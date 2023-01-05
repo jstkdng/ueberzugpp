@@ -14,30 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __LOGGING__
-#define __LOGGING__
+#include "logging.hpp"
 
-#include <fstream>
 #include <iostream>
+#include <filesystem>
 
-class Logging
+#include <unistd.h>
+
+namespace fs = std::filesystem;
+
+Logging::Logging()
 {
-public:
-    Logging();
-    ~Logging();
-
-    template <class T>
-    void log(T t);
-
-private:
-    std::ofstream logfile;
-};
-
-template <class T>
-void Logging::log(T t)
-{
-    //std::cout << t << std::endl;
-    this->logfile << t << std::endl;
+    //std::stringstream ss;
+    //ss << "ueberzug_" << std::to_string(getpid()) << ".txt";
+    fs::path tmp = fs::temp_directory_path() / "ueberzug.log";
+    this->logfile = std::ofstream(tmp, std::ios_base::app);
 }
 
-#endif
+Logging::~Logging()
+{}
+
