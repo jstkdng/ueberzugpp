@@ -14,21 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <cstdio>
-#include <iostream>
-#include <filesystem>
 #include <nlohmann/json.hpp>
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
 
+#include "display.hpp"
 #include "logging.hpp"
 
 using json = nlohmann::json;
 
 int main(int argc, char *argv[])
 {
-    bool silent;
+    bool silent = false;
 
     CLI::App program("Display images in the terminal", "ueberzug");
     CLI::App *layer_command = program.add_subcommand("layer", "Display images");
@@ -37,12 +35,16 @@ int main(int argc, char *argv[])
 
     CLI11_PARSE(program, argc, argv);
 
+    /*
     if (silent) {
         freopen("/dev/null", "w", stderr);
         freopen("/dev/null", "w", stdout);
-    }
+    }*/
 
     Logging logger;
+    Display display(logger);
+    display.create_window();
+    display.handle_events();
 
     /*
     std::string cmd;

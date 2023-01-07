@@ -17,21 +17,30 @@
 #ifndef __DISPLAY__
 #define __DISPLAY__
 
+#include "logging.hpp"
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
 
 class Display
 {
 public:
-    Display();
+    Display(Logging &logger);
     ~Display();
 
+    void create_window();
+    void handle_events();
+
 private:
-    void set_root_window();
+    void set_screen();
+    void create_colormap();
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
-    xcb_window_t root_window;
+
+    xcb_window_t window;
+    xcb_colormap_t colormap;
+
+    Logging &logger;
 };
 
 
