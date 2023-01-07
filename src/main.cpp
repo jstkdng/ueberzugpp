@@ -18,9 +18,6 @@
 #include <iostream>
 #include <filesystem>
 #include <nlohmann/json.hpp>
-#include <stdexcept>
-#include <vips/vips.h>
-#include <vips/vips8>
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
@@ -45,27 +42,29 @@ int main(int argc, char *argv[])
         freopen("/dev/null", "w", stdout);
     }
 
-    if (VIPS_INIT(argv[0])) {
-        vips_error_exit(NULL);
-    }
-
     Logging logger;
 
+    /*
     std::string cmd;
     std::stringstream ss;
     json j;
     while (true) {
         std::cin >> cmd;
+        if (cmd == "exit") break;
         ss << cmd;
         try {
             j = json::parse(ss.str());
             // clean stream
             ss.str(std::string());
             logger.log(j.dump());
+            if (j["action"] == "add") {
+
+            } else if (j["action"] == "remove") {
+
+            }
         } catch (json::parse_error e) {
             continue;
         }
-    }
-    vips_shutdown();
+    }*/
     return 0;
 }
