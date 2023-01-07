@@ -14,18 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <nlohmann/json.hpp>
-#include <CLI/App.hpp>
-#include <CLI/Formatter.hpp>
-#include <CLI/Config.hpp>
+#include <vips/vips8>
+#include <string>
 
 #include "display.hpp"
 #include "logging.hpp"
 
-using json = nlohmann::json;
-
 int main(int argc, char *argv[])
 {
+    if (VIPS_INIT(argv[0])) {
+        vips_error_exit(NULL);
+    }
+
+    if (argc != 2) {
+        vips_error_exit("usage: %s input-file", argv[0]);
+    }
+
+    /*
     bool silent = false;
 
     CLI::App program("Display images in the terminal", "ueberzug");
@@ -35,14 +40,16 @@ int main(int argc, char *argv[])
 
     CLI11_PARSE(program, argc, argv);
 
-    /*
+    
     if (silent) {
         freopen("/dev/null", "w", stderr);
         freopen("/dev/null", "w", stdout);
     }*/
 
+    std::string filename(argv[1]);
+
     Logging logger;
-    Display display(logger);
+    Display display(logger, filename);
     display.create_window();
     display.handle_events();
 
@@ -68,5 +75,7 @@ int main(int argc, char *argv[])
             continue;
         }
     }*/
+
+    vips_shutdown();
     return 0;
 }

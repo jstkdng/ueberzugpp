@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <iostream>
 #include <memory>
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
@@ -26,8 +25,9 @@ struct free_delete
     void operator()(void *x) { free(x); }
 };
 
-Display::Display(Logging &logger):
-logger(logger)
+Display::Display(Logging &logger, std::string &filename):
+logger(logger),
+filename(filename)
 {
     this->connection = xcb_connect(NULL, NULL);
     this->set_screen();
@@ -78,7 +78,7 @@ void Display::create_window()
             this->screen->root,
             0, 0,
             400, 400,
-            5,
+            0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             this->screen->root_visual,
             value_mask,
@@ -87,6 +87,9 @@ void Display::create_window()
     xcb_flush(this->connection);
 
     this->window = wid;
+    this->image = std::make_unique<Image>(this->filename, this->connection, wid);
+    this->image->draw();
+    xcb_flush(this->connection);
 }
 
 void Display::handle_events()
@@ -97,6 +100,7 @@ void Display::handle_events()
         switch (event->response_type & ~0x80) {
             case XCB_EXPOSE: {
                 logger.log("Exposing window!");
+                //this->image->draw();
                 break;
             }
             case XCB_KEY_PRESS: {

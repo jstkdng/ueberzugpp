@@ -18,13 +18,16 @@
 #define __DISPLAY__
 
 #include "logging.hpp"
-#include <xcb/xcb.h>
+#include "image.hpp"
+
 #include <xcb/xproto.h>
+#include <memory>
+#include <string>
 
 class Display
 {
 public:
-    Display(Logging &logger);
+    Display(Logging &logger, std::string &filename);
     ~Display();
 
     void create_window();
@@ -41,6 +44,8 @@ private:
     xcb_colormap_t colormap;
 
     Logging &logger;
+    std::unique_ptr<Image> image;
+    std::string &filename;
 };
 
 
