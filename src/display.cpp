@@ -15,10 +15,14 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <memory>
+#include <filesystem>
 #include <xcb/xcb.h>
+#include <xcb/xcb_image.h>
 #include <xcb/xproto.h>
 
 #include "display.hpp"
+
+namespace fs = std::filesystem;
 
 struct free_delete
 {
@@ -31,6 +35,8 @@ filename(filename)
 {
     this->connection = xcb_connect(NULL, NULL);
     this->set_screen();
+    this->image = vips::VImage::thumbnail(filename.c_str(), 500);
+    this->create_xcb_image();
 }
 
 Display::~Display()
@@ -38,6 +44,9 @@ Display::~Display()
     xcb_unmap_window(this->connection, this->window);
     xcb_destroy_window(this->connection, this->window);
     xcb_free_colormap(this->connection, this->colormap);
+    xcb_free_pixmap(this->connection, this->pixmap);
+    xcb_free_gc(this->connection, this->gc);
+    xcb_image_destroy(this->xcb_image);
     xcb_disconnect(this->connection);
 }
 
@@ -59,16 +68,65 @@ void Display::create_colormap()
     this->colormap = mid;
 }
 
+void Display::create_pixmap()
+{
+    xcb_pixmap_t pixmap = xcb_generate_id(this->connection);
+    xcb_create_pixmap(this->connection,
+            this->screen->root_depth,
+            pixmap,
+            this->window,
+            this->image.width(),
+            this->image.height());
+    this->pixmap = pixmap;
+}
+
+void Display::create_gc()
+{ 
+    xcb_gcontext_t cid = xcb_generate_id(this->connection);
+    xcb_create_gc(this->connection, cid, this->window, 0, nullptr);
+    this->gc = cid;
+}
+
+void Display::create_xcb_image()
+{
+    std::size_t len = fs::file_size(filename);
+    void *memory = calloc(len, sizeof(unsigned char));
+    this->xcb_image = xcb_image_create_native(this->connection,
+            this->image.width(),
+            this->image.height(),
+            XCB_IMAGE_FORMAT_Z_PIXMAP,
+            this->screen->root_depth,
+            memory,
+            len,
+            static_cast<unsigned char*>(this->image.write_to_memory(&len)));
+}
+
+void Display::draw_image()
+{ 
+    // draw image to pixmap
+    xcb_image_put(this->connection, this->pixmap, this->gc, this->xcb_image, 0, 0, 0);
+    // draw pixmap on window
+    xcb_copy_area(this->connection,
+            this->pixmap,
+            this->window,
+            this->gc,
+            0, 0,
+            0, 0,
+            this->image.width(),
+            this->image.height());
+    // flush connection
+    xcb_flush(this->connection);
+}
+
 void Display::create_window()
 {
-    this->create_colormap();
+    //this->create_colormap();
 
-    unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
+    unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
     unsigned int value_list[4] = {
         this->screen->black_pixel,
         this->screen->white_pixel,
-        XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS,
-        this->colormap
+        XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS
     };
 
     xcb_window_t wid = xcb_generate_id(this->connection);
@@ -77,7 +135,7 @@ void Display::create_window()
             wid,
             this->screen->root,
             0, 0,
-            400, 400,
+            this->image.width(), this->image.height(),
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             this->screen->root_visual,
@@ -87,9 +145,8 @@ void Display::create_window()
     xcb_flush(this->connection);
 
     this->window = wid;
-    this->image = std::make_unique<Image>(this->filename, this->connection, wid);
-    this->image->draw();
-    xcb_flush(this->connection);
+    this->create_pixmap();
+    this->create_gc();
 }
 
 void Display::handle_events()
@@ -100,7 +157,7 @@ void Display::handle_events()
         switch (event->response_type & ~0x80) {
             case XCB_EXPOSE: {
                 logger.log("Exposing window!");
-                //this->image->draw();
+                this->draw_image();
                 break;
             }
             case XCB_KEY_PRESS: {

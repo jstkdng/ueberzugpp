@@ -18,11 +18,12 @@
 #define __DISPLAY__
 
 #include "logging.hpp"
-#include "image.hpp"
 
-#include <xcb/xproto.h>
 #include <memory>
 #include <string>
+#include <vips/vips8>
+#include <xcb/xproto.h>
+#include <xcb/xcb_image.h>
 
 class Display
 {
@@ -32,19 +33,27 @@ public:
 
     void create_window();
     void handle_events();
+    void draw_image();
 
 private:
     void set_screen();
     void create_colormap();
+    void create_gc();
+    void create_pixmap();
+    void create_xcb_image();
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
+    xcb_image_t *xcb_image = nullptr;
 
     xcb_window_t window;
     xcb_colormap_t colormap;
+    xcb_pixmap_t pixmap;
+    xcb_gcontext_t gc;
+
+    vips::VImage image;
 
     Logging &logger;
-    std::unique_ptr<Image> image;
     std::string &filename;
 };
 
