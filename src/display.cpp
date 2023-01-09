@@ -20,11 +20,7 @@
 #include <xcb/xproto.h>
 
 #include "display.hpp"
-
-struct free_delete
-{
-    void operator()(void *x) { free(x); }
-};
+#include "utils.hpp"
 
 Display::Display(Logging &logger):
 logger(logger)

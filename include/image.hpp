@@ -22,10 +22,7 @@
 #include <vips/vips8>
 #include <xcb/xcb_image.h>
 
-struct gfree_delete
-{
-    void operator()(void *x) { g_free(x); }
-};
+#include "utils.hpp"
 
 class Image
 {

@@ -44,7 +44,7 @@ void Image::create_xcb_gc(xcb_window_t &window)
 
 void Image::destroy()
 {
-    if (this->xcb_image == nullptr) return;
+    if (!this->xcb_image) return;
     this->xcb_image = nullptr;
     xcb_free_gc(this->connection, this->gc);
 }
@@ -60,9 +60,7 @@ void Image::load(std::string &filename)
     bands[0] = bands[2];
     bands[2] = tmp;
     // ensure fourth channel
-    if (!srgb.has_alpha()) {
-        bands.push_back(bands[2]);
-    }
+    if (!srgb.has_alpha()) bands.push_back(bands[2]);
     this->image = VImage::bandjoin(bands);
     this->create_xcb_image(filename);
 }
