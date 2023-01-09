@@ -18,12 +18,11 @@
 #define __DISPLAY__
 
 #include "logging.hpp"
+#include "image.hpp"
 
 #include <memory>
 #include <string>
-#include <vips/vips8>
 #include <xcb/xproto.h>
-#include <xcb/xcb_image.h>
 #include <thread>
 
 class Display
@@ -36,24 +35,19 @@ public:
     void load_image(std::string filename);
     std::thread spawn_event_handler();
     void handle_events();
+    void destroy_image();
 
 private:
     void set_screen();
-    void create_gc();
     void draw_image();
     void trigger_redraw();
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
-    xcb_image_t *xcb_image = nullptr;
-
     xcb_window_t window;
-    xcb_gcontext_t gc;
-
-    //vips::VImage image;
-    //vips::VImage _image;
 
     Logging &logger;
+    std::unique_ptr<Image> image;
 };
 
 

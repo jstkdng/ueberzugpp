@@ -16,9 +16,7 @@
 
 #include <nlohmann/json.hpp>
 #include <vips/vips8>
-#include <string>
 #include <thread>
-#include <chrono>
 
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
@@ -43,7 +41,6 @@ int main(int argc, char *argv[])
     program.require_subcommand(1);
 
     CLI11_PARSE(program, argc, argv);
-
     
     if (silent) {
         freopen("/dev/null", "w", stderr);
@@ -61,10 +58,11 @@ int main(int argc, char *argv[])
     while (std::getline(std::cin, cmd)) {
         try {
             j = json::parse(cmd);
+            logger.log(j.dump());
             if (j["action"] == "add") {
                 display.load_image(j["path"]);
             } else if (j["action"] == "remove") {
-
+                display.destroy_image();  
             }
         } catch (json::parse_error e) {
             continue;

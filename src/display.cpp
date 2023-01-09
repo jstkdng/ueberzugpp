@@ -16,17 +16,10 @@
 
 #include <cstdlib>
 #include <memory>
-#include <filesystem>
-#include <vips/image.h>
 #include <xcb/xcb.h>
-#include <xcb/xcb_image.h>
 #include <xcb/xproto.h>
-#include <iostream>
 
 #include "display.hpp"
-
-namespace fs = std::filesystem;
-using namespace vips;
 
 struct free_delete
 {
@@ -38,14 +31,13 @@ logger(logger)
 {
     this->connection = xcb_connect(NULL, NULL);
     this->set_screen();
+    image = std::make_unique<Image>(this->connection, this->screen);
 }
 
 Display::~Display()
 {
     xcb_unmap_window(this->connection, this->window);
     xcb_destroy_window(this->connection, this->window);
-    xcb_free_gc(this->connection, this->gc);
-    xcb_image_destroy(this->xcb_image);
     xcb_disconnect(this->connection);
 }
 
@@ -56,60 +48,30 @@ void Display::set_screen()
     this->screen = iter.data;
 }
 
-void Display::create_gc()
+void Display::destroy_image()
 {
-    xcb_gcontext_t cid = xcb_generate_id(this->connection);
-    xcb_create_gc(this->connection, cid, this->window, 0, nullptr);
-    this->gc = cid;
+    image->destroy();
+    xcb_clear_area(this->connection, false, this->window, 0, 0, 0, 0);
+    xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
-    if (this->xcb_image) {
-        xcb_image_destroy(this->xcb_image);
-        xcb_free_gc(this->connection, this->gc);
-    }
-    // TODO: CALCULATE THUMNAIL WIDTH
-    auto img = VImage::thumbnail(filename.c_str(), 500);
-    img = img.colourspace(VIPS_INTERPRETATION_sRGB);
-    // convert RGB TO BGR
-    auto bands = img.bandsplit();
-    auto tmp = bands[0];
-    bands[0] = bands[2];
-    bands[2] = tmp;
-    // ensure BGRX
-    if (!img.has_alpha()) {
-        bands.push_back(bands[2]);
-    }
-    img = VImage::bandjoin(bands);
-
-    std::size_t len = fs::file_size(filename);
-    void *memory = calloc(len, sizeof(unsigned char));
-    this->xcb_image = xcb_image_create_native(this->connection,
-            img.width(),
-            img.height(),
-            XCB_IMAGE_FORMAT_Z_PIXMAP,
-            this->screen->root_depth,
-            memory,
-            len,
-            static_cast<unsigned char*>(img.write_to_memory(&len)));
+    image->load(filename);
     this->trigger_redraw();
-    //this->image = this->_image.thumbnail_image(500);
 }
 
 void Display::trigger_redraw()
 {
-    xcb_clear_area(this->connection, true, this->window, 0, 0, 0, 0);
-    xcb_flush(this->connection);
-}
-
-void Display::draw_image()
-{
-    if (!xcb_image) return;
-    this->create_gc();
-    // draw image to window
-    xcb_image_put(this->connection, this->window, this->gc, this->xcb_image, 0, 0, 0);
-    // flush connection
+    xcb_expose_event_t *e = static_cast<xcb_expose_event_t*>(calloc(1, sizeof(xcb_expose_event_t)));
+    e->response_type = XCB_EXPOSE;
+    e->window = this->window;
+    e->x = 0;
+    e->y = 0;
+    e->width = 0;
+    e->height = 0;
+    e->count = 0;
+    xcb_send_event(this->connection, false, this->window, XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e));
     xcb_flush(this->connection);
 }
 
@@ -156,7 +118,7 @@ void Display::handle_events()
         auto response = event->response_type & ~0x80;
         switch (response) {
             case XCB_EXPOSE: {
-                this->draw_image();
+                if (this->image) this->image->draw(this->window);
                 break;
             }
             default: {
