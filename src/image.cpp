@@ -16,12 +16,11 @@
 
 #include "image.hpp"
 
-#include <cstdlib>
 #include <filesystem>
 #include <memory>
 #include <iostream>
+#include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
-#include <xcb/xproto.h>
 
 namespace fs = std::filesystem;
 using namespace vips;
@@ -39,62 +38,51 @@ Image::~Image()
 void Image::create_xcb_gc(xcb_window_t &window)
 {
     xcb_gcontext_t cid = xcb_generate_id(this->connection);
-    unsigned int value_mask = XCB_GC_GRAPHICS_EXPOSURES;
-    unsigned int value_list[1] = {
-        0
-    };
-    xcb_create_gc(this->connection, cid, window, value_mask, value_list);
+    xcb_create_gc(this->connection, cid, window, 0, nullptr);
     this->gc = cid;
 }
 
 void Image::destroy()
 {
-    if (this->xcb_image) {
-        xcb_image_destroy(this->xcb_image);
-        g_free(this->imgdata);
-        xcb_free_gc(this->connection, this->gc);
-        this->xcb_image = nullptr;
-    }
+    if (this->xcb_image == nullptr) return;
+    this->xcb_image = nullptr;
+    xcb_free_gc(this->connection, this->gc);
 }
 
 void Image::load(std::string &filename)
 {
     // TODO: CALCULATE THUMBNAIL WIDTH
-    auto img = VImage::thumbnail(filename.c_str(), 500);
-    this->sanitize_image(img);
-    // convert RGB TO BGR
-    this->create_xcb_image(filename, img);
-}
-
-void Image::sanitize_image(VImage &img)
-{
-    img = img.colourspace(VIPS_INTERPRETATION_sRGB);
-    auto bands = img.bandsplit();
+    VImage thumbnail = VImage::thumbnail(filename.c_str(), 500);
+    VImage srgb = thumbnail.colourspace(VIPS_INTERPRETATION_sRGB);
+    std::vector<VImage> bands = srgb.bandsplit();
     // convert from RGB to BGR
-    auto tmp = bands[0];
+    VImage tmp = bands[0];
     bands[0] = bands[2];
     bands[2] = tmp;
-    // ensure BGRX
-    if (!img.has_alpha()) {
+    // ensure fourth channel
+    if (!srgb.has_alpha()) {
         bands.push_back(bands[2]);
     }
-    img = VImage::bandjoin(bands);
+    this->image = VImage::bandjoin(bands);
+    this->create_xcb_image(filename);
 }
 
-void Image::create_xcb_image(std::string &filename, VImage &img)
+void Image::create_xcb_image(std::string &filename)
 {
-    std::size_t len = fs::file_size(filename);
-    this->imgmemory = calloc(len, sizeof(char));
-    this->imgdata = img.write_to_memory(&len);
-    unsigned char *udata = static_cast<unsigned char*>(this->imgdata);
+    std::size_t size = fs::file_size(filename);
+    // memory xcb reads from
+    void *tmp = this->image.write_to_memory(&size);
+    this->imgdata.reset(tmp);
+    // memory xcb writes to
+    this->imgmemory = std::make_unique<char[]>(size);
     this->xcb_image = xcb_image_create_native(this->connection,
-            img.width(),
-            img.height(),
+            this->image.width(),
+            this->image.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             this->screen->root_depth,
-            this->imgmemory,
-            len,
-            udata);
+            this->imgmemory.get(),
+            size,
+            static_cast<unsigned char*>(this->imgdata.get()));
 }
 
 void Image::draw(xcb_window_t &window)
@@ -102,4 +90,6 @@ void Image::draw(xcb_window_t &window)
     if (!this->xcb_image) return;
     this->create_xcb_gc(window);
     xcb_image_put(this->connection, window, this->gc, this->xcb_image, 0, 0, 0);
+    xcb_flush(this->connection);
 }
+

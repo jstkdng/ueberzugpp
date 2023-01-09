@@ -22,6 +22,11 @@
 #include <vips/vips8>
 #include <xcb/xcb_image.h>
 
+struct gfree_delete
+{
+    void operator()(void *x) { g_free(x); }
+};
+
 class Image
 {
 public:
@@ -32,17 +37,18 @@ public:
     void destroy();
 
 private:
-    void create_xcb_image(std::string &filename, vips::VImage &img);
+    void create_xcb_image(std::string &filename);
     void create_xcb_gc(xcb_window_t &window);
-    void sanitize_image(vips::VImage &img);
 
     xcb_gcontext_t gc;
     xcb_image_t *xcb_image = nullptr;
     xcb_connection_t *connection;
     xcb_screen_t *screen;
 
-    void *imgdata;
-    void *imgmemory;
+    std::unique_ptr<char[]> imgmemory;
+    std::unique_ptr<void, gfree_delete> imgdata;
+
+    vips::VImage image;
 };
 
 #endif
