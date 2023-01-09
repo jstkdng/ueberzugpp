@@ -24,37 +24,36 @@
 #include <vips/vips8>
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
+#include <thread>
 
 class Display
 {
 public:
-    Display(Logging &logger, std::string &filename);
+    Display(Logging &logger);
     ~Display();
 
     void create_window();
+    void load_image(std::string filename);
+    std::thread spawn_event_handler();
     void handle_events();
-    void draw_image();
 
 private:
     void set_screen();
-    void create_colormap();
     void create_gc();
-    void create_pixmap();
-    void create_xcb_image();
+    void draw_image();
+    void trigger_redraw();
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
     xcb_image_t *xcb_image = nullptr;
 
     xcb_window_t window;
-    xcb_colormap_t colormap;
-    xcb_pixmap_t pixmap;
     xcb_gcontext_t gc;
 
-    vips::VImage image;
+    //vips::VImage image;
+    //vips::VImage _image;
 
     Logging &logger;
-    std::string &filename;
 };
 
 

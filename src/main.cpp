@@ -14,11 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <nlohmann/json.hpp>
 #include <vips/vips8>
 #include <string>
+#include <thread>
+#include <chrono>
+
+#include <CLI/App.hpp>
+#include <CLI/Formatter.hpp>
+#include <CLI/Config.hpp>
 
 #include "display.hpp"
 #include "logging.hpp"
+
+using json = nlohmann::json;
 
 int main(int argc, char *argv[])
 {
@@ -26,11 +35,6 @@ int main(int argc, char *argv[])
         vips_error_exit(NULL);
     }
 
-    if (argc != 2) {
-        vips_error_exit("usage: %s input-file", argv[0]);
-    }
-
-    /*
     bool silent = false;
 
     CLI::App program("Display images in the terminal", "ueberzug");
@@ -44,38 +48,29 @@ int main(int argc, char *argv[])
     if (silent) {
         freopen("/dev/null", "w", stderr);
         freopen("/dev/null", "w", stdout);
-    }*/
-
-    std::string filename(argv[1]);
+    }
 
     Logging logger;
-    Display display(logger, filename);
+    Display display(logger);
     display.create_window();
-    display.handle_events();
 
-    /*
+    std::thread t1 = display.spawn_event_handler();
+
     std::string cmd;
-    std::stringstream ss;
     json j;
-    while (true) {
-        std::cin >> cmd;
-        if (cmd == "exit") break;
-        ss << cmd;
+    while (std::getline(std::cin, cmd)) {
         try {
-            j = json::parse(ss.str());
-            // clean stream
-            ss.str(std::string());
-            logger.log(j.dump());
+            j = json::parse(cmd);
             if (j["action"] == "add") {
-
+                display.load_image(j["path"]);
             } else if (j["action"] == "remove") {
 
             }
         } catch (json::parse_error e) {
             continue;
         }
-    }*/
-
+    }
+    t1.join();
     vips_shutdown();
     return 0;
 }

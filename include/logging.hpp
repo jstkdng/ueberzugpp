@@ -36,7 +36,7 @@ private:
 template <class T>
 void Logging::log(T t)
 {
-    //std::cout << t << std::endl;
+    std::cout << t << std::endl;
     this->logfile << t << std::endl;
 }
 

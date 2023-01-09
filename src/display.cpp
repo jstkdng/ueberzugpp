@@ -14,37 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <cstdlib>
 #include <memory>
 #include <filesystem>
+#include <vips/image.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
 #include <xcb/xproto.h>
+#include <iostream>
 
 #include "display.hpp"
 
 namespace fs = std::filesystem;
+using namespace vips;
 
 struct free_delete
 {
     void operator()(void *x) { free(x); }
 };
 
-Display::Display(Logging &logger, std::string &filename):
-logger(logger),
-filename(filename)
+Display::Display(Logging &logger):
+logger(logger)
 {
     this->connection = xcb_connect(NULL, NULL);
     this->set_screen();
-    this->image = vips::VImage::thumbnail(filename.c_str(), 500);
-    this->create_xcb_image();
 }
 
 Display::~Display()
 {
     xcb_unmap_window(this->connection, this->window);
     xcb_destroy_window(this->connection, this->window);
-    xcb_free_colormap(this->connection, this->colormap);
-    xcb_free_pixmap(this->connection, this->pixmap);
     xcb_free_gc(this->connection, this->gc);
     xcb_image_destroy(this->xcb_image);
     xcb_disconnect(this->connection);
@@ -57,85 +56,80 @@ void Display::set_screen()
     this->screen = iter.data;
 }
 
-void Display::create_colormap()
-{
-    xcb_colormap_t mid = xcb_generate_id(this->connection);
-    xcb_create_colormap(this->connection,
-            XCB_COLORMAP_ALLOC_NONE,
-            mid,
-            this->screen->root,
-            this->screen->root_visual);
-    this->colormap = mid;
-}
-
-void Display::create_pixmap()
-{
-    xcb_pixmap_t pixmap = xcb_generate_id(this->connection);
-    xcb_create_pixmap(this->connection,
-            this->screen->root_depth,
-            pixmap,
-            this->window,
-            this->image.width(),
-            this->image.height());
-    this->pixmap = pixmap;
-}
-
 void Display::create_gc()
-{ 
+{
     xcb_gcontext_t cid = xcb_generate_id(this->connection);
     xcb_create_gc(this->connection, cid, this->window, 0, nullptr);
     this->gc = cid;
 }
 
-void Display::create_xcb_image()
+void Display::load_image(std::string filename)
 {
+    if (this->xcb_image) {
+        xcb_image_destroy(this->xcb_image);
+        xcb_free_gc(this->connection, this->gc);
+    }
+    // TODO: CALCULATE THUMNAIL WIDTH
+    auto img = VImage::thumbnail(filename.c_str(), 500);
+    img = img.colourspace(VIPS_INTERPRETATION_sRGB);
+    // convert RGB TO BGR
+    auto bands = img.bandsplit();
+    auto tmp = bands[0];
+    bands[0] = bands[2];
+    bands[2] = tmp;
+    // ensure BGRX
+    if (!img.has_alpha()) {
+        bands.push_back(bands[2]);
+    }
+    img = VImage::bandjoin(bands);
+
     std::size_t len = fs::file_size(filename);
     void *memory = calloc(len, sizeof(unsigned char));
     this->xcb_image = xcb_image_create_native(this->connection,
-            this->image.width(),
-            this->image.height(),
+            img.width(),
+            img.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             this->screen->root_depth,
             memory,
             len,
-            static_cast<unsigned char*>(this->image.write_to_memory(&len)));
+            static_cast<unsigned char*>(img.write_to_memory(&len)));
+    this->trigger_redraw();
+    //this->image = this->_image.thumbnail_image(500);
+}
+
+void Display::trigger_redraw()
+{
+    xcb_clear_area(this->connection, true, this->window, 0, 0, 0, 0);
+    xcb_flush(this->connection);
 }
 
 void Display::draw_image()
-{ 
-    // draw image to pixmap
-    xcb_image_put(this->connection, this->pixmap, this->gc, this->xcb_image, 0, 0, 0);
-    // draw pixmap on window
-    xcb_copy_area(this->connection,
-            this->pixmap,
-            this->window,
-            this->gc,
-            0, 0,
-            0, 0,
-            this->image.width(),
-            this->image.height());
+{
+    if (!xcb_image) return;
+    this->create_gc();
+    // draw image to window
+    xcb_image_put(this->connection, this->window, this->gc, this->xcb_image, 0, 0, 0);
     // flush connection
     xcb_flush(this->connection);
 }
 
 void Display::create_window()
 {
-    //this->create_colormap();
-
-    unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
+    unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     unsigned int value_list[4] = {
         this->screen->black_pixel,
-        this->screen->white_pixel,
-        XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS
+        this->screen->black_pixel,
+        XCB_EVENT_MASK_EXPOSURE,
+        this->screen->default_colormap
     };
 
     xcb_window_t wid = xcb_generate_id(this->connection);
     xcb_create_window(this->connection,
-            0,
+            this->screen->root_depth,
             wid,
             this->screen->root,
             0, 0,
-            this->image.width(), this->image.height(),
+            1000, 1000,
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             this->screen->root_visual,
@@ -145,8 +139,13 @@ void Display::create_window()
     xcb_flush(this->connection);
 
     this->window = wid;
-    this->create_pixmap();
-    this->create_gc();
+}
+
+std::thread Display::spawn_event_handler()
+{
+    return std::thread([this] {
+        this->handle_events();
+    });
 }
 
 void Display::handle_events()
@@ -154,23 +153,16 @@ void Display::handle_events()
     while (true) {
         std::unique_ptr<xcb_generic_event_t, free_delete>
             event (xcb_wait_for_event(this->connection));
-        switch (event->response_type & ~0x80) {
+        auto response = event->response_type & ~0x80;
+        switch (response) {
             case XCB_EXPOSE: {
-                logger.log("Exposing window!");
                 this->draw_image();
                 break;
             }
-            case XCB_KEY_PRESS: {
-                logger.log("Key pressed!");
-                goto endloop;
-            }
             default: {
-                logger.log("Unknown event");
                 break;
             }
         }
     }
-    endloop:
-    return;
 }
 
