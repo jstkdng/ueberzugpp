@@ -3,6 +3,7 @@
 
 #include <cstdlib>
 #include <glib-2.0/glib.h>
+#include <string>
 
 struct gfree_delete
 {
@@ -13,5 +14,7 @@ struct free_delete
 {
     void operator()(void *x) { free(x); }
 };
+
+std::string exec(const char *cmd);
 
 #endif

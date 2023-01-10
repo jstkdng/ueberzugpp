@@ -24,6 +24,7 @@
 
 #include "display.hpp"
 #include "logging.hpp"
+#include "utils.hpp"
 
 using json = nlohmann::json;
 

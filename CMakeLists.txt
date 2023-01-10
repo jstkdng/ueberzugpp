@@ -21,6 +21,7 @@ set(UEBERZUGPP_SOURCES
     "src/logging.cpp"
     "src/display.cpp"
     "src/image.cpp"
+    "src/utils.cpp"
 )
 
 add_executable(ueberzug ${UEBERZUGPP_SOURCES})
