@@ -5,16 +5,15 @@
 #include <glib-2.0/glib.h>
 #include <string>
 
-struct gfree_delete
-{
-    void operator()(void *x) { g_free(x); }
-};
-
 struct free_delete
 {
     void operator()(void *x) { free(x); }
 };
 
-std::string exec(const char *cmd);
+namespace os
+{
+    std::string exec(std::string const& cmd);
+    std::string getenv(std::string const& var);
+}
 
 #endif

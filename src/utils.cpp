@@ -1,14 +1,15 @@
 #include "utils.hpp"
 
+#include <cstdlib>
 #include <memory>
 #include <array>
 #include <stdexcept>
 
-std::string exec(const char *cmd)
+std::string os::exec(std::string const& cmd)
 {
     std::array<char, 128> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"), pclose);
     if (!pipe) {
         throw std::runtime_error("popen() failed");
     }
@@ -17,3 +18,9 @@ std::string exec(const char *cmd)
     } 
     return result;
 }
+
+std::string os::getenv(std::string const& var)
+{
+    return std::getenv(var.c_str());
+}
+

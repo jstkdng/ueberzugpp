@@ -43,7 +43,7 @@ private:
     xcb_screen_t *screen;
 
     std::unique_ptr<char[]> imgmemory;
-    std::unique_ptr<void, gfree_delete> imgdata;
+    std::unique_ptr<void, free_delete> imgdata;
 
     vips::VImage image;
 };
