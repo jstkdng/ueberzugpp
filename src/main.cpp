@@ -54,6 +54,7 @@ int main(int argc, char *argv[])
 
     std::thread t1 = display.spawn_event_handler();
 
+    os::get_process_info(os::get_pid());
     std::string cmd;
     json j;
     while (std::getline(std::cin, cmd)) {
