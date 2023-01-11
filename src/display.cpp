@@ -48,13 +48,13 @@ void Display::destroy_image()
 {
     this->image->destroy();
     xcb_clear_area(this->connection, false, this->window, 0, 0, 0, 0);
-    xcb_unmap_window(this->connection, this->window);
+    //xcb_unmap_window(this->connection, this->window);
     xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
-    xcb_map_window(this->connection, this->window);
+    //xcb_map_window(this->connection, this->window);
     this->image->load(filename);
     this->trigger_redraw();
 }
@@ -90,9 +90,10 @@ void Display::create_window()
             this->screen->root_visual,
             value_mask,
             value_list);
-    xcb_flush(this->connection);
 
     this->window = wid;
+    xcb_map_window(this->connection, this->window);
+    xcb_flush(this->connection);
 }
 
 std::thread Display::spawn_event_handler()
@@ -114,7 +115,7 @@ void Display::handle_events()
                 break;
             }
             default: {
-                std::cout << "got event" << response << std::endl;
+                //std::cout << "got event" << response << std::endl;
                 break;
             }
         }

@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         } catch (json::parse_error e) {
             continue;
         }
-        if (quit.load()) break;
+        //if (quit.load()) break;
     }
     t1.join();
     vips_shutdown();
