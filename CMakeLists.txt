@@ -35,3 +35,4 @@ target_link_libraries(ueberzug PUBLIC
     PkgConfig::VIPS
     PkgConfig::XCBIMAGE
 )
+

@@ -38,13 +38,12 @@ public:
     void destroy_image();
 
 private:
-    void set_screen();
     void draw_image();
     void trigger_redraw();
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
-    xcb_window_t window;
+    xcb_window_t window = 0;
 
     Logging &logger;
     std::unique_ptr<Image> image;

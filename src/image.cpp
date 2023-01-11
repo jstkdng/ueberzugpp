@@ -88,6 +88,6 @@ void Image::draw(xcb_window_t &window)
     if (!this->xcb_image) return;
     this->create_xcb_gc(window);
     xcb_image_put(this->connection, window, this->gc, this->xcb_image, 0, 0, 0);
-    xcb_flush(this->connection);
+    //xcb_flush(this->connection);
 }
 

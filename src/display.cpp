@@ -25,9 +25,17 @@
 Display::Display(Logging &logger):
 logger(logger)
 {
-    this->connection = xcb_connect(NULL, NULL);
-    this->set_screen();
-    image = std::make_unique<Image>(this->connection, this->screen);
+    int screen_num;
+    this->connection = xcb_connect(NULL, &screen_num);
+    // set screen
+    const xcb_setup_t *setup = xcb_get_setup(this->connection);
+    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
+    for (int i = 0; i < screen_num; ++i) {
+        xcb_screen_next(&iter);
+    }
+    this->screen = iter.data;
+    // create image
+    this->image = std::make_unique<Image>(this->connection, this->screen);
 }
 
 Display::~Display()
@@ -37,23 +45,18 @@ Display::~Display()
     xcb_disconnect(this->connection);
 }
 
-void Display::set_screen()
-{
-    const xcb_setup_t *setup = xcb_get_setup(this->connection);
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
-    this->screen = iter.data;
-}
-
 void Display::destroy_image()
 {
-    image->destroy();
+    this->image->destroy();
     xcb_clear_area(this->connection, false, this->window, 0, 0, 0, 0);
+    xcb_unmap_window(this->connection, this->window);
     xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
-    image->load(filename);
+    xcb_map_window(this->connection, this->window);
+    this->image->load(filename);
     this->trigger_redraw();
 }
 
@@ -62,11 +65,6 @@ void Display::trigger_redraw()
     xcb_expose_event_t *e = static_cast<xcb_expose_event_t*>(calloc(1, sizeof(xcb_expose_event_t)));
     e->response_type = XCB_EXPOSE;
     e->window = this->window;
-    e->x = 0;
-    e->y = 0;
-    e->width = 0;
-    e->height = 0;
-    e->count = 0;
     xcb_send_event(this->connection, false, this->window, XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e));
     xcb_flush(this->connection);
 }
@@ -86,14 +84,13 @@ void Display::create_window()
             this->screen->root_depth,
             wid,
             this->screen->root,
-            0, 0,
-            1000, 1000,
+            800, 50,
+            500, 500,
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             this->screen->root_visual,
             value_mask,
             value_list);
-    xcb_map_window(this->connection, wid);
     xcb_flush(this->connection);
 
     this->window = wid;
@@ -114,7 +111,7 @@ void Display::handle_events()
         auto response = event->response_type & ~0x80;
         switch (response) {
             case XCB_EXPOSE: {
-                if (this->image) this->image->draw(this->window);
+                this->image->draw(this->window);
                 break;
             }
             default: {

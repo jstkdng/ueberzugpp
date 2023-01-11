@@ -30,10 +30,6 @@ using json = nlohmann::json;
 
 int main(int argc, char *argv[])
 {
-    if (VIPS_INIT(argv[0])) {
-        vips_error_exit(NULL);
-    }
-
     bool silent = false;
 
     CLI::App program("Display images in the terminal", "ueberzug");
@@ -48,13 +44,16 @@ int main(int argc, char *argv[])
         freopen("/dev/null", "w", stdout);
     }
 
+    if (VIPS_INIT(argv[0])) {
+        vips_error_exit(NULL);
+    }
+
     Logging logger;
     Display display(logger);
     display.create_window();
 
     std::thread t1 = display.spawn_event_handler();
 
-    os::get_process_info(os::get_pid());
     std::string cmd;
     json j;
     while (std::getline(std::cin, cmd)) {

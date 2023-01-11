@@ -1,13 +1,13 @@
 #include "utils.hpp"
 
 #include <cstdlib>
-#include <memory>
 #include <array>
 #include <stdexcept>
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <memory>
 
 std::string os::exec(std::string const& cmd)
 {
@@ -37,19 +37,11 @@ void os::get_process_info(int pid)
 {
     std::stringstream ss;
     ss << "/proc/" << pid << "/stat";
-    std::ifstream is(ss.str(), std::ifstream::binary | std::ifstream::ate);
-    if (!is) return;
+    unsigned int n1, n2;
+    std::ifstream is(ss.str());
+    is >> n1 >> n2;
+    std::cout << n1 << " " << n2;
     // read stream size
-    is.seekg(0, is.end);
-    int length = is.tellg();
-    is.seekg(0, is.beg);
 
-    std::cout << length << std::endl;
-
-    // read file contents
-    std::unique_ptr<char[]> buffer = std::make_unique<char[]>(length);
-
-    is.read(buffer.get(), length);
-    std::cout << buffer << std::endl;
 }
 
