@@ -24,6 +24,7 @@
 #include <string>
 #include <xcb/xproto.h>
 #include <thread>
+#include <vector>
 
 class Display
 {
@@ -36,10 +37,12 @@ public:
     std::thread spawn_event_handler();
     void handle_events();
     void destroy_image();
+    auto get_server_window_ids() -> std::vector<xcb_window_t>;
 
 private:
     void draw_image();
     void trigger_redraw();
+    auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;

@@ -19,13 +19,16 @@ std::string os::exec(std::string const& cmd)
     }
     while(fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
-    } 
+    }
+    result.erase(result.length() - 1);
     return result;
 }
 
 std::string os::getenv(std::string const& var)
 {
-    return std::getenv(var.c_str());
+    auto res = std::getenv(var.c_str());
+    if (res == nullptr) return "";
+    return res;
 }
 
 int os::get_pid()

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <array>
 #include <cstdlib>
 #include <memory>
 #include <xcb/xcb.h>
@@ -68,6 +69,36 @@ void Display::trigger_redraw()
     xcb_flush(this->connection);
 }
 
+
+auto Display::get_server_window_ids() -> std::vector<xcb_window_t>
+{
+    auto cookie = xcb_query_tree(this->connection, this->screen->root);
+    std::vector<xcb_window_t> windows;
+    get_server_window_ids_helper(windows, cookie);
+    return windows;
+}
+
+auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void
+{
+    std::unique_ptr<xcb_query_tree_reply_t, decltype(&free)> reply(
+        xcb_query_tree_reply(this->connection, cookie, NULL), free);
+    int num_children = xcb_query_tree_children_length(reply.get());
+
+    if (!num_children) return;
+
+    auto children = xcb_query_tree_children(reply.get());
+    std::vector<xcb_query_tree_cookie_t> cookies;
+
+    for (int i = 0; i < num_children; ++i) {
+        windows.push_back(children[i]);
+        cookies.push_back(xcb_query_tree(this->connection, children[i]));
+    }
+
+    for (auto new_cookie: cookies) {
+        this->get_server_window_ids_helper(windows, new_cookie);
+    }
+}
+
 void Display::create_window()
 {
     unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
@@ -115,7 +146,6 @@ void Display::handle_events()
                 break;
             }
             default: {
-                //std::cout << "got event" << response << std::endl;
                 break;
             }
         }

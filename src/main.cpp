@@ -24,6 +24,10 @@
 
 #include "display.hpp"
 #include "logging.hpp"
+#include "os.hpp"
+#include "tmux.hpp"
+
+using json = nlohmann::json;
 
 std::atomic<bool> quit(false);
 
@@ -31,8 +35,6 @@ void got_signal(int)
 {
     quit.store(true);
 }
-
-using json = nlohmann::json;
 
 int main(int argc, char *argv[])
 {
@@ -70,6 +72,12 @@ int main(int argc, char *argv[])
 
     std::thread t1 = display.spawn_event_handler();
 
+    auto windows = display.get_server_window_ids();
+    for (auto window: windows) {
+        std::cout << window << " ";
+    }
+    std::cout << std::endl;
+
     std::string cmd;
     json j;
     while (std::getline(std::cin, cmd)) {
@@ -84,8 +92,9 @@ int main(int argc, char *argv[])
         } catch (json::parse_error e) {
             continue;
         }
-        //if (quit.load()) break;
+        if (quit.load()) break;
     }
+    // TODO: send exit event to thread
     t1.join();
     vips_shutdown();
     return 0;
