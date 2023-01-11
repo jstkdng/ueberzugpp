@@ -47,6 +47,8 @@ void Image::destroy()
     if (!this->xcb_image) return;
     this->xcb_image = nullptr;
     xcb_free_gc(this->connection, this->gc);
+    free(this->imgdata);
+    this->imgdata = nullptr;
 }
 
 void Image::load(std::string &filename)
@@ -69,8 +71,8 @@ void Image::create_xcb_image(std::string &filename)
 {
     std::size_t size = fs::file_size(filename);
     // memory xcb reads from
-    void *tmp = this->image.write_to_memory(&size);
-    this->imgdata.reset(tmp);
+    this->imgdata = this->image.write_to_memory(&size);
+    //this->imgdata.reset(tmp);
     // memory xcb writes to
     this->imgmemory = std::make_unique<char[]>(size);
     this->xcb_image = xcb_image_create_native(this->connection,
@@ -80,7 +82,7 @@ void Image::create_xcb_image(std::string &filename)
             this->screen->root_depth,
             this->imgmemory.get(),
             size,
-            static_cast<unsigned char*>(this->imgdata.get()));
+            static_cast<unsigned char*>(this->imgdata));
 }
 
 void Image::draw(xcb_window_t &window)

@@ -21,7 +21,8 @@ set(UEBERZUGPP_SOURCES
     "src/logging.cpp"
     "src/display.cpp"
     "src/image.cpp"
-    "src/utils.cpp"
+    "src/os.cpp"
+    "src/tmux.cpp"
 )
 
 add_executable(ueberzug ${UEBERZUGPP_SOURCES})

@@ -16,20 +16,36 @@
 
 #include <nlohmann/json.hpp>
 #include <vips/vips8>
-#include <thread>
-
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
+#include <thread>
+#include <atomic>
 
 #include "display.hpp"
 #include "logging.hpp"
-#include "utils.hpp"
+
+std::atomic<bool> quit(false);
+
+void got_signal(int)
+{
+    quit.store(true);
+}
 
 using json = nlohmann::json;
 
 int main(int argc, char *argv[])
 {
+    // handle SIGINT and SIGTERM
+    /*
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = got_signal;
+    sigfillset(&sa.sa_mask);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGTERM, &sa, NULL);
+    */
+
     bool silent = false;
 
     CLI::App program("Display images in the terminal", "ueberzug");
@@ -68,6 +84,7 @@ int main(int argc, char *argv[])
         } catch (json::parse_error e) {
             continue;
         }
+        if (quit.load()) break;
     }
     t1.join();
     vips_shutdown();

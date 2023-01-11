@@ -20,7 +20,6 @@
 #include <xcb/xproto.h>
 
 #include "display.hpp"
-#include "utils.hpp"
 
 Display::Display(Logging &logger):
 logger(logger)
@@ -106,8 +105,8 @@ std::thread Display::spawn_event_handler()
 void Display::handle_events()
 {
     while (true) {
-        std::unique_ptr<xcb_generic_event_t, free_delete>
-            event (xcb_wait_for_event(this->connection));
+        std::unique_ptr<xcb_generic_event_t, decltype(&free)>
+            event (xcb_wait_for_event(this->connection), free);
         auto response = event->response_type & ~0x80;
         switch (response) {
             case XCB_EXPOSE: {
@@ -115,6 +114,7 @@ void Display::handle_events()
                 break;
             }
             default: {
+                std::cout << "got event" << response << std::endl;
                 break;
             }
         }

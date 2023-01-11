@@ -22,8 +22,6 @@
 #include <vips/vips8>
 #include <xcb/xcb_image.h>
 
-#include "utils.hpp"
-
 class Image
 {
 public:
@@ -43,7 +41,7 @@ private:
     xcb_screen_t *screen;
 
     std::unique_ptr<char[]> imgmemory;
-    std::unique_ptr<void, free_delete> imgdata;
+    void *imgdata;
 
     vips::VImage image;
 };

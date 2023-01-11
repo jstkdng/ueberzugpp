@@ -1,14 +1,7 @@
-#ifndef __UTILS__
-#define __UTILS__
+#ifndef __NAMESPACE_OS__
+#define __NAMESPACE_OS__
 
-#include <cstdlib>
-#include <glib-2.0/glib.h>
 #include <string>
-
-struct free_delete
-{
-    void operator()(void *x) { free(x); }
-};
 
 namespace os
 {
