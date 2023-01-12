@@ -25,6 +25,7 @@ set(UEBERZUGPP_SOURCES
     "src/tmux.cpp"
     "src/process_info.cpp"
     "src/util.cpp"
+    "src/terminal.cpp"
 )
 
 add_executable(ueberzug ${UEBERZUGPP_SOURCES})
