@@ -69,11 +69,8 @@ int main(int argc, char *argv[])
 
     Logging logger;
     Display display(logger);
-    display.create_window();
 
     std::thread t1 = display.spawn_event_handler();
-
-    display.get_window_pid();
 
     std::string cmd;
     json j;

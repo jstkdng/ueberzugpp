@@ -25,6 +25,7 @@
 #include <xcb/xproto.h>
 #include <thread>
 #include <vector>
+#include <unordered_map>
 
 class Display
 {
@@ -38,12 +39,15 @@ public:
     void handle_events();
     void destroy_image();
     auto get_server_window_ids() -> std::vector<xcb_window_t>;
-    auto get_window_pid() -> int;
+    auto get_window_pid(xcb_window_t window) -> unsigned int;
+    auto get_parent_terminals() -> void;
 
 private:
     void draw_image();
     void trigger_redraw();
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
+    auto get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>;
+    auto get_parent_pids(int pid) -> std::vector<int>;
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
