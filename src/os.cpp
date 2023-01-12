@@ -36,15 +36,3 @@ int os::get_pid()
     return getpid();
 }
 
-void os::get_process_info(int pid)
-{
-    std::stringstream ss;
-    ss << "/proc/" << pid << "/stat";
-    unsigned int n1, n2;
-    std::ifstream is(ss.str());
-    is >> n1 >> n2;
-    std::cout << n1 << " " << n2;
-    // read stream size
-
-}
-

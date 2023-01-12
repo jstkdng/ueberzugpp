@@ -25,6 +25,7 @@
 #include "display.hpp"
 #include "logging.hpp"
 #include "os.hpp"
+#include "process_info.hpp"
 #include "tmux.hpp"
 
 using json = nlohmann::json;
@@ -72,11 +73,7 @@ int main(int argc, char *argv[])
 
     std::thread t1 = display.spawn_event_handler();
 
-    auto windows = display.get_server_window_ids();
-    for (auto window: windows) {
-        std::cout << window << " ";
-    }
-    std::cout << std::endl;
+    display.get_window_pid();
 
     std::string cmd;
     json j;

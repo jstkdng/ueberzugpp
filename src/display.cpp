@@ -16,9 +16,11 @@
 
 #include <array>
 #include <cstdlib>
+#include <iostream>
 #include <memory>
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
+#include <xcb/res.h>
 
 #include "display.hpp"
 
@@ -97,6 +99,27 @@ auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     for (auto new_cookie: cookies) {
         this->get_server_window_ids_helper(windows, new_cookie);
     }
+}
+
+auto Display::get_window_pid() -> int
+{
+    int num_specs = 1;
+    std::unique_ptr<xcb_res_client_id_spec_t> client_specs = std::make_unique<xcb_res_client_id_spec_t>();
+    client_specs->client = this->window;
+    client_specs->mask = XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID;
+    /*
+    auto cookie = xcb_res_query_client_ids_unchecked
+        (this->connection, num_specs, client_specs.get());
+    std::unique_ptr<xcb_res_query_client_ids_reply_t, decltype(&free)> reply
+        (xcb_res_query_client_ids_reply(this->connection, cookie, nullptr), free);
+    auto clients = xcb_res_query_clients_clients(reply.get());
+    std::cout << reply->num_ids << std::endl;
+    auto iter = xcb_res_query_client_ids_ids_iterator(reply.get());
+    for (int i = 0; i < xcb_res_query_client_ids_ids_length(reply.get()); ++i) {
+        std::cout << iter.data->spec.client << std::endl;
+        xcb_res_client_id_value_next(&iter);
+    }*/
+    return 0;
 }
 
 void Display::create_window()

@@ -38,6 +38,7 @@ public:
     void handle_events();
     void destroy_image();
     auto get_server_window_ids() -> std::vector<xcb_window_t>;
+    auto get_window_pid() -> int;
 
 private:
     void draw_image();
