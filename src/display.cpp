@@ -14,9 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <array>
 #include <cstdlib>
-#include <iostream>
 #include <memory>
 #include <xcb/xcb.h>
 
@@ -24,6 +22,7 @@
 #include "tmux.hpp"
 #include "os.hpp"
 #include "process_info.hpp"
+#include "util.hpp"
 
 Display::Display(Logging &logger):
 logger(logger)
@@ -63,9 +62,6 @@ auto Display::get_parent_terminals() -> void
                 ppid_window_id_map[ppid] = pid_window_map[ppid];
             }
         }
-        for (const auto& [key, value]: ppid_window_id_map) {
-            std::cout << "key: " << key << " value: " << value << std::endl;
-        }
     }
 }
 
@@ -74,15 +70,15 @@ auto Display::get_parent_pids(int pid) -> std::vector<int>
     ProcessInfo proc(pid);
     std::vector<int> ppids;
     while (proc.pid != 1) {
-        ppids.push_back(proc.ppid);
+        ppids.push_back(proc.pid);
         proc = ProcessInfo(proc.ppid);
     }
     return ppids;
 }
 
-auto Display::get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>
+auto Display::get_pid_window_map() -> std::unordered_map<int, xcb_window_t>
 {
-    std::unordered_map<unsigned int, xcb_window_t> res;
+    std::unordered_map<int, xcb_window_t> res;
     for (auto window: this->get_server_window_ids()) {
         auto pid = this->get_window_pid(window);
         if (pid) res[pid] = window;
@@ -94,30 +90,41 @@ void Display::destroy_image()
 {
     this->image->destroy();
     xcb_clear_area(this->connection, false, this->window, 0, 0, 0, 0);
-    //xcb_unmap_window(this->connection, this->window);
     xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
-    //xcb_map_window(this->connection, this->window);
     this->image->load(filename);
     this->trigger_redraw();
 }
 
 void Display::trigger_redraw()
 {
-    xcb_expose_event_t *e = static_cast<xcb_expose_event_t*>(calloc(1, sizeof(xcb_expose_event_t)));
+    this->send_expose_event(0, 0);
+}
+
+auto Display::send_expose_event(int x, int y) -> void
+{
+    xcb_expose_event_t *e = static_cast<xcb_expose_event_t*>
+        (calloc(1, sizeof(xcb_expose_event_t)));
     e->response_type = XCB_EXPOSE;
     e->window = this->window;
-    xcb_send_event(this->connection, false, this->window, XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e));
+    e->x = x;
+    e->y = y;
+    xcb_send_event(this->connection, false, this->window,
+            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e));
     xcb_flush(this->connection);
 }
 
+auto Display::terminate_event_handler() -> void
+{
+    this->send_expose_event(69, 420);
+}
 
 auto Display::get_server_window_ids() -> std::vector<xcb_window_t>
 {
-    auto cookie = xcb_query_tree(this->connection, this->screen->root);
+    auto cookie = xcb_query_tree_unchecked(this->connection, this->screen->root);
     std::vector<xcb_window_t> windows;
     get_server_window_ids_helper(windows, cookie);
     return windows;
@@ -125,8 +132,9 @@ auto Display::get_server_window_ids() -> std::vector<xcb_window_t>
 
 auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void
 {
-    std::unique_ptr<xcb_query_tree_reply_t, decltype(&free)> reply(
-        xcb_query_tree_reply(this->connection, cookie, NULL), free);
+    std::unique_ptr<xcb_query_tree_reply_t, free_delete> reply {
+        xcb_query_tree_reply(this->connection, cookie, nullptr)
+    };
     int num_children = xcb_query_tree_children_length(reply.get());
 
     if (!num_children) return;
@@ -136,7 +144,7 @@ auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
 
     for (int i = 0; i < num_children; ++i) {
         windows.push_back(children[i]);
-        cookies.push_back(xcb_query_tree(this->connection, children[i]));
+        cookies.push_back(xcb_query_tree_unchecked(this->connection, children[i]));
     }
 
     for (auto new_cookie: cookies) {
@@ -144,32 +152,24 @@ auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     }
 }
 
-auto Display::get_window_pid(xcb_window_t window) -> unsigned int
+auto Display::get_window_pid(xcb_window_t window) -> int
 {
     std::string atom_str = "_NET_WM_PID";
 
-    xcb_generic_error_t *err = nullptr;
-    auto atom_cookie = xcb_intern_atom
+    auto atom_cookie = xcb_intern_atom_unchecked
         (this->connection, true, atom_str.size(), atom_str.c_str());
-    std::unique_ptr<xcb_intern_atom_reply_t, decltype(&free)> atom_reply {
-        xcb_intern_atom_reply(this->connection, atom_cookie, &err),
-        &free
+    std::unique_ptr<xcb_intern_atom_reply_t, free_delete> atom_reply {
+        xcb_intern_atom_reply(this->connection, atom_cookie, nullptr)
     };
 
     auto property_cookie = xcb_get_property_unchecked(
             this->connection, false, window, atom_reply->atom,
             XCB_ATOM_CARDINAL, 0, 1);
-    std::unique_ptr<xcb_get_property_reply_t, decltype(&free)> property_reply {
-        xcb_get_property_reply(this->connection, property_cookie, &err),
-        &free
+    std::unique_ptr<xcb_get_property_reply_t, free_delete> property_reply {
+        xcb_get_property_reply(this->connection, property_cookie, nullptr),
     };
 
-    if (err) {
-        free(err);
-        return 0;
-    }
-
-    return *reinterpret_cast<unsigned int*>(xcb_get_property_value(property_reply.get()));
+    return *reinterpret_cast<int*>(xcb_get_property_value(property_reply.get()));
 }
 
 void Display::create_window()
@@ -210,11 +210,13 @@ std::thread Display::spawn_event_handler()
 void Display::handle_events()
 {
     while (true) {
-        std::unique_ptr<xcb_generic_event_t, decltype(&free)>
-            event (xcb_wait_for_event(this->connection), free);
-        auto response = event->response_type & ~0x80;
-        switch (response) {
+        std::unique_ptr<xcb_generic_event_t, free_delete> event {
+            xcb_wait_for_event(this->connection)
+        };
+        switch (event->response_type & ~0x80) {
             case XCB_EXPOSE: {
+                auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
+                if (expose->x == 69 && expose->y == 420) return;
                 this->image->draw(this->window);
                 break;
             }

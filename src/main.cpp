@@ -15,12 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <nlohmann/json.hpp>
-#include <vips/vips8>
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
-#include <thread>
 #include <atomic>
+#include <csignal>
 
 #include "display.hpp"
 #include "logging.hpp"
@@ -40,14 +39,12 @@ void got_signal(int)
 int main(int argc, char *argv[])
 {
     // handle SIGINT and SIGTERM
-    /*
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = got_signal;
     sigfillset(&sa.sa_mask);
     sigaction(SIGINT, &sa, NULL);
     sigaction(SIGTERM, &sa, NULL);
-    */
 
     bool silent = false;
 
@@ -66,15 +63,19 @@ int main(int argc, char *argv[])
     if (VIPS_INIT(argv[0])) {
         vips_error_exit(NULL);
     }
+    vips_cache_set_max(0);
+    vips_concurrency_set(1);
 
     Logging logger;
     Display display(logger);
+    display.create_window();
 
-    std::thread t1 = display.spawn_event_handler();
+    auto t1 = display.spawn_event_handler();
 
     std::string cmd;
     json j;
     while (std::getline(std::cin, cmd)) {
+        if (quit.load()) break;
         try {
             j = json::parse(cmd);
             logger.log(j.dump());
@@ -86,10 +87,10 @@ int main(int argc, char *argv[])
         } catch (json::parse_error e) {
             continue;
         }
-        if (quit.load()) break;
     }
+    display.terminate_event_handler();
+    vips_shutdown();
     // TODO: send exit event to thread
     t1.join();
-    vips_shutdown();
     return 0;
 }

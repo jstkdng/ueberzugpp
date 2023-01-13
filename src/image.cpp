@@ -16,13 +16,12 @@
 
 #include "image.hpp"
 
-#include <filesystem>
+#include <cstdlib>
 #include <memory>
-#include <iostream>
+#include <vips/vips8>
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
 
-namespace fs = std::filesystem;
 using namespace vips;
 
 Image::Image(xcb_connection_t *connection, xcb_screen_t *screen):
@@ -44,16 +43,16 @@ void Image::create_xcb_gc(xcb_window_t &window)
 
 void Image::destroy()
 {
-    if (!this->xcb_image) return;
-    this->xcb_image = nullptr;
+    if (!this->xcb_image.get()) return;
+    this->image.reset(nullptr);
+    this->imgdata.reset(nullptr);
+    this->xcb_image.reset(nullptr);
+
     xcb_free_gc(this->connection, this->gc);
-    free(this->imgdata);
-    this->imgdata = nullptr;
 }
 
 void Image::load(std::string &filename)
 {
-    // TODO: CALCULATE THUMBNAIL WIDTH
     VImage thumbnail = VImage::thumbnail(filename.c_str(), 500);
     VImage srgb = thumbnail.colourspace(VIPS_INTERPRETATION_sRGB);
     std::vector<VImage> bands = srgb.bandsplit();
@@ -63,33 +62,28 @@ void Image::load(std::string &filename)
     bands[2] = tmp;
     // ensure fourth channel
     if (!srgb.has_alpha()) bands.push_back(bands[2]);
-    this->image = VImage::bandjoin(bands);
+    this->image = std::make_unique<VImage>(VImage::bandjoin(bands));
     this->create_xcb_image(filename);
 }
 
 void Image::create_xcb_image(std::string &filename)
 {
-    std::size_t size = fs::file_size(filename);
-    // memory xcb reads from
-    this->imgdata = this->image.write_to_memory(&size);
-    //this->imgdata.reset(tmp);
-    // memory xcb writes to
-    this->imgmemory = std::make_unique<char[]>(size);
-    this->xcb_image = xcb_image_create_native(this->connection,
-            this->image.width(),
-            this->image.height(),
+    auto size = VIPS_IMAGE_SIZEOF_IMAGE(this->image->get_image());
+    this->imgdata.reset(this->image->write_to_memory(&size));
+    this->xcb_image.reset(xcb_image_create_native(this->connection,
+            this->image->width(),
+            this->image->height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             this->screen->root_depth,
-            this->imgmemory.get(),
+            this->imgdata.get(),
             size,
-            static_cast<unsigned char*>(this->imgdata));
+            nullptr));
 }
 
 void Image::draw(xcb_window_t &window)
 {
-    if (!this->xcb_image) return;
+    if (!this->xcb_image.get()) return;
     this->create_xcb_gc(window);
-    xcb_image_put(this->connection, window, this->gc, this->xcb_image, 0, 0, 0);
-    //xcb_flush(this->connection);
+    xcb_image_put(this->connection, window, this->gc, this->xcb_image.get(), 0, 0, 0);
 }
 

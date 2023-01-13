@@ -39,14 +39,16 @@ public:
     void handle_events();
     void destroy_image();
     auto get_server_window_ids() -> std::vector<xcb_window_t>;
-    auto get_window_pid(xcb_window_t window) -> unsigned int;
+    auto get_window_pid(xcb_window_t window) -> int;
     auto get_parent_terminals() -> void;
+    auto terminate_event_handler() -> void;
 
 private:
     void draw_image();
     void trigger_redraw();
+    auto send_expose_event(int x, int y) -> void;
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
-    auto get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>;
+    auto get_pid_window_map() -> std::unordered_map<int, xcb_window_t>;
     auto get_parent_pids(int pid) -> std::vector<int>;
 
     xcb_connection_t *connection;

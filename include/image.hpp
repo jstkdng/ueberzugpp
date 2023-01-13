@@ -17,10 +17,12 @@
 #ifndef __IMAGE__
 #define __IMAGE__
 
-#include <memory>
 #include <string>
-#include <vips/vips8>
 #include <xcb/xcb_image.h>
+#include <vips/vips8>
+#include <memory>
+
+#include "free_delete.hpp"
 
 class Image
 {
@@ -36,14 +38,12 @@ private:
     void create_xcb_gc(xcb_window_t &window);
 
     xcb_gcontext_t gc;
-    xcb_image_t *xcb_image = nullptr;
     xcb_connection_t *connection;
     xcb_screen_t *screen;
 
-    std::unique_ptr<char[]> imgmemory;
-    void *imgdata;
-
-    vips::VImage image;
+    std::unique_ptr<xcb_image_t, free_delete> xcb_image;
+    std::unique_ptr<void, free_delete> imgdata;
+    std::unique_ptr<vips::VImage> image;
 };
 
 #endif
