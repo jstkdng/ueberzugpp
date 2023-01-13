@@ -23,9 +23,6 @@
 
 #include "display.hpp"
 #include "logging.hpp"
-#include "os.hpp"
-#include "process_info.hpp"
-#include "tmux.hpp"
 
 using json = nlohmann::json;
 
@@ -76,6 +73,7 @@ int main(int argc, char *argv[])
     json j;
     while (std::getline(std::cin, cmd)) {
         if (quit.load()) break;
+        if (cmd == "exit") break;
         try {
             j = json::parse(cmd);
             logger.log(j.dump());

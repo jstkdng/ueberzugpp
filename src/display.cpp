@@ -87,8 +87,8 @@ auto Display::get_pid_window_map() -> std::unordered_map<int, xcb_window_t>
 
 void Display::destroy_image()
 {
-    this->image.reset();
     xcb_clear_area(this->connection, false, this->window, 0, 0, 0, 0);
+    this->image.reset();
     xcb_flush(this->connection);
 }
 

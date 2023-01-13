@@ -16,10 +16,8 @@
 
 #include "image.hpp"
 
-#include <cstdlib>
 #include <memory>
 #include <vips/vips8>
-#include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
 
 using namespace vips;
@@ -33,6 +31,7 @@ screen(screen)
 
 Image::~Image()
 {
+    xcb_image_destroy(this->xcb_image);
     xcb_free_gc(this->connection, this->gc);
 }
 
@@ -45,15 +44,14 @@ void Image::create_xcb_gc(xcb_window_t &window)
 
 void Image::load(std::string const& filename)
 {
-    VImage thumbnail = VImage::thumbnail(filename.c_str(), 500);
-    VImage srgb = thumbnail.colourspace(VIPS_INTERPRETATION_sRGB);
-    std::vector<VImage> bands = srgb.bandsplit();
+    VImage img = VImage::thumbnail(filename.c_str(), 500).colourspace(VIPS_INTERPRETATION_sRGB);
+    std::vector<VImage> bands = img.bandsplit();
     // convert from RGB to BGR
     VImage tmp = bands[0];
     bands[0] = bands[2];
     bands[2] = tmp;
     // ensure fourth channel
-    if (!srgb.has_alpha()) bands.push_back(bands[2]);
+    if (!img.has_alpha()) bands.push_back(bands[2]);
     this->image = std::make_unique<VImage>(VImage::bandjoin(bands));
     this->create_xcb_image(filename);
 }
@@ -61,21 +59,19 @@ void Image::load(std::string const& filename)
 void Image::create_xcb_image(std::string const& filename)
 {
     auto size = VIPS_IMAGE_SIZEOF_IMAGE(this->image->get_image());
-    this->imgdata.reset(this->image->write_to_memory(&size));
-    this->xcb_image.reset(xcb_image_create_native(this->connection,
+    this->xcb_image = xcb_image_create_native(this->connection,
             this->image->width(),
             this->image->height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             this->screen->root_depth,
-            this->imgdata.get(),
+            this->image->write_to_memory(&size),
             size,
-            nullptr));
+            nullptr);
 }
 
 void Image::draw(xcb_window_t &window)
 {
-    if (!this->xcb_image.get()) return;
     this->create_xcb_gc(window);
-    xcb_image_put(this->connection, window, this->gc, this->xcb_image.get(), 0, 0, 0);
+    xcb_image_put(this->connection, window, this->gc, this->xcb_image, 0, 0, 0);
 }
 

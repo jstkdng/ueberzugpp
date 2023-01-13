@@ -40,8 +40,7 @@ private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
 
-    std::unique_ptr<xcb_image_t, free_delete> xcb_image;
-    std::unique_ptr<void, free_delete> imgdata;
+    xcb_image_t *xcb_image;
     std::unique_ptr<vips::VImage> image;
 };
 
