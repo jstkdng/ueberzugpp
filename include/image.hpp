@@ -22,8 +22,6 @@
 #include <vips/vips8>
 #include <memory>
 
-#include "free_delete.hpp"
-
 class Image
 {
 public:

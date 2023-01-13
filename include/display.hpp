@@ -49,7 +49,6 @@ private:
     auto send_expose_event(int x, int y) -> void;
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
     auto get_pid_window_map() -> std::unordered_map<int, xcb_window_t>;
-    auto get_parent_pids(int pid) -> std::vector<int>;
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;

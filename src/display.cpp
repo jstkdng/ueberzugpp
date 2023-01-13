@@ -21,8 +21,8 @@
 #include "display.hpp"
 #include "tmux.hpp"
 #include "os.hpp"
-#include "process_info.hpp"
 #include "util.hpp"
+#include "free_delete.hpp"
 
 Display::Display(Logging &logger):
 logger(logger)
@@ -54,7 +54,7 @@ auto Display::get_parent_terminals() -> void
 
     auto pid_window_map = this->get_pid_window_map();
     for (const auto& pid: client_pids) {
-        auto ppids = this->get_parent_pids(pid);
+        auto ppids = util::get_parent_pids(pid);
         std::unordered_map<int, xcb_window_t> ppid_window_id_map;
         for (const auto& ppid: ppids) {
             if (pid_window_map.contains(ppid)) {
@@ -62,17 +62,6 @@ auto Display::get_parent_terminals() -> void
             }
         }
     }
-}
-
-auto Display::get_parent_pids(int pid) -> std::vector<int>
-{
-    ProcessInfo proc(pid);
-    std::vector<int> ppids;
-    while (proc.pid != 1) {
-        ppids.push_back(proc.pid);
-        proc = ProcessInfo(proc.ppid);
-    }
-    return ppids;
 }
 
 auto Display::get_pid_window_map() -> std::unordered_map<int, xcb_window_t>
