@@ -27,15 +27,14 @@
 class Image
 {
 public:
-    Image(xcb_connection_t *connection, xcb_screen_t *screen);
+    Image(xcb_connection_t *connection, xcb_screen_t *screen, std::string const& filename);
     ~Image();
     void draw(xcb_window_t &window);
-    void load(std::string &filename);
-    void destroy();
 
 private:
-    void create_xcb_image(std::string &filename);
+    void create_xcb_image(std::string const& filename);
     void create_xcb_gc(xcb_window_t &window);
+    void load(std::string const& filename);
 
     xcb_gcontext_t gc;
     xcb_connection_t *connection;

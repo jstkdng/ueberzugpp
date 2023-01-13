@@ -24,14 +24,16 @@
 
 using namespace vips;
 
-Image::Image(xcb_connection_t *connection, xcb_screen_t *screen):
+Image::Image(xcb_connection_t *connection, xcb_screen_t *screen, std::string const& filename):
 connection(connection),
 screen(screen)
-{}
+{
+    this->load(filename);
+}
 
 Image::~Image()
 {
-    this->destroy();
+    xcb_free_gc(this->connection, this->gc);
 }
 
 void Image::create_xcb_gc(xcb_window_t &window)
@@ -41,17 +43,7 @@ void Image::create_xcb_gc(xcb_window_t &window)
     this->gc = cid;
 }
 
-void Image::destroy()
-{
-    if (!this->xcb_image.get()) return;
-    this->image.reset(nullptr);
-    this->imgdata.reset(nullptr);
-    this->xcb_image.reset(nullptr);
-
-    xcb_free_gc(this->connection, this->gc);
-}
-
-void Image::load(std::string &filename)
+void Image::load(std::string const& filename)
 {
     VImage thumbnail = VImage::thumbnail(filename.c_str(), 500);
     VImage srgb = thumbnail.colourspace(VIPS_INTERPRETATION_sRGB);
@@ -66,7 +58,7 @@ void Image::load(std::string &filename)
     this->create_xcb_image(filename);
 }
 
-void Image::create_xcb_image(std::string &filename)
+void Image::create_xcb_image(std::string const& filename)
 {
     auto size = VIPS_IMAGE_SIZEOF_IMAGE(this->image->get_image());
     this->imgdata.reset(this->image->write_to_memory(&size));

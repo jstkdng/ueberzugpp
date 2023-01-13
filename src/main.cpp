@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     program.require_subcommand(1);
 
     CLI11_PARSE(program, argc, argv);
-    
+
     if (silent) {
         freopen("/dev/null", "w", stderr);
         freopen("/dev/null", "w", stdout);
@@ -94,3 +94,4 @@ int main(int argc, char *argv[])
     t1.join();
     return 0;
 }
+

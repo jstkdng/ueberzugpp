@@ -37,7 +37,6 @@ logger(logger)
     }
     this->screen = iter.data;
     // create image
-    this->image = std::make_unique<Image>(this->connection, this->screen);
     this->get_parent_terminals();
 }
 
@@ -88,14 +87,14 @@ auto Display::get_pid_window_map() -> std::unordered_map<int, xcb_window_t>
 
 void Display::destroy_image()
 {
-    this->image->destroy();
+    this->image.reset();
     xcb_clear_area(this->connection, false, this->window, 0, 0, 0, 0);
     xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
-    this->image->load(filename);
+    this->image = std::make_unique<Image>(this->connection, this->screen, filename);
     this->trigger_redraw();
 }
 
@@ -217,7 +216,7 @@ void Display::handle_events()
             case XCB_EXPOSE: {
                 auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
                 if (expose->x == 69 && expose->y == 420) return;
-                this->image->draw(this->window);
+                if (this->image.get()) this->image->draw(this->window);
                 break;
             }
             default: {
