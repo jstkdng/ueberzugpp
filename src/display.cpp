@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <cstdlib>
 #include <memory>
-#include <chrono>
-#include <ratio>
 #include <xcb/xcb.h>
+#include <xcb/xproto.h>
 
 #include "display.hpp"
 #include "tmux.hpp"
@@ -39,6 +37,11 @@ logger(logger)
         xcb_screen_next(&iter);
     }
     this->screen = iter.data;
+
+    this->set_parent_terminals();
+    this->event_handler = std::make_unique<std::thread>([this] {
+        this->handle_events();
+    });
 }
 
 Display::~Display()
@@ -54,21 +57,27 @@ Display::~Display()
     xcb_disconnect(this->connection);
 }
 
-auto Display::get_parent_terminals() -> void
+auto Display::set_parent_terminals() -> void
 {
     std::vector<int> client_pids {os::get_pid()};
-    if (tmux::is_used()) client_pids = tmux::get_client_pids().value();
+    std::unordered_map<unsigned int, xcb_window_t> pid_window_map;
+
+    if (tmux::is_used()) {
+        client_pids = tmux::get_client_pids().value();
+        pid_window_map = this->get_pid_window_map();
+    }
 
     auto wid = os::getenv("WINDOWID").value_or("");
 
-    auto pid_window_map = this->get_pid_window_map();
-
     for (const auto& pid: client_pids) {
+        // don't run any calculations if $WINDOWID is set
+        // unless tmux is being used
         if (wid != "" && !tmux::is_used()) {
             terminals[pid] = std::make_unique<Terminal>
                 (pid, std::stoi(wid), this->connection, this->screen);
             continue;
         }
+        // calculate a map with parent's pid and window id
         auto ppids = util::get_parent_pids(pid);
         for (const auto& ppid: ppids) {
             if (pid_window_map.contains(ppid)) {
@@ -76,12 +85,6 @@ auto Display::get_parent_terminals() -> void
                     (ppid, pid_window_map[ppid], this->connection, this->screen);
             }
         }
-    }
-
-    if (!this->event_handler.get()) {
-        this->event_handler = std::make_unique<std::thread>([this] {
-            this->handle_events();
-        });
     }
 }
 
@@ -97,20 +100,19 @@ auto Display::get_pid_window_map() -> std::unordered_map<unsigned int, xcb_windo
 
 void Display::destroy_image()
 {
-    this->terminals.clear();
+    for (auto const& [key, value]: terminals) {
+        value->unmap_window();
+    }
+    //this->terminals.clear();
     this->image.reset();
     xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
-    auto t1 = std::chrono::high_resolution_clock::now();
-    this->get_parent_terminals();
-    auto t2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
-    logger.log("get_parent_terminals took...");
-    logger.log(ms_double.count());
-
+    for (auto const& [key, value]: terminals) {
+        value->map_window();
+    }
     this->image = std::make_unique<Image>(this->connection, this->screen, filename);
     this->trigger_redraw();
 }
@@ -124,14 +126,13 @@ void Display::trigger_redraw()
 
 auto Display::send_expose_event(xcb_window_t const& window, int x, int y) -> void
 {
-    xcb_expose_event_t *e = static_cast<xcb_expose_event_t*>
-        (calloc(1, sizeof(xcb_expose_event_t)));
+    auto e = std::make_unique<xcb_expose_event_t>();
     e->response_type = XCB_EXPOSE;
     e->window = window;
     e->x = x;
     e->y = y;
     xcb_send_event(this->connection, false, window,
-            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e));
+            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e.get()));
     xcb_flush(this->connection);
 }
 

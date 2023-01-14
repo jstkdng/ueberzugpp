@@ -16,7 +16,8 @@ public:
             xcb_screen_t *screen);
     ~Terminal();
 
-    auto create_window() -> void;
+    auto map_window() -> void;
+    auto unmap_window() -> void;
     auto get_window_id() -> xcb_window_t;
 
 private:

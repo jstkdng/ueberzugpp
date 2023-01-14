@@ -41,8 +41,6 @@ auto Window::create() -> void
             value_list);
 
     this->window = wid;
-    xcb_map_window(this->connection, this->window);
-    xcb_flush(this->connection);
 }
 
 auto Window::get_id() -> xcb_window_t

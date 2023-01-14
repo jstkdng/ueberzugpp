@@ -39,7 +39,7 @@ public:
     void destroy_image();
     auto get_server_window_ids() -> std::vector<xcb_window_t>;
     auto get_window_pid(xcb_window_t window) -> unsigned int;
-    auto get_parent_terminals() -> void;
+    auto set_parent_terminals() -> void;
     auto destroy() -> void;
 
 private:

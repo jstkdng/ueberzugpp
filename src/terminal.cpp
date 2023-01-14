@@ -1,6 +1,7 @@
 #include "terminal.hpp"
 
 #include <iostream>
+#include <xcb/xcb.h>
 
 Terminal::Terminal(int const& pid,
         xcb_window_t const& parent,
@@ -10,7 +11,7 @@ parent(parent),
 proc(ProcessInfo(pid)),
 connection(connection),
 screen(screen)
-{ 
+{
     this->window = std::make_unique<Window>(this->connection, this->screen, this->parent);
 }
 
@@ -21,5 +22,17 @@ auto Terminal::get_window_id() -> xcb_window_t
 {
     if (!this->window.get()) return 0;
     return this->window->get_id();
+}
+
+auto Terminal::map_window() -> void
+{
+    if (!this->window.get()) return;
+    xcb_map_window(this->connection, this->window->get_id());
+}
+
+auto Terminal::unmap_window() -> void
+{
+    if (!this->window.get()) return;
+    xcb_unmap_window(this->connection, this->window->get_id());
 }
 
