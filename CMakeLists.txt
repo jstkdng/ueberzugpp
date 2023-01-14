@@ -26,6 +26,7 @@ set(UEBERZUGPP_SOURCES
     "src/process_info.cpp"
     "src/util.cpp"
     "src/terminal.cpp"
+    "src/window.cpp"
 )
 
 add_executable(ueberzug ${UEBERZUGPP_SOURCES})

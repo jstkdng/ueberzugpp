@@ -65,9 +65,6 @@ int main(int argc, char *argv[])
 
     Logging logger;
     Display display(logger);
-    display.create_window();
-
-    auto t1 = display.spawn_event_handler();
 
     std::string cmd;
     json j;
@@ -86,10 +83,8 @@ int main(int argc, char *argv[])
             continue;
         }
     }
-    display.terminate_event_handler();
+    //display.destroy();
     vips_shutdown();
-    // TODO: send exit event to thread
-    t1.join();
     return 0;
 }
 

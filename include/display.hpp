@@ -19,11 +19,12 @@
 
 #include "logging.hpp"
 #include "image.hpp"
+#include "terminal.hpp"
 
 #include <memory>
 #include <string>
-#include <xcb/xproto.h>
 #include <thread>
+#include <xcb/xproto.h>
 #include <vector>
 #include <unordered_map>
 
@@ -33,30 +34,28 @@ public:
     Display(Logging &logger);
     ~Display();
 
-    void create_window();
     void load_image(std::string filename);
-    std::thread spawn_event_handler();
-    void handle_events();
     void destroy_image();
     auto get_server_window_ids() -> std::vector<xcb_window_t>;
-    auto get_window_pid(xcb_window_t window) -> int;
+    auto get_window_pid(xcb_window_t window) -> unsigned int;
     auto get_parent_terminals() -> void;
-    auto terminate_event_handler() -> void;
+    auto destroy() -> void;
 
 private:
     void draw_image();
     void trigger_redraw();
-    auto send_expose_event(int x, int y) -> void;
+    auto send_expose_event(xcb_window_t window, int x = 0, int y = 0) -> void;
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
-    auto get_pid_window_map() -> std::unordered_map<int, xcb_window_t>;
+    auto get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>;
+    auto handle_events() -> void;
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
-    xcb_window_t window = 0;
 
     Logging &logger;
     std::unique_ptr<Image> image;
+    std::thread event_handler;
+    std::unordered_map<int, std::unique_ptr<Terminal>> terminals;
 };
-
 
 #endif
