@@ -17,7 +17,6 @@ public:
     ~Terminal();
 
     auto create_window() -> void;
-    auto destroy_window() -> void;
     auto get_window_id() -> xcb_window_t;
 
 private:

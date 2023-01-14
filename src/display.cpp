@@ -16,7 +16,8 @@
 
 #include <cstdlib>
 #include <memory>
-#include <iostream>
+#include <chrono>
+#include <ratio>
 #include <xcb/xcb.h>
 
 #include "display.hpp"
@@ -38,30 +39,19 @@ logger(logger)
         xcb_screen_next(&iter);
     }
     this->screen = iter.data;
-    this->get_parent_terminals();
-
-    //for (auto const& [pid, terminal]: terminals) {
-    //    terminal->create_window();
-    //    std::cout << terminal->get_window_id() << std::endl;
-    //}
-
-    // spawn event handler
-    /*
-    this->event_handler = std::thread([this] {
-        this->handle_events();
-    });*/
 }
 
 Display::~Display()
 {
+    // send custom event to first window
+    if (this->terminals.size() != 0) {
+        this->send_expose_event(terminals.begin()->second->get_window_id(), 69, 420);
+    }
     // terminate event handler
+    if (this->event_handler.get()) {
+        this->event_handler->join();
+    }
     xcb_disconnect(this->connection);
-}
-
-auto Display::destroy() -> void
-{
-    this->send_expose_event(0);
-    this->event_handler.join();
 }
 
 auto Display::get_parent_terminals() -> void
@@ -69,23 +59,30 @@ auto Display::get_parent_terminals() -> void
     std::vector<int> client_pids {os::get_pid()};
     if (tmux::is_used()) client_pids = tmux::get_client_pids().value();
 
+    auto wid = os::getenv("WINDOWID").value_or("");
+
     auto pid_window_map = this->get_pid_window_map();
 
-    for (auto const& [key, value]: pid_window_map) {
-        std::cout << key << " " << value << " " << std::endl;
-    }
-    /*
     for (const auto& pid: client_pids) {
+        if (wid != "" && !tmux::is_used()) {
+            terminals[pid] = std::make_unique<Terminal>
+                (pid, std::stoi(wid), this->connection, this->screen);
+            continue;
+        }
         auto ppids = util::get_parent_pids(pid);
-        std::unordered_map<int, xcb_window_t> ppid_window_id_map;
         for (const auto& ppid: ppids) {
             if (pid_window_map.contains(ppid)) {
-                ppid_window_id_map[ppid] = pid_window_map[ppid];
-                //terminals[ppid] = std::make_unique<Terminal>
-                //    (ppid, pid_window_map[ppid], this->connection, this->screen);
+                terminals[ppid] = std::make_unique<Terminal>
+                    (ppid, pid_window_map[ppid], this->connection, this->screen);
             }
         }
-    }*/
+    }
+
+    if (!this->event_handler.get()) {
+        this->event_handler = std::make_unique<std::thread>([this] {
+            this->handle_events();
+        });
+    }
 }
 
 auto Display::get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>
@@ -100,30 +97,40 @@ auto Display::get_pid_window_map() -> std::unordered_map<unsigned int, xcb_windo
 
 void Display::destroy_image()
 {
-    //xcb_clear_area(this->connection, false, this->window, 0, 0, 0, 0);
+    this->terminals.clear();
     this->image.reset();
     xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
+    auto t1 = std::chrono::high_resolution_clock::now();
+    this->get_parent_terminals();
+    auto t2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double, std::milli> ms_double = t2 - t1;
+    logger.log("get_parent_terminals took...");
+    logger.log(ms_double.count());
+
     this->image = std::make_unique<Image>(this->connection, this->screen, filename);
     this->trigger_redraw();
 }
 
 void Display::trigger_redraw()
 {
-    //this->send_expose_event(0, 0);
+    for (auto const& [key, value]: terminals) {
+        this->send_expose_event(value->get_window_id());
+    }
 }
 
-auto Display::send_expose_event(xcb_window_t window, int x, int y) -> void
+auto Display::send_expose_event(xcb_window_t const& window, int x, int y) -> void
 {
     xcb_expose_event_t *e = static_cast<xcb_expose_event_t*>
         (calloc(1, sizeof(xcb_expose_event_t)));
     e->response_type = XCB_EXPOSE;
+    e->window = window;
     e->x = x;
     e->y = y;
-    xcb_send_event(this->connection, false, this->screen->root,
+    xcb_send_event(this->connection, false, window,
             XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e));
     xcb_flush(this->connection);
 }
@@ -149,7 +156,12 @@ auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     std::vector<xcb_query_tree_cookie_t> cookies;
 
     for (int i = 0; i < num_children; ++i) {
-        windows.push_back(children[i]);
+        bool is_complete_window = (
+            util::window_has_property(this->connection, children[i], XCB_ATOM_WM_NAME, XCB_ATOM_STRING) &&
+            util::window_has_property(this->connection, children[i], XCB_ATOM_WM_CLASS, XCB_ATOM_STRING) &&
+            util::window_has_property(this->connection, children[i], XCB_ATOM_WM_NORMAL_HINTS)
+        );
+        if (is_complete_window) windows.push_back(children[i]);
         cookies.push_back(xcb_query_tree_unchecked(this->connection, children[i]));
     }
 
@@ -164,15 +176,15 @@ auto Display::get_window_pid(xcb_window_t window) -> unsigned int
     xcb_generic_error_t *error = nullptr;
 
     auto atom_cookie = xcb_intern_atom
-        (this->connection, true, atom_str.size(), atom_str.c_str());
-    std::unique_ptr<xcb_intern_atom_reply_t, free_delete> atom_reply {
+        (this->connection, false, atom_str.size(), atom_str.c_str());
+    auto atom_reply = std::unique_ptr<xcb_intern_atom_reply_t, free_delete> {
         xcb_intern_atom_reply(this->connection, atom_cookie, &error)
     };
 
     auto property_cookie = xcb_get_property(
             this->connection, false, window, atom_reply->atom,
-            XCB_ATOM_CARDINAL, 0, 1);
-    std::unique_ptr<xcb_get_property_reply_t, free_delete> property_reply {
+            XCB_ATOM_ANY, 0, 1);
+    auto property_reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
         xcb_get_property_reply(this->connection, property_cookie, &error),
     };
 
@@ -185,13 +197,12 @@ auto Display::handle_events() -> void
         std::unique_ptr<xcb_generic_event_t, free_delete> event {
             xcb_wait_for_event(this->connection)
         };
-        std::cout << "Got Event" << std::endl;
         switch (event->response_type & ~0x80) {
             case XCB_EXPOSE: {
                 auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
-                std::cout << expose->window << std::endl;
-                if (expose->window == 69420) return;
-                //if (this->image.get()) this->image->draw(this->window);
+                if (expose->x == 69 && expose->y == 420) return;
+                if (!this->image.get()) continue;
+                this->image->draw(expose->window);
                 break;
             }
             default: {

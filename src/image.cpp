@@ -35,7 +35,7 @@ Image::~Image()
     xcb_free_gc(this->connection, this->gc);
 }
 
-void Image::create_xcb_gc(xcb_window_t &window)
+void Image::create_xcb_gc(xcb_window_t const& window)
 {
     xcb_gcontext_t cid = xcb_generate_id(this->connection);
     xcb_create_gc(this->connection, cid, window, 0, nullptr);
@@ -69,7 +69,7 @@ void Image::create_xcb_image(std::string const& filename)
             nullptr);
 }
 
-void Image::draw(xcb_window_t &window)
+void Image::draw(xcb_window_t const& window)
 {
     this->create_xcb_gc(window);
     xcb_image_put(this->connection, window, this->gc, this->xcb_image, 0, 0, 0);

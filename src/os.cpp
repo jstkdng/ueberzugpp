@@ -24,10 +24,11 @@ std::string os::exec(std::string const& cmd)
     return result;
 }
 
-std::string os::getenv(std::string const& var)
+auto os::getenv(std::string const& var)
+    -> std::optional<std::string>
 {
     auto res = std::getenv(var.c_str());
-    if (res == nullptr) return "";
+    if (res == nullptr) return {};
     return res;
 }
 

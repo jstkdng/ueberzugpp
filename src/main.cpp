@@ -68,9 +68,9 @@ int main(int argc, char *argv[])
 
     std::string cmd;
     json j;
+
     while (std::getline(std::cin, cmd)) {
         if (quit.load()) break;
-        if (cmd == "exit") break;
         try {
             j = json::parse(cmd);
             logger.log(j.dump());
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
             continue;
         }
     }
-    //display.destroy();
+
     vips_shutdown();
     return 0;
 }

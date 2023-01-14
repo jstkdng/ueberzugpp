@@ -10,22 +10,12 @@ parent(parent),
 proc(ProcessInfo(pid)),
 connection(connection),
 screen(screen)
-{
-    std::cout << "Parent: " << parent << " PID: " << pid << std::endl;
+{ 
+    this->window = std::make_unique<Window>(this->connection, this->screen, this->parent);
 }
 
 Terminal::~Terminal()
 {}
-
-auto Terminal::create_window() -> void
-{
-    this->window = std::make_unique<Window>(this->connection, this->screen, this->parent);
-}
-
-auto Terminal::destroy_window() -> void
-{
-    this->window.reset();
-}
 
 auto Terminal::get_window_id() -> xcb_window_t
 {

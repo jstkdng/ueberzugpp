@@ -24,6 +24,7 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <optional>
 #include <xcb/xproto.h>
 #include <vector>
 #include <unordered_map>
@@ -44,7 +45,7 @@ public:
 private:
     void draw_image();
     void trigger_redraw();
-    auto send_expose_event(xcb_window_t window, int x = 0, int y = 0) -> void;
+    auto send_expose_event(xcb_window_t const& window, int x = 0, int y = 0) -> void;
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
     auto get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>;
     auto handle_events() -> void;
@@ -54,7 +55,7 @@ private:
 
     Logging &logger;
     std::unique_ptr<Image> image;
-    std::thread event_handler;
+    std::unique_ptr<std::thread> event_handler;
     std::unordered_map<int, std::unique_ptr<Terminal>> terminals;
 };
 

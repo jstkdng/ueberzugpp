@@ -26,7 +26,7 @@ bool tmux::is_window_focused()
 
 std::string tmux::get_pane()
 {
-    return os::getenv("TMUX_PANE");
+    return os::getenv("TMUX_PANE").value_or("");
 }
 
 auto tmux::get_client_pids() -> std::optional<std::vector<int>>
