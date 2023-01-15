@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     if (VIPS_INIT(argv[0])) {
         vips_error_exit(NULL);
     }
-    vips_cache_set_max(0);
+    //vips_cache_set_max(0);
     vips_concurrency_set(1);
 
     Logging logger;

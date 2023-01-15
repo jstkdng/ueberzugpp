@@ -30,7 +30,7 @@ public:
     void draw(xcb_window_t const& window);
 
 private:
-    void create_xcb_image(std::string const& filename);
+    void create_xcb_image();
     void create_xcb_gc(xcb_window_t const& window);
     void load(std::string const& filename);
 
@@ -40,6 +40,7 @@ private:
 
     xcb_image_t *xcb_image;
     std::unique_ptr<vips::VImage> image;
+    unsigned long size;
 };
 
 #endif

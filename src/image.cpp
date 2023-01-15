@@ -27,6 +27,7 @@ connection(connection),
 screen(screen)
 {
     this->load(filename);
+    this->create_xcb_image();
 }
 
 Image::~Image()
@@ -42,30 +43,32 @@ void Image::create_xcb_gc(xcb_window_t const& window)
     this->gc = cid;
 }
 
+// X11 requires images to be in the BGRx format
 void Image::load(std::string const& filename)
 {
-    VImage img = VImage::thumbnail(filename.c_str(), 500).colourspace(VIPS_INTERPRETATION_sRGB);
-    std::vector<VImage> bands = img.bandsplit();
+    // at least 3 bands are required
+    auto img = VImage::thumbnail(filename.c_str(), 500).colourspace(VIPS_INTERPRETATION_sRGB);
+    // alpha channel required
+    if (!img.has_alpha()) img = img.bandjoin(255);
     // convert from RGB to BGR
-    VImage tmp = bands[0];
+    auto bands = img.bandsplit();
+    auto tmp = bands[0];
     bands[0] = bands[2];
     bands[2] = tmp;
-    // ensure fourth channel
-    if (!img.has_alpha()) bands.push_back(bands[2]);
+
     this->image = std::make_unique<VImage>(VImage::bandjoin(bands));
-    this->create_xcb_image(filename);
+    this->size = VIPS_IMAGE_SIZEOF_IMAGE(this->image->get_image());
 }
 
-void Image::create_xcb_image(std::string const& filename)
+void Image::create_xcb_image()
 {
-    auto size = VIPS_IMAGE_SIZEOF_IMAGE(this->image->get_image());
     this->xcb_image = xcb_image_create_native(this->connection,
             this->image->width(),
             this->image->height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             this->screen->root_depth,
-            this->image->write_to_memory(&size),
-            size,
+            this->image->write_to_memory(&(this->size)),
+            this->size,
             nullptr);
 }
 
