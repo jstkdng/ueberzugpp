@@ -6,6 +6,7 @@
 
 #include <xcb/xproto.h>
 #include <memory>
+#include <utility>
 
 class Terminal
 {
@@ -19,6 +20,7 @@ public:
     auto create_window(int x, int y, int max_width, int max_height) -> void;
     auto destroy_window() -> void;
     auto get_window_id() -> xcb_window_t;
+    auto get_window_dimensions() -> std::pair<int, int>;
 
 private:
     ProcessInfo proc;

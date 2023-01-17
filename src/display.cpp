@@ -77,7 +77,8 @@ auto Display::action(std::string const& cmd) -> void
         for (auto const& [key, value]: terminals) {
             value->create_window(j["x"], j["y"], j["max_width"], j["max_height"]);
         }
-        this->load_image(j["path"]);
+        auto dimensions = terminals.begin()->second->get_window_dimensions();
+        this->load_image(j["path"], dimensions.first, dimensions.second);
     } else {
         this->destroy_image();
     }
@@ -133,9 +134,10 @@ void Display::destroy_image()
     xcb_flush(this->connection);
 }
 
-void Display::load_image(std::string filename)
+void Display::load_image(std::string const& filename, int width, int height)
 {
-    this->image = std::make_unique<Image>(this->connection, this->screen, filename);
+    this->image = std::make_unique<Image>
+        (this->connection, this->screen, filename, width, height);
     this->trigger_redraw();
 }
 

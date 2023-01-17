@@ -25,7 +25,10 @@
 class Image
 {
 public:
-    Image(xcb_connection_t *connection, xcb_screen_t *screen, std::string const& filename);
+    Image(xcb_connection_t *connection,
+            xcb_screen_t *screen,
+            std::string const& filename,
+            int width, int height);
     ~Image();
     void draw(xcb_window_t const& window);
 
@@ -40,6 +43,8 @@ private:
 
     xcb_image_t *xcb_image;
     std::unique_ptr<vips::VImage> image;
+    int max_width;
+    int max_height;
     unsigned long size;
 };
 

@@ -34,11 +34,10 @@ public:
     Display(Logging &logger);
     ~Display();
 
-    void load_image(std::string filename);
+    void load_image(std::string const& filename, int width, int height);
     void destroy_image();
     auto get_server_window_ids() -> std::vector<xcb_window_t>;
     auto get_window_pid(xcb_window_t window) -> unsigned int;
-    auto set_parent_terminals() -> void;
     auto action(std::string const& cmd) -> void;
 
 private:
@@ -48,6 +47,8 @@ private:
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
     auto get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>;
     auto handle_events() -> void;
+
+    auto set_parent_terminals() -> void;
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;

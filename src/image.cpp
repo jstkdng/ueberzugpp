@@ -22,9 +22,14 @@
 
 using namespace vips;
 
-Image::Image(xcb_connection_t *connection, xcb_screen_t *screen, std::string const& filename):
+Image::Image(xcb_connection_t *connection,
+        xcb_screen_t *screen,
+        std::string const& filename,
+        int width, int height):
 connection(connection),
-screen(screen)
+screen(screen),
+max_width(width),
+max_height(height)
 {
     this->load(filename);
     this->create_xcb_image();
@@ -46,8 +51,16 @@ void Image::create_xcb_gc(xcb_window_t const& window)
 // X11 requires images to be in the BGRx format
 void Image::load(std::string const& filename)
 {
+    // check width/height before anything
+    auto check = VImage::new_from_file(filename.c_str());
+    VImage img;
     // at least 3 bands are required
-    auto img = VImage::thumbnail(filename.c_str(), 500).colourspace(VIPS_INTERPRETATION_sRGB);
+    if (check.width() < this->max_width && check.height() < this->max_height) {
+        // thumbnail not required
+        img = check.colourspace(VIPS_INTERPRETATION_sRGB);
+    } else {
+        img = VImage::thumbnail(filename.c_str(), max_width - 1).colourspace(VIPS_INTERPRETATION_sRGB);
+    }
     // alpha channel required
     if (!img.has_alpha()) img = img.bandjoin(255);
     // convert from RGB to BGR

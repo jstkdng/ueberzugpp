@@ -45,6 +45,11 @@ auto Terminal::get_terminal_size() -> void
         this->guess_font_size(this->rows, this->ypixel, this->padding_vertical);
 }
 
+auto Terminal::get_window_dimensions() -> std::pair<int, int>
+{
+    return this->window->get_dimensions();
+}
+
 auto Terminal::create_window(int x, int y, int max_width, int max_height) -> void
 {
     double w_x = x * this->font_width,
@@ -52,8 +57,7 @@ auto Terminal::create_window(int x, int y, int max_width, int max_height) -> voi
            w_width = max_width * this->font_width,
            w_height = max_height * this->font_height;
     this->window = std::make_unique<Window>
-        (this->connection, this->screen, this->parent);
-    this->window->create(w_x, w_y, w_width, w_height);
+        (this->connection, this->screen, this->parent, w_x, w_y, w_width, w_height);
 }
 
 auto Terminal::destroy_window() -> void

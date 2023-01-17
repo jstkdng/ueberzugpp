@@ -3,21 +3,17 @@
 
 #include <xcb/xcb.h>
 
-Window::Window(xcb_connection_t *connection, xcb_screen_t *screen, xcb_window_t parent):
+Window::Window(
+        xcb_connection_t *connection,
+        xcb_screen_t *screen,
+        xcb_window_t parent,
+        int x, int y, int max_width, int max_height
+):
 connection(connection),
 screen(screen),
-parent(parent)
-{
-    //this->create();
-}
-
-Window::~Window()
-{
-    xcb_unmap_window(this->connection, this->window);
-    xcb_destroy_window(this->connection, this->window);
-}
-
-auto Window::create(int x, int y, int max_width, int max_height) -> void
+parent(parent),
+width(max_width),
+height(max_height)
 {
     unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     unsigned int value_list[4] = {
@@ -42,6 +38,17 @@ auto Window::create(int x, int y, int max_width, int max_height) -> void
 
     this->window = wid;
     xcb_map_window(this->connection, this->window);
+}
+
+Window::~Window()
+{
+    xcb_unmap_window(this->connection, this->window);
+    xcb_destroy_window(this->connection, this->window);
+}
+
+auto Window::get_dimensions() -> std::pair<int, int>
+{
+    return std::make_pair(this->width, this->height);
 }
 
 auto Window::get_id() -> xcb_window_t
