@@ -57,3 +57,8 @@ target_link_libraries(ueberzug PUBLIC
     PkgConfig::XCBIMAGE
 )
 
+install(TARGETS ueberzug
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION bin)
+
+
