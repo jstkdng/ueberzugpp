@@ -61,4 +61,3 @@ install(TARGETS ueberzug
         CONFIGURATIONS Release
         RUNTIME DESTINATION bin)
 
-
