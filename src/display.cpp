@@ -14,15 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <cmath>
 #include <memory>
 #include <xcb/xcb.h>
 #include <xcb/xproto.h>
+#include <nlohmann/json.hpp>
 
 #include "display.hpp"
 #include "tmux.hpp"
 #include "os.hpp"
 #include "util.hpp"
 #include "free_delete.hpp"
+
+using json = nlohmann::json;
 
 Display::Display(Logging &logger):
 logger(logger)
@@ -37,6 +41,8 @@ logger(logger)
         xcb_screen_next(&iter);
     }
     this->screen = iter.data;
+    this->bitmap_pad = setup->bitmap_format_scanline_pad;
+    this->bitmap_unit = setup->bitmap_format_scanline_unit;
 
     this->set_parent_terminals();
     this->event_handler = std::make_unique<std::thread>([this] {
@@ -55,6 +61,26 @@ Display::~Display()
         this->event_handler->join();
     }
     xcb_disconnect(this->connection);
+}
+
+auto Display::action(std::string const& cmd) -> void
+{
+    json j;
+    try {
+        j = json::parse(cmd);
+    } catch (json::parse_error const& e) {
+        logger.log("There was an error parsing the command.");
+        return;
+    }
+    logger.log(j.dump());
+    if (j["action"] == "add") {
+        for (auto const& [key, value]: terminals) {
+            value->create_window(j["x"], j["y"], j["max_height"], j["max_width"]);
+        }
+        this->load_image(j["path"]);
+    } else {
+        this->destroy_image();
+    }
 }
 
 auto Display::set_parent_terminals() -> void
@@ -101,18 +127,14 @@ auto Display::get_pid_window_map() -> std::unordered_map<unsigned int, xcb_windo
 void Display::destroy_image()
 {
     for (auto const& [key, value]: terminals) {
-        value->unmap_window();
+        value->destroy_window();
     }
-    //this->terminals.clear();
     this->image.reset();
     xcb_flush(this->connection);
 }
 
 void Display::load_image(std::string filename)
 {
-    for (auto const& [key, value]: terminals) {
-        value->map_window();
-    }
     this->image = std::make_unique<Image>(this->connection, this->screen, filename);
     this->trigger_redraw();
 }

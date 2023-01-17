@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <nlohmann/json.hpp>
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
@@ -23,8 +22,6 @@
 
 #include "display.hpp"
 #include "logging.hpp"
-
-using json = nlohmann::json;
 
 std::atomic<bool> quit(false);
 
@@ -60,28 +57,16 @@ int main(int argc, char *argv[])
     if (VIPS_INIT(argv[0])) {
         vips_error_exit(NULL);
     }
-    //vips_cache_set_max(0);
     vips_concurrency_set(1);
 
     Logging logger;
     Display display(logger);
 
     std::string cmd;
-    json j;
 
     while (std::getline(std::cin, cmd)) {
         if (quit.load()) break;
-        try {
-            j = json::parse(cmd);
-            logger.log(j.dump());
-            if (j["action"] == "add") {
-                display.load_image(j["path"]);
-            } else if (j["action"] == "remove") {
-                display.destroy_image();  
-            }
-        } catch (json::parse_error e) {
-            continue;
-        }
+        display.action(cmd);
     }
 
     vips_shutdown();

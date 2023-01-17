@@ -8,7 +8,7 @@ connection(connection),
 screen(screen),
 parent(parent)
 {
-    this->create();
+    //this->create();
 }
 
 Window::~Window()
@@ -17,7 +17,7 @@ Window::~Window()
     xcb_destroy_window(this->connection, this->window);
 }
 
-auto Window::create() -> void
+auto Window::create(int x, int y, int max_height, int max_width) -> void
 {
     unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     unsigned int value_list[4] = {
@@ -32,8 +32,8 @@ auto Window::create() -> void
             this->screen->root_depth,
             wid,
             this->parent,
-            800, 50,
-            500, 500,
+            x, y,
+            max_width, max_height,
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             this->screen->root_visual,
@@ -41,6 +41,7 @@ auto Window::create() -> void
             value_list);
 
     this->window = wid;
+    xcb_map_window(this->connection, this->window);
 }
 
 auto Window::get_id() -> xcb_window_t

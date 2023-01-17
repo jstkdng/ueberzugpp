@@ -24,7 +24,6 @@
 #include <memory>
 #include <string>
 #include <thread>
-#include <optional>
 #include <xcb/xproto.h>
 #include <vector>
 #include <unordered_map>
@@ -40,7 +39,7 @@ public:
     auto get_server_window_ids() -> std::vector<xcb_window_t>;
     auto get_window_pid(xcb_window_t window) -> unsigned int;
     auto set_parent_terminals() -> void;
-    auto destroy() -> void;
+    auto action(std::string const& cmd) -> void;
 
 private:
     void draw_image();
@@ -52,6 +51,9 @@ private:
 
     xcb_connection_t *connection;
     xcb_screen_t *screen;
+
+    uint8_t bitmap_pad;
+    uint8_t bitmap_unit;
 
     Logging &logger;
     std::unique_ptr<Image> image;
