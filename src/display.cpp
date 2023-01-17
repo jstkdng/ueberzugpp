@@ -75,7 +75,7 @@ auto Display::action(std::string const& cmd) -> void
     logger.log(j.dump());
     if (j["action"] == "add") {
         for (auto const& [key, value]: terminals) {
-            value->create_window(j["x"], j["y"], j["max_height"], j["max_width"]);
+            value->create_window(j["x"], j["y"], j["max_width"], j["max_height"]);
         }
         this->load_image(j["path"]);
     } else {

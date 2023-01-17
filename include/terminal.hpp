@@ -16,7 +16,7 @@ public:
             xcb_screen_t *screen);
     ~Terminal();
 
-    auto create_window(int x, int y, int max_height, int max_width) -> void;
+    auto create_window(int x, int y, int max_width, int max_height) -> void;
     auto destroy_window() -> void;
     auto get_window_id() -> xcb_window_t;
 

@@ -10,7 +10,7 @@ public:
     Window(xcb_connection_t *connection, xcb_screen_t *screen, xcb_window_t parent);
     ~Window();
 
-    auto create(int x, int y, int max_height, int max_width) -> void;
+    auto create(int x, int y, int max_width, int max_height) -> void;
     auto get_id() -> xcb_window_t;
 
 private:

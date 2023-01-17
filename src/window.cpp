@@ -17,7 +17,7 @@ Window::~Window()
     xcb_destroy_window(this->connection, this->window);
 }
 
-auto Window::create(int x, int y, int max_height, int max_width) -> void
+auto Window::create(int x, int y, int max_width, int max_height) -> void
 {
     unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     unsigned int value_list[4] = {
