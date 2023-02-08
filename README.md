@@ -10,7 +10,7 @@ Drop in replacement for ueberzug written in C++
 
 ## Dependencies
 
-1. libvips
+1. opencv
 2. xcb-util-image
 3. nlohmann-json
 4. cli11
