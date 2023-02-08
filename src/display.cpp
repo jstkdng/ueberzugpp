@@ -32,17 +32,11 @@ Display::Display(Logging &logger):
 logger(logger)
 {
     // connect to server
-    int screen_num;
-    this->connection = xcb_connect(nullptr, &screen_num);
+    this->connection = xcb_connect(nullptr, nullptr);
     // set screen
     const xcb_setup_t *setup = xcb_get_setup(this->connection);
     xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
-    for (int i = 0; i < screen_num; ++i) {
-        xcb_screen_next(&iter);
-    }
     this->screen = iter.data;
-    this->bitmap_pad = setup->bitmap_format_scanline_pad;
-    this->bitmap_unit = setup->bitmap_format_scanline_unit;
 
     this->set_parent_terminals();
     this->event_handler = std::make_unique<std::thread>([this] {
@@ -60,6 +54,7 @@ Display::~Display()
     if (this->event_handler.get()) {
         this->event_handler->join();
     }
+
     xcb_disconnect(this->connection);
 }
 
@@ -198,19 +193,18 @@ auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
 auto Display::get_window_pid(xcb_window_t window) -> unsigned int
 {
     std::string atom_str = "_NET_WM_PID";
-    xcb_generic_error_t *error = nullptr;
 
-    auto atom_cookie = xcb_intern_atom
+    auto atom_cookie = xcb_intern_atom_unchecked
         (this->connection, false, atom_str.size(), atom_str.c_str());
     auto atom_reply = std::unique_ptr<xcb_intern_atom_reply_t, free_delete> {
-        xcb_intern_atom_reply(this->connection, atom_cookie, &error)
+        xcb_intern_atom_reply(this->connection, atom_cookie, nullptr)
     };
 
-    auto property_cookie = xcb_get_property(
+    auto property_cookie = xcb_get_property_unchecked(
             this->connection, false, window, atom_reply->atom,
             XCB_ATOM_ANY, 0, 1);
     auto property_reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
-        xcb_get_property_reply(this->connection, property_cookie, &error),
+        xcb_get_property_reply(this->connection, property_cookie, nullptr),
     };
 
     return *reinterpret_cast<unsigned int*>(xcb_get_property_value(property_reply.get()));
