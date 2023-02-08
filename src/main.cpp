@@ -54,11 +54,6 @@ int main(int argc, char *argv[])
         freopen("/dev/null", "w", stdout);
     }
 
-    if (VIPS_INIT(argv[0])) {
-        vips_error_exit(NULL);
-    }
-    vips_concurrency_set(1);
-
     Logging logger;
     Display display(logger);
 
@@ -69,7 +64,6 @@ int main(int argc, char *argv[])
         display.action(cmd);
     }
 
-    vips_shutdown();
     return 0;
 }
 
