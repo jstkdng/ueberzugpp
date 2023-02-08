@@ -19,7 +19,7 @@
 
 #include <string>
 #include <xcb/xcb_image.h>
-#include <vips/vips8>
+#include <opencv2/core.hpp>
 #include <memory>
 
 class Image
@@ -42,9 +42,12 @@ private:
     xcb_screen_t *screen;
 
     xcb_image_t *xcb_image;
-    std::unique_ptr<vips::VImage> image;
-    int max_width;
-    int max_height;
+    cv::Mat image;
+
+    unsigned long width;
+    unsigned long height;
+    unsigned long max_width;
+    unsigned long max_height;
     unsigned long size;
 };
 

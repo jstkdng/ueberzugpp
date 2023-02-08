@@ -73,7 +73,11 @@ auto Display::action(std::string const& cmd) -> void
             value->create_window(j["x"], j["y"], j["max_width"], j["max_height"]);
         }
         auto dimensions = terminals.begin()->second->get_window_dimensions();
-        this->load_image(j["path"], dimensions.first, dimensions.second);
+        try {
+            this->load_image(j["path"], dimensions.first, dimensions.second);
+        } catch (const std::runtime_error& error) {
+            logger.log(error.what());
+        }
     } else {
         this->destroy_image();
     }

@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.14)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
 
 project(ueberzugpp LANGUAGES CXX)
 
@@ -28,8 +28,8 @@ find_package(CLI11 REQUIRED)
 find_package(X11 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
 
-pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
 
 set(UEBERZUGPP_SOURCES
@@ -53,8 +53,10 @@ target_link_libraries(ueberzug PUBLIC
     CLI11::CLI11
     X11::xcb
     Threads::Threads
-    PkgConfig::VIPS
     PkgConfig::XCBIMAGE
+    opencv_core
+    opencv_imgproc
+    opencv_imgcodecs
 )
 
 install(TARGETS ueberzug
