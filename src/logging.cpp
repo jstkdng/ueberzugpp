@@ -15,20 +15,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "logging.hpp"
+#include "os.hpp"
 
-#include <iostream>
+#include <fstream>
 #include <filesystem>
-
-#include <unistd.h>
 
 namespace fs = std::filesystem;
 
 Logging::Logging()
 {
-    //std::stringstream ss;
-    //ss << "ueberzug_" << std::to_string(getpid()) << ".txt";
-    fs::path tmp = fs::temp_directory_path() / "ueberzug.log";
-    this->logfile = std::ofstream(tmp, std::ios_base::app);
+    std::string log_tmp = "ueberzug_" + os::getenv("USER").value() + ".log";
+    fs::path log_path = fs::temp_directory_path() / log_tmp;
+    this->logfile = std::ofstream(log_path, std::ios_base::app);
 }
 
 Logging::~Logging()

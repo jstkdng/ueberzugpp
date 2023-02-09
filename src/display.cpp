@@ -17,7 +17,6 @@
 #include <cmath>
 #include <memory>
 #include <xcb/xcb.h>
-#include <xcb/xproto.h>
 #include <nlohmann/json.hpp>
 
 #include "display.hpp"
@@ -33,10 +32,11 @@ logger(logger)
 {
     // connect to server
     this->connection = xcb_connect(nullptr, nullptr);
+    if (xcb_connection_has_error(this->connection)) {
+        throw std::runtime_error("CANNOT CONNECT TO X11");
+    }
     // set screen
-    const xcb_setup_t *setup = xcb_get_setup(this->connection);
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
-    this->screen = iter.data;
+    this->screen = xcb_setup_roots_iterator(xcb_get_setup(this->connection)).data;
 
     this->set_parent_terminals();
     this->event_handler = std::make_unique<std::thread>([this] {
@@ -69,7 +69,7 @@ auto Display::action(std::string const& cmd) -> void
     }
     logger.log(j.dump());
     if (j["action"] == "add") {
-        for (auto const& [key, value]: terminals) {
+        for (const auto& [key, value]: terminals) {
             value->create_window(j["x"], j["y"], j["max_width"], j["max_height"]);
         }
         auto dimensions = terminals.begin()->second->get_window_dimensions();
@@ -88,28 +88,26 @@ auto Display::set_parent_terminals() -> void
     std::vector<int> client_pids {os::get_pid()};
     std::unordered_map<unsigned int, xcb_window_t> pid_window_map;
 
+    auto wid = os::getenv("WINDOWID");
+
     if (tmux::is_used()) {
         client_pids = tmux::get_client_pids().value();
         pid_window_map = this->get_pid_window_map();
+    } else if (wid.has_value()) {
+        // if WID exists prevent doing any calculations
+        int pid = client_pids.front();
+        this->terminals[pid] = std::make_unique<Terminal>
+            (pid, std::stoi(wid.value()), this->connection, this->screen);
+        return;
     }
 
-    auto wid = os::getenv("WINDOWID").value_or("");
-
     for (const auto& pid: client_pids) {
-        // don't run any calculations if $WINDOWID is set
-        // unless tmux is being used
-        if (wid != "" && !tmux::is_used()) {
-            terminals[pid] = std::make_unique<Terminal>
-                (pid, std::stoi(wid), this->connection, this->screen);
-            continue;
-        }
         // calculate a map with parent's pid and window id
         auto ppids = util::get_parent_pids(pid);
         for (const auto& ppid: ppids) {
-            if (pid_window_map.contains(ppid)) {
-                terminals[ppid] = std::make_unique<Terminal>
-                    (ppid, pid_window_map[ppid], this->connection, this->screen);
-            }
+            if (!pid_window_map.contains(ppid)) continue;
+            this->terminals[ppid] = std::make_unique<Terminal>
+                (ppid, pid_window_map[ppid], this->connection, this->screen);
         }
     }
 }
@@ -180,13 +178,14 @@ auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     std::vector<xcb_query_tree_cookie_t> cookies;
 
     for (int i = 0; i < num_children; ++i) {
+        auto child = children[i];
         bool is_complete_window = (
-            util::window_has_property(this->connection, children[i], XCB_ATOM_WM_NAME, XCB_ATOM_STRING) &&
-            util::window_has_property(this->connection, children[i], XCB_ATOM_WM_CLASS, XCB_ATOM_STRING) &&
-            util::window_has_property(this->connection, children[i], XCB_ATOM_WM_NORMAL_HINTS)
+            util::window_has_property(this->connection, child, XCB_ATOM_WM_NAME, XCB_ATOM_STRING) &&
+            util::window_has_property(this->connection, child, XCB_ATOM_WM_CLASS, XCB_ATOM_STRING) &&
+            util::window_has_property(this->connection, child, XCB_ATOM_WM_NORMAL_HINTS)
         );
-        if (is_complete_window) windows.push_back(children[i]);
-        cookies.push_back(xcb_query_tree_unchecked(this->connection, children[i]));
+        if (is_complete_window) windows.push_back(child);
+        cookies.push_back(xcb_query_tree_unchecked(this->connection, child));
     }
 
     for (auto new_cookie: cookies) {

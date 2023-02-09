@@ -53,9 +53,6 @@ private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
 
-    uint8_t bitmap_pad;
-    uint8_t bitmap_unit;
-
     Logging &logger;
     std::unique_ptr<Image> image;
     std::unique_ptr<std::thread> event_handler;
