@@ -21,6 +21,7 @@
 #include <xcb/xcb.h>
 #include <memory>
 #include <xcb/xproto.h>
+#include <iostream>
 
 auto util::str_split(std::string const& str, std::string const& delim) -> std::vector<std::string>
 {
@@ -38,13 +39,15 @@ auto util::str_split(std::string const& str, std::string const& delim) -> std::v
     return res;
 }
 
-auto util::get_parent_pids(int const& pid) -> std::vector<int>
+auto util::get_parent_pids(const ProcessInfo& proc) -> std::vector<ProcessInfo>
 {
-    std::vector<int> res;
-    ProcessInfo proc(pid);
-    while (proc.ppid != 1) {
-        res.push_back(proc.ppid);
-        proc = ProcessInfo(proc.ppid);
+    std::vector<ProcessInfo> res;
+    ProcessInfo runner(proc.pid);
+    while (runner.pid != 1) {
+        auto pproc = ProcessInfo(runner.ppid);
+        if (pproc.tty_nr == 0) pproc.pty_path = runner.pty_path;
+        res.push_back(runner);
+        runner = pproc;
     }
     return res;
 }

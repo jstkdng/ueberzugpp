@@ -20,11 +20,12 @@
 #include <string>
 #include <vector>
 #include <xcb/xproto.h>
+#include "process_info.hpp"
 
 namespace util
 {
     auto str_split(std::string const& str, std::string const& delim) -> std::vector<std::string>;
-    auto get_parent_pids(int const& pid) -> std::vector<int>;
+    auto get_parent_pids(const ProcessInfo& proc) -> std::vector<ProcessInfo>;
     auto window_has_property(
             xcb_connection_t *connection,
             xcb_window_t window,

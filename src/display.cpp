@@ -39,9 +39,6 @@ logger(logger)
     this->screen = xcb_setup_roots_iterator(xcb_get_setup(this->connection)).data;
 
     this->set_parent_terminals();
-    this->event_handler = std::make_unique<std::thread>([this] {
-        this->handle_events();
-    });
 }
 
 Display::~Display()
@@ -69,8 +66,14 @@ auto Display::action(std::string const& cmd) -> void
     }
     logger.log(j.dump());
     if (j["action"] == "add") {
-        for (const auto& [key, value]: terminals) {
+        for (const auto& [key, value]: this->terminals) {
             value->create_window(j["x"], j["y"], j["max_width"], j["max_height"]);
+        }
+        // spawn event handler once windows exist
+        if (!this->event_handler.get()) {
+            this->event_handler = std::make_unique<std::thread>([this] {
+                this->handle_events();
+            });
         }
         auto dimensions = terminals.begin()->second->get_window_dimensions();
         try {
@@ -85,7 +88,7 @@ auto Display::action(std::string const& cmd) -> void
 
 auto Display::set_parent_terminals() -> void
 {
-    std::vector<int> client_pids {os::get_pid()};
+    std::vector<ProcessInfo> client_pids {ProcessInfo(os::get_pid())};
     std::unordered_map<unsigned int, xcb_window_t> pid_window_map;
 
     auto wid = os::getenv("WINDOWID");
@@ -95,19 +98,20 @@ auto Display::set_parent_terminals() -> void
         pid_window_map = this->get_pid_window_map();
     } else if (wid.has_value()) {
         // if WID exists prevent doing any calculations
-        int pid = client_pids.front();
-        this->terminals[pid] = std::make_unique<Terminal>
-            (pid, std::stoi(wid.value()), this->connection, this->screen);
+        auto proc = client_pids.front();
+        this->terminals[proc.pid] = std::make_unique<Terminal>
+            (proc, std::stoi(wid.value()), this->connection, this->screen);
         return;
     }
 
+    std::cout << client_pids.size() << std::endl;
     for (const auto& pid: client_pids) {
         // calculate a map with parent's pid and window id
         auto ppids = util::get_parent_pids(pid);
         for (const auto& ppid: ppids) {
-            if (!pid_window_map.contains(ppid)) continue;
-            this->terminals[ppid] = std::make_unique<Terminal>
-                (ppid, pid_window_map[ppid], this->connection, this->screen);
+            if (!pid_window_map.contains(ppid.pid)) continue;
+            this->terminals[ppid.pid] = std::make_unique<Terminal>
+                (ppid, pid_window_map[ppid.pid], this->connection, this->screen);
         }
     }
 }

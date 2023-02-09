@@ -16,19 +16,19 @@
 
 #include "terminal.hpp"
 
-#include <iostream>
 #include <xcb/xcb.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <cmath>
+#include <iostream>
 
-Terminal::Terminal(int const& pid,
+Terminal::Terminal(ProcessInfo pid,
         xcb_window_t const& parent,
         xcb_connection_t *connection,
         xcb_screen_t *screen):
 parent(parent),
-proc(ProcessInfo(pid)),
+proc(pid),
 connection(connection),
 screen(screen)
 {

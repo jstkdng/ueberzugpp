@@ -16,11 +16,13 @@
 
 #include "process_info.hpp"
 #include "util.hpp"
+#include "tmux.hpp"
+#include "os.hpp"
 
 #include <fstream>
 #include <string>
-
-const unsigned int MINOR_DEVICE_NUMBER_MASK = 0b11111111111100000000000011111111;
+#include <iostream>
+#include <sys/sysmacros.h>
 
 ProcessInfo::ProcessInfo(int pid):
 pid(pid)
@@ -40,9 +42,9 @@ pid(pid)
     this->state = proc[0][0];
     this->ppid = std::stoi(proc[1]);
     this->tty_nr = std::stoi(proc[4]);
-    this->minor_dev = this->tty_nr & MINOR_DEVICE_NUMBER_MASK;
+    this->minor_dev = minor(this->tty_nr);
     this->pty_path = "/dev/pts/" + std::to_string(this->minor_dev);
-
+    //std::cout << this->executable << " " << this->pid << " " << this->ppid << " " << this->pty_path << std::endl;
     is.close();
 }
 

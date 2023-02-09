@@ -27,7 +27,7 @@
 class Terminal
 {
 public:
-    Terminal(int const& pid,
+    Terminal(ProcessInfo pid,
             xcb_window_t const& parent,
             xcb_connection_t *connection,
             xcb_screen_t *screen);
