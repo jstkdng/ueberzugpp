@@ -21,7 +21,6 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <cmath>
-#include <iostream>
 
 Terminal::Terminal(ProcessInfo pid,
         xcb_window_t const& parent,

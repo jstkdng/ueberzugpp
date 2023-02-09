@@ -17,7 +17,6 @@
 #ifndef __DISPLAY__
 #define __DISPLAY__
 
-#include "logging.hpp"
 #include "image.hpp"
 #include "terminal.hpp"
 
@@ -31,7 +30,7 @@
 class Display
 {
 public:
-    Display(Logging &logger);
+    Display();
     ~Display();
 
     void load_image(std::string const& filename, int width, int height);
@@ -53,7 +52,6 @@ private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
 
-    Logging &logger;
     std::unique_ptr<Image> image;
     std::unique_ptr<std::thread> event_handler;
     std::unordered_map<int, std::unique_ptr<Terminal>> terminals;

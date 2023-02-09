@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "image.hpp"
+#include "logging.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -31,6 +32,7 @@ screen(screen),
 max_width(width),
 max_height(height)
 {
+    logger << "Loading file " << filename << std::endl;
     this->load(filename);
     this->create_xcb_image();
 }

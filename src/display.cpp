@@ -24,11 +24,11 @@
 #include "os.hpp"
 #include "util.hpp"
 #include "free_delete.hpp"
+#include "logging.hpp"
 
 using json = nlohmann::json;
 
-Display::Display(Logging &logger):
-logger(logger)
+Display::Display()
 {
     // connect to server
     this->connection = xcb_connect(nullptr, nullptr);
@@ -61,10 +61,10 @@ auto Display::action(std::string const& cmd) -> void
     try {
         j = json::parse(cmd);
     } catch (json::parse_error const& e) {
-        logger.log("There was an error parsing the command.");
+        logger << "There was an error parsing the command." << std::endl;
         return;
     }
-    logger.log(j.dump());
+    logger << "Command received: " << j.dump() << std::endl;
     if (j["action"] == "add") {
         for (const auto& [key, value]: this->terminals) {
             value->create_window(j["x"], j["y"], j["max_width"], j["max_height"]);
@@ -79,7 +79,7 @@ auto Display::action(std::string const& cmd) -> void
         try {
             this->load_image(j["path"], dimensions.first, dimensions.second);
         } catch (const std::runtime_error& error) {
-            logger.log(error.what());
+            logger << error.what() << std::endl;;
         }
     } else {
         this->destroy_image();
@@ -104,7 +104,6 @@ auto Display::set_parent_terminals() -> void
         return;
     }
 
-    std::cout << client_pids.size() << std::endl;
     for (const auto& pid: client_pids) {
         // calculate a map with parent's pid and window id
         auto ppids = util::get_parent_pids(pid);

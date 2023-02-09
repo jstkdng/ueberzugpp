@@ -54,8 +54,7 @@ int main(int argc, char *argv[])
         freopen("/dev/null", "w", stdout);
     }
 
-    Logging logger;
-    Display display(logger);
+    Display display;
 
     std::string cmd;
 

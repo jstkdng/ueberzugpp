@@ -22,22 +22,31 @@
 
 class Logging
 {
+private:
+    std::ofstream logfile;
+    using endl_type = std::ostream&(std::ostream&);
+
 public:
     Logging();
     ~Logging();
 
-    template <class T>
-    void log(T t);
+    //Overload for std::endl only:
+    Logging& operator<<(endl_type endl)
+    {
+        this->logfile << endl;
+        std::cout << endl;
+        return *this;
+    }
 
-private:
-    std::ofstream logfile;
+    template <class T>
+    Logging& operator<<(const T& t)
+    {
+        this->logfile << t;
+        std::cout << t;
+        return *this;
+    }
 };
 
-template <class T>
-void Logging::log(T t)
-{
-    std::cout << t << std::endl;
-    this->logfile << t << std::endl;
-}
+static Logging logger;
 
 #endif
