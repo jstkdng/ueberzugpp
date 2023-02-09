@@ -18,7 +18,7 @@ The documentation is deferred at this point.
     ```
 
 2. You can then feed Ueberzug with json objects to display an image or make it disappear.
-  - json object to display the image / replace the image:
+  - json object to display the image:
   
     ```json
     {"action":"add","identifier":"preview","max_height":0,"max_width":0,"path":"/path/image.ext","x":0,"y":0}
@@ -29,7 +29,6 @@ The documentation is deferred at this point.
   - Don't display the image anymore:
   
     ```json
-    {"action":"anything_else"}
     {"action":"remove","identifier":"preview"}
     ```
 
