@@ -25,24 +25,25 @@ class Logging
 private:
     std::ofstream logfile;
     using endl_type = std::ostream&(std::ostream&);
+    FILE *fp = nullptr;
 
 public:
     Logging();
     ~Logging();
 
+    void set_silent(bool silent);
+
     //Overload for std::endl only:
     Logging& operator<<(endl_type endl)
     {
-        this->logfile << endl;
-        std::cout << endl;
+        logfile << endl;
         return *this;
     }
 
     template <class T>
     Logging& operator<<(const T& t)
     {
-        this->logfile << t;
-        std::cout << t;
+        logfile << t;
         return *this;
     }
 };

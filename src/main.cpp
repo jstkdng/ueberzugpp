@@ -39,11 +39,10 @@ int main(int argc, char *argv[])
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = got_signal;
     sigfillset(&sa.sa_mask);
-    sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, nullptr);
+    sigaction(SIGTERM, &sa, nullptr);
 
     bool silent = false;
-
     CLI::App program("Display images in the terminal", "ueberzug");
     CLI::App *layer_command = program.add_subcommand("layer", "Display images");
     layer_command->add_flag("-s,--silent", silent, "print stderr to /dev/null");
@@ -51,13 +50,10 @@ int main(int argc, char *argv[])
 
     CLI11_PARSE(program, argc, argv);
 
-    if (silent) {
-        freopen("/dev/null", "w", stderr);
-        freopen("/dev/null", "w", stdout);
-    }
+    logger.set_silent(silent);
 
     if (VIPS_INIT(argv[0])) {
-        vips_error_exit(NULL);
+        vips_error_exit(nullptr);
     }
     vips_concurrency_set(1);
 
