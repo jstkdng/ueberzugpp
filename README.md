@@ -32,7 +32,7 @@ The documentation is deferred at this point.
     {"action":"remove","identifier":"preview"}
     ```
 
-3. This project supports more filetypes by using [opencv](https://docs.opencv.org/4.7.0/d4/da8/group__imgcodecs.html#ga288b8b3da0892bd651fce07b3bbd3a56). But not SVGs, you have to convert and cache them first.
+3. This project supports more filetypes by trying to use opencv if supported and libvips as a fallback.
 
 Until further documentation is available, it is easy to find examples of scripts for the Ueberzug using the json parser around the web.
 
@@ -41,10 +41,11 @@ Until further documentation is available, it is easy to find examples of scripts
 ## Dependencies
 
 1. opencv
-2. xcb-util-image
-3. nlohmann-json
-4. cli11
-5. ninja/make
+2. libvips
+3. xcb-util-image
+4. nlohmann-json
+5. cli11
+6. ninja/make
 
 ## Build instructions
 
