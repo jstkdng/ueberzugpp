@@ -64,7 +64,7 @@ auto Display::action(std::string const& cmd) -> void
         logger << "There was an error parsing the command." << std::endl;
         return;
     }
-    logger << "Command received: " << j.dump() << std::endl;
+    logger << "=== Command received:\n" << j.dump() << std::endl;
     if (j["action"] == "add") {
         for (const auto& [key, value]: this->terminals) {
             value->create_window(j["x"], j["y"], j["max_width"], j["max_height"]);
@@ -136,7 +136,7 @@ void Display::destroy_image()
 
 void Display::load_image(std::string const& filename, int width, int height)
 {
-    this->image = std::make_unique<Image>
+    this->image = std::make_unique<ImageL>
         (this->connection, this->screen, filename, width, height);
     this->trigger_redraw();
 }

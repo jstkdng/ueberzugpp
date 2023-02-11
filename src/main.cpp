@@ -19,6 +19,8 @@
 #include <CLI/Config.hpp>
 #include <atomic>
 #include <csignal>
+#include <cstring>
+#include <vips/vips8>
 
 #include "display.hpp"
 #include "logging.hpp"
@@ -54,15 +56,20 @@ int main(int argc, char *argv[])
         freopen("/dev/null", "w", stdout);
     }
 
+    if (VIPS_INIT(argv[0])) {
+        vips_error_exit(NULL);
+    }
+    vips_concurrency_set(1);
+
     Display display;
 
     std::string cmd;
-
     while (std::getline(std::cin, cmd)) {
         if (quit.load()) break;
         display.action(cmd);
     }
 
+    vips_shutdown();
     return 0;
 }
 

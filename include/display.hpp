@@ -17,7 +17,7 @@
 #ifndef __DISPLAY__
 #define __DISPLAY__
 
-#include "image.hpp"
+#include "imagel.hpp"
 #include "terminal.hpp"
 
 #include <memory>
@@ -52,7 +52,7 @@ private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
 
-    std::unique_ptr<Image> image;
+    std::unique_ptr<ImageL> image;
     std::unique_ptr<std::thread> event_handler;
     std::unordered_map<int, std::unique_ptr<Terminal>> terminals;
 };
