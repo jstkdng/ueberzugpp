@@ -20,7 +20,6 @@
 #include "os.hpp"
 
 #include <nlohmann/json.hpp>
-#include <iostream>
 
 using json = nlohmann::json;
 
@@ -50,6 +49,10 @@ auto Application::execute(const std::string& cmd) -> void
         int y = static_cast<int>(j["y"]) * terminal.font_height;
         canvas->create(x, y, max_width, max_height);
         image = Image::load(j["path"], max_width, max_height);
+        if (!image) {
+            logger << "Unable to load image file." << std::endl;
+            return;
+        }
         canvas->draw(*image);
     } else if (j["action"] == "remove") {
         canvas->clear();

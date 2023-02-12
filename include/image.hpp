@@ -31,6 +31,9 @@ public:
     virtual auto height() const -> int = 0;
     virtual auto size() const -> unsigned long = 0;
     virtual auto data() const -> const unsigned char* = 0;
+
+    virtual auto framerate() const -> int { return -1; };
+    virtual auto next_frame() -> void {};
 };
 
 #endif

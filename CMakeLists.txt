@@ -28,7 +28,7 @@ find_package(CLI11 REQUIRED)
 find_package(X11 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
+find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
@@ -68,6 +68,7 @@ target_link_libraries(ueberzug PUBLIC
     opencv_core
     opencv_imgproc
     opencv_imgcodecs
+    opencv_videoio
 )
 
 install(TARGETS ueberzug

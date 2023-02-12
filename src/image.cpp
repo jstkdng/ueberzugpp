@@ -21,11 +21,15 @@
 
 #include <opencv2/imgcodecs.hpp>
 #include <vips/vips.h>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 auto Image::load(const std::string& filename, int max_width, int max_height)
     -> std::unique_ptr<Image>
 {
-    if (cv::haveImageReader(filename)) {
+    fs::path file = filename;
+    if (cv::haveImageReader(filename) || file.extension() == "gif") {
         logger << "=== Loading image with opencv" << std::endl;
         return std::make_unique<OpencvImage>(filename, max_width, max_height);
     }
@@ -34,5 +38,5 @@ auto Image::load(const std::string& filename, int max_width, int max_height)
         logger << "=== Loading image with libvips" << std::endl;
         return std::make_unique<LibvipsImage>(filename, max_width, max_height);
     }
-    throw std::runtime_error("Image format unsupported.");
+    return nullptr;
 }

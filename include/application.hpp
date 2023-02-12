@@ -35,8 +35,8 @@ public:
 private:
     Terminal terminal;
 
-    std::unique_ptr<Image> image;
-    std::unique_ptr<Canvas> canvas;
+    std::unique_ptr<Image> image = nullptr;
+    std::unique_ptr<Canvas> canvas = nullptr;
 };
 
 #endif

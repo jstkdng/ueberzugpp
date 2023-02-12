@@ -21,6 +21,7 @@
 
 #include <string>
 #include <opencv2/core.hpp>
+#include <opencv2/videoio.hpp>
 
 class OpencvImage : public Image
 {
@@ -32,8 +33,12 @@ public:
     auto size() const -> unsigned long override;
     auto data() const -> const unsigned char* override;
 
+    auto framerate() const -> int override;
+    auto next_frame() -> void override;
+
 private:
     cv::Mat image;
+    cv::VideoCapture video;
 
     std::string filename;
 
@@ -42,6 +47,8 @@ private:
     unsigned long _size;
     int max_width;
     int max_height;
+
+    auto process_image() -> void;
 };
 
 #endif

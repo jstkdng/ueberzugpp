@@ -42,7 +42,7 @@ X11Canvas::~X11Canvas()
     xcb_disconnect(connection);
 }
 
-auto X11Canvas::draw(const Image& image) -> void
+auto X11Canvas::draw(Image& image) -> void
 {
     for (const auto& window: windows) {
         window->draw(image);

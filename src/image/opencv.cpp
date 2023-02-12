@@ -19,6 +19,9 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <cmath>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 OpencvImage::OpencvImage(const std::string& filename,
         int max_width, int max_height):
@@ -26,7 +29,53 @@ filename(filename),
 max_width(max_width),
 max_height(max_height)
 {
-    image = cv::imread(filename, cv::IMREAD_COLOR);
+    fs::path path = filename;
+    if (path.extension() == "gif") {
+        video = cv::VideoCapture(filename, cv::CAP_FFMPEG);
+        video.read(image);
+    } else {
+        image = cv::imread(filename, cv::IMREAD_COLOR);
+    }
+    process_image();
+}
+
+auto OpencvImage::width() const-> int
+{
+    return _width;
+}
+
+auto OpencvImage::height() const -> int
+{
+    return _height;
+}
+
+auto OpencvImage::size() const -> unsigned long
+{
+    return _size;
+}
+
+auto OpencvImage::data() const -> const unsigned char*
+{
+    return image.ptr();
+}
+
+auto OpencvImage::framerate() const -> int
+{
+    if (video.isOpened()) return video.get(cv::CAP_PROP_FPS);
+    return -1;
+}
+
+auto OpencvImage::next_frame() -> void
+{
+    if (!video.read(image)) {
+        video.set(cv::CAP_PROP_POS_FRAMES, 0);
+        video.read(image);
+    }
+    process_image();
+}
+
+auto OpencvImage::process_image() -> void
+{
     _width = image.cols;
     _height = image.rows;
 
@@ -65,24 +114,4 @@ max_height(max_height)
         cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
     }
     _size = image.total() * image.elemSize();
-}
-
-auto OpencvImage::width() const-> int
-{
-    return _width;
-}
-
-auto OpencvImage::height() const -> int
-{
-    return _height;
-}
-
-auto OpencvImage::size() const -> unsigned long
-{
-    return _size;
-}
-
-auto OpencvImage::data() const -> const unsigned char*
-{
-    return image.ptr();
 }

@@ -33,7 +33,7 @@ public:
     ~X11Canvas();
 
     auto create(int x, int y, int max_width, int max_height) -> void override;
-    auto draw(const Image& image) -> void override;
+    auto draw(Image& image) -> void override;
     auto clear() -> void override;
 
 private:

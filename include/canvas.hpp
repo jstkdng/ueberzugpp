@@ -29,7 +29,7 @@ public:
     virtual ~Canvas() {}
 
     virtual auto create(int x, int y, int max_width, int max_height) -> void = 0;
-    virtual auto draw(const Image& image) -> void = 0;
+    virtual auto draw(Image& image) -> void = 0;
     virtual auto clear() -> void = 0;
 };
 

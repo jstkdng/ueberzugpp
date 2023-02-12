@@ -41,8 +41,9 @@ SixelCanvas::~SixelCanvas()
 auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 {}
 
-auto SixelCanvas::draw(const Image& image) -> void
+auto SixelCanvas::draw(Image& image) -> void
 {
+    image.next_frame();
     sixel_encoder_encode_bytes(encoder,
             const_cast<unsigned char*>(image.data()),
             image.width(),
