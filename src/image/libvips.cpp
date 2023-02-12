@@ -19,7 +19,7 @@
 using namespace vips;
 
 LibvipsImage::LibvipsImage(const std::string& filename,
-        const int& max_width, const int& max_height):
+        int max_width, int max_height):
 filename(filename),
 max_width(max_width),
 max_height(max_height)

@@ -26,8 +26,7 @@
 class LibvipsImage : public Image
 {
 public:
-    LibvipsImage(const std::string &filename,
-            const int& max_width, const int& max_height);
+    LibvipsImage(const std::string &filename, int max_width, int max_height);
 
     auto width() const -> int override;
     auto height() const -> int override;

@@ -25,8 +25,7 @@
 class OpencvImage : public Image
 {
 public:
-    OpencvImage(const std::string& filename,
-            const int& max_width, const int& max_height);
+    OpencvImage(const std::string& filename, int max_width, int max_height);
 
     auto width() const -> int override;
     auto height() const -> int override;

@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "window.hpp"
+#include "logging.hpp"
 
 #include <xcb/xcb.h>
 
@@ -74,7 +75,7 @@ auto Window::draw(const Image& image) -> void
             image.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
-            nullptr,
+            ptr,
             image.size(),
             const_cast<unsigned char*>(image.data()));
     xcb_clear_area(connection, true, window, 0, 0, 0, 0);
@@ -88,6 +89,7 @@ Window::~Window()
     xcb_free_gc(connection, gc);
     xcb_unmap_window(connection, window);
     xcb_destroy_window(connection, window);
+    xcb_flush(connection);
 }
 
 auto Window::handle_events() -> void
@@ -96,8 +98,7 @@ auto Window::handle_events() -> void
         std::unique_ptr<xcb_generic_event_t, free_delete> event {
             xcb_wait_for_event(this->connection)
         };
-        auto response = event->response_type & ~0x80;
-        switch (response) {
+        switch (event->response_type & ~0x80) {
             case XCB_EXPOSE: {
                 auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
                 if (expose->x == 69 && expose->y == 420) return;
