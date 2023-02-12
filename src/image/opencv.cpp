@@ -56,22 +56,22 @@ max_height(max_height)
     _size = image.total() * image.elemSize();
 }
 
-auto OpencvImage::width() -> int
+auto OpencvImage::width() const-> int
 {
     return _width;
 }
 
-auto OpencvImage::height() -> int
+auto OpencvImage::height() const -> int
 {
     return _height;
 }
 
-auto OpencvImage::size() -> unsigned long
+auto OpencvImage::size() const -> unsigned long
 {
     return _size;
 }
 
-auto OpencvImage::data() -> unsigned char*
+auto OpencvImage::data() const -> const unsigned char*
 {
     return image.ptr();
 }

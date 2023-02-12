@@ -43,26 +43,26 @@ max_height(max_height)
     bands[2] = tmp;
 
     image = VImage::bandjoin(bands);
-    _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image()); 
+    _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
+    _data.reset(static_cast<unsigned char*>(image.write_to_memory(&(_size))));
 }
 
-auto LibvipsImage::width() -> int
+auto LibvipsImage::width() const -> int
 {
     return image.width();
 }
 
-auto LibvipsImage::height() -> int
+auto LibvipsImage::height() const -> int
 {
     return image.height();
 }
 
-auto LibvipsImage::size() -> unsigned long
+auto LibvipsImage::size() const -> unsigned long
 {
     return _size;
 }
 
-auto LibvipsImage::data() -> unsigned char*
+auto LibvipsImage::data() const -> const unsigned char*
 {
-    _data.reset(static_cast<unsigned char*>(image.write_to_memory(&(_size))));
     return _data.get();
 }

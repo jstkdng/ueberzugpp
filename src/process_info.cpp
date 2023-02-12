@@ -44,7 +44,6 @@ pid(pid)
     this->tty_nr = std::stoi(proc[4]);
     this->minor_dev = minor(this->tty_nr);
     this->pty_path = "/dev/pts/" + std::to_string(this->minor_dev);
-    //std::cout << this->executable << " " << this->pid << " " << this->ppid << " " << this->pty_path << std::endl;
     is.close();
 }
 

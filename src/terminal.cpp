@@ -15,23 +15,18 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "terminal.hpp"
+#include "os.hpp"
 
-#include <xcb/xcb.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <cmath>
 
-Terminal::Terminal(ProcessInfo pid,
-        xcb_window_t const& parent,
-        xcb_connection_t *connection,
-        xcb_screen_t *screen):
-parent(parent),
-proc(pid),
-connection(connection),
-screen(screen)
+Terminal::Terminal(ProcessInfo pid):
+proc(pid)
 {
     this->pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+    this->name = os::getenv("TERM").value_or("xterm-256color");
     this->get_terminal_size();
 }
 
@@ -60,6 +55,19 @@ auto Terminal::get_terminal_size() -> void
         this->guess_font_size(this->rows, this->ypixel, this->padding_vertical);
 }
 
+auto Terminal::guess_padding(short chars, short pixels)
+    -> double
+{
+    double font_size = floor(static_cast<double>(pixels) / chars);
+    return (- font_size * chars + pixels) / 2;
+}
+
+auto Terminal::guess_font_size(short chars, short pixels, double padding)
+    -> double
+{
+    return (pixels - 2 * padding) / chars;
+}
+/*
 auto Terminal::get_window_dimensions() -> std::pair<int, int>
 {
     return this->window->get_dimensions();
@@ -80,22 +88,9 @@ auto Terminal::destroy_window() -> void
     this->window.reset();
 }
 
-auto Terminal::guess_padding(short chars, short pixels)
-    -> double
-{
-    double font_size = floor(static_cast<double>(pixels) / chars);
-    return (- font_size * chars + pixels) / 2;
-}
-
-auto Terminal::guess_font_size(short chars, short pixels, double padding)
-    -> double
-{
-    return (pixels - 2 * padding) / chars;
-}
-
 auto Terminal::get_window_id() -> xcb_window_t
 {
     if (!this->window.get()) return 0;
     return this->window->get_id();
 }
-
+*/

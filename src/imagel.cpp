@@ -17,10 +17,7 @@
 #include "imagel.hpp"
 
 #include <memory>
-#include <stdexcept>
 #include <xcb/xcb_image.h>
-#include <opencv2/imgcodecs.hpp>
-#include <opencv2/imgproc.hpp>
 
 ImageL::ImageL(xcb_connection_t *connection,
         xcb_screen_t *screen,

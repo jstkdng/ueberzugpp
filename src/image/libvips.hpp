@@ -29,10 +29,10 @@ public:
     LibvipsImage(const std::string &filename,
             const int& max_width, const int& max_height);
 
-    auto width() -> int override;
-    auto height() -> int override;
-    auto size() -> unsigned long override;
-    auto data() -> unsigned char* override;
+    auto width() const -> int override;
+    auto height() const -> int override;
+    auto size() const -> unsigned long override;
+    auto data() const -> const unsigned char* override;
 
 private:
     vips::VImage image;

@@ -22,7 +22,7 @@
 #include <cstring>
 #include <vips/vips8>
 
-#include "display.hpp"
+#include "application.hpp"
 #include "logging.hpp"
 
 std::atomic<bool> quit(false);
@@ -57,12 +57,12 @@ int main(int argc, char *argv[])
     }
     vips_concurrency_set(1);
 
-    Display display;
+    Application application;
 
     std::string cmd;
     while (std::getline(std::cin, cmd)) {
         if (quit.load()) break;
-        display.action(cmd);
+        application.execute(cmd);
     }
 
     vips_shutdown();

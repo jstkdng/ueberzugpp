@@ -27,10 +27,10 @@ public:
         -> std::unique_ptr<Image>;
     virtual ~Image() {}
 
-    virtual auto width() -> int = 0;
-    virtual auto height() -> int = 0;
-    virtual auto size() -> unsigned long = 0;
-    virtual auto data() -> unsigned char* = 0;
+    virtual auto width() const -> int = 0;
+    virtual auto height() const -> int = 0;
+    virtual auto size() const -> unsigned long = 0;
+    virtual auto data() const -> const unsigned char* = 0;
 };
 
 #endif
