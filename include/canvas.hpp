@@ -14,14 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __FREE_DELETE__
-#define __FREE_DELETE__
+#ifndef __CANVAS__
+#define __CANVAS__
 
-#include <cstdlib>
+#include "image.hpp"
+#include "terminal.hpp"
 
-struct free_delete
+#include <memory>
+
+class Canvas
 {
-    void operator()(void* x) { free(x); }
+public:
+    static auto init(const Terminal& terminal) -> std::unique_ptr<Canvas>;
+    virtual ~Canvas() {}
+
+    virtual auto create(int x, int y, int max_width, int max_height) -> void = 0;
+    virtual auto draw(const Image& image) -> void = 0;
+    virtual auto clear() -> void = 0;
 };
 
 #endif
+

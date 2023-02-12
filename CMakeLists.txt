@@ -32,19 +32,24 @@ find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs)
 
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
+pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 
 set(UEBERZUGPP_SOURCES
     "src/main.cpp"
+    "src/application.cpp"
     "src/logging.cpp"
-    "src/display.cpp"
-    "src/image.cpp"
-    "src/imagel.cpp"
     "src/os.cpp"
     "src/tmux.cpp"
     "src/process_info.cpp"
     "src/util.cpp"
     "src/terminal.cpp"
-    "src/window.cpp"
+
+    "src/canvas.cpp"
+    "src/canvas/sixel.cpp"
+    "src/canvas/x11/x11.cpp"
+    "src/canvas/x11/window.cpp"
+    
+    "src/image.cpp"
     "src/image/opencv.cpp"
     "src/image/libvips.cpp"
 )
@@ -59,6 +64,7 @@ target_link_libraries(ueberzug PUBLIC
     Threads::Threads
     PkgConfig::XCBIMAGE
     PkgConfig::VIPS
+    PkgConfig::SIXEL
     opencv_core
     opencv_imgproc
     opencv_imgcodecs

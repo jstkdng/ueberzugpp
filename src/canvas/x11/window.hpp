@@ -17,9 +17,11 @@
 #ifndef __WINDOW__
 #define __WINDOW__
 
+#include "image.hpp"
+
 #include <xcb/xproto.h>
+#include <xcb/xcb_image.h>
 #include <thread>
-#include <utility>
 
 class Window
 {
@@ -30,17 +32,19 @@ public:
             int x, int y, int max_width, int max_height);
     ~Window();
 
-    auto get_id() -> xcb_window_t;
-    auto get_dimensions() -> std::pair<int, int>;
+    auto draw(const Image& image) -> void;
 
 private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
     xcb_window_t parent;
     xcb_window_t window;
+    xcb_gcontext_t gc;
+    xcb_image_t *xcb_image = nullptr;
 
-    int width;
-    int height;
+    std::unique_ptr<std::jthread> event_handler;
+    auto handle_events() -> void;
+    auto terminate_event_handler() -> void;
 };
 
 #endif

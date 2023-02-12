@@ -14,37 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __IMAGEL__
-#define __IMAGEL__
+#ifndef __SIXEL_CANVAS__
+#define __SIXEL_CANVAS__
 
+#include "canvas.hpp"
 #include "image.hpp"
+#include "terminal.hpp"
 
-#include <string>
-#include <xcb/xcb_image.h>
-#include <memory>
+#include <sixel.h>
 
-class ImageL
+class SixelCanvas : public Canvas
 {
 public:
-    ImageL(xcb_connection_t *connection,
-            xcb_screen_t *screen,
-            std::string const& filename,
-            int width, int height);
-    ~ImageL();
-    void draw(xcb_window_t const& window);
+    SixelCanvas();
+    ~SixelCanvas();
+
+    auto create(int x, int y, int max_width, int max_height) -> void override;
+    auto draw(const Image& image) -> void override;
+    auto clear() -> void override;
+
+    static auto is_supported(const Terminal& terminal) -> bool;
 
 private:
-    void create_xcb_image();
-    void create_xcb_gc(xcb_window_t const& window);
-
-    xcb_gcontext_t gc;
-    xcb_connection_t *connection;
-    xcb_screen_t *screen;
-    xcb_image_t *xcb_image;
-
-    std::unique_ptr<Image> image;
-    //unsigned long max_width;
-    //unsigned long max_height;
+    sixel_encoder_t *encoder;
 };
+
 
 #endif

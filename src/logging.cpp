@@ -29,6 +29,13 @@ Logging::Logging()
     this->logfile = std::ofstream(log_path, std::ios_base::app);
 }
 
+void Logging::set_silent(bool silent)
+{
+    if (silent) fp = freopen("/dev/null", "w", stderr);
+}
+
 Logging::~Logging()
-{}
+{
+    if (fp) fclose(fp);
+}
 

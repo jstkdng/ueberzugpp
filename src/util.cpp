@@ -16,12 +16,16 @@
 
 #include "util.hpp"
 #include "process_info.hpp"
-#include "free_delete.hpp"
 
 #include <xcb/xcb.h>
 #include <memory>
 #include <xcb/xproto.h>
 #include <iostream>
+
+struct free_delete
+{
+    void operator()(void* x) { free(x); }
+};
 
 auto util::str_split(std::string const& str, std::string const& delim) -> std::vector<std::string>
 {

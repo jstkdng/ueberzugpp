@@ -14,35 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __VIPS_IMAGE__
-#define __VIPS_IMAGE__
+#ifndef __APPLICATION__
+#define __APPLICATION__
 
 #include "image.hpp"
+#include "canvas.hpp"
+#include "terminal.hpp"
 
 #include <string>
 #include <memory>
-#include <vips/vips8>
 
-class LibvipsImage : public Image
+class Application
 {
 public:
-    LibvipsImage(const std::string &filename,
-            const int& max_width, const int& max_height);
+    Application();
+    ~Application();
 
-    auto width() const -> int override;
-    auto height() const -> int override;
-    auto size() const -> unsigned long override;
-    auto data() const -> const unsigned char* override;
+    auto execute(const std::string& cmd) -> void;
 
 private:
-    vips::VImage image;
+    Terminal terminal;
 
-    std::unique_ptr<unsigned char> _data;
-    std::string filename;
-
-    int max_width;
-    int max_height;
-    unsigned long _size;
+    std::unique_ptr<Image> image;
+    std::unique_ptr<Canvas> canvas;
 };
 
 #endif
