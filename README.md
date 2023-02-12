@@ -45,7 +45,8 @@ Until further documentation is available, it is easy to find examples of scripts
 3. xcb-util-image
 4. nlohmann-json
 5. cli11
-6. ninja/make
+6. libsixel
+7. ninja/make
 
 ## Build instructions
 
