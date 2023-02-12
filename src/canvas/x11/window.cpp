@@ -15,11 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "window.hpp"
-#include "free_delete.hpp"
 
 #include <xcb/xcb.h>
-#include <iostream>
-#include <chrono>
+
+struct free_delete
+{
+    void operator()(void* x) { free(x); }
+};
 
 Window::Window(
         xcb_connection_t *connection,
@@ -29,9 +31,7 @@ Window::Window(
 ):
 connection(connection),
 screen(screen),
-parent(parent),
-width(max_width),
-height(max_height)
+parent(parent)
 {
     unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     unsigned int value_list[4] = {

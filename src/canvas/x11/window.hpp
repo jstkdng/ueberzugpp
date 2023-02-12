@@ -22,7 +22,6 @@
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
 #include <thread>
-#include <utility>
 
 class Window
 {
@@ -42,9 +41,6 @@ private:
     xcb_window_t window;
     xcb_gcontext_t gc;
     xcb_image_t *xcb_image = nullptr;
-
-    int width;
-    int height;
 
     std::unique_ptr<std::jthread> event_handler;
     auto handle_events() -> void;

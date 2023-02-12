@@ -1,17 +1,32 @@
+// Display images inside a terminal
+// Copyright (C) 2023  JustKidding
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 #include "x11.hpp"
 #include "util.hpp"
 #include "os.hpp"
 #include "tmux.hpp"
 
 #include <xcb/xcb.h>
-#include <algorithm>
 
 struct free_delete
 {
     void operator()(void* x) { free(x); }
 };
 
-X11Canvas::X11Canvas(const Terminal& terminal)
+X11Canvas::X11Canvas()
 {
     connection = xcb_connect(nullptr, nullptr);
     if (xcb_connection_has_error(connection)) {
@@ -46,7 +61,7 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
     } else if (wid.has_value()) {
         // if WID exists prevent doing any calculations
         auto proc = client_pids.front();
-        windows.insert(std::make_unique<Window>(connection, screen,
+        windows.push_back(std::make_unique<Window>(connection, screen,
                     std::stoi(wid.value()), x, y, max_width, max_height));
         return;
     }
@@ -56,7 +71,7 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
         auto ppids = util::get_parent_pids(pid);
         for (const auto& ppid: ppids) {
             if (!pid_window_map.contains(ppid.pid)) continue;
-            windows.insert(std::make_unique<Window>(connection, screen,
+            windows.push_back(std::make_unique<Window>(connection, screen,
                     pid_window_map[ppid.pid], x, y, max_width, max_height));
         }
     }
