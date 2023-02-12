@@ -3,11 +3,12 @@
 
 #include <unordered_set>
 #include <string>
+#include <iostream>
 
 auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 {
     std::unordered_set<std::string> supported_terms {
-        "contour", "foot"
+        "contour", "foot", "xterm-256color"
     };
     return supported_terms.contains(terminal.name);
 }
@@ -22,7 +23,7 @@ SixelCanvas::~SixelCanvas()
     sixel_encoder_unref(encoder);
 }
 
-auto SixelCanvas::create(int max_width, int max_height) -> void
+auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 {}
 
 auto SixelCanvas::draw(const Image& image) -> void
@@ -37,7 +38,4 @@ auto SixelCanvas::draw(const Image& image) -> void
 }
 
 auto SixelCanvas::clear() -> void
-{}
-
-auto SixelCanvas::quit() -> void
 {}

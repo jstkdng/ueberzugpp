@@ -13,10 +13,9 @@ public:
     SixelCanvas();
     ~SixelCanvas();
 
-    auto create(int max_width, int max_height) -> void override;
+    auto create(int x, int y, int max_width, int max_height) -> void override;
     auto draw(const Image& image) -> void override;
     auto clear() -> void override;
-    auto quit() -> void override;
 
     static auto is_supported(const Terminal& terminal) -> bool;
 

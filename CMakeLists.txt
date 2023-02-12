@@ -46,7 +46,7 @@ set(UEBERZUGPP_SOURCES
 
     "src/canvas.cpp"
     "src/canvas/sixel.cpp"
-    "src/canvas/x11.cpp"
+    "src/canvas/x11/x11.cpp"
     "src/canvas/x11/window.cpp"
     
     "src/image.cpp"

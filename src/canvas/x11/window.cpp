@@ -18,6 +18,8 @@
 #include "free_delete.hpp"
 
 #include <xcb/xcb.h>
+#include <iostream>
+#include <chrono>
 
 Window::Window(
         xcb_connection_t *connection,
@@ -40,6 +42,7 @@ height(max_height)
     };
 
     xcb_window_t wid = xcb_generate_id(this->connection);
+    this->gc = xcb_generate_id(this->connection);
     xcb_create_window(this->connection,
             this->screen->root_depth,
             wid,
@@ -52,23 +55,71 @@ height(max_height)
             value_mask,
             value_list);
 
+    xcb_create_gc(connection, gc, wid, 0, nullptr);
     this->window = wid;
     xcb_map_window(this->connection, this->window);
+
+    this->event_handler = std::make_unique<std::jthread>([this]() {
+        this->handle_events();
+    });
+
+    xcb_flush(connection);
+}
+
+auto Window::draw(const Image& image) -> void
+{
+    auto ptr = malloc(image.size());
+    xcb_image = xcb_image_create_native(connection,
+            image.width(),
+            image.height(),
+            XCB_IMAGE_FORMAT_Z_PIXMAP,
+            screen->root_depth,
+            nullptr,
+            image.size(),
+            const_cast<unsigned char*>(image.data()));
+    xcb_clear_area(connection, true, window, 0, 0, 0, 0);
+    xcb_flush(connection);
 }
 
 Window::~Window()
 {
-    xcb_unmap_window(this->connection, this->window);
-    xcb_destroy_window(this->connection, this->window);
+    terminate_event_handler();
+    xcb_image_destroy(xcb_image);
+    xcb_free_gc(connection, gc);
+    xcb_unmap_window(connection, window);
+    xcb_destroy_window(connection, window);
 }
 
-auto Window::get_dimensions() -> std::pair<int, int>
+auto Window::handle_events() -> void
 {
-    return std::make_pair(this->width, this->height);
+    while (true) {
+        std::unique_ptr<xcb_generic_event_t, free_delete> event {
+            xcb_wait_for_event(this->connection)
+        };
+        auto response = event->response_type & ~0x80;
+        switch (response) {
+            case XCB_EXPOSE: {
+                auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
+                if (expose->x == 69 && expose->y == 420) return;
+                if (!xcb_image) continue;
+                xcb_image_put(connection, window, gc, xcb_image, 0, 0, 0);
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
 }
 
-auto Window::get_id() -> xcb_window_t
+auto Window::terminate_event_handler() -> void
 {
-    return this->window;
+    auto e = std::make_unique<xcb_expose_event_t>();
+    e->response_type = XCB_EXPOSE;
+    e->window = window;
+    e->x = 69;
+    e->y = 420;
+    xcb_send_event(connection, false, window,
+            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e.get()));
+    xcb_flush(this->connection);
 }
-

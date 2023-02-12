@@ -1,7 +1,7 @@
 #include "logging.hpp"
 #include "canvas.hpp"
-#include "canvas/x11.hpp"
 #include "canvas/sixel.hpp"
+#include "canvas/x11/x11.hpp"
 
 auto Canvas::init(const Terminal& terminal) -> std::unique_ptr<Canvas>
 {

@@ -71,9 +71,6 @@ auto Display::action(std::string const& cmd) -> void
         }
         // spawn event handler once windows exist
         if (!this->event_handler.get()) {
-            this->event_handler = std::make_unique<std::thread>([this] {
-                this->handle_events();
-            });
         }
         auto dimensions = terminals.begin()->second->get_window_dimensions();
         try {
@@ -115,16 +112,6 @@ auto Display::set_parent_terminals() -> void
     }
 }
 
-auto Display::get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>
-{
-    std::unordered_map<unsigned int, xcb_window_t> res;
-    for (auto window: this->get_server_window_ids()) {
-        auto pid = this->get_window_pid(window);
-        res[pid] = window;
-    }
-    return res;
-}
-
 void Display::destroy_image()
 {
     for (auto const& [key, value]: terminals) {
@@ -148,92 +135,6 @@ void Display::trigger_redraw()
     }
 }
 
-auto Display::send_expose_event(xcb_window_t const& window, int x, int y) -> void
-{
-    auto e = std::make_unique<xcb_expose_event_t>();
-    e->response_type = XCB_EXPOSE;
-    e->window = window;
-    e->x = x;
-    e->y = y;
-    xcb_send_event(this->connection, false, window,
-            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e.get()));
-    xcb_flush(this->connection);
-}
 
-auto Display::get_server_window_ids() -> std::vector<xcb_window_t>
-{
-    auto cookie = xcb_query_tree_unchecked(this->connection, this->screen->root);
-    std::vector<xcb_window_t> windows;
-    get_server_window_ids_helper(windows, cookie);
-    return windows;
-}
 
-auto Display::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void
-{
-    std::unique_ptr<xcb_query_tree_reply_t, free_delete> reply {
-        xcb_query_tree_reply(this->connection, cookie, nullptr)
-    };
-    int num_children = xcb_query_tree_children_length(reply.get());
-
-    if (!num_children) return;
-
-    auto children = xcb_query_tree_children(reply.get());
-    std::vector<xcb_query_tree_cookie_t> cookies;
-
-    for (int i = 0; i < num_children; ++i) {
-        auto child = children[i];
-        bool is_complete_window = (
-            util::window_has_property(this->connection, child, XCB_ATOM_WM_NAME, XCB_ATOM_STRING) &&
-            util::window_has_property(this->connection, child, XCB_ATOM_WM_CLASS, XCB_ATOM_STRING) &&
-            util::window_has_property(this->connection, child, XCB_ATOM_WM_NORMAL_HINTS)
-        );
-        if (is_complete_window) windows.push_back(child);
-        cookies.push_back(xcb_query_tree_unchecked(this->connection, child));
-    }
-
-    for (auto new_cookie: cookies) {
-        this->get_server_window_ids_helper(windows, new_cookie);
-    }
-}
-
-auto Display::get_window_pid(xcb_window_t window) -> unsigned int
-{
-    std::string atom_str = "_NET_WM_PID";
-
-    auto atom_cookie = xcb_intern_atom_unchecked
-        (this->connection, false, atom_str.size(), atom_str.c_str());
-    auto atom_reply = std::unique_ptr<xcb_intern_atom_reply_t, free_delete> {
-        xcb_intern_atom_reply(this->connection, atom_cookie, nullptr)
-    };
-
-    auto property_cookie = xcb_get_property_unchecked(
-            this->connection, false, window, atom_reply->atom,
-            XCB_ATOM_ANY, 0, 1);
-    auto property_reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
-        xcb_get_property_reply(this->connection, property_cookie, nullptr),
-    };
-
-    return *reinterpret_cast<unsigned int*>(xcb_get_property_value(property_reply.get()));
-}
-
-auto Display::handle_events() -> void
-{
-    while (true) {
-        std::unique_ptr<xcb_generic_event_t, free_delete> event {
-            xcb_wait_for_event(this->connection)
-        };
-        switch (event->response_type & ~0x80) {
-            case XCB_EXPOSE: {
-                auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
-                if (expose->x == 69 && expose->y == 420) return;
-                if (!this->image.get()) continue;
-                this->image->draw(expose->window);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
-}
 

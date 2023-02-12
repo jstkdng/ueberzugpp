@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <cmath>
+#include <iostream>
 
 Terminal::Terminal(ProcessInfo pid):
 proc(pid)
