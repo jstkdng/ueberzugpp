@@ -32,7 +32,7 @@ public:
             int x, int y, int max_width, int max_height);
     ~Window();
 
-    auto draw(const Image& image) -> void;
+    auto draw(Image& image) -> void;
 
 private:
     xcb_connection_t *connection;
@@ -43,8 +43,12 @@ private:
     xcb_image_t *xcb_image = nullptr;
 
     std::unique_ptr<std::jthread> event_handler;
+    std::unique_ptr<std::jthread> draw_thread;
+
     auto handle_events() -> void;
     auto terminate_event_handler() -> void;
+    auto send_expose_event(int x = 0, int y = 0) -> void;
+    auto draw_frame(const Image& image) -> void;
 };
 
 #endif

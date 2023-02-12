@@ -22,6 +22,8 @@
 #include "terminal.hpp"
 
 #include <sixel.h>
+#include <memory>
+#include <thread>
 
 class SixelCanvas : public Canvas
 {
@@ -37,6 +39,9 @@ public:
 
 private:
     sixel_encoder_t *encoder;
+    std::unique_ptr<std::jthread> draw_thread;
+
+    auto draw_frame(const Image& image) -> void;
 };
 
 

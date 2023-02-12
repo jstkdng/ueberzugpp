@@ -22,6 +22,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <vips/vips.h>
 #include <filesystem>
+#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -29,7 +30,7 @@ auto Image::load(const std::string& filename, int max_width, int max_height)
     -> std::unique_ptr<Image>
 {
     fs::path file = filename;
-    if (cv::haveImageReader(filename) || file.extension() == "gif") {
+    if (cv::haveImageReader(filename) || file.extension() == ".gif") {
         logger << "=== Loading image with opencv" << std::endl;
         return std::make_unique<OpencvImage>(filename, max_width, max_height);
     }

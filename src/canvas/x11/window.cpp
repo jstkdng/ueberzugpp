@@ -67,7 +67,23 @@ parent(parent)
     xcb_flush(connection);
 }
 
-auto Window::draw(const Image& image) -> void
+auto Window::draw(Image& image) -> void
+{
+    if (image.framerate() == -1) {
+        draw_frame(image);
+        return;
+    }
+    draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
+        while (!token.stop_requested()) {
+            draw_frame(image);
+            image.next_frame();
+            unsigned long duration = (1.0 / image.framerate()) * 1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+        }
+    });
+}
+
+auto Window::draw_frame(const Image& image) -> void
 {
     auto ptr = malloc(image.size());
     xcb_image = xcb_image_create_native(connection,
@@ -78,14 +94,14 @@ auto Window::draw(const Image& image) -> void
             ptr,
             image.size(),
             const_cast<unsigned char*>(image.data()));
-    xcb_clear_area(connection, true, window, 0, 0, 0, 0);
+    send_expose_event();
     xcb_flush(connection);
 }
 
 Window::~Window()
 {
     terminate_event_handler();
-    xcb_image_destroy(xcb_image);
+    if (xcb_image) xcb_image_destroy(xcb_image);
     xcb_free_gc(connection, gc);
     xcb_unmap_window(connection, window);
     xcb_destroy_window(connection, window);
@@ -104,6 +120,8 @@ auto Window::handle_events() -> void
                 if (expose->x == 69 && expose->y == 420) return;
                 if (!xcb_image) continue;
                 xcb_image_put(connection, window, gc, xcb_image, 0, 0, 0);
+                xcb_image_destroy(xcb_image);
+                xcb_image = nullptr;
                 break;
             }
             default: {
@@ -115,12 +133,18 @@ auto Window::handle_events() -> void
 
 auto Window::terminate_event_handler() -> void
 {
+    send_expose_event(69, 420);
+}
+
+auto Window::send_expose_event(int x, int y) -> void
+{
     auto e = std::make_unique<xcb_expose_event_t>();
     e->response_type = XCB_EXPOSE;
     e->window = window;
-    e->x = 69;
-    e->y = 420;
+    e->x = x;
+    e->y = y;
     xcb_send_event(connection, false, window,
             XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e.get()));
     xcb_flush(this->connection);
 }
+

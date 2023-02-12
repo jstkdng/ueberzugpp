@@ -19,6 +19,7 @@
 
 #include <unordered_set>
 #include <string>
+#include <chrono>
 
 auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 {
@@ -43,7 +44,30 @@ auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 
 auto SixelCanvas::draw(Image& image) -> void
 {
-    image.next_frame();
+    draw_frame(image);
+    /*
+    if (image.framerate() == -1) {
+        draw_frame(image);
+        return;
+    }
+    // TODO: how to do this with sixel?
+    draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
+        while (!token.stop_requested()) {
+            draw_frame(image);
+            image.next_frame();
+            unsigned long duration = (1.0 / image.framerate()) * 1000;
+            std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+        }
+    });*/
+}
+
+auto SixelCanvas::clear() -> void
+{
+    draw_thread.reset();
+}
+
+auto SixelCanvas::draw_frame(const Image& image) -> void
+{
     sixel_encoder_encode_bytes(encoder,
             const_cast<unsigned char*>(image.data()),
             image.width(),
@@ -52,6 +76,3 @@ auto SixelCanvas::draw(Image& image) -> void
             nullptr,
             (-1));
 }
-
-auto SixelCanvas::clear() -> void
-{}

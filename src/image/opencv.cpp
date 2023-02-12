@@ -30,7 +30,7 @@ max_width(max_width),
 max_height(max_height)
 {
     fs::path path = filename;
-    if (path.extension() == "gif") {
+    if (path.extension() == ".gif") {
         video = cv::VideoCapture(filename, cv::CAP_FFMPEG);
         video.read(image);
     } else {
@@ -67,6 +67,7 @@ auto OpencvImage::framerate() const -> int
 
 auto OpencvImage::next_frame() -> void
 {
+    if (!video.isOpened()) return;
     if (!video.read(image)) {
         video.set(cv::CAP_PROP_POS_FRAMES, 0);
         video.read(image);
