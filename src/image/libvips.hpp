@@ -33,6 +33,8 @@ public:
     auto size() const -> unsigned long override;
     auto data() const -> const unsigned char* override;
 
+    auto framerate() const -> int override;
+
 private:
     vips::VImage image;
 

@@ -24,13 +24,13 @@
 namespace fs = std::filesystem;
 
 OpencvImage::OpencvImage(const std::string& filename,
-        int max_width, int max_height):
+        int max_width, int max_height, bool is_video):
 filename(filename),
 max_width(max_width),
 max_height(max_height)
 {
     fs::path path = filename;
-    if (path.extension() == ".gif") {
+    if (is_video) {
         video = cv::VideoCapture(filename, cv::CAP_FFMPEG);
         video.read(image);
     } else {

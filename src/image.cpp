@@ -20,9 +20,9 @@
 #include "logging.hpp"
 
 #include <opencv2/imgcodecs.hpp>
+#include <opencv2/videoio.hpp>
 #include <vips/vips.h>
 #include <filesystem>
-#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -30,9 +30,18 @@ auto Image::load(const std::string& filename, int max_width, int max_height)
     -> std::unique_ptr<Image>
 {
     fs::path file = filename;
-    if (cv::haveImageReader(filename) || file.extension() == ".gif") {
+    if (file.extension() == ".webp") {
+        logger << "=== Loading image with libvips" << std::endl;
+        return std::make_unique<LibvipsImage>(filename, max_width, max_height);
+    }
+    if (cv::haveImageReader(filename)) {
         logger << "=== Loading image with opencv" << std::endl;
         return std::make_unique<OpencvImage>(filename, max_width, max_height);
+    }
+    cv::VideoCapture capture(filename, cv::CAP_FFMPEG);
+    if (capture.isOpened()) {
+        logger << "=== Loading image with opencv" << std::endl;
+        return std::make_unique<OpencvImage>(filename, max_width, max_height, true);
     }
     std::string vips_loader = vips_foreign_find_load(filename.c_str());
     if (!vips_loader.empty()) {

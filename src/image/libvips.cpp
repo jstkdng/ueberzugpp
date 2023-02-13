@@ -66,3 +66,12 @@ auto LibvipsImage::data() const -> const unsigned char*
 {
     return _data.get();
 }
+
+auto LibvipsImage::framerate() const -> int
+{
+    try {
+        return image.get_int("n-pages");
+    } catch (const VError& err) {
+        return -1;
+    }
+}

@@ -32,6 +32,7 @@ auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 SixelCanvas::SixelCanvas()
 {
     sixel_encoder_new(&encoder, nullptr);
+    sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_8BIT_MODE, nullptr);
 }
 
 SixelCanvas::~SixelCanvas()
@@ -45,12 +46,11 @@ auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 auto SixelCanvas::draw(Image& image) -> void
 {
     draw_frame(image);
-    /*
-    if (image.framerate() == -1) {
+    // TODO: how to do this with sixel?
+    /*if (image.framerate() == -1) {
         draw_frame(image);
         return;
     }
-    // TODO: how to do this with sixel?
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
             draw_frame(image);
