@@ -2,6 +2,13 @@
 
 Drop in replacement for ueberzug written in C++
 
+# Features
+
+1. A lot of image formats supported (through opencv and libvips)
+2. GIF support
+3. Fast image downscaling (through opencv and opencl)
+4. Sixel support on supported terminals
+
 # Download
 
 *ueberzugpp* is available in the [AUR](https://aur.archlinux.org/packages/ueberzugpp)
