@@ -20,10 +20,6 @@
 #include <unordered_set>
 #include <string>
 #include <chrono>
-#include <fstream>
-#include <filesystem>
-
-namespace fs = std::filesystem;
 
 auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 {
@@ -35,25 +31,22 @@ auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 
 SixelCanvas::SixelCanvas()
 {
+    sixel_encoder_new(&encoder, nullptr);
 }
 
 SixelCanvas::~SixelCanvas()
 {
+    sixel_encoder_unref(encoder);
 }
 
 auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
-{}
+{
+    this->x = x + 1;
+    this->y = y + 1;
+}
 
 auto SixelCanvas::draw(Image& image) -> void
 {
-    //draw_frame(image);
-    // TODO: how to do this with sixel?
-    //auto tmp = std::ofstream("/tmp/ueberzug_sixel.txt", std::ios_base::out);
-    //tmp.close();
-    sixel_encoder_new(&encoder, nullptr);
-    //sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_8BIT_MODE, nullptr);
-    sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_OUTFILE, "/tmp/ueberzug_sixel.txt");
-
     if (image.framerate() == -1) {
         draw_frame(image);
         return;
@@ -71,12 +64,11 @@ auto SixelCanvas::draw(Image& image) -> void
 auto SixelCanvas::clear() -> void
 {
     draw_thread.reset();
-    fs::remove("/tmp/ueberzug_sixel.txt");
-    sixel_encoder_unref(encoder);
 }
 
 auto SixelCanvas::draw_frame(const Image& image) -> void
 {
+    move_cursor(y, x);
     sixel_encoder_encode_bytes(encoder,
             const_cast<unsigned char*>(image.data()),
             image.width(),
@@ -84,4 +76,10 @@ auto SixelCanvas::draw_frame(const Image& image) -> void
             SIXEL_PIXELFORMAT_BGRA8888,
             nullptr,
             (-1));
+}
+
+auto SixelCanvas::move_cursor(int row, int col) -> void
+{
+    printf("\033[%d;%df", row, col);
+    fflush(stdout);
 }
