@@ -94,15 +94,6 @@ auto OpencvImage::process_image() -> void
             new_width = _width * scale;
         }
     }
-    /*
-    if (_height > max_height) {
-        if (_width > max_width) {
-            width_scale = static_cast<double>(max_width) / _width;
-            height_scale = static_cast<double>(max_height) / _height;
-            min_scale = std::min(width_scale, height_scale);
-            max_scale = std::max(width_scale, height_scale);
-        }
-    }*/
 
     if (new_width != 0 || new_height != 0) {
         cv::resize(image, image, cv::Size(new_width, new_height),

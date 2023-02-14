@@ -20,6 +20,7 @@
 #include <unordered_set>
 #include <string>
 #include <chrono>
+#include <iostream>
 
 auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 {
@@ -43,6 +44,8 @@ auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 {
     this->x = x + 1;
     this->y = y + 1;
+    this->max_width = max_width;
+    this->max_height = max_height;
 }
 
 auto SixelCanvas::draw(Image& image) -> void
@@ -64,6 +67,11 @@ auto SixelCanvas::draw(Image& image) -> void
 auto SixelCanvas::clear() -> void
 {
     draw_thread.reset();
+    for (int i = y; i <= max_height; ++i) {
+        move_cursor(i, x);
+        std::cout << std::string(max_width, ' ');
+    }
+    std::cout << std::flush;
 }
 
 auto SixelCanvas::draw_frame(const Image& image) -> void
@@ -80,6 +88,5 @@ auto SixelCanvas::draw_frame(const Image& image) -> void
 
 auto SixelCanvas::move_cursor(int row, int col) -> void
 {
-    printf("\033[%d;%df", row, col);
-    fflush(stdout);
+    std::cout << "\033[" << row << ";" << col << "f" << std::flush;
 }

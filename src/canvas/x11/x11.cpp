@@ -64,8 +64,11 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
         // if WID exists prevent doing any calculations
         auto proc = client_pids.front();
         windows.push_back(std::make_unique<Window>(connection, screen,
-                    std::stoi(wid.value()), x * terminal.font_width,
-                    y * terminal.font_height, max_width, max_height));
+                    std::stoi(wid.value()),
+                    x * terminal.font_width,
+                    y * terminal.font_height,
+                    max_width * terminal.font_width,
+                    max_height * terminal.font_height));
         return;
     }
 
@@ -74,9 +77,13 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
         auto ppids = util::get_parent_pids(pid);
         for (const auto& ppid: ppids) {
             if (!pid_window_map.contains(ppid.pid)) continue;
-            windows.push_back(std::make_unique<Window>(connection, screen,
-                    pid_window_map[ppid.pid], x * terminal.font_width,
-                    y * terminal.font_height, max_width, max_height));
+            windows.push_back(std::make_unique<Window>(
+                        connection, screen,
+                        pid_window_map[ppid.pid],
+                        x * terminal.font_width,
+                        y * terminal.font_height,
+                        max_width * terminal.font_width,
+                        max_height * terminal.font_height));
         }
     }
 }
