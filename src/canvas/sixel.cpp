@@ -20,6 +20,10 @@
 #include <unordered_set>
 #include <string>
 #include <chrono>
+#include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 {
@@ -31,13 +35,10 @@ auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 
 SixelCanvas::SixelCanvas()
 {
-    sixel_encoder_new(&encoder, nullptr);
-    sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_8BIT_MODE, nullptr);
 }
 
 SixelCanvas::~SixelCanvas()
 {
-    sixel_encoder_unref(encoder);
 }
 
 auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
@@ -45,9 +46,15 @@ auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 
 auto SixelCanvas::draw(Image& image) -> void
 {
-    draw_frame(image);
+    //draw_frame(image);
     // TODO: how to do this with sixel?
-    /*if (image.framerate() == -1) {
+    //auto tmp = std::ofstream("/tmp/ueberzug_sixel.txt", std::ios_base::out);
+    //tmp.close();
+    sixel_encoder_new(&encoder, nullptr);
+    //sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_8BIT_MODE, nullptr);
+    sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_OUTFILE, "/tmp/ueberzug_sixel.txt");
+
+    if (image.framerate() == -1) {
         draw_frame(image);
         return;
     }
@@ -58,12 +65,14 @@ auto SixelCanvas::draw(Image& image) -> void
             unsigned long duration = (1.0 / image.framerate()) * 1000;
             std::this_thread::sleep_for(std::chrono::milliseconds(duration));
         }
-    });*/
+    });
 }
 
 auto SixelCanvas::clear() -> void
 {
     draw_thread.reset();
+    fs::remove("/tmp/ueberzug_sixel.txt");
+    sixel_encoder_unref(encoder);
 }
 
 auto SixelCanvas::draw_frame(const Image& image) -> void
