@@ -32,7 +32,6 @@ auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
 SixelCanvas::SixelCanvas()
 {
     sixel_encoder_new(&encoder, nullptr);
-    sixel_encoder_setopt(encoder, SIXEL_OPTFLAG_8BIT_MODE, nullptr);
 }
 
 SixelCanvas::~SixelCanvas()
@@ -41,13 +40,14 @@ SixelCanvas::~SixelCanvas()
 }
 
 auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
-{}
+{
+    this->x = x + 1;
+    this->y = y + 1;
+}
 
 auto SixelCanvas::draw(Image& image) -> void
 {
-    draw_frame(image);
-    // TODO: how to do this with sixel?
-    /*if (image.framerate() == -1) {
+    if (image.framerate() == -1) {
         draw_frame(image);
         return;
     }
@@ -58,7 +58,7 @@ auto SixelCanvas::draw(Image& image) -> void
             unsigned long duration = (1.0 / image.framerate()) * 1000;
             std::this_thread::sleep_for(std::chrono::milliseconds(duration));
         }
-    });*/
+    });
 }
 
 auto SixelCanvas::clear() -> void
@@ -68,6 +68,7 @@ auto SixelCanvas::clear() -> void
 
 auto SixelCanvas::draw_frame(const Image& image) -> void
 {
+    move_cursor(y, x);
     sixel_encoder_encode_bytes(encoder,
             const_cast<unsigned char*>(image.data()),
             image.width(),
@@ -75,4 +76,10 @@ auto SixelCanvas::draw_frame(const Image& image) -> void
             SIXEL_PIXELFORMAT_BGRA8888,
             nullptr,
             (-1));
+}
+
+auto SixelCanvas::move_cursor(int row, int col) -> void
+{
+    printf("\033[%d;%df", row, col);
+    fflush(stdout);
 }

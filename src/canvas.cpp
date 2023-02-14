@@ -10,5 +10,5 @@ auto Canvas::init(const Terminal& terminal) -> std::unique_ptr<Canvas>
         return std::make_unique<SixelCanvas>();
     }
     logger << "=== Using X11 output" << std::endl;
-    return std::make_unique<X11Canvas>();
+    return std::make_unique<X11Canvas>(terminal);
 }

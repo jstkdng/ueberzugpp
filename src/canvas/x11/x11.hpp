@@ -20,6 +20,7 @@
 #include "canvas.hpp"
 #include "image.hpp"
 #include "window.hpp"
+#include "terminal.hpp"
 
 #include <xcb/xproto.h>
 #include <memory>
@@ -29,7 +30,7 @@
 class X11Canvas : public Canvas
 {
 public:
-    X11Canvas();
+    X11Canvas(const Terminal& terminal);
     ~X11Canvas();
 
     auto create(int x, int y, int max_width, int max_height) -> void override;
@@ -39,6 +40,7 @@ public:
 private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
+    const Terminal& terminal;
 
     std::vector<std::unique_ptr<Window>> windows;
 

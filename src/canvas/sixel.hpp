@@ -40,8 +40,11 @@ public:
 private:
     sixel_encoder_t *encoder;
     std::unique_ptr<std::jthread> draw_thread;
+    int x;
+    int y;
 
     auto draw_frame(const Image& image) -> void;
+    auto move_cursor(int row, int col) -> void;
 };
 
 

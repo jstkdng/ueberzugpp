@@ -27,7 +27,8 @@ struct free_delete
     void operator()(void* x) { free(x); }
 };
 
-X11Canvas::X11Canvas()
+X11Canvas::X11Canvas(const Terminal& terminal):
+terminal(terminal)
 {
     connection = xcb_connect(nullptr, nullptr);
     if (xcb_connection_has_error(connection)) {
@@ -63,7 +64,8 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
         // if WID exists prevent doing any calculations
         auto proc = client_pids.front();
         windows.push_back(std::make_unique<Window>(connection, screen,
-                    std::stoi(wid.value()), x, y, max_width, max_height));
+                    std::stoi(wid.value()), x * terminal.font_width,
+                    y * terminal.font_height, max_width, max_height));
         return;
     }
 
@@ -73,7 +75,8 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
         for (const auto& ppid: ppids) {
             if (!pid_window_map.contains(ppid.pid)) continue;
             windows.push_back(std::make_unique<Window>(connection, screen,
-                    pid_window_map[ppid.pid], x, y, max_width, max_height));
+                    pid_window_map[ppid.pid], x * terminal.font_width,
+                    y * terminal.font_height, max_width, max_height));
         }
     }
 }
