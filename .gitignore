@@ -2,3 +2,4 @@ build/
 .cache/
 .kdev4/
 .ccls-cache/
+/.vs
