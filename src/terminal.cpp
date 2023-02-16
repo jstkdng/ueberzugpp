@@ -21,15 +21,18 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <cmath>
-#include <iostream>
+#include <stdexcept>
 #include <unordered_set>
 
 Terminal::Terminal(ProcessInfo pid):
 proc(pid)
 {
-    this->pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
-    this->name = os::getenv("TERM").value_or("xterm-256color");
-    this->get_terminal_size();
+    pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+    if (pty_fd == -1) {
+        throw std::runtime_error("unable to open pty.");
+    }
+    name = os::getenv("TERM").value_or("xterm-256color");
+    get_terminal_size();
 }
 
 Terminal::~Terminal()
@@ -48,27 +51,30 @@ auto Terminal::supports_sixel() const -> bool
 auto Terminal::get_terminal_size() -> void
 {
     struct winsize sz;
-    ioctl(this->pty_fd, TIOCGWINSZ, &sz);
-    this->cols = sz.ws_col;
-    this->rows = sz.ws_row;
-    this->xpixel = sz.ws_xpixel;
-    this->ypixel = sz.ws_ypixel;
+    ioctl(pty_fd, TIOCGWINSZ, &sz);
+    cols = sz.ws_col;
+    rows = sz.ws_row;
+    xpixel = sz.ws_xpixel;
+    ypixel = sz.ws_ypixel;
+    if (cols <= 0 || rows <= 0 || xpixel <= 0 || ypixel <= 0) {
+        throw std::runtime_error("received wrong terminal sizes.");
+    }
 
-    double padding_horiz = this->guess_padding(this->cols, this->xpixel);
-    double padding_vert = this->guess_padding(this->rows, this->ypixel);
+    double padding_horiz = guess_padding(cols, xpixel);
+    double padding_vert = guess_padding(rows, ypixel);
 
-    this->padding_horizontal = std::max(padding_horiz, padding_vert);
-    this->padding_vertical = padding_horiz;
-    this->font_width =
-        this->guess_font_size(this->cols, this->xpixel, this->padding_horizontal);
-    this->font_height =
-        this->guess_font_size(this->rows, this->ypixel, this->padding_vertical);
+    padding_horizontal = std::max(padding_horiz, padding_vert);
+    padding_vertical = padding_horiz;
+    font_width =
+        guess_font_size(cols, xpixel, padding_horizontal);
+    font_height =
+        guess_font_size(rows, ypixel, padding_vertical);
 }
 
 auto Terminal::guess_padding(short chars, short pixels)
     -> double
 {
-    double font_size = floor(static_cast<double>(pixels) / chars);
+    double font_size = std::floor(static_cast<double>(pixels) / chars);
     return (- font_size * chars + pixels) / 2;
 }
 
