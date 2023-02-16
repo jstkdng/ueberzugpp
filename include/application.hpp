@@ -28,7 +28,7 @@ class Application
 {
 public:
     Application();
-    ~Application();
+    ~Application() = default;
 
     auto execute(const std::string& cmd) -> void;
 

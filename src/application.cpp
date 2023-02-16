@@ -29,9 +29,6 @@ terminal(ProcessInfo(os::get_pid()))
     canvas = Canvas::init(terminal);
 }
 
-Application::~Application()
-{}
-
 auto Application::execute(const std::string& cmd) -> void
 {
     json j;
