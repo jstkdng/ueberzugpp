@@ -30,7 +30,9 @@ terminal(ProcessInfo(os::get_pid()))
 }
 
 Application::~Application()
-{}
+{
+    canvas->clear();
+}
 
 auto Application::execute(const std::string& cmd) -> void
 {

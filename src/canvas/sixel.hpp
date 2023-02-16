@@ -45,15 +45,14 @@ private:
     sixel_output_t *output;
 
     std::unique_ptr<std::jthread> draw_thread;
-    std::mutex draw_lock;
-    fs::path out_file;
+    std::mutex draw_mutex;
     std::fstream stream;
+    fs::path out_file;
 
     int x;
     int y;
     int max_width;
     int max_height;
-    int tmp_fd;
 
     auto draw_frame(const Image& image) -> void;
     auto move_cursor(int row, int col) -> void;

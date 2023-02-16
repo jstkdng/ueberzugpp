@@ -35,12 +35,13 @@ SixelCanvas::SixelCanvas()
 {
     std::string tmppath = (fs::temp_directory_path() / "sixelXXXXXX").string();
     char *name = tmppath.data();
-    tmp_fd = mkstemp(name);
+    int fd = mkstemp(name);
+    close(fd); // fd not required
     out_file = tmppath;
 
     dither = sixel_dither_get(SIXEL_BUILTIN_XTERM256);
     sixel_output_new(&output, sixel_draw_callback, &stream, nullptr);
-    sixel_output_set_palette_type(output, SIXEL_PALETTETYPE_RGB);
+    sixel_output_set_palette_type(output, SIXEL_PALETTETYPE_AUTO);
     sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
 }
 
@@ -48,7 +49,6 @@ SixelCanvas::~SixelCanvas()
 {
     draw_thread.reset();
     if (stream.is_open()) stream.close();
-    close(tmp_fd); // file descriptor not needed;
     fs::remove(out_file);
 
     sixel_dither_destroy(dither);
@@ -65,8 +65,7 @@ auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 
 auto SixelCanvas::draw(Image& image) -> void
 {
-    using std::ios;
-    stream.open(out_file, ios::in | ios::out | ios::binary);
+    stream.open(out_file, std::ios::in | std::ios::out | std::ios::binary);
 
     if (image.framerate() == -1) {
         draw_frame(image);
@@ -86,9 +85,9 @@ auto SixelCanvas::draw(Image& image) -> void
 
 auto SixelCanvas::clear() -> void
 {
-    const std::lock_guard<std::mutex> lock(draw_lock);
-    if (stream.is_open()) stream.close();
+    std::scoped_lock lock {draw_mutex};
     draw_thread.reset();
+    stream.close();
 
     // clear terminal
     for (int i = y; i <= max_height; ++i) {
@@ -101,16 +100,18 @@ auto SixelCanvas::clear() -> void
 
 auto SixelCanvas::draw_frame(const Image& image) -> void
 {
-    const std::lock_guard<std::mutex> lock(draw_lock);
+    std::scoped_lock lock {draw_mutex};
     if (!stream.is_open()) return;
 
+    // output sixel content to file
     fs::resize_file(out_file, 0);
     stream.seekp(0);
-    // sixel expects RGB888
     sixel_encode(const_cast<unsigned char*>(image.data()),
             image.width(),
             image.height(),
             3 /*unused*/, dither, output);
+
+    // write whole file to stdout
     stream.clear();
     stream.seekg(0);
     move_cursor(y, x);
