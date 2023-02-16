@@ -29,8 +29,6 @@ Advantages over w3mimgdisplay and ueberzug:
 
 # Usage
 
-The documentation is deferred at this point.
-
 1. The only command currently provided is "layer" to make Ueberzug listen.
   - Layer accepts the silent [-s] option, to hide the textual output of the command.
   
