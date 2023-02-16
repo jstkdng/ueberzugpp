@@ -1,13 +1,27 @@
-# ueberzugpp
+# Überzug++
 
-Drop in replacement for ueberzug written in C++
+Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using child windows or using sixel on supported terminals. 
 
-# Features
+This is a drop-in replacement for the now defunct [ueberzug](https://github.com/seebye/ueberzug) project.
 
-1. A lot of image formats supported (through opencv and libvips)
-2. GIF support
-3. Fast image downscaling (through opencv and opencl)
-4. Sixel support on supported terminals
+Advantages over w3mimgdisplay and ueberzug:
+
+- no race conditions as a new window is created to display images
+- expose events will be processed, so images will be redrawn on switch workspaces
+- tmux support (excluding multi pane windows)
+- terminals without the WINDOWID environment variable are supported
+- chars are used as position - and size unit
+- No memory leak (usage of smart pointers)
+- A lot of image formats supported (through opencv and libvips).
+- GIF support on X11 and Sixel
+- Fast image downscaling (through opencv and opencl)
+- Sixel support on supported terminals
+
+# Applications that use Überzug++
+
+- [Ranger](https://github.com/ranger/ranger)
+- [Termusic](https://github.com/tramhao/termusic/)
+- ÜberzugPP is a drop in replacement for Ueberzug, so applications that worked with ueberzug should work out of the box with this project.
 
 # Download
 
@@ -39,10 +53,6 @@ The documentation is deferred at this point.
     {"action":"remove","identifier":"preview"}
     ```
 
-3. This project supports more filetypes by trying to use opencv if supported and libvips as a fallback.
-
-Until further documentation is available, it is easy to find examples of scripts for the Ueberzug using the json parser around the web.
-
 # Build from source
 
 ## Dependencies
@@ -53,7 +63,7 @@ Until further documentation is available, it is easy to find examples of scripts
 4. nlohmann-json
 5. cli11
 6. libsixel
-7. ninja/make
+7. cmake
 
 ## Build instructions
 
@@ -64,8 +74,8 @@ Until further documentation is available, it is easy to find examples of scripts
 $ git clone https://github.com/jstkdng/ueberzugpp.git
 $ cd ueberzugpp
 $ mkdir build && cd build
-$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
-$ ninja
+$ cmake -DCMAKE_BUILD_TYPE=Release ..
+$ cmake --build .
 ```
 
 after running these commands the resulting binary is ready to be used.
