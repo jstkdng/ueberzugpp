@@ -37,7 +37,7 @@ auto Application::execute(const std::string& cmd) -> void
     json j;
     try {
         j = json::parse(cmd);
-    } catch (const json::parse_error& e) { 
+    } catch (const json::parse_error& e) {
         logger << "There was an error parsing the command." << std::endl;
         return;
     }
@@ -48,9 +48,7 @@ auto Application::execute(const std::string& cmd) -> void
         int x = static_cast<int>(j["x"]);
         int y = static_cast<int>(j["y"]);
         canvas->create(x, y, max_width, max_height);
-        image = Image::load(j["path"],
-                max_width * terminal.font_width,
-                max_height * terminal.font_height);
+        image = Image::load(j["path"], max_width, max_height, terminal);
         if (!image) {
             logger << "Unable to load image file." << std::endl;
             return;

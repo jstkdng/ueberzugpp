@@ -16,33 +16,44 @@
 
 #include "libvips.hpp"
 
+#include <unordered_set>
+
 using namespace vips;
 
-LibvipsImage::LibvipsImage(const std::string& filename,
-        int max_width, int max_height):
-filename(filename),
-max_width(max_width),
-max_height(max_height)
+LibvipsImage::LibvipsImage(const Terminal& terminal,
+        const std::string& filename, int max_width, int max_height):
+terminal(terminal),
+path(filename),
+max_width(max_width * terminal.font_width),
+max_height(max_height * terminal.font_height)
 {
     auto check = VImage::new_from_file(filename.c_str());
     VImage img;
     // at least 3 bands are required
-    if (check.width() < max_width && check.height() < max_height) {
+    if (check.width() < this->max_width && check.height() < this->max_height) {
         // thumbnail not required
         img = check.colourspace(VIPS_INTERPRETATION_sRGB);
     } else {
-        img = VImage::thumbnail(filename.c_str(), max_width - 1)
+        img = VImage::thumbnail(filename.c_str(), this->max_width - 1)
             .colourspace(VIPS_INTERPRETATION_sRGB);
     }
-    // alpha channel required
-    if (!img.has_alpha()) img = img.bandjoin(255);
-    // convert from RGB to BGR
-    auto bands = img.bandsplit();
-    auto tmp = bands[0];
-    bands[0] = bands[2];
-    bands[2] = tmp;
+    if (terminal.supports_sixel()) {
+        // sixel expects RGB888
+        if (img.has_alpha()) {
+            img = img.flatten();
+        }
+    } else {
+        // alpha channel required
+        if (!img.has_alpha()) img = img.bandjoin(255);
+        // convert from RGB to BGR
+        auto bands = img.bandsplit();
+        auto tmp = bands[0];
+        bands[0] = bands[2];
+        bands[2] = tmp;
+        img = VImage::bandjoin(bands);
+    }
 
-    image = VImage::bandjoin(bands);
+    image = img;
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
     _data.reset(static_cast<unsigned char*>(image.write_to_memory(&(_size))));
 }
@@ -69,6 +80,11 @@ auto LibvipsImage::data() const -> const unsigned char*
 
 auto LibvipsImage::framerate() const -> int
 {
+    // only return framerate if it is webp or gif
+    std::unordered_set<std::string> supported_formats {
+        ".gif", ".webp"
+    };
+    if (!supported_formats.contains(path.extension())) return -1;
     try {
         return image.get_int("n-pages");
     } catch (const VError& err) {

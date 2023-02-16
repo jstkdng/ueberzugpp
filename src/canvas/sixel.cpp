@@ -17,27 +17,42 @@
 #include "sixel.hpp"
 #include "os.hpp"
 
-#include <unordered_set>
 #include <string>
 #include <chrono>
 #include <iostream>
 
-auto SixelCanvas::is_supported(const Terminal& terminal) -> bool
+#include <unistd.h>
+#include <cstdlib>
+
+int sixel_draw_callback(char *data, int size, void* priv)
 {
-    std::unordered_set<std::string> supported_terms {
-        "contour", "foot", "xterm-256color"
-    };
-    return supported_terms.contains(terminal.name);
+    auto stream = static_cast<std::fstream*>(priv);
+    if (stream->is_open()) stream->write(data, size);
+    return size;
 }
 
 SixelCanvas::SixelCanvas()
 {
-    sixel_encoder_new(&encoder, nullptr);
+    std::string tmppath = (fs::temp_directory_path() / "sixelXXXXXX").string();
+    char *name = tmppath.data();
+    tmp_fd = mkstemp(name);
+    out_file = tmppath;
+
+    dither = sixel_dither_get(SIXEL_BUILTIN_XTERM256);
+    sixel_output_new(&output, sixel_draw_callback, &stream, nullptr);
+    sixel_output_set_palette_type(output, SIXEL_PALETTETYPE_RGB);
+    sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
 }
 
 SixelCanvas::~SixelCanvas()
 {
-    sixel_encoder_unref(encoder);
+    draw_thread.reset();
+    if (stream.is_open()) stream.close();
+    close(tmp_fd); // file descriptor not needed;
+    fs::remove(out_file);
+
+    sixel_dither_destroy(dither);
+    sixel_output_destroy(output);
 }
 
 auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
@@ -50,10 +65,15 @@ auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 
 auto SixelCanvas::draw(Image& image) -> void
 {
+    using std::ios;
+    stream.open(out_file, ios::in | ios::out | ios::binary);
+
     if (image.framerate() == -1) {
         draw_frame(image);
         return;
     }
+
+    // start drawing loop
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
             draw_frame(image);
@@ -66,24 +86,35 @@ auto SixelCanvas::draw(Image& image) -> void
 
 auto SixelCanvas::clear() -> void
 {
+    const std::lock_guard<std::mutex> lock(draw_lock);
+    if (stream.is_open()) stream.close();
     draw_thread.reset();
+
+    // clear terminal
     for (int i = y; i <= max_height; ++i) {
         move_cursor(i, x);
         std::cout << std::string(max_width, ' ');
     }
     std::cout << std::flush;
+    move_cursor(y, x);
 }
 
 auto SixelCanvas::draw_frame(const Image& image) -> void
 {
-    move_cursor(y, x);
-    sixel_encoder_encode_bytes(encoder,
-            const_cast<unsigned char*>(image.data()),
+    const std::lock_guard<std::mutex> lock(draw_lock);
+    if (!stream.is_open()) return;
+
+    fs::resize_file(out_file, 0);
+    stream.seekp(0);
+    // sixel expects RGB888
+    sixel_encode(const_cast<unsigned char*>(image.data()),
             image.width(),
             image.height(),
-            SIXEL_PIXELFORMAT_BGRA8888,
-            nullptr,
-            (-1));
+            3 /*unused*/, dither, output);
+    stream.clear();
+    stream.seekg(0);
+    move_cursor(y, x);
+    std::cout << stream.rdbuf() << std::flush;
 }
 
 auto SixelCanvas::move_cursor(int row, int col) -> void

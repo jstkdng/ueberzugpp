@@ -19,8 +19,6 @@
 
 #include "process_info.hpp"
 
-#include <memory>
-#include <utility>
 #include <string>
 
 class Terminal
@@ -33,6 +31,8 @@ public:
     double font_width;
     double font_height;
     std::string name;
+
+    auto supports_sixel() const -> bool;
 
 private:
     auto get_terminal_size() -> void;

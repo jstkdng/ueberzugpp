@@ -18,16 +18,21 @@
 #define __OPENCV_IMAGE__
 
 #include "image.hpp"
+#include "terminal.hpp"
 
 #include <string>
 #include <opencv2/core.hpp>
 #include <opencv2/videoio.hpp>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 class OpencvImage : public Image
 {
 public:
-    OpencvImage(const std::string& filename, int max_width,
-            int max_height, bool is_video = false);
+    OpencvImage(const Terminal& terminal,
+            const std::string& filename, int max_width, int max_height,
+            bool is_video = false);
 
     auto width() const -> int override;
     auto height() const -> int override;
@@ -41,7 +46,8 @@ private:
     cv::Mat image;
     cv::VideoCapture video;
 
-    std::string filename;
+    fs::path path;
+    const Terminal& terminal;
 
     int _width;
     int _height;

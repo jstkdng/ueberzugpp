@@ -5,7 +5,7 @@
 
 auto Canvas::init(const Terminal& terminal) -> std::unique_ptr<Canvas>
 {
-    if (SixelCanvas::is_supported(terminal)) {
+    if (terminal.supports_sixel()) {
         logger << "=== Using sixel output" << std::endl;
         return std::make_unique<SixelCanvas>();
     }

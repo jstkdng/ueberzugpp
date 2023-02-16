@@ -24,6 +24,11 @@
 #include <sixel.h>
 #include <memory>
 #include <thread>
+#include <mutex>
+#include <fstream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 class SixelCanvas : public Canvas
 {
@@ -35,15 +40,20 @@ public:
     auto draw(Image& image) -> void override;
     auto clear() -> void override;
 
-    static auto is_supported(const Terminal& terminal) -> bool;
-
 private:
-    sixel_encoder_t *encoder;
+    sixel_dither_t *dither;
+    sixel_output_t *output;
+
     std::unique_ptr<std::jthread> draw_thread;
+    std::mutex draw_lock;
+    fs::path out_file;
+    std::fstream stream;
+
     int x;
     int y;
     int max_width;
     int max_height;
+    int tmp_fd;
 
     auto draw_frame(const Image& image) -> void;
     auto move_cursor(int row, int col) -> void;

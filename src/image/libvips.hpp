@@ -18,15 +18,18 @@
 #define __VIPS_IMAGE__
 
 #include "image.hpp"
+#include "terminal.hpp"
 
 #include <string>
 #include <memory>
 #include <vips/vips8>
+#include <filesystem>
 
 class LibvipsImage : public Image
 {
 public:
-    LibvipsImage(const std::string &filename, int max_width, int max_height);
+    LibvipsImage(const Terminal& terminal,
+            const std::string &filename, int max_width, int max_height);
 
     auto width() const -> int override;
     auto height() const -> int override;
@@ -39,7 +42,8 @@ private:
     vips::VImage image;
 
     std::unique_ptr<unsigned char> _data;
-    std::string filename;
+    std::filesystem::path path;
+    const Terminal& terminal;
 
     int max_width;
     int max_height;

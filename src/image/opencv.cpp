@@ -18,18 +18,15 @@
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
-#include <cmath>
-#include <filesystem>
 
-namespace fs = std::filesystem;
-
-OpencvImage::OpencvImage(const std::string& filename,
-        int max_width, int max_height, bool is_video):
-filename(filename),
-max_width(max_width),
-max_height(max_height)
+OpencvImage::OpencvImage(const Terminal& terminal,
+        const std::string& filename, int max_width, int max_height,
+        bool is_video):
+terminal(terminal),
+path(filename),
+max_width(max_width * terminal.font_width),
+max_height(max_height * terminal.font_height)
 {
-    fs::path path = filename;
     if (is_video) {
         video = cv::VideoCapture(filename, cv::CAP_FFMPEG);
         video.read(image);
@@ -67,6 +64,7 @@ auto OpencvImage::framerate() const -> int
 
 auto OpencvImage::next_frame() -> void
 {
+    // don't do anything unless opened by ffmpeg
     if (!video.isOpened()) return;
     if (!video.read(image)) {
         video.set(cv::CAP_PROP_POS_FRAMES, 0);
@@ -101,9 +99,17 @@ auto OpencvImage::process_image() -> void
         _width = new_width;
         _height = new_height;
     }
-    // alpha channel required
-    if (image.channels() <= 3) {
+
+    if (terminal.supports_sixel()) {
+        if (image.channels() == 4) {
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
+        } else {
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+        }
+    } else {
+        // alpha channel required
         cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
     }
+
     _size = image.total() * image.elemSize();
 }

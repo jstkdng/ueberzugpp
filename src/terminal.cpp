@@ -22,6 +22,7 @@
 #include <sys/ioctl.h>
 #include <cmath>
 #include <iostream>
+#include <unordered_set>
 
 Terminal::Terminal(ProcessInfo pid):
 proc(pid)
@@ -34,6 +35,14 @@ proc(pid)
 Terminal::~Terminal()
 {
     close(this->pty_fd);
+}
+
+auto Terminal::supports_sixel() const -> bool
+{
+    std::unordered_set<std::string> supported_terms {
+        "contour", "foot", "xterm-256color", "yaft-256color"
+    };
+    return supported_terms.contains(name);
 }
 
 auto Terminal::get_terminal_size() -> void
