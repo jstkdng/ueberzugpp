@@ -23,7 +23,7 @@ class ProcessInfo
 {
 public:
     ProcessInfo(int pid);
-    ~ProcessInfo();
+    ~ProcessInfo() = default;
 
     int pid;
     int ppid;

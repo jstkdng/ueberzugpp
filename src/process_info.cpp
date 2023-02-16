@@ -47,5 +47,3 @@ pid(pid)
     is.close();
 }
 
-ProcessInfo::~ProcessInfo()
-{}
