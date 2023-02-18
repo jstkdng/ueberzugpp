@@ -55,13 +55,15 @@ Advantages over w3mimgdisplay and ueberzug:
 
 ## Dependencies
 
-1. opencv
-2. libvips
-3. xcb-util-image
-4. nlohmann-json
-5. cli11
-6. libsixel
-7. cmake
+This project uses C++20 features so you must use a recent compiler.
+
+- cmake <=3.18
+- opencv
+- libvips
+- xcb-util-image
+- nlohmann-json
+- cli11
+- libsixel
 
 ## Build instructions
 
