@@ -41,7 +41,7 @@ public:
     auto clear() -> void override;
 
 private:
-    sixel_dither_t *dither;
+    sixel_dither_t *dither = nullptr;
     sixel_output_t *output;
 
     std::unique_ptr<std::jthread> draw_thread;

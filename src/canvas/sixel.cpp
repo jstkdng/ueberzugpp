@@ -39,9 +39,7 @@ SixelCanvas::SixelCanvas()
     close(fd); // fd not required
     out_file = tmppath;
 
-    dither = sixel_dither_get(SIXEL_BUILTIN_XTERM256);
     sixel_output_new(&output, sixel_draw_callback, &stream, nullptr);
-    sixel_output_set_palette_type(output, SIXEL_PALETTETYPE_AUTO);
     sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
 }
 
@@ -51,8 +49,11 @@ SixelCanvas::~SixelCanvas()
     if (stream.is_open()) stream.close();
     fs::remove(out_file);
 
-    sixel_dither_destroy(dither);
     sixel_output_destroy(output);
+    if (dither) {
+        sixel_dither_destroy(dither);
+        dither = nullptr;
+    }
 }
 
 auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
@@ -66,6 +67,17 @@ auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
 auto SixelCanvas::draw(Image& image) -> void
 {
     stream.open(out_file, std::ios::in | std::ios::out | std::ios::binary);
+
+    // create dither and palette from image
+    sixel_dither_new(&dither, -1, nullptr);
+    sixel_dither_initialize(dither,
+            const_cast<unsigned char*>(image.data()),
+            image.width(),
+            image.height(),
+            SIXEL_PIXELFORMAT_RGB888,
+            SIXEL_LARGE_NORM,
+            SIXEL_REP_CENTER_BOX,
+            SIXEL_QUALITY_HIGH);
 
     if (image.framerate() == -1) {
         draw_frame(image);
@@ -87,7 +99,11 @@ auto SixelCanvas::clear() -> void
 {
     std::scoped_lock lock {draw_mutex};
     draw_thread.reset();
-    stream.close();
+    if (stream.is_open()) stream.close();
+    if (dither) {
+        sixel_dither_destroy(dither);
+        dither = nullptr;
+    }
 
     // clear terminal
     for (int i = y; i <= max_height; ++i) {
