@@ -50,10 +50,7 @@ SixelCanvas::~SixelCanvas()
     fs::remove(out_file);
 
     sixel_output_destroy(output);
-    if (dither) {
-        sixel_dither_destroy(dither);
-        dither = nullptr;
-    }
+    if (dither) sixel_dither_destroy(dither);
 }
 
 auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void

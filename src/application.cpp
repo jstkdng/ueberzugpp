@@ -18,7 +18,7 @@
 #include "logging.hpp"
 #include "process_info.hpp"
 #include "os.hpp"
-#include "config.hpp"
+#include "version.hpp"
 
 #include <nlohmann/json.hpp>
 

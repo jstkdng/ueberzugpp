@@ -34,7 +34,7 @@ pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 
-configure_file("include/config.h.in" config.hpp)
+configure_file("include/version.hpp.in" version.hpp)
 
 set(UEBERZUGPP_SOURCES
     "src/main.cpp"
