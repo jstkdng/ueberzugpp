@@ -57,7 +57,7 @@ Advantages over w3mimgdisplay and ueberzug:
 
 This project uses C++20 features so you must use a recent compiler.
 
-- cmake <=3.18
+- cmake version 3.18 ≤
 - opencv
 - libvips
 - xcb-util-image
