@@ -21,7 +21,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
 
-project(ueberzugpp LANGUAGES CXX)
+project(ueberzugpp LANGUAGES CXX VERSION 1.7.0)
 
 find_package(nlohmann_json REQUIRED)
 find_package(CLI11 REQUIRED)
@@ -33,6 +33,8 @@ find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
+
+configure_file("include/config.h.in" config.hpp)
 
 set(UEBERZUGPP_SOURCES
     "src/main.cpp"
@@ -56,7 +58,10 @@ set(UEBERZUGPP_SOURCES
 
 add_executable(ueberzug ${UEBERZUGPP_SOURCES})
 
-target_include_directories(ueberzug PUBLIC "${CMAKE_SOURCE_DIR}/include")
+target_include_directories(ueberzug PUBLIC
+    "${CMAKE_SOURCE_DIR}/include"
+    "${PROJECT_BINARY_DIR}"
+)
 target_link_libraries(ueberzug PUBLIC
     nlohmann_json::nlohmann_json
     CLI11::CLI11

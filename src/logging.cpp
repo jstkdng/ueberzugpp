@@ -26,7 +26,7 @@ Logging::Logging()
 {
     std::string log_tmp = "ueberzug_" + os::getenv("USER").value() + ".log";
     fs::path log_path = fs::temp_directory_path() / log_tmp;
-    this->logfile = std::ofstream(log_path, std::ios_base::app);
+    logfile = std::ofstream(log_path, std::ios_base::app);
 }
 
 void Logging::set_silent(bool silent)

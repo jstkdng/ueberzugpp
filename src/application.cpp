@@ -18,6 +18,7 @@
 #include "logging.hpp"
 #include "process_info.hpp"
 #include "os.hpp"
+#include "config.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -26,6 +27,9 @@ using json = nlohmann::json;
 Application::Application():
 terminal(ProcessInfo(os::get_pid()))
 {
+    logger << "\n=== started ueberzugpp " << ueberzugpp_VERSION_MAJOR << "."
+            << ueberzugpp_VERSION_MINOR << "." << ueberzugpp_VERSION_PATCH
+            << std::endl;
     canvas = Canvas::init(terminal);
 }
 
