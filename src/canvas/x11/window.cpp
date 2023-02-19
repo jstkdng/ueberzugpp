@@ -60,8 +60,8 @@ parent(parent)
     this->window = wid;
     xcb_map_window(this->connection, this->window);
 
-    this->event_handler = std::make_unique<std::jthread>([this]() {
-        this->handle_events();
+    event_handler = std::make_unique<std::jthread>([&] () {
+        handle_events();
     });
 
     xcb_flush(connection);
@@ -85,6 +85,7 @@ auto Window::draw(Image& image) -> void
 
 auto Window::draw_frame(const Image& image) -> void
 {
+    if (xcb_image) xcb_image_destroy(xcb_image);
     auto ptr = malloc(image.size());
     xcb_image = xcb_image_create_native(connection,
             image.width(),
@@ -95,7 +96,6 @@ auto Window::draw_frame(const Image& image) -> void
             image.size(),
             const_cast<unsigned char*>(image.data()));
     send_expose_event();
-    xcb_flush(connection);
 }
 
 Window::~Window()
@@ -120,8 +120,6 @@ auto Window::handle_events() -> void
                 if (expose->x == 69 && expose->y == 420) return;
                 if (!xcb_image) continue;
                 xcb_image_put(connection, window, gc, xcb_image, 0, 0, 0);
-                xcb_image_destroy(xcb_image);
-                xcb_image = nullptr;
                 break;
             }
             default: {
