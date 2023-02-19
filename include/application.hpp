@@ -35,7 +35,7 @@ public:
 private:
     Terminal terminal;
 
-    std::unique_ptr<Image> image;
+    std::shared_ptr<Image> image;
     std::unique_ptr<Canvas> canvas;
 };
 

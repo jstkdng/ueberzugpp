@@ -36,13 +36,14 @@ public:
     SixelCanvas();
     ~SixelCanvas();
 
-    auto create(int x, int y, int max_width, int max_height) -> void override;
-    auto draw(Image& image) -> void override;
+    auto init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void override;
+    auto draw() -> void override;
     auto clear() -> void override;
 
 private:
     sixel_dither_t *dither = nullptr;
     sixel_output_t *output;
+    std::shared_ptr<Image> image;
 
     std::unique_ptr<std::jthread> draw_thread;
     std::mutex draw_mutex;
@@ -54,7 +55,7 @@ private:
     int max_width;
     int max_height;
 
-    auto draw_frame(const Image& image) -> void;
+    auto draw_frame() -> void;
     auto move_cursor(int row, int col) -> void;
 };
 

@@ -53,40 +53,41 @@ SixelCanvas::~SixelCanvas()
     if (dither) sixel_dither_destroy(dither);
 }
 
-auto SixelCanvas::create(int x, int y, int max_width, int max_height) -> void
+auto SixelCanvas::init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void
 {
     this->x = x + 1;
     this->y = y + 1;
     this->max_width = max_width;
     this->max_height = max_height;
-}
-
-auto SixelCanvas::draw(Image& image) -> void
-{
-    stream.open(out_file, std::ios::in | std::ios::out | std::ios::binary);
+    this->image = image;
 
     // create dither and palette from image
     sixel_dither_new(&dither, -1, nullptr);
     sixel_dither_initialize(dither,
-            const_cast<unsigned char*>(image.data()),
-            image.width(),
-            image.height(),
+            const_cast<unsigned char*>(image->data()),
+            image->width(),
+            image->height(),
             SIXEL_PIXELFORMAT_RGB888,
             SIXEL_LARGE_NORM,
             SIXEL_REP_CENTER_BOX,
             SIXEL_QUALITY_HIGH);
+}
 
-    if (image.framerate() == -1) {
-        draw_frame(image);
+auto SixelCanvas::draw() -> void
+{
+    stream.open(out_file, std::ios::in | std::ios::out | std::ios::binary);
+
+    if (image->framerate() == -1) {
+        draw_frame();
         return;
     }
 
     // start drawing loop
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
-            draw_frame(image);
-            image.next_frame();
-            unsigned long duration = (1.0 / image.framerate()) * 1000;
+            draw_frame();
+            image->next_frame();
+            unsigned long duration = (1.0 / image->framerate()) * 1000;
             std::this_thread::sleep_for(std::chrono::milliseconds(duration));
         }
     });
@@ -111,7 +112,7 @@ auto SixelCanvas::clear() -> void
     move_cursor(y, x);
 }
 
-auto SixelCanvas::draw_frame(const Image& image) -> void
+auto SixelCanvas::draw_frame() -> void
 {
     std::scoped_lock lock {draw_mutex};
     if (!stream.is_open()) return;
@@ -119,9 +120,9 @@ auto SixelCanvas::draw_frame(const Image& image) -> void
     // output sixel content to file
     fs::resize_file(out_file, 0);
     stream.seekp(0);
-    sixel_encode(const_cast<unsigned char*>(image.data()),
-            image.width(),
-            image.height(),
+    sixel_encode(const_cast<unsigned char*>(image->data()),
+            image->width(),
+            image->height(),
             3 /*unused*/, dither, output);
 
     // write whole file to stdout

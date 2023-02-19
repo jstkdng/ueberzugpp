@@ -26,7 +26,7 @@ class Image
 public:
     static auto load(const std::string& filename,
             int max_width, int max_height, const Terminal& terminal)
-        -> std::unique_ptr<Image>;
+        -> std::shared_ptr<Image>;
     virtual ~Image() = default;
 
     virtual auto width() const -> int = 0;

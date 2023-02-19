@@ -19,7 +19,7 @@
 #include "canvas/sixel.hpp"
 #include "canvas/x11/x11.hpp"
 
-auto Canvas::init(const Terminal& terminal) -> std::unique_ptr<Canvas>
+auto Canvas::create(const Terminal& terminal) -> std::unique_ptr<Canvas>
 {
     if (terminal.supports_sixel()) {
         logger << "=== Using sixel output" << std::endl;

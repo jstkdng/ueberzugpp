@@ -28,27 +28,27 @@ namespace fs = std::filesystem;
 
 auto Image::load(const std::string& filename, int max_width, int max_height,
         const Terminal& terminal)
-    -> std::unique_ptr<Image>
+    -> std::shared_ptr<Image>
 {
     fs::path file = filename;
     if (file.extension() == ".webp") {
         logger << "=== Loading image with libvips" << std::endl;
-        return std::make_unique<LibvipsImage>(terminal, filename, max_width, max_height);
+        return std::make_shared<LibvipsImage>(terminal, filename, max_width, max_height);
     }
     bool is_gif = file.extension() == ".gif";
     if (cv::haveImageReader(filename) || is_gif) {
         logger << "=== Loading image with opencv" << std::endl;
-        return std::make_unique<OpencvImage>(terminal, filename, max_width, max_height, is_gif);
+        return std::make_shared<OpencvImage>(terminal, filename, max_width, max_height, is_gif);
     }
     std::string vips_loader = vips_foreign_find_load(filename.c_str());
     if (!vips_loader.empty()) {
         logger << "=== Loading image with libvips" << std::endl;
-        return std::make_unique<LibvipsImage>(terminal, filename, max_width, max_height);
+        return std::make_shared<LibvipsImage>(terminal, filename, max_width, max_height);
     }
     cv::VideoCapture capture(filename, cv::CAP_FFMPEG);
     if (capture.isOpened()) {
         logger << "=== Loading image with opencv" << std::endl;
-        return std::make_unique<OpencvImage>(terminal, filename, max_width, max_height, true);
+        return std::make_shared<OpencvImage>(terminal, filename, max_width, max_height, true);
     }
     return nullptr;
 }

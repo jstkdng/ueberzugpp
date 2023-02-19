@@ -43,17 +43,18 @@ X11Canvas::~X11Canvas()
     xcb_disconnect(connection);
 }
 
-auto X11Canvas::draw(Image& image) -> void
+auto X11Canvas::draw() -> void
 {
     for (const auto& window: windows) {
-        window->draw(image);
+        window->draw(*image);
     }
 }
 
-auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
+auto X11Canvas::init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void
 {
     std::vector<ProcessInfo> client_pids {ProcessInfo(os::get_pid())};
     std::unordered_map<unsigned int, xcb_window_t> pid_window_map;
+    this->image = image;
 
     auto wid = os::getenv("WINDOWID");
 
@@ -67,8 +68,8 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
                     std::stoi(wid.value()),
                     x * terminal.font_width,
                     y * terminal.font_height,
-                    max_width * terminal.font_width,
-                    max_height * terminal.font_height));
+                    image->width(),
+                    image->height()));
         return;
     }
 
@@ -82,8 +83,8 @@ auto X11Canvas::create(int x, int y, int max_width, int max_height) -> void
                         pid_window_map[ppid.pid],
                         x * terminal.font_width,
                         y * terminal.font_height,
-                        max_width * terminal.font_width,
-                        max_height * terminal.font_height));
+                        image->width(),
+                        image->height()));
         }
     }
 }

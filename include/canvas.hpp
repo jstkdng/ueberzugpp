@@ -25,11 +25,11 @@
 class Canvas
 {
 public:
-    static auto init(const Terminal& terminal) -> std::unique_ptr<Canvas>;
+    static auto create(const Terminal& terminal) -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
-    virtual auto create(int x, int y, int max_width, int max_height) -> void = 0;
-    virtual auto draw(Image& image) -> void = 0;
+    virtual auto init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void = 0;
+    virtual auto draw() -> void = 0;
     virtual auto clear() -> void = 0;
 };
 

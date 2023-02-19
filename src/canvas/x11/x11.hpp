@@ -33,8 +33,8 @@ public:
     X11Canvas(const Terminal& terminal);
     ~X11Canvas();
 
-    auto create(int x, int y, int max_width, int max_height) -> void override;
-    auto draw(Image& image) -> void override;
+    auto init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void override;
+    auto draw() -> void override;
     auto clear() -> void override;
 
 private:
@@ -43,6 +43,7 @@ private:
     const Terminal& terminal;
 
     std::vector<std::unique_ptr<Window>> windows;
+    std::shared_ptr<Image> image;
 
     // utility functions
     auto get_server_window_ids() -> std::vector<xcb_window_t>;

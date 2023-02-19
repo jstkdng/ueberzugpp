@@ -31,7 +31,7 @@ terminal(ProcessInfo(os::get_pid()))
             << ueberzugpp_VERSION_MAJOR << "."
             << ueberzugpp_VERSION_MINOR << "."
             << ueberzugpp_VERSION_PATCH << std::endl;
-    canvas = Canvas::init(terminal);
+    canvas = Canvas::create(terminal);
 }
 
 Application::~Application()
@@ -54,13 +54,13 @@ auto Application::execute(const std::string& cmd) -> void
         int max_height = static_cast<int>(j["max_height"]);
         int x = static_cast<int>(j["x"]);
         int y = static_cast<int>(j["y"]);
-        canvas->create(x, y, max_width, max_height);
         image = Image::load(j["path"], max_width, max_height, terminal);
+        canvas->init(x, y, max_width, max_height, image);
         if (!image) {
             logger << "Unable to load image file." << std::endl;
             return;
         }
-        canvas->draw(*image);
+        canvas->draw();
     } else if (j["action"] == "remove") {
         canvas->clear();
     } else {
