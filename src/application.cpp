@@ -27,9 +27,10 @@ using json = nlohmann::json;
 Application::Application():
 terminal(ProcessInfo(os::get_pid()))
 {
-    logger << "\n=== started ueberzugpp " << ueberzugpp_VERSION_MAJOR << "."
-            << ueberzugpp_VERSION_MINOR << "." << ueberzugpp_VERSION_PATCH
-            << std::endl;
+    logger << "\n=== started ueberzugpp "
+            << ueberzugpp_VERSION_MAJOR << "."
+            << ueberzugpp_VERSION_MINOR << "."
+            << ueberzugpp_VERSION_PATCH << std::endl;
     canvas = Canvas::init(terminal);
 }
 
@@ -49,8 +50,8 @@ auto Application::execute(const std::string& cmd) -> void
     }
     logger << "=== Command received:\n" << j.dump() << std::endl;
     if (j["action"] == "add") {
-        int max_width = static_cast<int>(j["max_width"]) - 1;
-        int max_height = static_cast<int>(j["max_height"]) - 1;
+        int max_width = static_cast<int>(j["max_width"]);
+        int max_height = static_cast<int>(j["max_height"]);
         int x = static_cast<int>(j["x"]);
         int y = static_cast<int>(j["y"]);
         canvas->create(x, y, max_width, max_height);

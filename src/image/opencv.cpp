@@ -78,20 +78,7 @@ auto OpencvImage::process_image() -> void
     _width = image.cols;
     _height = image.rows;
 
-    unsigned long max_dim = (_width >= _height) ?
-                            _width : _height;
-    unsigned long new_width = 0, new_height = 0;
-    double width_scale, height_scale, min_scale, max_scale;
-    double scale = static_cast<double>(max_width) / max_dim;
-    if (!(_width <= max_width && _height <= max_height)) {
-        if (_width >= _height) {
-            new_width = this->max_width;
-            new_height = _height * scale;
-        } else {
-            new_height = this->max_width;
-            new_width = _width * scale;
-        }
-    }
+    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
 
     if (new_width != 0 || new_height != 0) {
         cv::resize(image, image, cv::Size(new_width, new_height),

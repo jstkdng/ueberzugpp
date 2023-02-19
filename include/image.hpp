@@ -36,6 +36,8 @@ public:
 
     virtual auto framerate() const -> int { return -1; }
     virtual auto next_frame() -> void {}
+protected:
+    auto get_new_sizes(int max_width, int max_height) -> std::pair<int, int>;
 };
 
 #endif

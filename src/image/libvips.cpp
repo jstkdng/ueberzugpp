@@ -27,33 +27,31 @@ path(filename),
 max_width(max_width * terminal.font_width),
 max_height(max_height * terminal.font_height)
 {
-    auto check = VImage::new_from_file(filename.c_str());
-    VImage img;
-    // at least 3 bands are required
-    if (check.width() < this->max_width && check.height() < this->max_height) {
-        // thumbnail not required
-        img = check.colourspace(VIPS_INTERPRETATION_sRGB);
-    } else {
-        img = VImage::thumbnail(filename.c_str(), this->max_width - 1)
-            .colourspace(VIPS_INTERPRETATION_sRGB);
+    image = VImage::new_from_file(filename.c_str())
+        .colourspace(VIPS_INTERPRETATION_sRGB);
+
+    auto [new_width, new_height] = get_new_sizes(this->max_width, this->max_height);
+    if (new_width != 0 || new_height != 0) {
+        image = VImage::thumbnail(filename.c_str(), new_width)
+                    .colourspace(VIPS_INTERPRETATION_sRGB);
     }
+
     if (terminal.supports_sixel()) {
         // sixel expects RGB888
-        if (img.has_alpha()) {
-            img = img.flatten();
+        if (image.has_alpha()) {
+            image = image.flatten();
         }
     } else {
         // alpha channel required
-        if (!img.has_alpha()) img = img.bandjoin(255);
+        if (!image.has_alpha()) image = image.bandjoin(255);
         // convert from RGB to BGR
-        auto bands = img.bandsplit();
+        auto bands = image.bandsplit();
         auto tmp = bands[0];
         bands[0] = bands[2];
         bands[2] = tmp;
-        img = VImage::bandjoin(bands);
+        image = VImage::bandjoin(bands);
     }
 
-    image = img;
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
     _data.reset(static_cast<unsigned char*>(image.write_to_memory(&(_size))));
 }

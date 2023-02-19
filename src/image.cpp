@@ -52,3 +52,31 @@ auto Image::load(const std::string& filename, int max_width, int max_height,
     }
     return nullptr;
 }
+
+auto Image::get_new_sizes(int max_width, int max_height) -> std::pair<int, int>
+{
+    int _width = width(), _height = height(), new_width = 0, new_height = 0;
+    double new_scale = 0, width_scale, height_scale, min_scale, max_scale;
+
+    if (_height > max_height) {
+        if (_width > max_width) {
+            width_scale = static_cast<double>(max_width) / _width;
+            height_scale = static_cast<double>(max_height) / _height;
+            min_scale = std::min(width_scale, height_scale);
+            max_scale = std::max(width_scale, height_scale);
+            if (_width * max_scale <= max_width && _height * max_scale <= max_height) {
+                new_scale = max_scale;
+            } else {
+                new_scale = min_scale;
+            }
+        } else {
+            new_scale = static_cast<double>(max_height) / _height;
+        }
+    } else if (_width > max_width) {
+        new_scale = static_cast<double>(max_width) / _width;
+    }
+    new_width = _width * new_scale;
+    new_height = _height * new_scale;
+
+    return std::make_pair(new_width, new_height);
+}
