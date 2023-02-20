@@ -19,6 +19,7 @@
 #include "process_info.hpp"
 #include "os.hpp"
 #include "version.hpp"
+#include "dimensions.hpp"
 
 #include <nlohmann/json.hpp>
 
@@ -50,12 +51,9 @@ auto Application::execute(const std::string& cmd) -> void
     }
     logger << "=== Command received:\n" << j.dump() << std::endl;
     if (j["action"] == "add") {
-        int max_width = static_cast<int>(j["max_width"]);
-        int max_height = static_cast<int>(j["max_height"]);
-        int x = static_cast<int>(j["x"]);
-        int y = static_cast<int>(j["y"]);
-        image = Image::load(j["path"], max_width, max_height, terminal);
-        canvas->init(x, y, max_width, max_height, image);
+        Dimensions dimensions(terminal, j["x"], j["y"], j["max_width"], j["max_height"]);
+        image = Image::load(terminal, dimensions, j["path"]);
+        canvas->init(dimensions, image);
         if (!image) {
             logger << "Unable to load image file." << std::endl;
             return;

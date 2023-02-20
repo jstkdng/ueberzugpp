@@ -33,6 +33,8 @@ namespace tmux
     bool is_window_focused();
 
     auto get_client_pids() -> std::optional<std::vector<ProcessInfo>>;
+
+    auto get_offset() -> std::pair<const int, const int>;
 }
 
 #endif

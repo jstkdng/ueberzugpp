@@ -46,11 +46,11 @@ X11Canvas::~X11Canvas()
 auto X11Canvas::draw() -> void
 {
     for (const auto& window: windows) {
-        window->draw(*image);
+        window->draw();
     }
 }
 
-auto X11Canvas::init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void
+auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void
 {
     std::vector<ProcessInfo> client_pids {ProcessInfo(os::get_pid())};
     std::unordered_map<unsigned int, xcb_window_t> pid_window_map;
@@ -64,12 +64,9 @@ auto X11Canvas::init(int x, int y, int max_width, int max_height, std::shared_pt
     } else if (wid.has_value()) {
         // if WID exists prevent doing any calculations
         auto proc = client_pids.front();
-        windows.push_back(std::make_unique<Window>(connection, screen,
-                    std::stoi(wid.value()),
-                    x * terminal.font_width,
-                    y * terminal.font_height,
-                    image->width(),
-                    image->height()));
+        windows.push_back(std::make_unique<Window>(
+                    connection, std::stoi(wid.value()), screen,
+                    dimensions, image));
         return;
     }
 
@@ -79,12 +76,9 @@ auto X11Canvas::init(int x, int y, int max_width, int max_height, std::shared_pt
         for (const auto& ppid: ppids) {
             if (!pid_window_map.contains(ppid.pid)) continue;
             windows.push_back(std::make_unique<Window>(
-                        connection, screen,
-                        pid_window_map[ppid.pid],
-                        x * terminal.font_width,
-                        y * terminal.font_height,
-                        image->width(),
-                        image->height()));
+                        connection,
+                        pid_window_map[ppid.pid], screen,
+                        dimensions, image));
         }
     }
 }

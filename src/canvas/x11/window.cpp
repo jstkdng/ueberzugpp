@@ -24,83 +24,78 @@ struct free_delete
     void operator()(void* x) { free(x); }
 };
 
-Window::Window(
-        xcb_connection_t *connection,
-        xcb_screen_t *screen,
-        xcb_window_t parent,
-        int x, int y, int max_width, int max_height
-):
+Window::Window(xcb_connection_t *connection, xcb_window_t parent, xcb_screen_t *screen,
+           const Dimensions& dimensions, std::shared_ptr<Image> image):
 connection(connection),
+parent(parent),
+image(image),
 screen(screen),
-parent(parent)
+window(xcb_generate_id(connection)),
+gc(xcb_generate_id(connection))
 {
-    unsigned int value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
-    unsigned int value_list[4] = {
-        this->screen->black_pixel,
-        this->screen->black_pixel,
-        XCB_EVENT_MASK_EXPOSURE,
-        this->screen->default_colormap
-    };
+    unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
+    auto value_list = std::make_unique<xcb_create_window_value_list_t>();
+    value_list->background_pixel =  screen->black_pixel;
+    value_list->border_pixel = screen->black_pixel;
+    value_list->event_mask = XCB_EVENT_MASK_EXPOSURE;
+    value_list->colormap = screen->default_colormap;
 
-    xcb_window_t wid = xcb_generate_id(this->connection);
-    this->gc = xcb_generate_id(this->connection);
-    xcb_create_window(this->connection,
-            this->screen->root_depth,
-            wid,
+    xcb_create_window_aux(connection,
+            screen->root_depth,
+            window,
             this->parent,
-            x, y,
-            max_width, max_height,
+            dimensions.xpixels(), dimensions.ypixels(),
+            image->width(), image->height(),
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
-            this->screen->root_visual,
+            screen->root_visual,
             value_mask,
-            value_list);
+            value_list.get());
+    xcb_map_window(connection, window);
+    xcb_create_gc(connection, gc, window, 0, nullptr);
 
-    xcb_create_gc(connection, gc, wid, 0, nullptr);
-    this->window = wid;
-    xcb_map_window(this->connection, this->window);
-
-    event_handler = std::make_unique<std::jthread>([&] () {
+    event_handler = std::make_unique<std::thread>([this] {
         handle_events();
     });
 
     xcb_flush(connection);
 }
 
-auto Window::draw(Image& image) -> void
+auto Window::draw() -> void
 {
-    if (image.framerate() == -1) {
-        draw_frame(image);
+    if (image->framerate() == -1) {
+        draw_frame();
         return;
     }
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
-            draw_frame(image);
-            image.next_frame();
-            unsigned long duration = (1.0 / image.framerate()) * 1000;
+            draw_frame();
+            image->next_frame();
+            unsigned long duration = (1.0 / image->framerate()) * 1000;
             std::this_thread::sleep_for(std::chrono::milliseconds(duration));
         }
     });
 }
 
-auto Window::draw_frame(const Image& image) -> void
+auto Window::draw_frame() -> void
 {
     if (xcb_image) xcb_image_destroy(xcb_image);
-    auto ptr = malloc(image.size());
+    auto ptr = malloc(image->size());
     xcb_image = xcb_image_create_native(connection,
-            image.width(),
-            image.height(),
+            image->width(),
+            image->height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
             ptr,
-            image.size(),
-            const_cast<unsigned char*>(image.data()));
+            image->size(),
+            const_cast<unsigned char*>(image->data()));
     send_expose_event();
 }
 
 Window::~Window()
 {
     terminate_event_handler();
+    if (event_handler->joinable()) event_handler->join();
     if (xcb_image) xcb_image_destroy(xcb_image);
     xcb_free_gc(connection, gc);
     xcb_unmap_window(connection, window);

@@ -21,6 +21,7 @@
 #include <csignal>
 #include <cstring>
 #include <vips/vips8>
+#include "tmux.hpp"
 
 #include "application.hpp"
 #include "logging.hpp"

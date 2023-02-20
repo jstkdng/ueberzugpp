@@ -20,12 +20,13 @@
 #include <memory>
 #include <string>
 #include "terminal.hpp"
+#include "dimensions.hpp"
 
 class Image
 {
 public:
-    static auto load(const std::string& filename,
-            int max_width, int max_height, const Terminal& terminal)
+    static auto load(const Terminal& terminal,
+            const Dimensions& dimensions, const std::string& filename)
         -> std::shared_ptr<Image>;
     virtual ~Image() = default;
 
@@ -37,7 +38,8 @@ public:
     virtual auto framerate() const -> int { return -1; }
     virtual auto next_frame() -> void {}
 protected:
-    auto get_new_sizes(int max_width, int max_height) -> std::pair<int, int>;
+    auto get_new_sizes(double max_width, double max_height)
+        -> std::pair<const int, const int>;
 };
 
 #endif

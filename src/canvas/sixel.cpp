@@ -53,12 +53,13 @@ SixelCanvas::~SixelCanvas()
     if (dither) sixel_dither_destroy(dither);
 }
 
-auto SixelCanvas::init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void
+auto SixelCanvas::init(const Dimensions& dimensions,
+        std::shared_ptr<Image> image) -> void
 {
-    this->x = x + 1;
-    this->y = y + 1;
-    this->max_width = max_width;
-    this->max_height = max_height;
+    x = dimensions.x + 1;
+    y = dimensions.y + 1;
+    max_width = dimensions.max_w;
+    max_height = dimensions.max_h;
     this->image = image;
 
     // create dither and palette from image

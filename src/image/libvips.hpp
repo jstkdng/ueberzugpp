@@ -19,6 +19,7 @@
 
 #include "image.hpp"
 #include "terminal.hpp"
+#include "dimensions.hpp"
 
 #include <string>
 #include <memory>
@@ -28,8 +29,8 @@
 class LibvipsImage : public Image
 {
 public:
-    LibvipsImage(const Terminal& terminal,
-            const std::string &filename, int max_width, int max_height);
+    LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
+            const std::string &filename);
 
     auto width() const -> int override;
     auto height() const -> int override;

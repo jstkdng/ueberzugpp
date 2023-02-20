@@ -20,17 +20,17 @@
 
 using namespace vips;
 
-LibvipsImage::LibvipsImage(const Terminal& terminal,
-        const std::string& filename, int max_width, int max_height):
+LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
+            const std::string &filename):
 terminal(terminal),
 path(filename),
-max_width(max_width * terminal.font_width),
-max_height(max_height * terminal.font_height)
+max_width(dimensions.max_wpixels()),
+max_height(dimensions.max_hpixels())
 {
     image = VImage::new_from_file(filename.c_str())
         .colourspace(VIPS_INTERPRETATION_sRGB);
 
-    auto [new_width, new_height] = get_new_sizes(this->max_width, this->max_height);
+    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
     if (new_width != 0 || new_height != 0) {
         image = VImage::thumbnail(filename.c_str(), new_width)
                     .colourspace(VIPS_INTERPRETATION_sRGB);

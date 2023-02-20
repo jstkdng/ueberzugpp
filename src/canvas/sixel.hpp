@@ -20,6 +20,7 @@
 #include "canvas.hpp"
 #include "image.hpp"
 #include "terminal.hpp"
+#include "dimensions.hpp"
 
 #include <sixel.h>
 #include <memory>
@@ -36,7 +37,8 @@ public:
     SixelCanvas();
     ~SixelCanvas();
 
-    auto init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void override;
+    auto init(const Dimensions& dimensions,
+            std::shared_ptr<Image> image) -> void override;
     auto draw() -> void override;
     auto clear() -> void override;
 

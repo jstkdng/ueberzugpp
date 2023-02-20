@@ -21,6 +21,7 @@
 #include "image.hpp"
 #include "window.hpp"
 #include "terminal.hpp"
+#include "dimensions.hpp"
 
 #include <xcb/xproto.h>
 #include <memory>
@@ -33,13 +34,15 @@ public:
     X11Canvas(const Terminal& terminal);
     ~X11Canvas();
 
-    auto init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void override;
+    auto init(const Dimensions& dimensions,
+            std::shared_ptr<Image> image) -> void override;
     auto draw() -> void override;
     auto clear() -> void override;
 
 private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
+
     const Terminal& terminal;
 
     std::vector<std::unique_ptr<Window>> windows;

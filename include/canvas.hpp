@@ -19,6 +19,7 @@
 
 #include "image.hpp"
 #include "terminal.hpp"
+#include "dimensions.hpp"
 
 #include <memory>
 
@@ -28,7 +29,8 @@ public:
     static auto create(const Terminal& terminal) -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
-    virtual auto init(int x, int y, int max_width, int max_height, std::shared_ptr<Image> image) -> void = 0;
+    virtual auto init(const Dimensions& dimensions,
+            std::shared_ptr<Image> image) -> void = 0;
     virtual auto draw() -> void = 0;
     virtual auto clear() -> void = 0;
 };

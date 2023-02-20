@@ -45,6 +45,7 @@ set(UEBERZUGPP_SOURCES
     "src/process_info.cpp"
     "src/util.cpp"
     "src/terminal.cpp"
+    "src/dimensions.cpp"
 
     "src/canvas.cpp"
     "src/canvas/sixel.cpp"

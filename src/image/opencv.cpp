@@ -19,19 +19,18 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-OpencvImage::OpencvImage(const Terminal& terminal,
-        const std::string& filename, int max_width, int max_height,
-        bool is_video):
+OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
+            const std::string& filename, bool is_video):
 terminal(terminal),
 path(filename),
-max_width(max_width * terminal.font_width),
-max_height(max_height * terminal.font_height)
+max_width(dimensions.max_wpixels()),
+max_height(dimensions.max_hpixels())
 {
     if (is_video) {
         video = cv::VideoCapture(filename, cv::CAP_FFMPEG);
         video.read(image);
     } else {
-        image = cv::imread(filename, cv::IMREAD_COLOR);
+        image = cv::imread(filename, cv::IMREAD_UNCHANGED);
     }
     process_image();
 }
@@ -94,8 +93,10 @@ auto OpencvImage::process_image() -> void
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
     } else {
-        // alpha channel required
-        cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
+        if (image.channels() < 4) {
+            // alpha channel required
+            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
+        }
     }
 
     _size = image.total() * image.elemSize();

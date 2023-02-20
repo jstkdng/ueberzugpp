@@ -19,6 +19,7 @@
 
 #include "image.hpp"
 #include "terminal.hpp"
+#include "dimensions.hpp"
 
 #include <string>
 #include <opencv2/core.hpp>
@@ -30,9 +31,8 @@ namespace fs = std::filesystem;
 class OpencvImage : public Image
 {
 public:
-    OpencvImage(const Terminal& terminal,
-            const std::string& filename, int max_width, int max_height,
-            bool is_video = false);
+    OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
+            const std::string& filename, bool is_video = false);
 
     auto width() const -> int override;
     auto height() const -> int override;

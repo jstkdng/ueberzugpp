@@ -18,6 +18,7 @@
 #define __WINDOW__
 
 #include "image.hpp"
+#include "dimensions.hpp"
 
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
@@ -26,29 +27,28 @@
 class Window
 {
 public:
-    Window(xcb_connection_t *connection,
-            xcb_screen_t *screen,
-            xcb_window_t parent,
-            int x, int y, int max_width, int max_height);
+    Window(xcb_connection_t *connection, xcb_window_t parent, xcb_screen_t *screen,
+           const Dimensions& dimensions, std::shared_ptr<Image> image);
     ~Window();
 
-    auto draw(Image& image) -> void;
+    auto draw() -> void;
 
 private:
     xcb_connection_t *connection;
-    xcb_screen_t *screen;
     xcb_window_t parent;
     xcb_window_t window;
+    xcb_screen_t *screen;
     xcb_gcontext_t gc;
     xcb_image_t *xcb_image = nullptr;
 
-    std::unique_ptr<std::jthread> event_handler;
+    std::unique_ptr<std::thread> event_handler;
     std::unique_ptr<std::jthread> draw_thread;
+    std::shared_ptr<Image> image;
 
     auto handle_events() -> void;
     auto terminate_event_handler() -> void;
     auto send_expose_event(int x = 0, int y = 0) -> void;
-    auto draw_frame(const Image& image) -> void;
+    auto draw_frame() -> void;
 };
 
 #endif
