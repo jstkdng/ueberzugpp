@@ -32,16 +32,12 @@ class OpencvImage : public Image
 {
 public:
     OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string& filename, bool is_video = false);
+            const std::string& filename);
 
     auto width() const -> int override;
     auto height() const -> int override;
     auto size() const -> unsigned long override;
     auto data() const -> const unsigned char* override;
-
-    auto framerate() const -> int override;
-    auto next_frame() -> void override;
-
 private:
     cv::Mat image;
     cv::VideoCapture video;

@@ -5,7 +5,7 @@ Dimensions::Dimensions(const Terminal& terminal, int x, int y, int max_w, int ma
 terminal(terminal),
 x(x), y(y), max_w(max_w), max_h(max_h)
 {
-    auto [offset_x, offset_y] = tmux::get_offset().value_or(std::make_pair(0, 0));
+    auto [offset_x, offset_y] = tmux::get_offset();
     this->x += offset_x;
     this->y += offset_y;
 }

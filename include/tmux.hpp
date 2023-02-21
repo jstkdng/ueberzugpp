@@ -34,7 +34,7 @@ namespace tmux
 
     auto get_client_pids() -> std::optional<std::vector<ProcessInfo>>;
 
-    auto get_offset() -> std::optional<std::pair<const int, const int>>;
+    auto get_offset() -> std::pair<const int, const int>;
 }
 
 #endif

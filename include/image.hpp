@@ -35,8 +35,9 @@ public:
     virtual auto size() const -> unsigned long = 0;
     virtual auto data() const -> const unsigned char* = 0;
 
-    virtual auto framerate() const -> int { return -1; }
+    virtual auto frame_delay() const -> int { return -1; }
     virtual auto next_frame() -> void {}
+    virtual auto is_animated() const -> bool { return false; }
 protected:
     auto get_new_sizes(double max_width, double max_height)
         -> std::pair<const int, const int>;

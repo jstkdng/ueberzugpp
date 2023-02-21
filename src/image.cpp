@@ -23,6 +23,7 @@
 #include <opencv2/videoio.hpp>
 #include <vips/vips.h>
 #include <filesystem>
+#include <unordered_set>
 
 namespace fs = std::filesystem;
 
@@ -31,25 +32,30 @@ auto Image::load(const Terminal& terminal,
     -> std::shared_ptr<Image>
 {
     fs::path file = filename;
-    if (file.extension() == ".webp") {
-        logger << "=== Loading image with libvips" << std::endl;
-        return std::make_shared<LibvipsImage>(terminal, dimensions, filename);
-    }
-    bool is_gif = file.extension() == ".gif";
-    if (cv::haveImageReader(filename) || is_gif) {
-        logger << "=== Loading image with opencv" << std::endl;
-        return std::make_shared<OpencvImage>(terminal, dimensions, filename, is_gif);
-    }
+    bool is_anim = false, load_opencv = false, load_libvips = false;
+    std::unordered_set<std::string> animated_formats {
+        ".gif", ".webp"
+    };
     std::string vips_loader = vips_foreign_find_load(filename.c_str());
-    if (!vips_loader.empty()) {
+
+    if (animated_formats.contains(file.extension())) {
+        is_anim = true;
+        load_libvips = true;
+    } else if (cv::haveImageReader(filename)) {
+        load_opencv = true;
+    } else if (!vips_loader.empty()) {
+        load_libvips = true;
+    }
+
+    if (load_libvips) { 
         logger << "=== Loading image with libvips" << std::endl;
-        return std::make_shared<LibvipsImage>(terminal, dimensions, filename);
+        return std::make_shared<LibvipsImage>(terminal, dimensions, filename, is_anim);
     }
-    cv::VideoCapture capture(filename, cv::CAP_FFMPEG);
-    if (capture.isOpened()) {
+    if (load_opencv) {
         logger << "=== Loading image with opencv" << std::endl;
-        return std::make_shared<OpencvImage>(terminal, dimensions, filename, true);
+        return std::make_shared<OpencvImage>(terminal, dimensions, filename);
     }
+    logger << "=== Can't load image file" << std::endl;
     return nullptr;
 }
 

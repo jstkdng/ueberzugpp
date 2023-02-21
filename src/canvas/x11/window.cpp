@@ -63,7 +63,7 @@ gc(xcb_generate_id(connection))
 
 auto Window::draw() -> void
 {
-    if (image->framerate() == -1) {
+    if (!image->is_animated()) {
         draw_frame();
         return;
     }
@@ -71,8 +71,7 @@ auto Window::draw() -> void
         while (!token.stop_requested()) {
             draw_frame();
             image->next_frame();
-            unsigned long duration = (1.0 / image->framerate()) * 1000;
-            std::this_thread::sleep_for(std::chrono::milliseconds(duration));
+            std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });
 }

@@ -63,9 +63,9 @@ auto tmux::get_client_pids() -> std::optional<std::vector<ProcessInfo>>
     return pids;
 }
 
-auto tmux::get_offset() -> std::optional<std::pair<const int, const int>>
+auto tmux::get_offset() -> std::pair<const int, const int>
 {
-    if (!tmux::is_used()) return {};
+    if (!tmux::is_used()) return std::make_pair(0, 0);
     std::string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
                                      #{pane_bottom},#{pane_right},\
                                      #{window_height},#{window_width}' \

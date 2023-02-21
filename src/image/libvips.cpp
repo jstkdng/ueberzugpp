@@ -17,43 +17,40 @@
 #include "libvips.hpp"
 
 #include <unordered_set>
+#include <iostream>
+#include <opencv2/videoio.hpp>
 
 using namespace vips;
 
 LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string &filename):
+            const std::string &filename, bool is_anim):
 terminal(terminal),
 path(filename),
+is_anim(is_anim),
 max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels())
 {
-    image = VImage::new_from_file(filename.c_str())
-        .colourspace(VIPS_INTERPRETATION_sRGB);
-
-    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
-    if (new_width != 0 || new_height != 0) {
-        image = VImage::thumbnail(filename.c_str(), new_width)
-                    .colourspace(VIPS_INTERPRETATION_sRGB);
-    }
-
-    if (terminal.supports_sixel()) {
-        // sixel expects RGB888
-        if (image.has_alpha()) {
-            image = image.flatten();
+    if (is_anim) {
+        std::string opts = filename + "[n=-1]";
+        backup = VImage::new_from_file(opts.c_str())
+            .colourspace(VIPS_INTERPRETATION_sRGB);
+        try {
+            npages = backup.get_int("n-pages");
+        } catch (const VError& err) {
+            this->is_anim = false;
+            npages = -1;
+        }
+        if (npages == -1) {
+            image = backup;
+        } else {
+            orig_height = backup.height() / npages;
+            image = backup.crop(0, 0, backup.width(), orig_height);
         }
     } else {
-        // alpha channel required
-        if (!image.has_alpha()) image = image.bandjoin(255);
-        // convert from RGB to BGR
-        auto bands = image.bandsplit();
-        auto tmp = bands[0];
-        bands[0] = bands[2];
-        bands[2] = tmp;
-        image = VImage::bandjoin(bands);
+        image = VImage::new_from_file(path.c_str())
+            .colourspace(VIPS_INTERPRETATION_sRGB);
     }
-
-    _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
-    _data.reset(static_cast<unsigned char*>(image.write_to_memory(&(_size))));
+    process_image();
 }
 
 auto LibvipsImage::width() const -> int
@@ -76,16 +73,62 @@ auto LibvipsImage::data() const -> const unsigned char*
     return _data.get();
 }
 
-auto LibvipsImage::framerate() const -> int
+auto LibvipsImage::is_animated() const -> bool
 {
-    // only return framerate if it is webp or gif
-    std::unordered_set<std::string> supported_formats {
-        ".gif", ".webp"
-    };
-    if (!supported_formats.contains(path.extension())) return -1;
+    return is_anim;
+}
+
+auto LibvipsImage::next_frame() -> void
+{
+    if (!is_anim) return;
+    top += orig_height;
+    if (top == backup.height()) top = 0;
+    image = backup.crop(0, top, backup.width(), orig_height);
+    process_image();
+}
+
+auto LibvipsImage::frame_delay() const -> int
+{
+    if (!is_anim) return -1;
     try {
-        return image.get_int("n-pages");
+        auto delays = backup.get_array_int("delay");
+        if (delays.at(0) == 0) {
+            cv::VideoCapture video (path);
+            if (video.isOpened()) {
+                return (1.0 / video.get(cv::CAP_PROP_FPS)) * 1000;
+            } else {
+                return (1.0 / npages) * 1000;
+            }
+        }
+        return delays.at(0);
     } catch (const VError& err) {
         return -1;
     }
+}
+
+auto LibvipsImage::process_image() -> void
+{
+    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
+    if (new_width != 0 || new_height != 0) {
+        image = image.thumbnail_image(new_width);
+    }
+
+    if (terminal.supports_sixel()) {
+        // sixel expects RGB888
+        if (image.has_alpha()) {
+            image = image.flatten();
+        }
+    } else {
+        // alpha channel required
+        if (!image.has_alpha()) image = image.bandjoin(255);
+        // convert from RGB to BGR
+        auto bands = image.bandsplit();
+        auto tmp = bands[0];
+        bands[0] = bands[2];
+        bands[2] = tmp;
+        image = VImage::bandjoin(bands);
+    }
+
+    _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
+    _data.reset(static_cast<unsigned char*>(image.write_to_memory(&(_size))));
 }

@@ -20,18 +20,13 @@
 #include <opencv2/imgproc.hpp>
 
 OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string& filename, bool is_video):
+            const std::string& filename):
 terminal(terminal),
 path(filename),
 max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels())
 {
-    if (is_video) {
-        video = cv::VideoCapture(filename, cv::CAP_FFMPEG);
-        video.read(image);
-    } else {
-        image = cv::imread(filename, cv::IMREAD_UNCHANGED);
-    }
+    image = cv::imread(filename, cv::IMREAD_UNCHANGED);
     process_image();
 }
 
@@ -53,23 +48,6 @@ auto OpencvImage::size() const -> unsigned long
 auto OpencvImage::data() const -> const unsigned char*
 {
     return image.ptr();
-}
-
-auto OpencvImage::framerate() const -> int
-{
-    if (video.isOpened()) return video.get(cv::CAP_PROP_FPS);
-    return -1;
-}
-
-auto OpencvImage::next_frame() -> void
-{
-    // don't do anything unless opened by ffmpeg
-    if (!video.isOpened()) return;
-    if (!video.read(image)) {
-        video.set(cv::CAP_PROP_POS_FRAMES, 0);
-        video.read(image);
-    }
-    process_image();
 }
 
 auto OpencvImage::process_image() -> void
