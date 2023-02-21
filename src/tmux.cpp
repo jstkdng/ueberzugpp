@@ -16,12 +16,10 @@
 
 #include "tmux.hpp"
 #include "os.hpp"
+#include "util.hpp"
 
 #include <sstream>
 #include <string>
-#include <iostream>
-
-using std::string;
 
 std::string tmux::get_session_id()
 {
@@ -65,12 +63,13 @@ auto tmux::get_client_pids() -> std::optional<std::vector<ProcessInfo>>
     return pids;
 }
 
-auto tmux::get_offset() -> std::pair<const int, const int>
+auto tmux::get_offset() -> std::optional<std::pair<const int, const int>>
 {
-    string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
+    if (!tmux::is_used()) return {};
+    std::string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
                                      #{pane_bottom},#{pane_right},\
                                      #{window_height},#{window_width}' \
                                   -t" +  tmux::get_pane();
-    string output = os::exec(cmd);
-    return std::make_pair(0,0);
+    auto output = util::str_split(os::exec(cmd), ",");
+    return std::make_pair(std::stoi(output.at(1)), std::stoi(output.at(0)));
 }
