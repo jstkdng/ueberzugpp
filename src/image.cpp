@@ -49,7 +49,7 @@ auto Image::load(const Terminal& terminal,
 
     if (load_libvips) { 
         logger << "=== Loading image with libvips" << std::endl;
-        return std::make_shared<LibvipsImage>(terminal, dimensions, filename, is_anim);
+        return std::make_shared<LibvipsImage>(terminal, dimensions, filename, is_anim, vips_loader);
     }
     if (load_opencv) {
         logger << "=== Loading image with opencv" << std::endl;

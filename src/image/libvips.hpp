@@ -30,7 +30,7 @@ class LibvipsImage : public Image
 {
 public:
     LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string &filename, bool is_anim);
+            const std::string &filename, bool is_anim, const std::string& loader);
 
     auto width() const -> int override;
     auto height() const -> int override;

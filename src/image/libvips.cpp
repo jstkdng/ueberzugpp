@@ -17,13 +17,12 @@
 #include "libvips.hpp"
 
 #include <unordered_set>
-#include <iostream>
 #include <opencv2/videoio.hpp>
 
 using namespace vips;
 
 LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string &filename, bool is_anim):
+            const std::string &filename, bool is_anim, const std::string& loader):
 terminal(terminal),
 path(filename),
 is_anim(is_anim),
@@ -31,8 +30,8 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels())
 {
     if (is_anim) {
-        std::string opts = filename + "[n=-1]";
-        backup = VImage::new_from_file(opts.c_str())
+        auto opts = VImage::option()->set("n", -1);
+        backup = VImage::new_from_file(filename.c_str(), opts)
             .colourspace(VIPS_INTERPRETATION_sRGB);
         try {
             npages = backup.get_int("n-pages");
@@ -110,7 +109,8 @@ auto LibvipsImage::process_image() -> void
 {
     auto [new_width, new_height] = get_new_sizes(max_width, max_height);
     if (new_width != 0 || new_height != 0) {
-        image = image.thumbnail_image(new_width);
+        auto opts = VImage::option()->set("height", new_height);
+        image = image.thumbnail_image(new_width, opts);
     }
 
     if (terminal.supports_sixel()) {
