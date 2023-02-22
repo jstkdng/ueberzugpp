@@ -21,7 +21,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
 
-project(ueberzugpp LANGUAGES CXX VERSION 1.9.1)
+project(ueberzugpp LANGUAGES CXX VERSION 2.0.0)
 
 find_package(nlohmann_json REQUIRED)
 find_package(CLI11 REQUIRED)
