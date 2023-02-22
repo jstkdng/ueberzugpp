@@ -31,6 +31,8 @@ namespace util
             xcb_window_t window,
             xcb_atom_t property,
             xcb_atom_t type = XCB_ATOM_ANY) -> bool;
+    auto get_b2_hash(const std::string& str) -> std::string;
+    auto get_cache_path() -> std::string;
 }
 
 #endif

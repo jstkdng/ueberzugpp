@@ -18,11 +18,12 @@
 #include "image/opencv.hpp"
 #include "image/libvips.hpp"
 #include "logging.hpp"
+#include "os.hpp"
+#include "util.hpp"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio.hpp>
 #include <vips/vips.h>
-#include <filesystem>
 #include <unordered_set>
 
 namespace fs = std::filesystem;
@@ -31,17 +32,18 @@ auto Image::load(const Terminal& terminal,
             const Dimensions& dimensions, const std::string& filename)
     -> std::shared_ptr<Image>
 {
-    fs::path file = filename;
+    auto image_path = check_cache(dimensions, filename);
+    fs::path file = image_path;
     bool is_anim = false, load_opencv = false, load_libvips = false;
     std::unordered_set<std::string> animated_formats {
         ".gif", ".webp"
     };
-    std::string vips_loader = vips_foreign_find_load(filename.c_str());
+    std::string vips_loader = vips_foreign_find_load(image_path.c_str());
 
     if (animated_formats.contains(file.extension())) {
         is_anim = true;
         load_libvips = true;
-    } else if (cv::haveImageReader(filename)) {
+    } else if (cv::haveImageReader(image_path)) {
         load_opencv = true;
     } else if (!vips_loader.empty()) {
         load_libvips = true;
@@ -49,14 +51,29 @@ auto Image::load(const Terminal& terminal,
 
     if (load_libvips) { 
         logger << "=== Loading image with libvips" << std::endl;
-        return std::make_shared<LibvipsImage>(terminal, dimensions, filename, is_anim, vips_loader);
+        return std::make_shared<LibvipsImage>(terminal, dimensions, image_path, is_anim, vips_loader);
     }
     if (load_opencv) {
         logger << "=== Loading image with opencv" << std::endl;
-        return std::make_shared<OpencvImage>(terminal, dimensions, filename);
+        return std::make_shared<OpencvImage>(terminal, dimensions, image_path);
     }
     logger << "=== Can't load image file" << std::endl;
     return nullptr;
+}
+
+auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
+{
+    std::string cache_filename = util::get_b2_hash(orig_path) + orig_path.extension().string(),
+                cache_dir = util::get_cache_path();
+    if (!fs::exists(cache_dir)) fs::create_directories(cache_dir);
+    fs::path cache_path = cache_dir + cache_filename;
+    if (!fs::exists(cache_path)) return orig_path;
+    auto cache_img = vips::VImage::new_from_file(cache_path.c_str());
+    if (cache_img.width() == dimensions.max_wpixels() ||
+        cache_img.height() == dimensions.max_hpixels()) {
+        return cache_path;
+    }
+    return orig_path;
 }
 
 auto Image::get_new_sizes(double max_width, double max_height)

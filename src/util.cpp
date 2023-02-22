@@ -16,11 +16,13 @@
 
 #include "util.hpp"
 #include "process_info.hpp"
+#include "os.hpp"
 
 #include <xcb/xcb.h>
 #include <memory>
-#include <xcb/xproto.h>
 #include <iostream>
+#include <botan/hash.h>
+#include <botan/hex.h>
 
 struct free_delete
 {
@@ -70,3 +72,15 @@ auto util::window_has_property(
     return xcb_get_property_value_length(reply.get()) != 0;
 }
 
+auto util::get_b2_hash(const std::string& str) -> std::string
+{
+    using namespace Botan;
+    std::unique_ptr<HashFunction> hash (HashFunction::create("BLAKE2b"));
+    hash->update(str);
+    return hex_encode(hash->final());
+}
+
+auto util::get_cache_path() -> std::string
+{
+    return os::getenv("HOME").value() + "/.cache/ueberzug/";
+}

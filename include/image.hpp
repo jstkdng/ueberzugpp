@@ -19,6 +19,7 @@
 
 #include <memory>
 #include <string>
+#include <filesystem>
 #include "terminal.hpp"
 #include "dimensions.hpp"
 
@@ -28,6 +29,9 @@ public:
     static auto load(const Terminal& terminal,
             const Dimensions& dimensions, const std::string& filename)
         -> std::shared_ptr<Image>;
+    static auto check_cache(const Dimensions& dimensions,
+            const std::filesystem::path& orig_path) -> std::string;
+
     virtual ~Image() = default;
 
     virtual auto width() const -> int = 0;
@@ -38,6 +42,7 @@ public:
     virtual auto frame_delay() const -> int { return -1; }
     virtual auto next_frame() -> void {}
     virtual auto is_animated() const -> bool { return false; }
+
 protected:
     auto get_new_sizes(double max_width, double max_height)
         -> std::pair<const int, const int>;

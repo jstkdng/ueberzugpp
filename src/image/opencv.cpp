@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "opencv.hpp"
+#include "util.hpp"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -60,6 +61,8 @@ auto OpencvImage::process_image() -> void
     if (new_width != 0 || new_height != 0) {
         cv::resize(image, image, cv::Size(new_width, new_height),
                 0, 0, cv::INTER_AREA);
+        std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
+        cv::imwrite(save_location, image);
         _width = new_width;
         _height = new_height;
     }

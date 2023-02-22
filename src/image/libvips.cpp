@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "libvips.hpp"
+#include "util.hpp"
 
 #include <unordered_set>
 #include <opencv2/videoio.hpp>
@@ -111,6 +112,12 @@ auto LibvipsImage::process_image() -> void
     if (new_width != 0 || new_height != 0) {
         auto opts = VImage::option()->set("height", new_height);
         image = image.thumbnail_image(new_width, opts);
+        if (!is_anim) {
+            std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
+            try {
+                image.write_to_file(save_location.c_str());
+            } catch (const VError& err) {};
+        }
     }
 
     if (terminal.supports_sixel()) {
