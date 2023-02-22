@@ -20,6 +20,7 @@
 #include <memory>
 #include <string>
 #include <filesystem>
+#include <spdlog/spdlog.h>
 #include "terminal.hpp"
 #include "dimensions.hpp"
 
@@ -27,7 +28,7 @@ class Image
 {
 public:
     static auto load(const Terminal& terminal,
-            const Dimensions& dimensions, const std::string& filename)
+            const Dimensions& dimensions, const std::string& filename, spdlog::logger& logger)
         -> std::shared_ptr<Image>;
     static auto check_cache(const Dimensions& dimensions,
             const std::filesystem::path& orig_path) -> std::string;

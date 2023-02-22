@@ -28,6 +28,7 @@ find_package(CLI11 REQUIRED)
 find_package(X11 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
+find_package(spdlog REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
@@ -40,7 +41,6 @@ configure_file("include/version.hpp.in" version.hpp)
 set(UEBERZUGPP_SOURCES
     "src/main.cpp"
     "src/application.cpp"
-    "src/logging.cpp"
     "src/os.cpp"
     "src/tmux.cpp"
     "src/process_info.cpp"
@@ -69,6 +69,7 @@ target_link_libraries(ueberzug PUBLIC
     CLI11::CLI11
     X11::xcb
     Threads::Threads
+    spdlog::spdlog
     PkgConfig::XCBIMAGE
     PkgConfig::VIPS
     PkgConfig::SIXEL

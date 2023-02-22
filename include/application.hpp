@@ -23,6 +23,9 @@
 
 #include <string>
 #include <memory>
+#include <atomic>
+#include <spdlog/spdlog.h>
+#include <cstdlib>
 
 class Application
 {
@@ -31,12 +34,18 @@ public:
     ~Application();
 
     auto execute(const std::string& cmd) -> void;
+    auto command_loop(const std::atomic<bool>& flag) -> void;
+    auto set_silent(bool silent = false) -> void;
 
 private:
     Terminal terminal;
 
     std::shared_ptr<Image> image;
     std::unique_ptr<Canvas> canvas;
+    std::shared_ptr<spdlog::logger> logger;
+
+    auto setup_logger() -> void;
+    std::FILE* f_stderr = nullptr;
 };
 
 #endif

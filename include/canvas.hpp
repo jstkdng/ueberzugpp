@@ -22,11 +22,12 @@
 #include "dimensions.hpp"
 
 #include <memory>
+#include <spdlog/spdlog.h>
 
 class Canvas
 {
 public:
-    static auto create(const Terminal& terminal) -> std::unique_ptr<Canvas>;
+    static auto create(const Terminal& terminal, spdlog::logger& logger) -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
     virtual auto init(const Dimensions& dimensions,

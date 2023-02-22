@@ -15,29 +15,32 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "application.hpp"
-#include "logging.hpp"
 #include "process_info.hpp"
 #include "os.hpp"
 #include "version.hpp"
 #include "dimensions.hpp"
 
+#include <filesystem>
+#include <iostream>
 #include <nlohmann/json.hpp>
+#include <spdlog/sinks/basic_file_sink.h>
 
+namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 Application::Application():
 terminal(ProcessInfo(os::get_pid()))
 {
-    logger << "\n=== started ueberzugpp "
-            << ueberzugpp_VERSION_MAJOR << "."
-            << ueberzugpp_VERSION_MINOR << "."
-            << ueberzugpp_VERSION_PATCH << std::endl;
-    canvas = Canvas::create(terminal);
+    setup_logger();
+    logger->info("Started ueberzug++ {}.{}.{}", ueberzugpp_VERSION_MAJOR,
+            ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
+    canvas = Canvas::create(terminal, *logger);
 }
 
 Application::~Application()
 {
     canvas->clear();
+    if (f_stderr) std::fclose(f_stderr);
 }
 
 auto Application::execute(const std::string& cmd) -> void
@@ -46,22 +49,50 @@ auto Application::execute(const std::string& cmd) -> void
     try {
         j = json::parse(cmd);
     } catch (const json::parse_error& e) {
-        logger << "There was an error parsing the command." << std::endl;
+        logger->error("There was an error parsing the command.");
         return;
     }
-    logger << "=== Command received:\n" << j.dump() << std::endl;
+    logger->info("Command received: {}", j.dump());
     if (j["action"] == "add") {
         Dimensions dimensions(terminal, j["x"], j["y"], j["max_width"], j["max_height"]);
-        image = Image::load(terminal, dimensions, j["path"]);
+        image = Image::load(terminal, dimensions, j["path"], *logger);
         canvas->init(dimensions, image);
         if (!image) {
-            logger << "Unable to load image file." << std::endl;
+            logger->warn("Unable to load image file.");
             return;
         }
         canvas->draw();
     } else if (j["action"] == "remove") {
+        logger->info("Removing image.");
         canvas->clear();
     } else {
-        logger << "=== Command not supported!" << std::endl;
+        logger->warn("Command not supported.");
     }
+}
+
+auto Application::setup_logger() -> void
+{
+    std::string log_tmp = "ueberzug_" + os::getenv("USER").value() + ".log";
+    fs::path log_path = fs::temp_directory_path() / log_tmp;
+    try {
+        logger = spdlog::basic_logger_mt("main", log_path);
+        logger->flush_on(spdlog::level::info);
+    } catch (const spdlog::spdlog_ex& ex) {
+        std::cout << "Log init failed: " << ex.what() << std::endl;
+    }
+}
+
+auto Application::command_loop(const std::atomic<bool>& stop_flag) -> void
+{
+    std::string cmd;
+    while (std::getline(std::cin, cmd)) {
+        if (stop_flag.load()) break;
+        execute(cmd);
+    }
+}
+
+auto Application::set_silent(bool silent) -> void
+{
+    if (!silent) return;
+    f_stderr = freopen("/dev/null", "w", stderr);
 }

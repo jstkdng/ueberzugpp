@@ -18,7 +18,6 @@
 #include "util.hpp"
 #include "os.hpp"
 #include "tmux.hpp"
-#include "logging.hpp"
 
 #include <xcb/xcb.h>
 

@@ -19,39 +19,49 @@
 #include <CLI/Config.hpp>
 #include <atomic>
 #include <csignal>
-#include <cstring>
 #include <vips/vips8>
-#include "tmux.hpp"
 
 #include "application.hpp"
-#include "logging.hpp"
 
-std::atomic<bool> quit(false);
+std::atomic<bool> stop_flag(false);
 
-void got_signal(int)
+void got_signal(const int signal)
 {
-    quit.store(true);
+    stop_flag.store(true);
+    auto logger = spdlog::get("main");
+    switch (signal) {
+        case SIGINT:
+            logger->error("SIGINT received, exiting.");
+            break;
+        case SIGTERM:
+            logger->error("SIGTERM received, exiting.");
+            break;
+        case SIGHUP:
+            logger->error("SIGHUP received, exiting.");
+            break;
+        default:
+            logger->error("UNKNOWN({}) signal received, exiting.", signal);
+            break;
+    }
 }
 
 int main(int argc, char *argv[])
 {
-    // handle SIGINT and SIGTERM
+    // handle signals
     struct sigaction sa;
-    memset(&sa, 0, sizeof(sa));
     sa.sa_handler = got_signal;
-    sigfillset(&sa.sa_mask);
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
     sigaction(SIGINT, &sa, nullptr);
     sigaction(SIGTERM, &sa, nullptr);
+    sigaction(SIGHUP, &sa, nullptr);
 
     bool silent = false;
     CLI::App program("Display images in the terminal", "ueberzug");
     CLI::App *layer_command = program.add_subcommand("layer", "Display images");
     layer_command->add_flag("-s,--silent", silent, "print stderr to /dev/null");
     program.require_subcommand(1);
-
     CLI11_PARSE(program, argc, argv);
-
-    logger.set_silent(silent);
 
     if (VIPS_INIT(argv[0])) {
         vips_error_exit(nullptr);
@@ -59,12 +69,7 @@ int main(int argc, char *argv[])
     vips_concurrency_set(1);
 
     Application application;
-
-    std::string cmd;
-    while (std::getline(std::cin, cmd)) {
-        if (quit.load()) break;
-        application.execute(cmd);
-    }
+    application.command_loop(stop_flag);
 
     vips_shutdown();
     return 0;

@@ -14,17 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "logging.hpp"
 #include "canvas.hpp"
 #include "canvas/sixel.hpp"
 #include "canvas/x11/x11.hpp"
 
-auto Canvas::create(const Terminal& terminal) -> std::unique_ptr<Canvas>
+#include <spdlog/spdlog.h>
+
+auto Canvas::create(const Terminal& terminal, spdlog::logger& logger) -> std::unique_ptr<Canvas>
 {
     if (terminal.supports_sixel()) {
-        logger << "=== Using sixel output" << std::endl;
+        logger.info("Terminal is {}, using sixel output.", terminal.name);
         return std::make_unique<SixelCanvas>();
     }
-    logger << "=== Using X11 output" << std::endl;
+    logger.info("Terminal is {}, using X11 output.", terminal.name);
     return std::make_unique<X11Canvas>(terminal);
 }

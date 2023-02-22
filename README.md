@@ -66,6 +66,7 @@ This project uses C++20 features so you must use a recent compiler.
 - cli11
 - libsixel
 - botan
+- spdlog
 
 ## Build instructions
 

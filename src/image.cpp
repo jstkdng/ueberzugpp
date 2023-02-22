@@ -17,19 +17,19 @@
 #include "image.hpp"
 #include "image/opencv.hpp"
 #include "image/libvips.hpp"
-#include "logging.hpp"
 #include "os.hpp"
 #include "util.hpp"
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio.hpp>
-#include <vips/vips.h>
+#include <vips/vips8>
+#include <spdlog/spdlog.h>
 #include <unordered_set>
 
 namespace fs = std::filesystem;
 
 auto Image::load(const Terminal& terminal,
-            const Dimensions& dimensions, const std::string& filename)
+            const Dimensions& dimensions, const std::string& filename, spdlog::logger& logger)
     -> std::shared_ptr<Image>
 {
     auto image_path = check_cache(dimensions, filename);
@@ -50,14 +50,14 @@ auto Image::load(const Terminal& terminal,
     }
 
     if (load_libvips) { 
-        logger << "=== Loading image with libvips" << std::endl;
+        logger.info("Loading image with libvips.");
         return std::make_shared<LibvipsImage>(terminal, dimensions, image_path, is_anim, vips_loader);
     }
     if (load_opencv) {
-        logger << "=== Loading image with opencv" << std::endl;
+        logger.info("Loading image with opencv.");
         return std::make_shared<OpencvImage>(terminal, dimensions, image_path);
     }
-    logger << "=== Can't load image file" << std::endl;
+    logger.error("Can't load image file.");
     return nullptr;
 }
 
