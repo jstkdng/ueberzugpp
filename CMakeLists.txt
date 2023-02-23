@@ -21,7 +21,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
 
-project(ueberzugpp LANGUAGES CXX VERSION 2.0.0)
+project(ueberzugpp LANGUAGES CXX VERSION 2.1.0)
 
 find_package(nlohmann_json REQUIRED)
 find_package(CLI11 REQUIRED)
@@ -52,7 +52,7 @@ set(UEBERZUGPP_SOURCES
     "src/canvas/sixel.cpp"
     "src/canvas/x11/x11.cpp"
     "src/canvas/x11/window.cpp"
-    
+
     "src/image.cpp"
     "src/image/opencv.cpp"
     "src/image/libvips.cpp"
