@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     CLI::App *layer_command = program.add_subcommand("layer", "Display images");
     layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null");
     layer_command->add_flag("--tcp", flags.force_tcp, "Send commands through a tcp socket on port 56988");
-    layer_command->add_option<int>("--tcp-port", flags.tcp_port, "Change tcp port used")->needs("--tcp")->type_size(1024, 65535);
+    layer_command->add_option("--tcp-port", flags.tcp_port, "Change tcp port used")->needs("--tcp");
     layer_command->add_flag("--x11", flags.force_x11, "Force X11 output");
     layer_command->add_flag("--sixel", flags.force_sixel, "Force sixel output")->excludes("--x11");
     program.require_subcommand(1);
