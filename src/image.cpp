@@ -38,14 +38,13 @@ auto Image::load(const Terminal& terminal,
     std::unordered_set<std::string> animated_formats {
         ".gif", ".webp"
     };
-    std::string vips_loader = vips_foreign_find_load(image_path.c_str());
 
     if (animated_formats.contains(file.extension())) {
         is_anim = true;
         load_libvips = true;
     } else if (cv::haveImageReader(image_path)) {
         load_opencv = true;
-    } else if (!vips_loader.empty()) {
+    } else if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
         load_libvips = true;
     }
 
