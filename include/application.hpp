@@ -48,6 +48,7 @@ private:
 
     auto setup_logger() -> void;
     auto set_silent() -> void;
+    auto print_header() -> void;
     auto tcp_loop(const std::atomic<bool>& stop_flag) -> void;
 };
 

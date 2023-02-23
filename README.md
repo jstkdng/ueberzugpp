@@ -31,13 +31,32 @@ Advantages over w3mimgdisplay and ueberzug:
 # Usage
 
 1. The only command currently provided is "layer" to make Ueberzug listen.
-  - Layer accepts the silent [-s] option, to hide the textual output of the command.
+  - Layer accepts the following options
   
     ```bash
-    ueberzug layer -s
+    $ ueberzug layer -h
+    Display images
+    Usage: ueberzug layer [OPTIONS]
+    
+    Options:
+      -h,--help                   Print this help message and exit
+      -s,--silent                 Print stderr to /dev/null
+      --tcp                       Send commands through a tcp socket on port 56988
+      --tcp-port INT Needs: --tcp Change tcp port used
+      --x11 Excludes: --sixel     Force X11 output
+      --sixel Excludes: --x11     Force sixel output
     ```
 
-2. You can then feed Ueberzug with json objects to display an image or make it disappear.
+2. By default, commands are sent to ueberzug++ through stdin, this is enough in
+most cases. In some terminals and application combinations (e.g. ranger + wezterm + zellij)
+using stdin to send commands doesn't work properly or ueberzug++ could fail to
+start altogether. In those cases, the user may send commands to ueberzug++ through
+a TCP socket. By default, ueberzug++ will listen to commands on port 56988, the user
+may change this port by passing the `--tcp-port` option.
+
+New software is encouraged to use tcp instead of stdin as tcp covers most cases.
+
+3. You can then feed Ueberzug with json objects to display an image or make it disappear.
   - json object to display the image:
   
     ```json
@@ -67,6 +86,7 @@ This project uses C++20 features so you must use a recent compiler.
 - libsixel
 - botan
 - spdlog
+- zeromq
 
 ## Build instructions
 

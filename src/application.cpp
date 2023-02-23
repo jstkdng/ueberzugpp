@@ -24,6 +24,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <fstream>
 #include <nlohmann/json.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <zmq.hpp>
@@ -35,10 +36,9 @@ Application::Application(const Flags& flags):
 terminal(ProcessInfo(os::get_pid()), flags),
 flags(flags)
 {
+    print_header();
     setup_logger();
     set_silent();
-    logger->info("Started ueberzug++ {}.{}.{}", ueberzugpp_VERSION_MAJOR,
-            ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
     canvas = Canvas::create(terminal, *logger);
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
@@ -92,6 +92,7 @@ auto Application::setup_logger() -> void
 auto Application::command_loop(const std::atomic<bool>& stop_flag) -> void
 {
     if (flags.force_tcp) {
+        logger->info("Listenning on port {}.", flags.tcp_port);
         tcp_loop(stop_flag);
     } else {
         std::string cmd;
@@ -124,6 +125,24 @@ auto Application::tcp_loop(const std::atomic<bool>& stop_flag) -> void
     }
     socket.close();
     context.close();
+}
+
+auto Application::print_header() -> void
+{
+    std::string log_tmp = "ueberzug_" + os::getenv("USER").value() + ".log";
+    fs::path log_path = fs::temp_directory_path() / log_tmp;
+    std::ofstream ofs(log_path, std::ios::out | std::ios::app);
+    ofs << " _    _      _                                           \n"
+        << "| |  | |    | |                                _     _   \n"
+        << "| |  | | ___| |__   ___ _ __ _____   _  __ _ _| |_ _| |_ \n"
+        << "| |  | |/ _ \\ '_ \\ / _ \\ '__|_  / | | |/ _` |_   _|_   _|\n"
+        << "| |__| |  __/ |_) |  __/ |   / /| |_| | (_| | |_|   |_|  \n"
+        << " \\____/ \\___|_.__/ \\___|_|  /___|\\__,_|\\__, |            \n"
+        << "                                        __/ |            \n"
+        << "                                       |___/     "
+        << "v" << ueberzugpp_VERSION_MAJOR << "." << ueberzugpp_VERSION_MINOR
+        << "." << ueberzugpp_VERSION_PATCH << std::endl;
+    ofs.close();
 }
 
 auto Application::set_silent() -> void
