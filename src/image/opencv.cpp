@@ -21,11 +21,12 @@
 #include <opencv2/imgproc.hpp>
 
 OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string& filename):
+            const std::string& filename, bool in_cache):
 terminal(terminal),
 path(filename),
 max_width(dimensions.max_wpixels()),
-max_height(dimensions.max_hpixels())
+max_height(dimensions.max_hpixels()),
+in_cache(in_cache)
 {
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
     process_image();
@@ -33,12 +34,12 @@ max_height(dimensions.max_hpixels())
 
 auto OpencvImage::width() const-> int
 {
-    return _width;
+    return image.cols;
 }
 
 auto OpencvImage::height() const -> int
 {
-    return _height;
+    return image.rows;
 }
 
 auto OpencvImage::size() const -> unsigned long
@@ -51,21 +52,20 @@ auto OpencvImage::data() const -> const unsigned char*
     return image.ptr();
 }
 
+auto OpencvImage::resize_image() -> void
+{
+    if (in_cache) return;
+    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
+    if (new_width == 0 && new_height == 0) return;
+    cv::resize(image, image, cv::Size(new_width, new_height),
+            0, 0, cv::INTER_AREA);
+    std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
+    cv::imwrite(save_location, image);
+}
+
 auto OpencvImage::process_image() -> void
 {
-    _width = image.cols;
-    _height = image.rows;
-
-    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
-
-    if (new_width != 0 || new_height != 0) {
-        cv::resize(image, image, cv::Size(new_width, new_height),
-                0, 0, cv::INTER_AREA);
-        std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
-        cv::imwrite(save_location, image);
-        _width = new_width;
-        _height = new_height;
-    }
+    resize_image();
 
     if (terminal.supports_sixel()) {
         if (image.channels() == 4) {

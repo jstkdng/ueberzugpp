@@ -40,6 +40,7 @@ public:
     virtual auto size() const -> unsigned long = 0;
     virtual auto data() const -> const unsigned char* = 0;
 
+    virtual auto resize_image() -> void = 0;
     virtual auto frame_delay() const -> int { return -1; }
     virtual auto next_frame() -> void {}
     virtual auto is_animated() const -> bool { return false; }

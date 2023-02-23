@@ -19,6 +19,7 @@
 #include "os.hpp"
 #include "version.hpp"
 #include "dimensions.hpp"
+#include "util.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -35,6 +36,8 @@ terminal(ProcessInfo(os::get_pid()))
     logger->info("Started ueberzug++ {}.{}.{}", ueberzugpp_VERSION_MAJOR,
             ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
     canvas = Canvas::create(terminal, *logger);
+    auto cache_path = util::get_cache_path();
+    if (!fs::exists(cache_path)) fs::create_directories(cache_path);
 }
 
 Application::~Application()

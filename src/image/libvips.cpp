@@ -23,12 +23,13 @@
 using namespace vips;
 
 LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string &filename, bool is_anim, const std::string& loader):
+            const std::string &filename, bool is_anim, bool in_cache):
 terminal(terminal),
 path(filename),
 is_anim(is_anim),
 max_width(dimensions.max_wpixels()),
-max_height(dimensions.max_hpixels())
+max_height(dimensions.max_hpixels()),
+in_cache(in_cache)
 {
     if (is_anim) {
         auto opts = VImage::option()->set("n", -1);
@@ -96,9 +97,8 @@ auto LibvipsImage::frame_delay() const -> int
             cv::VideoCapture video (path);
             if (video.isOpened()) {
                 return (1.0 / video.get(cv::CAP_PROP_FPS)) * 1000;
-            } else {
-                return (1.0 / npages) * 1000;
             }
+            return (1.0 / npages) * 1000;
         }
         return delays.at(0);
     } catch (const VError& err) {
@@ -106,19 +106,22 @@ auto LibvipsImage::frame_delay() const -> int
     }
 }
 
+auto LibvipsImage::resize_image() -> void
+{
+    if (in_cache) return;
+    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
+    if (new_width == 0 && new_height == 0) return;
+    image = image.thumbnail_image(new_width);
+    if (is_anim) return;
+    std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
+    try {
+        image.write_to_file(save_location.c_str());
+    } catch (const VError& err) {}
+}
+
 auto LibvipsImage::process_image() -> void
 {
-    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
-    if (new_width != 0 || new_height != 0) {
-        auto opts = VImage::option()->set("height", new_height);
-        image = image.thumbnail_image(new_width, opts);
-        if (!is_anim) {
-            std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
-            try {
-                image.write_to_file(save_location.c_str());
-            } catch (const VError& err) {};
-        }
-    }
+    resize_image();
 
     if (terminal.supports_sixel()) {
         // sixel expects RGB888

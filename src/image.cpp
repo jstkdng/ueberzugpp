@@ -21,7 +21,6 @@
 #include "util.hpp"
 
 #include <opencv2/imgcodecs.hpp>
-#include <opencv2/videoio.hpp>
 #include <vips/vips8>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
@@ -33,8 +32,9 @@ auto Image::load(const Terminal& terminal,
     -> std::shared_ptr<Image>
 {
     auto image_path = check_cache(dimensions, filename);
+    bool is_anim = false, load_opencv = false, load_libvips = false,
+         in_cache = image_path != filename;
     fs::path file = image_path;
-    bool is_anim = false, load_opencv = false, load_libvips = false;
     std::unordered_set<std::string> animated_formats {
         ".gif", ".webp"
     };
@@ -51,11 +51,11 @@ auto Image::load(const Terminal& terminal,
 
     if (load_libvips) { 
         logger.info("Loading image with libvips.");
-        return std::make_shared<LibvipsImage>(terminal, dimensions, image_path, is_anim, vips_loader);
+        return std::make_shared<LibvipsImage>(terminal, dimensions, image_path, is_anim, in_cache);
     }
     if (load_opencv) {
         logger.info("Loading image with opencv.");
-        return std::make_shared<OpencvImage>(terminal, dimensions, image_path);
+        return std::make_shared<OpencvImage>(terminal, dimensions, image_path, in_cache);
     }
     logger.error("Can't load image file.");
     return nullptr;
@@ -65,7 +65,6 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
 {
     std::string cache_filename = util::get_b2_hash(orig_path) + orig_path.extension().string(),
                 cache_dir = util::get_cache_path();
-    if (!fs::exists(cache_dir)) fs::create_directories(cache_dir);
     fs::path cache_path = cache_dir + cache_filename;
     if (!fs::exists(cache_path)) return orig_path;
     auto cache_img = vips::VImage::new_from_file(cache_path.c_str());

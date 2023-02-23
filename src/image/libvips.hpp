@@ -30,13 +30,14 @@ class LibvipsImage : public Image
 {
 public:
     LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
-            const std::string &filename, bool is_anim, const std::string& loader);
+            const std::string &filename, bool is_anim, bool in_cache);
 
     auto width() const -> int override;
     auto height() const -> int override;
     auto size() const -> unsigned long override;
     auto data() const -> const unsigned char* override;
 
+    auto resize_image() -> void override;
     auto frame_delay() const -> int override;
     auto next_frame() -> void override;
     auto is_animated() const -> bool override;
@@ -56,8 +57,9 @@ private:
     // for animated pictures
     int top = 0;
     int orig_height;
-    bool is_anim;
     int npages;
+    bool is_anim;
+    bool in_cache;
 
     auto process_image() -> void;
 };
