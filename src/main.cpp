@@ -56,10 +56,16 @@ int main(int argc, char *argv[])
     sigaction(SIGTERM, &sa, nullptr);
     sigaction(SIGHUP, &sa, nullptr);
 
-    bool silent = false;
+    bool silent = false, force_stdin = true, force_tcp = false, force_x11 = false, force_sixel = false;
+    int tcp_port = 56988;
     CLI::App program("Display images in the terminal", "ueberzug");
     CLI::App *layer_command = program.add_subcommand("layer", "Display images");
-    layer_command->add_flag("-s,--silent", silent, "print stderr to /dev/null");
+    layer_command->add_flag("-s,--silent", silent, "Print stderr to /dev/null");
+    layer_command->add_flag("--stdin", force_stdin, "Send commands through stdin (default)");
+    layer_command->add_flag("--tcp", force_tcp, "Send commands through a tcp socket on port 56988")->excludes("--stdin");
+    layer_command->add_option<int>("--tcp-port", tcp_port, "Change tcp port used")->needs("--tcp")->type_size(1024, 65535);
+    layer_command->add_flag("--x11", force_x11, "Force X11 output");
+    layer_command->add_flag("--sixel", force_sixel, "Force sixel output")->excludes("--x11");
     program.require_subcommand(1);
     CLI11_PARSE(program, argc, argv);
 

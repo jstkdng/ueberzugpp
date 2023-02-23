@@ -95,6 +95,7 @@ auto SixelCanvas::draw() -> void
 
 auto SixelCanvas::clear() -> void
 {
+    if (max_width == 0 && max_height == 0) return;
     std::scoped_lock lock {draw_mutex};
     draw_thread.reset();
     if (stream.is_open()) stream.close();

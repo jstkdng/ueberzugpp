@@ -34,6 +34,7 @@ find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
+pkg_check_modules(ZMQ REQUIRED IMPORTED_TARGET libzmq)
 pkg_check_modules(BOTAN REQUIRED IMPORTED_TARGET botan-2)
 
 configure_file("include/version.hpp.in" version.hpp)
@@ -74,6 +75,7 @@ target_link_libraries(ueberzug PUBLIC
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::BOTAN
+    PkgConfig::ZMQ
     opencv_core
     opencv_imgproc
     opencv_imgcodecs

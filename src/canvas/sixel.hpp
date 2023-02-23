@@ -54,8 +54,8 @@ private:
 
     int x;
     int y;
-    int max_width;
-    int max_height;
+    int max_width = 0;
+    int max_height = 0;
 
     auto draw_frame() -> void;
     auto move_cursor(int row, int col) -> void;

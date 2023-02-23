@@ -20,6 +20,7 @@
 #include "process_info.hpp"
 
 #include <string>
+#include <termios.h>
 
 class Terminal
 {
@@ -39,6 +40,10 @@ private:
     auto guess_padding(short chars, short pixels) -> double;
     auto guess_font_size(short chars, short pixels, double padding) -> double;
 
+    auto init_termios() -> void;
+    auto reset_termios() -> void;
+    auto get_terminal_size_escape_code() -> void;
+
     int pty_fd;
     double padding_horizontal;
     double padding_vertical;
@@ -46,6 +51,9 @@ private:
     short cols;
     short xpixel;
     short ypixel;
+
+    struct termios old_term;
+    struct termios new_term;
 };
 
 #endif

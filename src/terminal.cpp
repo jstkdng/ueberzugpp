@@ -16,6 +16,7 @@
 
 #include "terminal.hpp"
 #include "os.hpp"
+#include "util.hpp"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -23,6 +24,8 @@
 #include <cmath>
 #include <stdexcept>
 #include <unordered_set>
+#include <sstream>
+#include <iostream>
 
 Terminal::Terminal(ProcessInfo pid):
 proc(pid)
@@ -43,9 +46,14 @@ Terminal::~Terminal()
 auto Terminal::supports_sixel() const -> bool
 {
     std::unordered_set<std::string> supported_terms {
-        "contour", "foot", "xterm-256color", "yaft-256color"
+        "contour", "foot", "xterm-256color-sixel", "yaft-256color",
+        "BlackBox", "WezTerm"
     };
-    return supported_terms.contains(name);
+    auto term_program = os::getenv("TERM_PROGRAM");
+    if (term_program.has_value()) {
+        return supported_terms.contains(term_program.value());
+    }
+    return supported_terms.contains(name) && !os::getenv("VTE_VERSION").has_value();
 }
 
 auto Terminal::get_terminal_size() -> void
@@ -56,8 +64,14 @@ auto Terminal::get_terminal_size() -> void
     rows = sz.ws_row;
     xpixel = sz.ws_xpixel;
     ypixel = sz.ws_ypixel;
-    if (cols <= 0 || rows <= 0 || xpixel <= 0 || ypixel <= 0) {
+    if (cols <= 0 || rows <= 0) {
         throw std::runtime_error("received wrong terminal sizes.");
+    }
+    if (xpixel <= 0 || ypixel <= 0) {
+        get_terminal_size_escape_code();
+        if (xpixel <= 0 || ypixel <= 0) {
+            throw std::runtime_error("received wrong terminal sizes.");
+        }
     }
 
     double padding_horiz = guess_padding(cols, xpixel);
@@ -82,4 +96,40 @@ auto Terminal::guess_font_size(short chars, short pixels, double padding)
     -> double
 {
     return (pixels - 2 * padding) / chars;
+}
+
+auto Terminal::get_terminal_size_escape_code() -> void
+{
+    init_termios();
+    char c;
+    std::stringstream ss;
+    std::cout << "\033[14t" << std::flush;
+    while (true) {
+        read(0, &c, 1);
+        if (c == 't') break;
+        ss << c;
+    }
+    reset_termios();
+    std::stringstream newss (ss.str().erase(0, 4));
+    std::string segment;
+    std::vector<std::string> seglist;
+    while (std::getline(newss, segment, ';')) {
+        seglist.push_back(segment);
+    }
+    ypixel = std::stoi(seglist.at(0));
+    xpixel = std::stoi(seglist.at(1));
+}
+
+auto Terminal::init_termios() -> void
+{
+    tcgetattr(0, &old_term); /* grab old terminal i/o settings */
+    new_term = old_term; /* make new settings same as old settings */
+    new_term.c_lflag &= ~ICANON; /* disable buffered i/o */
+    new_term.c_lflag &= ~ECHO; /* set echo mode */
+    tcsetattr(0, TCSANOW, &new_term); /* use these new terminal i/o settings now */
+}
+
+auto Terminal::reset_termios() -> void
+{
+    tcsetattr(0, TCSANOW, &old_term);
 }

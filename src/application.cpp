@@ -25,6 +25,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <zmq.hpp>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -87,11 +88,32 @@ auto Application::setup_logger() -> void
 
 auto Application::command_loop(const std::atomic<bool>& stop_flag) -> void
 {
+    /*
     std::string cmd;
     while (std::getline(std::cin, cmd)) {
         if (stop_flag.load()) break;
         execute(cmd);
+    }*/
+    zmq::context_t context(1);
+    zmq::socket_t socket(context, ZMQ_STREAM);
+    socket.bind("tcp://127.0.0.1:5569");
+    int data[256];
+    auto idbuf = zmq::buffer(data);
+    while (true) {
+        zmq::message_t request, id;
+        zmq::recv_result_t result;
+        try {
+            auto id_res = socket.recv(idbuf, zmq::recv_flags::none);
+            result = socket.recv(request, zmq::recv_flags::none);
+        } catch (const zmq::error_t& err) {}
+        if (stop_flag.load()) break;
+        if (result.has_value()) {
+            auto str_response = request.to_string();
+            if (!str_response.empty()) execute(str_response);
+        }
     }
+    socket.close();
+    context.close();
 }
 
 auto Application::set_silent(bool silent) -> void
