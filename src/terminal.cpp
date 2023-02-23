@@ -17,6 +17,7 @@
 #include "terminal.hpp"
 #include "os.hpp"
 #include "util.hpp"
+#include "flags.hpp"
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -27,8 +28,8 @@
 #include <sstream>
 #include <iostream>
 
-Terminal::Terminal(ProcessInfo pid):
-proc(pid)
+Terminal::Terminal(ProcessInfo pid, const Flags& flags):
+proc(pid), flags(flags)
 {
     pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
     if (pty_fd == -1) {
@@ -45,6 +46,10 @@ Terminal::~Terminal()
 
 auto Terminal::supports_sixel() const -> bool
 {
+    if (flags.force_sixel != flags.force_x11) {
+        if (flags.force_sixel && !flags.force_x11) return true;
+        else if (flags.force_x11 && !flags.force_sixel) return false;
+    }
     std::unordered_set<std::string> supported_terms {
         "contour", "foot", "xterm-256color-sixel", "yaft-256color",
         "BlackBox", "WezTerm"

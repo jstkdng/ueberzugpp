@@ -20,6 +20,7 @@
 #include "image.hpp"
 #include "canvas.hpp"
 #include "terminal.hpp"
+#include "flags.hpp"
 
 #include <string>
 #include <memory>
@@ -30,12 +31,11 @@
 class Application
 {
 public:
-    Application();
+    Application(const Flags& flags);
     ~Application();
 
     auto execute(const std::string& cmd) -> void;
     auto command_loop(const std::atomic<bool>& flag) -> void;
-    auto set_silent(bool silent = false) -> void;
 
 private:
     Terminal terminal;
@@ -43,9 +43,12 @@ private:
     std::shared_ptr<Image> image;
     std::unique_ptr<Canvas> canvas;
     std::shared_ptr<spdlog::logger> logger;
+    std::FILE* f_stderr = nullptr;
+    const Flags& flags;
 
     auto setup_logger() -> void;
-    std::FILE* f_stderr = nullptr;
+    auto set_silent() -> void;
+    auto tcp_loop(const std::atomic<bool>& stop_flag) -> void;
 };
 
 #endif

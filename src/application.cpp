@@ -20,6 +20,7 @@
 #include "version.hpp"
 #include "dimensions.hpp"
 #include "util.hpp"
+#include "flags.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -30,10 +31,12 @@
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
-Application::Application():
-terminal(ProcessInfo(os::get_pid()))
+Application::Application(const Flags& flags):
+terminal(ProcessInfo(os::get_pid()), flags),
+flags(flags)
 {
     setup_logger();
+    set_silent();
     logger->info("Started ueberzug++ {}.{}.{}", ueberzugpp_VERSION_MAJOR,
             ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
     canvas = Canvas::create(terminal, *logger);
@@ -88,15 +91,22 @@ auto Application::setup_logger() -> void
 
 auto Application::command_loop(const std::atomic<bool>& stop_flag) -> void
 {
-    /*
-    std::string cmd;
-    while (std::getline(std::cin, cmd)) {
-        if (stop_flag.load()) break;
-        execute(cmd);
-    }*/
+    if (flags.force_tcp) {
+        tcp_loop(stop_flag);
+    } else {
+        std::string cmd;
+        while (std::getline(std::cin, cmd)) {
+            if (stop_flag.load()) break;
+            execute(cmd);
+        }
+    }
+}
+
+auto Application::tcp_loop(const std::atomic<bool>& stop_flag) -> void
+{
     zmq::context_t context(1);
     zmq::socket_t socket(context, ZMQ_STREAM);
-    socket.bind("tcp://127.0.0.1:5569");
+    socket.bind("tcp://127.0.0.1:" + std::to_string(flags.tcp_port));
     int data[256];
     auto idbuf = zmq::buffer(data);
     while (true) {
@@ -116,8 +126,8 @@ auto Application::command_loop(const std::atomic<bool>& stop_flag) -> void
     context.close();
 }
 
-auto Application::set_silent(bool silent) -> void
+auto Application::set_silent() -> void
 {
-    if (!silent) return;
+    if (!flags.silent) return;
     f_stderr = freopen("/dev/null", "w", stderr);
 }

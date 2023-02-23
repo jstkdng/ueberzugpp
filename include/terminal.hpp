@@ -18,6 +18,7 @@
 #define __TERMINAL__
 
 #include "process_info.hpp"
+#include "flags.hpp"
 
 #include <string>
 #include <termios.h>
@@ -25,7 +26,7 @@
 class Terminal
 {
 public:
-    Terminal(ProcessInfo pid);
+    Terminal(ProcessInfo pid, const Flags& flags);
     ~Terminal();
 
     ProcessInfo proc;
@@ -51,6 +52,8 @@ private:
     short cols;
     short xpixel;
     short ypixel;
+
+    const Flags& flags;
 
     struct termios old_term;
     struct termios new_term;

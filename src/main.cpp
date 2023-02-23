@@ -22,6 +22,7 @@
 #include <vips/vips8>
 
 #include "application.hpp"
+#include "flags.hpp"
 
 std::atomic<bool> stop_flag(false);
 
@@ -56,16 +57,14 @@ int main(int argc, char *argv[])
     sigaction(SIGTERM, &sa, nullptr);
     sigaction(SIGHUP, &sa, nullptr);
 
-    bool silent = false, force_stdin = true, force_tcp = false, force_x11 = false, force_sixel = false;
-    int tcp_port = 56988;
+    Flags flags;
     CLI::App program("Display images in the terminal", "ueberzug");
     CLI::App *layer_command = program.add_subcommand("layer", "Display images");
-    layer_command->add_flag("-s,--silent", silent, "Print stderr to /dev/null");
-    layer_command->add_flag("--stdin", force_stdin, "Send commands through stdin (default)");
-    layer_command->add_flag("--tcp", force_tcp, "Send commands through a tcp socket on port 56988")->excludes("--stdin");
-    layer_command->add_option<int>("--tcp-port", tcp_port, "Change tcp port used")->needs("--tcp")->type_size(1024, 65535);
-    layer_command->add_flag("--x11", force_x11, "Force X11 output");
-    layer_command->add_flag("--sixel", force_sixel, "Force sixel output")->excludes("--x11");
+    layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null");
+    layer_command->add_flag("--tcp", flags.force_tcp, "Send commands through a tcp socket on port 56988");
+    layer_command->add_option<int>("--tcp-port", flags.tcp_port, "Change tcp port used")->needs("--tcp")->type_size(1024, 65535);
+    layer_command->add_flag("--x11", flags.force_x11, "Force X11 output");
+    layer_command->add_flag("--sixel", flags.force_sixel, "Force sixel output")->excludes("--x11");
     program.require_subcommand(1);
     CLI11_PARSE(program, argc, argv);
 
@@ -74,7 +73,7 @@ int main(int argc, char *argv[])
     }
     vips_concurrency_set(1);
 
-    Application application;
+    Application application(flags);
     application.command_loop(stop_flag);
 
     vips_shutdown();
