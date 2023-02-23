@@ -48,7 +48,7 @@ Advantages over w3mimgdisplay and ueberzug:
     ```
 
 2. By default, commands are sent to ueberzug++ through stdin, this is enough in
-most cases. In some terminals and application combinations (e.g. ranger + wezterm + zellij)
+some cases. In some terminals and application combinations (e.g. ranger + wezterm + zellij)
 using stdin to send commands doesn't work properly or ueberzug++ could fail to
 start altogether. In those cases, the user may send commands to ueberzug++ through
 a TCP socket. By default, ueberzug++ will listen to commands on port 56988, the user
