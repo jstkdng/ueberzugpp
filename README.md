@@ -94,11 +94,11 @@ This project uses C++20 features so you must use a recent compiler.
 2. Run the following commands in a terminal
 
 ```sh
-$ git clone https://github.com/jstkdng/ueberzugpp.git
-$ cd ueberzugpp
-$ mkdir build && cd build
-$ cmake -DCMAKE_BUILD_TYPE=Release ..
-$ cmake --build .
+git clone https://github.com/jstkdng/ueberzugpp.git
+cd ueberzugpp
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build .
 ```
 
 after running these commands the resulting binary is ready to be used.
