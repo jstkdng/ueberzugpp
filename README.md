@@ -2,11 +2,11 @@
 
 Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using child windows or using sixel on supported terminals. 
 
-This is a drop-in replacement for the now defunct [ueberzug](https://github.com/seebye/ueberzug) project.
+This project intends to be a drop-in replacement for the now defunct [ueberzug](https://github.com/seebye/ueberzug) project. If some tool doesn't work,
+feel free to open an issue.
 
 Advantages over w3mimgdisplay and ueberzug:
 
-- X11 and sixel support on supported terminals
 - no race conditions as a new window is created to display images
 - expose events will be processed, so images will be redrawn on switch workspaces
 - tmux support
@@ -35,7 +35,6 @@ Advantages over w3mimgdisplay and ueberzug:
   
     ```bash
     $ ueberzug layer -h
-    Display images
     Usage: ueberzug layer [OPTIONS]
     
     Options:
@@ -45,6 +44,8 @@ Advantages over w3mimgdisplay and ueberzug:
       --tcp-port INT Needs: --tcp Change tcp port used
       --x11 Excludes: --sixel     Force X11 output
       --sixel Excludes: --x11     Force sixel output
+      -p,--parser                 **UNUSED**, only present for backwards compatibility
+      -l,--loader                 **UNUSED**, only present for backwards compatibility
     ```
 
 2. By default, commands are sent to ueberzug++ through stdin, this is enough in
