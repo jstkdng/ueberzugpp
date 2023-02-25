@@ -21,12 +21,14 @@
 #include "canvas.hpp"
 #include "terminal.hpp"
 #include "flags.hpp"
+#include "dimensions.hpp"
 
 #include <string>
 #include <memory>
 #include <atomic>
-#include <spdlog/spdlog.h>
 #include <cstdlib>
+#include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
 
 class Application
 {
@@ -34,11 +36,12 @@ public:
     Application(const Flags& flags);
     ~Application();
 
-    auto execute(const std::string& cmd) -> void;
-    auto command_loop(const std::atomic<bool>& flag) -> void;
+    void execute(const std::string& cmd);
+    void command_loop(const std::atomic<bool>& flag);
 
 private:
     Terminal terminal;
+    std::unique_ptr<Dimensions> dimensions;
 
     std::shared_ptr<Image> image;
     std::unique_ptr<Canvas> canvas;
@@ -50,6 +53,7 @@ private:
     auto set_silent() -> void;
     auto print_header() -> void;
     auto tcp_loop(const std::atomic<bool>& stop_flag) -> void;
+    void set_dimensions_from_json(const nlohmann::json& json);
 };
 
 #endif

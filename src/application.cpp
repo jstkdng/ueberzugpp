@@ -18,14 +18,12 @@
 #include "process_info.hpp"
 #include "os.hpp"
 #include "version.hpp"
-#include "dimensions.hpp"
 #include "util.hpp"
 #include "flags.hpp"
 
 #include <filesystem>
 #include <iostream>
 #include <fstream>
-#include <nlohmann/json.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <zmq.hpp>
 
@@ -61,9 +59,9 @@ auto Application::execute(const std::string& cmd) -> void
     }
     logger->info("Command received: {}", j.dump());
     if (j["action"] == "add") {
-        Dimensions dimensions(terminal, j["x"], j["y"], j["max_width"], j["max_height"]);
-        image = Image::load(terminal, dimensions, j["path"], *logger);
-        canvas->init(dimensions, image);
+        set_dimensions_from_json(j);
+        image = Image::load(terminal, *dimensions, j["path"], *logger);
+        canvas->init(*dimensions, image);
         if (!image) {
             logger->warn("Unable to load image file.");
             return;
@@ -75,6 +73,34 @@ auto Application::execute(const std::string& cmd) -> void
     } else {
         logger->warn("Command not supported.");
     }
+}
+
+void Application::set_dimensions_from_json(const json& j)
+{
+    using std::string;
+    int x, y, max_width, max_height;
+    string width_key = "max_width", height_key = "max_height";
+    if (j.contains("width")) {
+        width_key = "width";
+        height_key = "height";
+    }
+    if (j[width_key].is_string()) {
+        string w = j[width_key], h = j[height_key];
+        max_width = std::stoi(w);
+        max_height = std::stoi(h);
+    } else {
+        max_width = j[width_key];
+        max_height = j[height_key];
+    }
+    if (j["x"].is_string()) {
+        string _x = j["x"], _y = j["y"];
+        x = std::stoi(_x);
+        y = std::stoi(_y);
+    } else {
+        x = j["x"];
+        y = j["y"];
+    }
+    dimensions = std::make_unique<Dimensions>(terminal, x, y, max_width, max_height);
 }
 
 auto Application::setup_logger() -> void

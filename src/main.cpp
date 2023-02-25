@@ -65,6 +65,8 @@ int main(int argc, char *argv[])
     layer_command->add_option("--tcp-port", flags.tcp_port, "Change tcp port used")->needs("--tcp");
     layer_command->add_flag("--x11", flags.force_x11, "Force X11 output");
     layer_command->add_flag("--sixel", flags.force_sixel, "Force sixel output")->excludes("--x11");
+    layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility");
+    layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility");
     program.require_subcommand(1);
     CLI11_PARSE(program, argc, argv);
 

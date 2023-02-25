@@ -60,7 +60,9 @@ auto OpencvImage::resize_image() -> void
     cv::resize(image, image, cv::Size(new_width, new_height),
             0, 0, cv::INTER_AREA);
     std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
-    cv::imwrite(save_location, image);
+    try {
+        cv::imwrite(save_location, image);
+    } catch (const cv::Exception& ex) {}
 }
 
 auto OpencvImage::process_image() -> void
