@@ -154,7 +154,7 @@ void Terminal::open_first_pty()
     for (const auto& pid: tree) {
         auto proc = Process(pid);
         pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
-        if (pty_fd != -1) break;
+        if (pty_fd != -1) return;
     }
-    if (pty_fd == -1) pty_fd = STDOUT_FILENO;
+    pty_fd = STDOUT_FILENO;
 }

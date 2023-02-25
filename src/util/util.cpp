@@ -20,7 +20,6 @@
 
 #include <xcb/xcb.h>
 #include <memory>
-#include <iostream>
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <fmt/format.h>
@@ -45,7 +44,7 @@ auto util::get_process_tree(int pid) -> std::vector<int>
 {
     std::vector<int> res;
     Process runner(pid);
-    while (runner.ppid != 1) {
+    while (runner.pid != 1) {
         auto pproc = Process(runner.ppid);
         res.push_back(runner.pid);
         runner = pproc;
