@@ -87,6 +87,7 @@ This project uses C++20 features so you must use a recent compiler.
 - libsixel
 - botan
 - spdlog
+- fmt
 - zeromq
 - cppzmq (in some distributions)
 
