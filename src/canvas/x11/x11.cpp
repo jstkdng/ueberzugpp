@@ -60,7 +60,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
         auto proc = client_pids.front();
         windows.push_back(std::make_unique<Window>(
                     connection, std::stoi(wid.value()), screen,
-                    dimensions, image));
+                    dimensions, *image));
         return;
     }
 
@@ -71,7 +71,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
             auto search = pid_window_map.find(ppid);
             if (search == pid_window_map.end()) continue;
             windows.push_back(std::make_unique<Window>(
-                        connection, search->second, screen, dimensions, image));
+                    connection, search->second, screen, dimensions, *image));
         }
     }
 }

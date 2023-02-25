@@ -24,7 +24,7 @@ struct free_delete
 };
 
 Window::Window(xcb_connection_t *connection, xcb_window_t parent, xcb_screen_t *screen,
-           const Dimensions& dimensions, std::shared_ptr<Image> image):
+           const Dimensions& dimensions, Image& image):
 connection(connection),
 parent(parent),
 image(image),
@@ -44,7 +44,7 @@ gc(xcb_generate_id(connection))
             window,
             this->parent,
             dimensions.xpixels(), dimensions.ypixels(),
-            image->width(), image->height(),
+            image.width(), image.height(),
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
@@ -62,15 +62,15 @@ gc(xcb_generate_id(connection))
 
 auto Window::draw() -> void
 {
-    if (!image->is_animated()) {
+    if (!image.is_animated()) {
         draw_frame();
         return;
     }
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
             draw_frame();
-            image->next_frame();
-            std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
+            image.next_frame();
+            std::this_thread::sleep_for(std::chrono::milliseconds(image.frame_delay()));
         }
     });
 }
@@ -78,15 +78,15 @@ auto Window::draw() -> void
 auto Window::draw_frame() -> void
 {
     if (xcb_image) xcb_image_destroy(xcb_image);
-    auto ptr = malloc(image->size());
+    auto ptr = malloc(image.size());
     xcb_image = xcb_image_create_native(connection,
-            image->width(),
-            image->height(),
+            image.width(),
+            image.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
             ptr,
-            image->size(),
-            const_cast<unsigned char*>(image->data()));
+            image.size(),
+            const_cast<unsigned char*>(image.data()));
     send_expose_event();
 }
 

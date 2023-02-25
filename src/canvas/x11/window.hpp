@@ -28,7 +28,7 @@ class Window
 {
 public:
     Window(xcb_connection_t *connection, xcb_window_t parent, xcb_screen_t *screen,
-           const Dimensions& dimensions, std::shared_ptr<Image> image);
+           const Dimensions& dimensions, Image& image);
     ~Window();
 
     auto draw() -> void;
@@ -43,7 +43,7 @@ private:
 
     std::unique_ptr<std::thread> event_handler;
     std::unique_ptr<std::jthread> draw_thread;
-    std::shared_ptr<Image> image;
+    Image& image;
 
     auto handle_events() -> void;
     auto terminate_event_handler() -> void;
