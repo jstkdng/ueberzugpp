@@ -19,6 +19,7 @@
 
 #include "process_info.hpp"
 #include "flags.hpp"
+#include "util/x11.hpp"
 
 #include <string>
 #include <termios.h>
@@ -38,25 +39,28 @@ public:
 
 private:
     auto get_terminal_size() -> void;
-    auto guess_padding(short chars, short pixels) -> double;
-    auto guess_font_size(short chars, short pixels, double padding) -> double;
+    auto guess_padding(int chars, double pixels) -> double;
+    auto guess_font_size(int chars, double pixels, double padding) -> double;
 
     auto init_termios() -> void;
     auto reset_termios() -> void;
     auto get_terminal_size_escape_code() -> void;
+    void get_terminal_size_pixels_fallback();
 
     int pty_fd;
     double padding_horizontal;
     double padding_vertical;
-    short rows;
-    short cols;
-    short xpixel;
-    short ypixel;
+    int rows;
+    int cols;
+    int xpixel;
+    int ypixel;
 
     const Flags& flags;
 
     struct termios old_term;
     struct termios new_term;
+
+    const X11Util xutil;
 };
 
 #endif

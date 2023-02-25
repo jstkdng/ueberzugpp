@@ -45,9 +45,10 @@ set(UEBERZUGPP_SOURCES
     "src/os.cpp"
     "src/tmux.cpp"
     "src/process_info.cpp"
-    "src/util.cpp"
     "src/terminal.cpp"
     "src/dimensions.cpp"
+    "src/util/x11.cpp"
+    "src/util/util.cpp"
 
     "src/canvas.cpp"
     "src/canvas/sixel.cpp"

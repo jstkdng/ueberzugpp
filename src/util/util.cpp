@@ -51,25 +51,11 @@ auto util::get_parent_pids(const ProcessInfo& proc) -> std::vector<ProcessInfo>
     ProcessInfo runner(proc.pid);
     while (runner.pid != 1) {
         auto pproc = ProcessInfo(runner.ppid);
-        if (pproc.tty_nr == 0) pproc.pty_path = runner.pty_path;
+        //if (pproc.tty_nr == 0) pproc.pty_path = runner.pty_path;
         res.push_back(runner);
         runner = pproc;
     }
     return res;
-}
-
-auto util::window_has_property(
-        xcb_connection_t *connection,
-        xcb_window_t window,
-        xcb_atom_t property,
-        xcb_atom_t type) -> bool
-{
-    auto cookie = xcb_get_property(connection, false, window, property, type, 0, 4);
-    auto reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
-        xcb_get_property_reply(connection, cookie, nullptr)
-    };
-    if (!reply.get()) return false;
-    return xcb_get_property_value_length(reply.get()) != 0;
 }
 
 auto util::get_b2_hash(const std::string& str) -> std::string

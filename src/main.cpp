@@ -19,7 +19,7 @@
 #include <CLI/Config.hpp>
 #include <atomic>
 #include <csignal>
-#include <vips/vips8>
+#include <vips/vips.h>
 
 #include "application.hpp"
 #include "flags.hpp"

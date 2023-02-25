@@ -20,6 +20,7 @@
 #include "version.hpp"
 #include "util.hpp"
 #include "flags.hpp"
+#include "util/x11.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -34,6 +35,12 @@ Application::Application(const Flags& flags):
 terminal(ProcessInfo(os::get_pid()), flags),
 flags(flags)
 {
+    X11Util xutil;
+    if (xutil.connected) {
+
+    } else {
+        terminal = {ProcessInfo(os::get_pid()), flags};
+    }
     print_header();
     setup_logger();
     set_silent();

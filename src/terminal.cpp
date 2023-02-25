@@ -73,31 +73,27 @@ auto Terminal::get_terminal_size() -> void
         throw std::runtime_error("received wrong terminal sizes.");
     }
     if (xpixel <= 0 || ypixel <= 0) {
-        get_terminal_size_escape_code();
-        if (xpixel <= 0 || ypixel <= 0) {
-            throw std::runtime_error("received wrong terminal sizes.");
-        }
+        get_terminal_size_pixels_fallback();
     }
 
     double padding_horiz = guess_padding(cols, xpixel);
     double padding_vert = guess_padding(rows, ypixel);
 
     padding_horizontal = std::max(padding_horiz, padding_vert);
-    padding_vertical = padding_horiz;
+    padding_vertical = padding_horizontal;
     font_width =
         guess_font_size(cols, xpixel, padding_horizontal);
     font_height =
         guess_font_size(rows, ypixel, padding_vertical);
 }
 
-auto Terminal::guess_padding(short chars, short pixels)
-    -> double
+auto Terminal::guess_padding(int chars, double pixels) -> double
 {
-    double font_size = std::floor(static_cast<double>(pixels) / chars);
-    return (- font_size * chars + pixels) / 2;
+    double font_size = std::floor(pixels / chars);
+    return (pixels - font_size * chars) / 2;
 }
 
-auto Terminal::guess_font_size(short chars, short pixels, double padding)
+auto Terminal::guess_font_size(int chars, double pixels, double padding)
     -> double
 {
     return (pixels - 2 * padding) / chars;
@@ -137,4 +133,16 @@ auto Terminal::init_termios() -> void
 auto Terminal::reset_termios() -> void
 {
     tcsetattr(0, TCSANOW, &old_term);
+}
+
+void Terminal::get_terminal_size_pixels_fallback()
+{
+    if (xutil.connected) {
+        auto window = xutil.get_parent_window(os::get_pid());
+        auto dims = xutil.get_window_dimensions(window);
+        xpixel = dims.first;
+        ypixel = dims.second;
+    }
+    if (xpixel != 0 && ypixel != 0) return;
+    get_terminal_size_escape_code();
 }

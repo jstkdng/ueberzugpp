@@ -15,16 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "x11.hpp"
-#include "util.hpp"
 #include "os.hpp"
 #include "tmux.hpp"
+#include "util.hpp"
 
 #include <xcb/xcb.h>
-
-struct free_delete
-{
-    void operator()(void* x) { free(x); }
-};
 
 X11Canvas::X11Canvas(const Terminal& terminal):
 terminal(terminal)
@@ -59,7 +54,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 
     if (tmux::is_used()) {
         client_pids = tmux::get_client_pids().value();
-        pid_window_map = this->get_pid_window_map();
+        pid_window_map = xutil.get_pid_window_map();
     } else if (wid.has_value()) {
         // if WID exists prevent doing any calculations
         auto proc = client_pids.front();
@@ -73,11 +68,10 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
         // calculate a map with parent's pid and window id
         auto ppids = util::get_parent_pids(pid);
         for (const auto& ppid: ppids) {
-            if (!pid_window_map.contains(ppid.pid)) continue;
+            auto search = pid_window_map.find(ppid.pid);
+            if (search == pid_window_map.end()) continue;
             windows.push_back(std::make_unique<Window>(
-                        connection,
-                        pid_window_map[ppid.pid], screen,
-                        dimensions, image));
+                        connection, search->second, screen, dimensions, image));
         }
     }
 }
@@ -86,71 +80,3 @@ auto X11Canvas::clear() -> void
 {
     windows.clear();
 }
-
-auto X11Canvas::get_server_window_ids() -> std::vector<xcb_window_t>
-{
-    auto cookie = xcb_query_tree_unchecked(this->connection, this->screen->root);
-    std::vector<xcb_window_t> windows;
-    get_server_window_ids_helper(windows, cookie);
-    return windows;
-}
-
-auto X11Canvas::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void
-{
-    std::unique_ptr<xcb_query_tree_reply_t, free_delete> reply {
-        xcb_query_tree_reply(this->connection, cookie, nullptr)
-    };
-    int num_children = xcb_query_tree_children_length(reply.get());
-
-    if (!num_children) return;
-
-    auto children = xcb_query_tree_children(reply.get());
-    std::vector<xcb_query_tree_cookie_t> cookies;
-
-    for (int i = 0; i < num_children; ++i) {
-        auto child = children[i];
-        bool is_complete_window = (
-            util::window_has_property(this->connection, child, XCB_ATOM_WM_NAME, XCB_ATOM_STRING) &&
-            util::window_has_property(this->connection, child, XCB_ATOM_WM_CLASS, XCB_ATOM_STRING) &&
-            util::window_has_property(this->connection, child, XCB_ATOM_WM_NORMAL_HINTS)
-        );
-        if (is_complete_window) windows.push_back(child);
-        cookies.push_back(xcb_query_tree_unchecked(this->connection, child));
-    }
-
-    for (auto new_cookie: cookies) {
-        this->get_server_window_ids_helper(windows, new_cookie);
-    }
-}
-
-auto X11Canvas::get_window_pid(xcb_window_t window) -> unsigned int
-{
-    std::string atom_str = "_NET_WM_PID";
-
-    auto atom_cookie = xcb_intern_atom_unchecked
-        (this->connection, false, atom_str.size(), atom_str.c_str());
-    auto atom_reply = std::unique_ptr<xcb_intern_atom_reply_t, free_delete> {
-        xcb_intern_atom_reply(this->connection, atom_cookie, nullptr)
-    };
-
-    auto property_cookie = xcb_get_property_unchecked(
-            this->connection, false, window, atom_reply->atom,
-            XCB_ATOM_ANY, 0, 1);
-    auto property_reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
-        xcb_get_property_reply(this->connection, property_cookie, nullptr),
-    };
-
-    return *reinterpret_cast<unsigned int*>
-        (xcb_get_property_value(property_reply.get()));
-}
-
-auto X11Canvas::get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>
-{
-    std::unordered_map<unsigned int, xcb_window_t> res;
-    for (auto window: this->get_server_window_ids()) {
-        auto pid = this->get_window_pid(window);
-        res[pid] = window;
-    }
-    return res;
-}
-

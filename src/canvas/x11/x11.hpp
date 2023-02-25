@@ -22,11 +22,11 @@
 #include "window.hpp"
 #include "terminal.hpp"
 #include "dimensions.hpp"
+#include "util/x11.hpp"
 
 #include <xcb/xproto.h>
 #include <memory>
 #include <vector>
-#include <unordered_map>
 
 class X11Canvas : public Canvas
 {
@@ -42,17 +42,12 @@ public:
 private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
+    X11Util xutil;
 
     const Terminal& terminal;
 
     std::vector<std::unique_ptr<Window>> windows;
     std::shared_ptr<Image> image;
-
-    // utility functions
-    auto get_server_window_ids() -> std::vector<xcb_window_t>;
-    auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) -> void;
-    auto get_window_pid(xcb_window_t window) -> unsigned int;
-    auto get_pid_window_map() -> std::unordered_map<unsigned int, xcb_window_t>;
 };
 
 #endif
