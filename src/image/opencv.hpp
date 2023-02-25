@@ -33,6 +33,7 @@ class OpencvImage : public Image
 public:
     OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
             const std::string& filename, bool in_cache);
+    ~OpencvImage();
 
     auto width() const -> int override;
     auto height() const -> int override;

@@ -28,18 +28,23 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
-    image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    uimage = cv::imread(filename, cv::IMREAD_UNCHANGED).getUMat(cv::ACCESS_RW | cv::ACCESS_FAST);
     process_image();
+}
+
+OpencvImage::~OpencvImage()
+{
+    image.release();
 }
 
 auto OpencvImage::width() const-> int
 {
-    return image.cols;
+    return uimage.cols;
 }
 
 auto OpencvImage::height() const -> int
 {
-    return image.rows;
+    return uimage.rows;
 }
 
 auto OpencvImage::size() const -> unsigned long
@@ -67,7 +72,7 @@ auto OpencvImage::resize_image() -> void
 
 auto OpencvImage::process_image() -> void
 {
-    image.copyTo(uimage);
+    //image.copyTo(uimage);
     resize_image();
 
     if (terminal.supports_sixel()) {
@@ -83,6 +88,6 @@ auto OpencvImage::process_image() -> void
         }
     }
 
-    uimage.copyTo(image);
-    _size = image.total() * image.elemSize();
+    _size = uimage.total() * uimage.elemSize();
+    image = uimage.getMat(cv::ACCESS_READ | cv::ACCESS_FAST);
 }
