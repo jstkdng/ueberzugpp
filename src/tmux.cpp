@@ -46,18 +46,18 @@ std::string tmux::get_pane()
     return os::getenv("TMUX_PANE").value_or("");
 }
 
-auto tmux::get_client_pids() -> std::optional<std::vector<ProcessInfo>>
+auto tmux::get_client_pids() -> std::optional<std::vector<int>>
 {
     if (!tmux::is_window_focused()) return {};
 
-    std::vector<ProcessInfo> pids;
+    std::vector<int> pids;
     std::string cmd =
         "tmux list-clients -F '#{client_pid}' -t " + tmux::get_pane();
     std::string output = os::exec(cmd), to;
     std::stringstream ss(output);
 
     while(std::getline(ss, to, '\n')) {
-        pids.push_back(ProcessInfo(std::stoi(to)));
+        pids.push_back(std::stoi(to));
     }
 
     return pids;

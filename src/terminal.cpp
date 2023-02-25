@@ -18,24 +18,24 @@
 #include "os.hpp"
 #include "util.hpp"
 #include "flags.hpp"
+#include "process.hpp"
 
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
 #include <cmath>
 #include <stdexcept>
 #include <unordered_set>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
-Terminal::Terminal(ProcessInfo pid, const Flags& flags):
-proc(pid), flags(flags)
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+
+Terminal::Terminal(int pid, const Flags& flags):
+pid(pid), flags(flags)
 {
-    pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
-    if (pty_fd == -1) {
-        throw std::runtime_error("unable to open pty.");
-    }
     name = os::getenv("TERM").value_or("xterm-256color");
+    open_first_pty();
     get_terminal_size();
 }
 
@@ -106,7 +106,7 @@ auto Terminal::get_terminal_size_escape_code() -> void
     std::stringstream ss;
     std::cout << "\033[14t" << std::flush;
     while (true) {
-        read(0, &c, 1);
+        int r = read(0, &c, 1);
         if (c == 't') break;
         ss << c;
     }
@@ -145,4 +145,16 @@ void Terminal::get_terminal_size_pixels_fallback()
     }
     if (xpixel != 0 && ypixel != 0) return;
     get_terminal_size_escape_code();
+}
+
+void Terminal::open_first_pty()
+{
+    auto tree = util::get_process_tree(pid);
+    std::reverse(tree.begin(), tree.end());
+    for (const auto& pid: tree) {
+        auto proc = Process(pid);
+        pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+        if (pty_fd != -1) break;
+    }
+    if (pty_fd == -1) pty_fd = STDOUT_FILENO;
 }

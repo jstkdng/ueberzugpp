@@ -20,7 +20,6 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include "process_info.hpp"
 
 namespace tmux
 {
@@ -32,7 +31,7 @@ namespace tmux
 
     bool is_window_focused();
 
-    auto get_client_pids() -> std::optional<std::vector<ProcessInfo>>;
+    auto get_client_pids() -> std::optional<std::vector<int>>;
 
     auto get_offset() -> std::pair<const int, const int>;
 }

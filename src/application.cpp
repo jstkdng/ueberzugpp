@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "application.hpp"
-#include "process_info.hpp"
 #include "os.hpp"
 #include "version.hpp"
 #include "util.hpp"
@@ -27,20 +26,15 @@
 #include <fstream>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <zmq.hpp>
+#include <fmt/format.h>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
 Application::Application(const Flags& flags):
-terminal(ProcessInfo(os::get_pid()), flags),
+terminal(os::get_pid(), flags),
 flags(flags)
 {
-    X11Util xutil;
-    if (xutil.connected) {
-
-    } else {
-        terminal = {ProcessInfo(os::get_pid()), flags};
-    }
     print_header();
     setup_logger();
     set_silent();
@@ -112,7 +106,7 @@ void Application::set_dimensions_from_json(const json& j)
 
 auto Application::setup_logger() -> void
 {
-    std::string log_tmp = "ueberzug_" + os::getenv("USER").value() + ".log";
+    std::string log_tmp = util::get_log_filename();
     fs::path log_path = fs::temp_directory_path() / log_tmp;
     try {
         logger = spdlog::basic_logger_mt("main", log_path);
@@ -140,7 +134,7 @@ auto Application::tcp_loop(const std::atomic<bool>& stop_flag) -> void
 {
     zmq::context_t context(1);
     zmq::socket_t socket(context, ZMQ_STREAM);
-    socket.bind("tcp://127.0.0.1:" + std::to_string(flags.tcp_port));
+    socket.bind(fmt::format("tcp://127.0.0.1:{}", flags.tcp_port));
     int data[256];
     auto idbuf = zmq::buffer(data);
     while (true) {
@@ -162,7 +156,7 @@ auto Application::tcp_loop(const std::atomic<bool>& stop_flag) -> void
 
 auto Application::print_header() -> void
 {
-    std::string log_tmp = "ueberzug_" + os::getenv("USER").value() + ".log";
+    std::string log_tmp = util::get_log_filename();
     fs::path log_path = fs::temp_directory_path() / log_tmp;
     std::ofstream ofs(log_path, std::ios::out | std::ios::app);
     ofs << " _    _      _                                           \n"

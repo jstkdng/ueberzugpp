@@ -19,11 +19,11 @@
 
 #include <string>
 
-class ProcessInfo
+class Process
 {
 public:
-    ProcessInfo(int pid);
-    ~ProcessInfo() = default;
+    Process(int pid);
+    ~Process() = default;
 
     int pid;
     int ppid;

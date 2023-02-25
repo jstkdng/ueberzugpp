@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util.hpp"
-#include "process_info.hpp"
+#include "process.hpp"
 #include "os.hpp"
 
 #include <xcb/xcb.h>
@@ -23,11 +23,7 @@
 #include <iostream>
 #include <botan/hash.h>
 #include <botan/hex.h>
-
-struct free_delete
-{
-    void operator()(void* x) const { free(x); }
-};
+#include <fmt/format.h>
 
 auto util::str_split(std::string const& str, std::string const& delim) -> std::vector<std::string>
 {
@@ -45,14 +41,13 @@ auto util::str_split(std::string const& str, std::string const& delim) -> std::v
     return res;
 }
 
-auto util::get_parent_pids(const ProcessInfo& proc) -> std::vector<ProcessInfo>
+auto util::get_process_tree(int pid) -> std::vector<int>
 {
-    std::vector<ProcessInfo> res;
-    ProcessInfo runner(proc.pid);
-    while (runner.pid != 1) {
-        auto pproc = ProcessInfo(runner.ppid);
-        //if (pproc.tty_nr == 0) pproc.pty_path = runner.pty_path;
-        res.push_back(runner);
+    std::vector<int> res;
+    Process runner(pid);
+    while (runner.ppid != 1) {
+        auto pproc = Process(runner.ppid);
+        res.push_back(runner.pid);
         runner = pproc;
     }
     return res;
@@ -68,5 +63,10 @@ auto util::get_b2_hash(const std::string& str) -> std::string
 
 auto util::get_cache_path() -> std::string
 {
-    return os::getenv("HOME").value() + "/.cache/ueberzug/";
+    return fmt::format("{}/.cache/ueberzug/", os::getenv("HOME").value());
+}
+
+auto util::get_log_filename() -> std::string
+{
+    return fmt::format("ueberzug_{}.log", os::getenv("USER").value());
 }

@@ -1,11 +1,11 @@
 #include "util/x11.hpp"
 #include "util.hpp"
 #include "os.hpp"
-#include "process_info.hpp"
 
 #include <xcb/xcb.h>
 #include <string>
 #include <memory>
+#include <iostream>
 
 struct free_delete
 {
@@ -62,7 +62,7 @@ auto X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     }
 }
 
-auto X11Util::get_window_pid(xcb_window_t window) const -> unsigned int
+int X11Util::get_window_pid(xcb_window_t window) const
 {
     std::string atom_str = "_NET_WM_PID";
 
@@ -78,7 +78,7 @@ auto X11Util::get_window_pid(xcb_window_t window) const -> unsigned int
         xcb_get_property_reply(connection, property_cookie, nullptr),
     };
 
-    return *reinterpret_cast<unsigned int*>
+    return *reinterpret_cast<int*>
         (xcb_get_property_value(property_reply.get()));
 }
 
@@ -117,9 +117,10 @@ auto X11Util::get_parent_window(int pid) const -> xcb_window_t
     if (pid == os::get_pid() && wid.has_value()) return std::stoi(wid.value());
 
     auto pid_window_map = get_pid_window_map();
-    auto ppids = util::get_parent_pids(ProcessInfo(pid));
+    auto ppids = util::get_process_tree(pid);
     for (const auto& ppid: ppids) {
-        auto search = pid_window_map.find(pid);
+        std::cout << ppid << std::endl;
+        auto search = pid_window_map.find(ppid);
         if (search != pid_window_map.end()) return search->second;
     }
     return -1;

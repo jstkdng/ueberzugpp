@@ -46,7 +46,7 @@ auto X11Canvas::draw() -> void
 
 auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void
 {
-    std::vector<ProcessInfo> client_pids {ProcessInfo(os::get_pid())};
+    std::vector<int> client_pids {os::get_pid()};
     std::unordered_map<unsigned int, xcb_window_t> pid_window_map;
     this->image = image;
 
@@ -66,9 +66,9 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 
     for (const auto& pid: client_pids) {
         // calculate a map with parent's pid and window id
-        auto ppids = util::get_parent_pids(pid);
+        auto ppids = util::get_process_tree(pid);
         for (const auto& ppid: ppids) {
-            auto search = pid_window_map.find(ppid.pid);
+            auto search = pid_window_map.find(ppid);
             if (search == pid_window_map.end()) continue;
             windows.push_back(std::make_unique<Window>(
                         connection, search->second, screen, dimensions, image));

@@ -17,7 +17,6 @@
 #ifndef __TERMINAL__
 #define __TERMINAL__
 
-#include "process_info.hpp"
 #include "flags.hpp"
 #include "util/x11.hpp"
 
@@ -27,10 +26,9 @@
 class Terminal
 {
 public:
-    Terminal(ProcessInfo pid, const Flags& flags);
+    Terminal(int pid, const Flags& flags);
     ~Terminal();
 
-    ProcessInfo proc;
     double font_width;
     double font_height;
     std::string name;
@@ -46,8 +44,10 @@ private:
     auto reset_termios() -> void;
     auto get_terminal_size_escape_code() -> void;
     void get_terminal_size_pixels_fallback();
+    void open_first_pty();
 
     int pty_fd;
+    int pid;
     double padding_horizontal;
     double padding_vertical;
     int rows;

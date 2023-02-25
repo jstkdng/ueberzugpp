@@ -14,20 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "process_info.hpp"
+#include "process.hpp"
 #include "util.hpp"
 #include "tmux.hpp"
 #include "os.hpp"
 
 #include <fstream>
 #include <string>
-#include <iostream>
 #include <sys/sysmacros.h>
+#include <fmt/format.h>
 
-ProcessInfo::ProcessInfo(int pid):
+Process::Process(int pid):
 pid(pid)
 {
-    std::string stat = "/proc/" + std::to_string(pid) + "/stat";
+    std::string stat = fmt::format("/proc/{}/stat", pid);
     std::ifstream is(stat);
     std::string out;
     std::getline(is, out);
@@ -43,7 +43,6 @@ pid(pid)
     this->ppid = std::stoi(proc[1]);
     this->tty_nr = std::stoi(proc[4]);
     this->minor_dev = minor(this->tty_nr);
-    this->pty_path = "/dev/pts/" + std::to_string(this->minor_dev);
+    this->pty_path = fmt::format("/dev/pts/{}", minor_dev);
     is.close();
 }
-

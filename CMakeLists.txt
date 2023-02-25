@@ -29,6 +29,7 @@ find_package(X11 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(fmt REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
@@ -44,7 +45,7 @@ set(UEBERZUGPP_SOURCES
     "src/application.cpp"
     "src/os.cpp"
     "src/tmux.cpp"
-    "src/process_info.cpp"
+    "src/process.cpp"
     "src/terminal.cpp"
     "src/dimensions.cpp"
     "src/util/x11.cpp"
@@ -72,6 +73,7 @@ target_link_libraries(ueberzug PUBLIC
     X11::xcb
     Threads::Threads
     spdlog::spdlog
+    fmt::fmt
     PkgConfig::XCBIMAGE
     PkgConfig::VIPS
     PkgConfig::SIXEL

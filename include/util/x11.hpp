@@ -16,10 +16,10 @@ public:
     auto get_server_window_ids() const -> std::vector<xcb_window_t>;
     auto get_pid_window_map() const -> std::unordered_map<unsigned int, xcb_window_t>;
     auto get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>;
-    auto get_window_pid(xcb_window_t window) const -> unsigned int;
     auto get_parent_window(int pid) const -> xcb_window_t;
 
     bool window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type = XCB_ATOM_ANY) const;
+    int get_window_pid(xcb_window_t window) const;
 
 private:
     xcb_connection_t* connection;
