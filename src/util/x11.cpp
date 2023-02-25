@@ -36,9 +36,10 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
 
 auto X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) const -> void
 {
-    std::unique_ptr<xcb_query_tree_reply_t, free_delete> reply {
+    auto reply = std::unique_ptr<xcb_query_tree_reply_t, free_delete> {
         xcb_query_tree_reply(connection, cookie, nullptr)
     };
+    if (!reply.get()) throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
     int num_children = xcb_query_tree_children_length(reply.get());
 
     if (!num_children) return;
@@ -94,7 +95,7 @@ auto X11Util::get_pid_window_map() const -> std::unordered_map<unsigned int, xcb
 
 bool X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type) const
 {
-    auto cookie = xcb_get_property(connection, false, window, property, type, 0, 4);
+    auto cookie = xcb_get_property_unchecked(connection, false, window, property, type, 0, 4);
     auto reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
         xcb_get_property_reply(connection, cookie, nullptr)
     };
@@ -108,6 +109,7 @@ auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<int,
     auto reply = std::unique_ptr<xcb_get_geometry_reply_t, free_delete> {
         xcb_get_geometry_reply(connection, cookie, nullptr)
     };
+    if (!reply.get()) return std::make_pair(0, 0);
     return std::make_pair(reply->width, reply->height);
 }
 
@@ -119,7 +121,6 @@ auto X11Util::get_parent_window(int pid) const -> xcb_window_t
     auto pid_window_map = get_pid_window_map();
     auto ppids = util::get_process_tree(pid);
     for (const auto& ppid: ppids) {
-        std::cout << ppid << std::endl;
         auto search = pid_window_map.find(ppid);
         if (search != pid_window_map.end()) return search->second;
     }

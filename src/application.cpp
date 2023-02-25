@@ -19,7 +19,6 @@
 #include "version.hpp"
 #include "util.hpp"
 #include "flags.hpp"
-#include "util/x11.hpp"
 
 #include <filesystem>
 #include <iostream>
