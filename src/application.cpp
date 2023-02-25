@@ -24,6 +24,7 @@
 #include <iostream>
 #include <fstream>
 #include <spdlog/sinks/basic_file_sink.h>
+#include <opencv2/core/ocl.hpp>
 #include <zmq.hpp>
 #include <fmt/format.h>
 
@@ -40,6 +41,11 @@ flags(flags)
     canvas = Canvas::create(terminal, *logger);
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
+    cv::ocl::Context ctx = cv::ocl::Context::getDefault();
+    if (ctx.ptr()) {
+        auto device = ctx.device(0);
+        logger->info("OpenCL supported. Using device {}.", device.name());
+    }
 }
 
 Application::~Application()

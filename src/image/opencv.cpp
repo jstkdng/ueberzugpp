@@ -57,30 +57,32 @@ auto OpencvImage::resize_image() -> void
     if (in_cache) return;
     auto [new_width, new_height] = get_new_sizes(max_width, max_height);
     if (new_width == 0 && new_height == 0) return;
-    cv::resize(image, image, cv::Size(new_width, new_height),
+    cv::resize(uimage, uimage, cv::Size(new_width, new_height),
             0, 0, cv::INTER_AREA);
     std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
     try {
-        cv::imwrite(save_location, image);
+        cv::imwrite(save_location, uimage);
     } catch (const cv::Exception& ex) {}
 }
 
 auto OpencvImage::process_image() -> void
 {
+    image.copyTo(uimage);
     resize_image();
 
     if (terminal.supports_sixel()) {
         if (image.channels() == 4) {
-            cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
+            cv::cvtColor(uimage, uimage, cv::COLOR_BGRA2RGB);
         } else {
-            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+            cv::cvtColor(uimage, uimage, cv::COLOR_BGR2RGB);
         }
     } else {
         if (image.channels() < 4) {
             // alpha channel required
-            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
+            cv::cvtColor(uimage, uimage, cv::COLOR_BGR2BGRA);
         }
     }
 
+    uimage.copyTo(image);
     _size = image.total() * image.elemSize();
 }

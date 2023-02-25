@@ -21,8 +21,7 @@
 
 #include <xcb/xcb.h>
 
-X11Canvas::X11Canvas(const Terminal& terminal):
-terminal(terminal)
+X11Canvas::X11Canvas()
 {
     connection = xcb_connect(nullptr, nullptr);
     if (xcb_connection_has_error(connection)) {

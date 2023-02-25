@@ -20,7 +20,6 @@
 #include "canvas.hpp"
 #include "image.hpp"
 #include "window.hpp"
-#include "terminal.hpp"
 #include "dimensions.hpp"
 #include "util/x11.hpp"
 
@@ -31,7 +30,7 @@
 class X11Canvas : public Canvas
 {
 public:
-    X11Canvas(const Terminal& terminal);
+    X11Canvas();
     ~X11Canvas();
 
     auto init(const Dimensions& dimensions,
@@ -43,8 +42,6 @@ private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
     X11Util xutil;
-
-    const Terminal& terminal;
 
     std::vector<std::unique_ptr<Window>> windows;
     std::shared_ptr<Image> image;

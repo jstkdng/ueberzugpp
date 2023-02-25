@@ -42,6 +42,7 @@ public:
     auto resize_image() -> void override;
 private:
     cv::Mat image;
+    cv::UMat uimage;
 
     fs::path path;
     const Terminal& terminal;

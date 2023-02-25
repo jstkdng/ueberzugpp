@@ -27,5 +27,5 @@ auto Canvas::create(const Terminal& terminal, spdlog::logger& logger) -> std::un
         return std::make_unique<SixelCanvas>();
     }
     logger.info("Terminal is {}, using X11 output.", terminal.name);
-    return std::make_unique<X11Canvas>(terminal);
+    return std::make_unique<X11Canvas>();
 }
