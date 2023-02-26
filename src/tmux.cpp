@@ -85,7 +85,7 @@ int tmux::get_statusbar_offset()
 {
     std::string cmd = "tmux display -p '#{status},#{status-position}'";
     auto output = util::str_split(os::exec(cmd), ",");
-    if (output[1] != "top") return 0;
+    if (output[1] != "top" || output[0] == "off") return 0;
     if (output[0] == "on") return 1;
     return std::stoi(output[0]);
 }
