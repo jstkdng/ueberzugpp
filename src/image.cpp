@@ -31,6 +31,7 @@ auto Image::load(const Terminal& terminal,
             const Dimensions& dimensions, const std::string& filename, spdlog::logger& logger)
     -> std::shared_ptr<Image>
 {
+    if (!fs::exists(filename)) return nullptr;
     auto image_path = check_cache(dimensions, filename);
     bool is_anim = false, load_opencv = false, load_libvips = false,
          in_cache = image_path != filename;
@@ -56,7 +57,6 @@ auto Image::load(const Terminal& terminal,
         logger.info("Loading image with opencv.");
         return std::make_shared<OpencvImage>(terminal, dimensions, image_path, in_cache);
     }
-    logger.error("Can't load image file.");
     return nullptr;
 }
 

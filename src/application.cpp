@@ -68,7 +68,7 @@ auto Application::execute(const std::string& cmd) -> void
         set_dimensions_from_json(j);
         image = Image::load(terminal, *dimensions, j["path"], *logger);
         if (!image) {
-            logger->warn("Unable to load image file.");
+            logger->error("Unable to load image file.");
             return;
         }
         canvas->init(*dimensions, image);
