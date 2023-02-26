@@ -111,7 +111,12 @@ auto LibvipsImage::resize_image() -> void
     if (in_cache) return;
     auto [new_width, new_height] = get_new_sizes(max_width, max_height);
     if (new_width == 0 && new_height == 0) return;
-    image = image.thumbnail_image(new_width);
+    if (is_anim) {
+        image = image.thumbnail_image(new_width);
+    } else {
+        image = VImage::thumbnail(path.c_str(), new_width)
+            .colourspace(VIPS_INTERPRETATION_sRGB);
+    }
     if (is_anim) return;
     std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
     try {
