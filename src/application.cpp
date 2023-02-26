@@ -67,11 +67,11 @@ auto Application::execute(const std::string& cmd) -> void
     if (j["action"] == "add") {
         set_dimensions_from_json(j);
         image = Image::load(terminal, *dimensions, j["path"], *logger);
-        canvas->init(*dimensions, image);
         if (!image) {
             logger->warn("Unable to load image file.");
             return;
         }
+        canvas->init(*dimensions, image);
         canvas->draw();
     } else if (j["action"] == "remove") {
         logger->info("Removing image.");
