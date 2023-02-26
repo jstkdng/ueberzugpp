@@ -182,3 +182,9 @@ auto Application::set_silent() -> void
     if (!flags.silent) return;
     f_stderr = freopen("/dev/null", "w", stderr);
 }
+
+void Application::print_version()
+{
+    std::cout << "ueberzugpp " << ueberzugpp_VERSION_MAJOR << "." << ueberzugpp_VERSION_MINOR
+        << "." << ueberzugpp_VERSION_PATCH << std::endl;
+}

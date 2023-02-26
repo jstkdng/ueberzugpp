@@ -39,6 +39,8 @@ public:
     void execute(const std::string& cmd);
     void command_loop(const std::atomic<bool>& flag);
 
+    static void print_version();
+
 private:
     Terminal terminal;
     std::unique_ptr<Dimensions> dimensions;

@@ -28,6 +28,7 @@ public:
     bool force_x11 = false;
     bool force_sixel = false;
     bool silent = false;
+    bool print_version = false;
 };
 
 #endif
