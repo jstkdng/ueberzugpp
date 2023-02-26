@@ -113,11 +113,10 @@ auto LibvipsImage::resize_image() -> void
     if (new_width == 0 && new_height == 0) return;
     if (is_anim) {
         image = image.thumbnail_image(new_width);
-    } else {
-        image = VImage::thumbnail(path.c_str(), new_width)
-            .colourspace(VIPS_INTERPRETATION_sRGB);
+        return;
     }
-    if (is_anim) return;
+    image = VImage::thumbnail(path.c_str(), new_width)
+        .colourspace(VIPS_INTERPRETATION_sRGB);
     std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
     try {
         image.write_to_file(save_location.c_str());
