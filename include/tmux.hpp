@@ -34,6 +34,10 @@ namespace tmux
     auto get_client_pids() -> std::optional<std::vector<int>>;
 
     auto get_offset() -> std::pair<const int, const int>;
+
+    auto get_pane_offset() -> std::pair<const int, const int>;
+
+    int get_statusbar_offset();
 }
 
 #endif

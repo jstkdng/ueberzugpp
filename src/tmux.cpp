@@ -66,10 +66,26 @@ auto tmux::get_client_pids() -> std::optional<std::vector<int>>
 auto tmux::get_offset() -> std::pair<const int, const int>
 {
     if (!tmux::is_used()) return std::make_pair(0, 0);
+    auto [p_x, p_y] = get_pane_offset();
+    auto s_y = get_statusbar_offset();
+    return std::make_pair(p_x, p_y + s_y);
+}
+
+auto tmux::get_pane_offset() -> std::pair<const int, const int>
+{
     std::string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
                                      #{pane_bottom},#{pane_right},\
                                      #{window_height},#{window_width}' \
                                   -t" +  tmux::get_pane();
     auto output = util::str_split(os::exec(cmd), ",");
-    return std::make_pair(std::stoi(output.at(1)), std::stoi(output.at(0)));
+    return std::make_pair(std::stoi(output[1]), std::stoi(output[0]));
+}
+
+int tmux::get_statusbar_offset()
+{
+    std::string cmd = "tmux display -p '#{status},#{status-position}'";
+    auto output = util::str_split(os::exec(cmd), ",");
+    if (output[1] != "top") return 0;
+    if (output[0] == "on") return 1;
+    return std::stoi(output[0]);
 }

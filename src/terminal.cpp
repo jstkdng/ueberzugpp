@@ -111,14 +111,9 @@ auto Terminal::get_terminal_size_escape_code() -> void
         ss << c;
     }
     reset_termios();
-    std::stringstream newss (ss.str().erase(0, 4));
-    std::string segment;
-    std::vector<std::string> seglist;
-    while (std::getline(newss, segment, ';')) {
-        seglist.push_back(segment);
-    }
-    ypixel = std::stoi(seglist.at(0));
-    xpixel = std::stoi(seglist.at(1));
+    auto sizes = util::str_split(ss.str().erase(0, 4), ";");
+    ypixel = std::stoi(sizes[0]);
+    xpixel = std::stoi(sizes[1]);
 }
 
 auto Terminal::init_termios() -> void

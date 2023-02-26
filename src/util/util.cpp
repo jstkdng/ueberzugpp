@@ -18,26 +18,19 @@
 #include "process.hpp"
 #include "os.hpp"
 
-#include <xcb/xcb.h>
 #include <memory>
+#include <regex>
+#include <xcb/xcb.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <fmt/format.h>
 
-auto util::str_split(std::string const& str, std::string const& delim) -> std::vector<std::string>
+auto util::str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>
 {
-    auto start = 0U;
-    auto end = str.find(delim);
-
-    std::vector<std::string> res;
-
-    while (end != std::string::npos) {
-        res.push_back(str.substr(start, end - start));
-        start = end + delim.length();
-        end = str.find(delim, start);
-    }
-
-    return res;
+    std::regex re {delim};
+    std::sregex_token_iterator
+        first {str.begin(), str.end(), re, -1}, last;
+    return {first, last};
 }
 
 auto util::get_process_tree(int pid) -> std::vector<int>
