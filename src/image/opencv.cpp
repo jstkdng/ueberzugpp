@@ -54,7 +54,7 @@ auto OpencvImage::size() const -> unsigned long
 
 auto OpencvImage::data() const -> const unsigned char*
 {
-    return image.ptr();
+    return image.data;
 }
 
 auto OpencvImage::resize_image() -> void

@@ -23,28 +23,25 @@
 #include "dimensions.hpp"
 #include "util/x11.hpp"
 
-#include <xcb/xproto.h>
 #include <memory>
 #include <vector>
 
 class X11Canvas : public Canvas
 {
 public:
-    X11Canvas();
+    X11Canvas() = default;
     ~X11Canvas();
 
-    auto init(const Dimensions& dimensions,
-            std::shared_ptr<Image> image) -> void override;
-    auto draw() -> void override;
-    auto clear() -> void override;
+    void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
+    void draw() override;
+    void clear() override;
 
 private:
-    xcb_connection_t *connection;
-    xcb_screen_t *screen;
     X11Util xutil;
 
     std::vector<std::unique_ptr<Window>> windows;
     std::shared_ptr<Image> image;
+    std::unique_ptr<std::jthread> draw_thread;
 };
 
 #endif

@@ -23,15 +23,29 @@ struct free_delete
     void operator()(void* x) { free(x); }
 };
 
-Window::Window(xcb_connection_t *connection, xcb_window_t parent, xcb_screen_t *screen,
-           const Dimensions& dimensions, Image& image):
-connection(connection),
+Window::Window(xcb_window_t parent, const Dimensions& dimensions, Image& image):
 parent(parent),
 image(image),
-screen(screen),
-window(xcb_generate_id(connection)),
-gc(xcb_generate_id(connection))
+dimensions(dimensions)
 {
+    connection = xcb_connect(nullptr, nullptr);
+    if (xcb_connection_has_error(connection)) {
+        throw std::runtime_error("CANNOT CONNECT TO X11");
+    }
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+
+    event_handler = std::make_unique<std::thread>([&] {
+        handle_events();
+    });
+
+    create_window();
+    create_gc();
+    xcb_flush(connection);
+}
+
+void Window::create_window()
+{
+    window = xcb_generate_id(connection);
     unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     auto value_list = std::make_unique<xcb_create_window_value_list_t>();
     value_list->background_pixel =  screen->black_pixel;
@@ -51,31 +65,15 @@ gc(xcb_generate_id(connection))
             value_mask,
             value_list.get());
     xcb_map_window(connection, window);
+}
+
+void Window::create_gc()
+{
+    gc = xcb_generate_id(connection);
     xcb_create_gc(connection, gc, window, 0, nullptr);
-
-    event_handler = std::make_unique<std::thread>([this] {
-        handle_events();
-    });
-
-    xcb_flush(connection);
 }
 
 auto Window::draw() -> void
-{
-    if (!image.is_animated()) {
-        draw_frame();
-        return;
-    }
-    draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
-        while (!token.stop_requested()) {
-            draw_frame();
-            image.next_frame();
-            std::this_thread::sleep_for(std::chrono::milliseconds(image.frame_delay()));
-        }
-    });
-}
-
-auto Window::draw_frame() -> void
 {
     if (xcb_image) xcb_image_destroy(xcb_image);
     auto ptr = malloc(image.size());
@@ -99,6 +97,7 @@ Window::~Window()
     xcb_unmap_window(connection, window);
     xcb_destroy_window(connection, window);
     xcb_flush(connection);
+    xcb_disconnect(connection);
 }
 
 auto Window::handle_events() -> void

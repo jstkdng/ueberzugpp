@@ -19,28 +19,31 @@
 #include "tmux.hpp"
 #include "util.hpp"
 
-#include <xcb/xcb.h>
-
-X11Canvas::X11Canvas()
-{
-    connection = xcb_connect(nullptr, nullptr);
-    if (xcb_connection_has_error(connection)) {
-        throw std::runtime_error("CANNOT CONNECT TO X11");
-    }
-    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-}
+#include <xcb/xproto.h>
 
 X11Canvas::~X11Canvas()
 {
+    draw_thread.reset();
     windows.clear();
-    xcb_disconnect(connection);
 }
 
 auto X11Canvas::draw() -> void
 {
-    for (const auto& window: windows) {
-        window->draw();
+    if (!image->is_animated()) {
+        for (const auto& window: windows) {
+            window->draw();
+        }
+        return;
     }
+    draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
+        while (!token.stop_requested()) {
+            for (const auto& window: windows) {
+                window->draw();
+            }
+            image->next_frame();
+            std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
+        }
+    });
 }
 
 auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void
@@ -55,11 +58,8 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
         client_pids = tmux::get_client_pids().value();
         pid_window_map = xutil.get_pid_window_map();
     } else if (wid.has_value()) {
-        // if WID exists prevent doing any calculations
-        auto proc = client_pids.front();
-        windows.push_back(std::make_unique<Window>(
-                    connection, std::stoi(wid.value()), screen,
-                    dimensions, *image));
+        windows.push_back(std::make_unique<Window>
+                    (std::stoi(wid.value()), dimensions, *image));
         return;
     }
 
@@ -69,13 +69,14 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
         for (const auto& ppid: ppids) {
             auto search = pid_window_map.find(ppid);
             if (search == pid_window_map.end()) continue;
-            windows.push_back(std::make_unique<Window>(
-                    connection, search->second, screen, dimensions, *image));
+            windows.push_back(std::make_unique<Window>
+                    (search->second, dimensions, *image));
         }
     }
 }
 
 auto X11Canvas::clear() -> void
 {
+    draw_thread.reset();
     windows.clear();
 }
