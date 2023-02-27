@@ -26,6 +26,7 @@
 #include <memory>
 #include <unordered_map>
 #include <xcb/xproto.h>
+#include <mutex>
 
 class X11Canvas : public Canvas
 {
@@ -46,6 +47,7 @@ private:
     std::shared_ptr<Image> image;
     std::unique_ptr<std::jthread> draw_thread;
     std::unique_ptr<std::jthread> event_handler;
+    std::mutex windows_mutex;
 
     void handle_events();
     void discard_leftover_events();

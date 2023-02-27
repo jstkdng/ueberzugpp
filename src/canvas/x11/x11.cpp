@@ -71,6 +71,7 @@ auto X11Canvas::handle_events() -> void
                 auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
                 if (expose->x == 69 && expose->y == 420) return;
                 try {
+                    std::scoped_lock lock (windows_mutex);
                     windows.at(expose->window)->draw();
                 } catch (const std::out_of_range& ex) {}
                 break;
@@ -121,13 +122,17 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 
 auto X11Canvas::clear() -> void
 {
-    windows.clear();
+    {
+        std::scoped_lock lock (windows_mutex);
+        windows.clear();
+    }
     event_handler.reset();
     draw_thread.reset();
 }
 
 void X11Canvas::discard_leftover_events()
 {
+    std::scoped_lock lock (windows_mutex);
     std::unique_ptr<xcb_generic_event_t, free_delete> event {
         xcb_poll_for_event(this->connection)
     };
