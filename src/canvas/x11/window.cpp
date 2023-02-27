@@ -23,29 +23,24 @@ struct free_delete
     void operator()(void* x) { free(x); }
 };
 
-Window::Window(xcb_window_t parent, const Dimensions& dimensions, Image& image):
+Window::Window(xcb_connection_t *connection, xcb_screen_t *screen,
+            xcb_window_t window, xcb_window_t parent,
+            const Dimensions& dimensions, Image& image):
+connection(connection),
+screen(screen),
+window(window),
 parent(parent),
 image(image),
-dimensions(dimensions)
+dimensions(dimensions),
+gc(xcb_generate_id(connection))
 {
-    connection = xcb_connect(nullptr, nullptr);
-    if (xcb_connection_has_error(connection)) {
-        throw std::runtime_error("CANNOT CONNECT TO X11");
-    }
-    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-
-    event_handler = std::make_unique<std::thread>([&] {
-        handle_events();
-    });
-
     create_window();
-    create_gc();
+    xcb_create_gc(connection, gc, window, 0, nullptr);
     xcb_flush(connection);
 }
 
 void Window::create_window()
 {
-    window = xcb_generate_id(connection);
     unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     auto value_list = std::make_unique<xcb_create_window_value_list_t>();
     value_list->background_pixel =  screen->black_pixel;
@@ -67,13 +62,13 @@ void Window::create_window()
     xcb_map_window(connection, window);
 }
 
-void Window::create_gc()
+auto Window::draw() -> void
 {
-    gc = xcb_generate_id(connection);
-    xcb_create_gc(connection, gc, window, 0, nullptr);
+    if (!xcb_image) return;
+    xcb_image_put(connection, window, gc, xcb_image, 0, 0, 0);
 }
 
-auto Window::draw() -> void
+void Window::generate_frame()
 {
     if (xcb_image) xcb_image_destroy(xcb_image);
     auto ptr = malloc(image.size());
@@ -91,34 +86,11 @@ auto Window::draw() -> void
 Window::~Window()
 {
     terminate_event_handler();
-    if (event_handler->joinable()) event_handler->join();
     if (xcb_image) xcb_image_destroy(xcb_image);
     xcb_free_gc(connection, gc);
     xcb_unmap_window(connection, window);
     xcb_destroy_window(connection, window);
     xcb_flush(connection);
-    xcb_disconnect(connection);
-}
-
-auto Window::handle_events() -> void
-{
-    while (true) {
-        std::unique_ptr<xcb_generic_event_t, free_delete> event {
-            xcb_wait_for_event(this->connection)
-        };
-        switch (event->response_type & ~0x80) {
-            case XCB_EXPOSE: {
-                auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
-                if (expose->x == 69 && expose->y == 420) return;
-                if (!xcb_image) continue;
-                xcb_image_put(connection, window, gc, xcb_image, 0, 0, 0);
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    }
 }
 
 auto Window::terminate_event_handler() -> void

@@ -24,12 +24,13 @@
 #include "util/x11.hpp"
 
 #include <memory>
-#include <vector>
+#include <unordered_map>
+#include <xcb/xproto.h>
 
 class X11Canvas : public Canvas
 {
 public:
-    X11Canvas() = default;
+    X11Canvas();
     ~X11Canvas();
 
     void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
@@ -38,10 +39,16 @@ public:
 
 private:
     X11Util xutil;
+    xcb_connection_t *connection;
+    xcb_screen_t *screen;
 
-    std::vector<std::unique_ptr<Window>> windows;
+    std::unordered_map<xcb_window_t, std::unique_ptr<Window>> windows;
     std::shared_ptr<Image> image;
     std::unique_ptr<std::jthread> draw_thread;
+    std::unique_ptr<std::jthread> event_handler;
+
+    void handle_events();
+    void discard_leftover_events();
 };
 
 #endif

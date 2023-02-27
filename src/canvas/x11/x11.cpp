@@ -21,29 +21,65 @@
 
 #include <xcb/xproto.h>
 
+struct free_delete
+{
+    void operator()(void* x) { free(x); }
+};
+
+X11Canvas::X11Canvas()
+{
+    connection = xcb_connect(nullptr, nullptr);
+    if (xcb_connection_has_error(connection)) {
+        throw std::runtime_error("CANNOT CONNECT TO X11");
+    }
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+}
+
 X11Canvas::~X11Canvas()
 {
-    draw_thread.reset();
-    windows.clear();
+    xcb_disconnect(connection);
 }
 
 auto X11Canvas::draw() -> void
 {
     if (!image->is_animated()) {
-        for (const auto& window: windows) {
-            window->draw();
+        for (const auto& [wid, window]: windows) {
+            window->generate_frame();
         }
         return;
     }
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
-            for (const auto& window: windows) {
-                window->draw();
+            for (const auto& [wid, window]: windows) {
+                window->generate_frame();
             }
             image->next_frame();
             std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });
+}
+
+auto X11Canvas::handle_events() -> void
+{
+    discard_leftover_events();
+    while (true) {
+        std::unique_ptr<xcb_generic_event_t, free_delete> event {
+            xcb_wait_for_event(this->connection)
+        };
+        switch (event->response_type & ~0x80) {
+            case XCB_EXPOSE: {
+                auto expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
+                if (expose->x == 69 && expose->y == 420) return;
+                try {
+                    windows.at(expose->window)->draw();
+                } catch (const std::out_of_range& ex) {}
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+    }
 }
 
 auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void
@@ -54,12 +90,17 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 
     auto wid = os::getenv("WINDOWID");
 
+    event_handler = std::make_unique<std::jthread>([&] {
+        handle_events();
+    });
+
     if (tmux::is_used()) {
         client_pids = tmux::get_client_pids().value();
         pid_window_map = xutil.get_pid_window_map();
     } else if (wid.has_value()) {
-        windows.push_back(std::make_unique<Window>
-                    (std::stoi(wid.value()), dimensions, *image));
+        auto window_id = xcb_generate_id(connection);
+        windows.insert({window_id, std::make_unique<Window>
+                    (connection, screen, window_id, std::stoi(wid.value()), dimensions, *image)});
         return;
     }
 
@@ -69,14 +110,26 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
         for (const auto& ppid: ppids) {
             auto search = pid_window_map.find(ppid);
             if (search == pid_window_map.end()) continue;
-            windows.push_back(std::make_unique<Window>
-                    (search->second, dimensions, *image));
+            auto window_id = xcb_generate_id(connection);
+            windows.insert({window_id, std::make_unique<Window>
+                    (connection, screen, window_id, search->second, dimensions, *image)});
         }
     }
+
+    if (windows.empty()) throw std::runtime_error("UNABLE TO CREATE X11 WINDOWS");
 }
 
 auto X11Canvas::clear() -> void
 {
-    draw_thread.reset();
     windows.clear();
+    event_handler.reset();
+    draw_thread.reset();
+}
+
+void X11Canvas::discard_leftover_events()
+{
+    std::unique_ptr<xcb_generic_event_t, free_delete> event {
+        xcb_poll_for_event(this->connection)
+    };
+    while (event.get()) event.reset(xcb_poll_for_event(this->connection));
 }

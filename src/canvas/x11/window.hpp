@@ -27,10 +27,14 @@
 class Window
 {
 public:
-    Window(xcb_window_t parent, const Dimensions& dimensions, Image& image);
+    Window(xcb_connection_t *connection, xcb_screen_t *screen,
+            xcb_window_t window, xcb_window_t parent,
+            const Dimensions& dimensions, Image& image);
     ~Window();
 
     void draw();
+    void generate_frame();
+    void terminate_event_handler();
 
 private:
     xcb_connection_t *connection;
@@ -42,12 +46,8 @@ private:
 
     Image& image;
     const Dimensions& dimensions;
-    std::unique_ptr<std::thread> event_handler;
 
-    void handle_events();
     void create_window();
-    void create_gc();
-    void terminate_event_handler();
     void send_expose_event(int x = 0, int y = 0);
 };
 
