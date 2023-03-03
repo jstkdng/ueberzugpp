@@ -21,6 +21,8 @@
 #include <vector>
 #include <optional>
 
+#include "flags.hpp"
+
 namespace tmux
 {
     std::string get_session_id();
@@ -38,6 +40,8 @@ namespace tmux
     auto get_pane_offset() -> std::pair<const int, const int>;
 
     int get_statusbar_offset();
+
+    void handle_hook(const std::string& hook, const Flags& flags);
 }
 
 #endif

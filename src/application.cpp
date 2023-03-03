@@ -138,7 +138,7 @@ auto Application::command_loop(const std::atomic<bool>& stop_flag) -> void
 auto Application::tcp_loop(const std::atomic<bool>& stop_flag) -> void
 {
     zmq::context_t context(1);
-    zmq::socket_t socket(context, ZMQ_STREAM);
+    zmq::socket_t socket(context, zmq::socket_type::stream);
     socket.bind(fmt::format("tcp://127.0.0.1:{}", flags.tcp_port));
     int data[256];
     auto idbuf = zmq::buffer(data);

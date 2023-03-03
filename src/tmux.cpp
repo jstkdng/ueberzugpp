@@ -20,6 +20,10 @@
 
 #include <sstream>
 #include <string>
+#include <iostream>
+#include <algorithm>
+#include <zmq.hpp>
+#include <fmt/format.h>
 
 std::string tmux::get_session_id()
 {
@@ -88,4 +92,17 @@ int tmux::get_statusbar_offset()
     if (output[1] != "top" || output[0] == "off") return 0;
     if (output[0] == "on") return 1;
     return std::stoi(output[0]);
+}
+
+void tmux::handle_hook(const std::string& hook, const Flags& flags)
+{
+    zmq::context_t context(1);
+    zmq::socket_t socket(context, zmq::socket_type::req);
+    socket.connect(fmt::format("tcp://127.0.0.1:{}", flags.tcp_port));
+    std::string msg = fmt::format("{{'action': 'tmux', 'hook': '{}'}}", hook);
+    zmq::message_t request(msg.size());
+    std::memcpy(request.data(), msg.c_str(), msg.size());
+    socket.send(request, zmq::send_flags::dontwait);
+    socket.close();
+    context.close();
 }

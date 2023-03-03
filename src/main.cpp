@@ -23,6 +23,7 @@
 
 #include "application.hpp"
 #include "flags.hpp"
+#include "tmux.hpp"
 
 std::atomic<bool> stop_flag(false);
 
@@ -68,6 +69,9 @@ int main(int argc, char *argv[])
     layer_command->add_flag("--sixel", flags.force_sixel, "Force sixel output")->excludes("--x11");
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility");
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility");
+
+    auto tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. For internal use.");
+    tmux_command->allow_extras();
     CLI11_PARSE(program, argc, argv);
 
     if (flags.print_version) {
@@ -75,20 +79,30 @@ int main(int argc, char *argv[])
         std::exit(0);
     }
 
-    if (!layer_command->parsed()) {
+    if (!layer_command->parsed() && !tmux_command->parsed()) {
         program.exit(CLI::CallForHelp());
-        exit(1);
+        std::exit(1);
     }
 
-    if (VIPS_INIT(argv[0])) {
-        vips_error_exit(nullptr);
+    if (layer_command->parsed()) {
+        if (VIPS_INIT(argv[0])) {
+            vips_error_exit(nullptr);
+        }
+        vips_concurrency_set(1);
+
+        Application application(flags);
+        application.command_loop(stop_flag);
+
+        vips_shutdown();
     }
-    vips_concurrency_set(1);
 
-    Application application(flags);
-    application.command_loop(stop_flag);
+    if (tmux_command->parsed()) {
+        try {
+            auto positionals = tmux_command->remaining();
+            tmux::handle_hook(positionals.at(0), flags);
+        } catch (const std::out_of_range& oor) {}
+    }
 
-    vips_shutdown();
     return 0;
 }
 
