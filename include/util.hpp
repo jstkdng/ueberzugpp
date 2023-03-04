@@ -19,15 +19,16 @@
 
 #include <string>
 #include <vector>
+#include <string_view>
 
 namespace util
 {
-    auto str_split(std::string const& str, std::string const& delim) -> std::vector<std::string>;
+    auto str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>;
     auto get_process_tree(int pid) -> std::vector<int>;
     auto get_b2_hash(const std::string& str) -> std::string;
     auto get_cache_path() -> std::string;
     auto get_log_filename() -> std::string;
-    void send_tcp_message(const std::string& msg, int port);
+    void send_tcp_message(std::string_view msg, int port);
 }
 
 #endif

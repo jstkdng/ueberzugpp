@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <string_view>
 
 #include "flags.hpp"
 
@@ -41,7 +42,7 @@ namespace tmux
 
     int get_statusbar_offset();
 
-    void handle_hook(const std::string& hook, const Flags& flags);
+    void handle_hook(std::string_view hook, const Flags& flags);
 }
 
 #endif

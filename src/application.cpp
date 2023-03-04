@@ -26,6 +26,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <opencv2/core/ocl.hpp>
 #include <fmt/format.h>
+#include <zmq.hpp>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -56,7 +57,6 @@ Application::~Application()
     canvas->clear();
     if (f_stderr) std::fclose(f_stderr);
     util::send_tcp_message("EXIT", flags.tcp_port);
-    context.close();
 }
 
 void Application::execute(const std::string& cmd)
@@ -143,6 +143,7 @@ void Application::command_loop(const std::atomic<bool>& stop_flag)
 
 void Application::tcp_loop()
 {
+    zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
     socket.bind(fmt::format("tcp://127.0.0.1:{}", flags.tcp_port));
     int data[256];
@@ -162,6 +163,7 @@ void Application::tcp_loop()
         }
     }
     socket.close();
+    context.close();
 }
 
 void Application::print_header()

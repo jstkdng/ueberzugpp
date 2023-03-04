@@ -29,7 +29,6 @@
 #include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
-#include <zmq.hpp>
 
 class Application
 {
@@ -52,7 +51,6 @@ private:
     std::FILE* f_stderr = nullptr;
     const Flags& flags;
     std::jthread tcp_thread;
-    zmq::context_t context{1};
 
     void setup_logger();
     void set_silent();

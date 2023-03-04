@@ -64,12 +64,12 @@ auto util::get_log_filename() -> std::string
     return fmt::format("ueberzug_{}.log", os::getenv("USER").value());
 }
 
-void util::send_tcp_message(const std::string& msg, int port)
+void util::send_tcp_message(std::string_view msg, int port)
 {
     auto endpoint = fmt::format("tcp://127.0.0.1:{}", port);
     zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
-    socket.set(zmq::sockopt::linger, 1);
+    socket.set(zmq::sockopt::linger, 2);
     socket.connect(endpoint);
     auto id_sock = socket.get(zmq::sockopt::routing_id);
     zmq::message_t id_req(id_sock), msg_req(msg);
