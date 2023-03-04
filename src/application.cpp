@@ -25,7 +25,6 @@
 #include <fstream>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <opencv2/core/ocl.hpp>
-#include <zmq.hpp>
 #include <fmt/format.h>
 
 namespace fs = std::filesystem;
@@ -41,6 +40,10 @@ flags(flags)
     canvas = Canvas::create(terminal, *logger);
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
+    tcp_thread = std::jthread([&] {
+        logger->info("Listenning on port {}.", flags.tcp_port);
+        tcp_loop();
+    });
     cv::ocl::Context ctx = cv::ocl::Context::getDefault();
     if (ctx.ptr()) {
         auto device = ctx.device(0);
@@ -52,9 +55,11 @@ Application::~Application()
 {
     canvas->clear();
     if (f_stderr) std::fclose(f_stderr);
+    util::send_tcp_message("EXIT", flags.tcp_port);
+    context.close();
 }
 
-auto Application::execute(const std::string& cmd) -> void
+void Application::execute(const std::string& cmd)
 {
     json j;
     try {
@@ -109,7 +114,7 @@ void Application::set_dimensions_from_json(const json& j)
     dimensions = std::make_unique<Dimensions>(terminal, x, y, max_width, max_height);
 }
 
-auto Application::setup_logger() -> void
+void Application::setup_logger()
 {
     std::string log_tmp = util::get_log_filename();
     fs::path log_path = fs::temp_directory_path() / log_tmp;
@@ -121,45 +126,45 @@ auto Application::setup_logger() -> void
     }
 }
 
-auto Application::command_loop(const std::atomic<bool>& stop_flag) -> void
+void Application::command_loop(const std::atomic<bool>& stop_flag)
 {
-    if (flags.force_tcp) {
-        logger->info("Listenning on port {}.", flags.tcp_port);
-        tcp_loop(stop_flag);
-    } else {
+    if (!flags.no_stdin) {
         std::string cmd;
         while (std::getline(std::cin, cmd)) {
             if (stop_flag.load()) break;
             execute(cmd);
         }
+    } else {
+        while (!stop_flag.load()) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
     }
 }
 
-auto Application::tcp_loop(const std::atomic<bool>& stop_flag) -> void
+void Application::tcp_loop()
 {
-    zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
     socket.bind(fmt::format("tcp://127.0.0.1:{}", flags.tcp_port));
     int data[256];
     auto idbuf = zmq::buffer(data);
     while (true) {
         zmq::message_t request, id;
-        zmq::recv_result_t result;
         try {
             auto id_res = socket.recv(idbuf, zmq::recv_flags::none);
-            result = socket.recv(request, zmq::recv_flags::none);
+            auto result = socket.recv(request, zmq::recv_flags::none);
         } catch (const zmq::error_t& err) {}
-        if (stop_flag.load()) break;
-        if (result.has_value()) {
-            auto str_response = request.to_string();
-            if (!str_response.empty()) execute(str_response);
+        auto str_response = request.to_string();
+        if (!str_response.empty()) {
+            if (str_response == "EXIT") break;
+            for (const auto& cmd: util::str_split(str_response, "\n")) {
+                if (!cmd.empty()) execute(cmd);
+            }
         }
     }
     socket.close();
-    context.close();
 }
 
-auto Application::print_header() -> void
+void Application::print_header()
 {
     std::string log_tmp = util::get_log_filename();
     fs::path log_path = fs::temp_directory_path() / log_tmp;
@@ -177,7 +182,7 @@ auto Application::print_header() -> void
     ofs.close();
 }
 
-auto Application::set_silent() -> void
+void Application::set_silent()
 {
     if (!flags.silent) return;
     f_stderr = freopen("/dev/null", "w", stderr);

@@ -24,7 +24,7 @@ public:
     ~Flags() = default;
 
     int tcp_port = 56988;
-    bool force_tcp = false;
+    bool no_stdin = false;
     bool force_x11 = false;
     bool force_sixel = false;
     bool silent = false;

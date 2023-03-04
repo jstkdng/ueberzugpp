@@ -29,6 +29,7 @@
 #include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
+#include <zmq.hpp>
 
 class Application
 {
@@ -50,11 +51,13 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     std::FILE* f_stderr = nullptr;
     const Flags& flags;
+    std::jthread tcp_thread;
+    zmq::context_t context{1};
 
-    auto setup_logger() -> void;
-    auto set_silent() -> void;
-    auto print_header() -> void;
-    auto tcp_loop(const std::atomic<bool>& stop_flag) -> void;
+    void setup_logger();
+    void set_silent();
+    void print_header();
+    void tcp_loop();
     void set_dimensions_from_json(const nlohmann::json& json);
 };
 

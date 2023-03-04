@@ -60,17 +60,17 @@ int main(int argc, char *argv[])
 
     Flags flags;
     CLI::App program("Display images in the terminal", "ueberzug");
-    program.add_flag("-V,--version", flags.print_version, "Print version information");
-    CLI::App *layer_command = program.add_subcommand("layer", "Display images");
-    layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null");
-    layer_command->add_flag("--tcp", flags.force_tcp, "Send commands through a tcp socket on port 56988");
-    layer_command->add_option("--tcp-port", flags.tcp_port, "Change tcp port used")->needs("--tcp");
-    layer_command->add_flag("--x11", flags.force_x11, "Force X11 output");
+    program.add_flag("-V,--version", flags.print_version, "Print version information.");
+    CLI::App *layer_command = program.add_subcommand("layer", "Display images on the terminal.");
+    layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null.");
+    layer_command->add_flag("--no-stdin", flags.no_stdin, "Don't listen on stdin for commands.");
+    layer_command->add_option("--tcp-port", flags.tcp_port, "Change tcp port used.");
+    layer_command->add_flag("--x11", flags.force_x11, "Force X11 output.");
     layer_command->add_flag("--sixel", flags.force_sixel, "Force sixel output")->excludes("--x11");
-    layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility");
-    layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility");
+    layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");
+    layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
-    auto tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. For internal use.");
+    auto tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
     tmux_command->allow_extras();
     CLI11_PARSE(program, argc, argv);
 
