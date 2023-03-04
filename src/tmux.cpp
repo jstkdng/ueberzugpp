@@ -18,11 +18,7 @@
 #include "os.hpp"
 #include "util.hpp"
 
-#include <sstream>
 #include <string>
-#include <iostream>
-#include <algorithm>
-#include <zmq.hpp>
 #include <fmt/format.h>
 
 std::string tmux::get_session_id()
@@ -58,10 +54,9 @@ auto tmux::get_client_pids() -> std::optional<std::vector<int>>
     std::string cmd =
         "tmux list-clients -F '#{client_pid}' -t " + tmux::get_pane();
     std::string output = os::exec(cmd), to;
-    std::stringstream ss(output);
 
-    while(std::getline(ss, to, '\n')) {
-        pids.push_back(std::stoi(to));
+    for (const auto& line: util::str_split(output, "\n")) {
+        pids.push_back(std::stoi(line));
     }
 
     return pids;
@@ -96,13 +91,6 @@ int tmux::get_statusbar_offset()
 
 void tmux::handle_hook(const std::string& hook, const Flags& flags)
 {
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, zmq::socket_type::req);
-    socket.connect(fmt::format("tcp://127.0.0.1:{}", flags.tcp_port));
-    std::string msg = fmt::format("{{'action': 'tmux', 'hook': '{}'}}", hook);
-    zmq::message_t request(msg.size());
-    std::memcpy(request.data(), msg.c_str(), msg.size());
-    socket.send(request, zmq::send_flags::dontwait);
-    socket.close();
-    context.close();
+    auto msg = fmt::format("{{\"action\": \"tmux\", \"hook\": \"{}\"}}", hook);
+    util::send_tcp_message(msg, flags.tcp_port);
 }

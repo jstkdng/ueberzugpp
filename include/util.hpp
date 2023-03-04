@@ -27,6 +27,7 @@ namespace util
     auto get_b2_hash(const std::string& str) -> std::string;
     auto get_cache_path() -> std::string;
     auto get_log_filename() -> std::string;
+    void send_tcp_message(const std::string& msg, int port);
 }
 
 #endif

@@ -24,6 +24,7 @@
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <fmt/format.h>
+#include <zmq.hpp>
 
 auto util::str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>
 {
@@ -61,4 +62,19 @@ auto util::get_cache_path() -> std::string
 auto util::get_log_filename() -> std::string
 {
     return fmt::format("ueberzug_{}.log", os::getenv("USER").value());
+}
+
+void util::send_tcp_message(const std::string& msg, int port)
+{
+    auto endpoint = fmt::format("tcp://127.0.0.1:{}", port);
+    zmq::context_t context(1);
+    zmq::socket_t socket(context, zmq::socket_type::stream);
+    socket.set(zmq::sockopt::linger, 1);
+    socket.connect(endpoint);
+    auto id_sock = socket.get(zmq::sockopt::routing_id);
+    zmq::message_t id_req(id_sock), msg_req(msg);
+    socket.send(id_req, zmq::send_flags::sndmore);
+    socket.send(msg_req, zmq::send_flags::none);
+    socket.close();
+    context.close();
 }
