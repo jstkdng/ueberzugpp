@@ -35,6 +35,9 @@ public:
     void draw();
     void generate_frame();
     void terminate_event_handler();
+    void toggle();
+    void show();
+    void hide();
 
 private:
     xcb_connection_t *connection;
@@ -46,6 +49,7 @@ private:
 
     Image& image;
     const Dimensions& dimensions;
+    bool visible = false;
 
     void create_window();
     void send_expose_event(int x = 0, int y = 0);

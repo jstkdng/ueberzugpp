@@ -60,6 +60,33 @@ void Window::create_window()
             value_mask,
             value_list.get());
     xcb_map_window(connection, window);
+    this->visible = true;
+    xcb_flush(connection);
+}
+
+void Window::toggle()
+{
+    if (visible) {
+        xcb_unmap_window(connection, window);
+    } else {
+        xcb_map_window(connection, window);
+    }
+    visible = !visible;
+    xcb_flush(connection);
+}
+
+void Window::show()
+{
+    visible = true;
+    xcb_map_window(connection, window);
+    xcb_flush(connection);
+}
+
+void Window::hide()
+{
+    visible = false;
+    xcb_unmap_window(connection, window);
+    xcb_flush(connection);
 }
 
 auto Window::draw() -> void

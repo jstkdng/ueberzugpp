@@ -84,8 +84,25 @@ void Application::execute(const std::string& cmd)
     } else if (j["action"] == "remove") {
         logger->info("Removing image.");
         canvas->clear();
+    } else if (j["action"] == "tmux") {
+        handle_tmux_hook(j["hook"]);
     } else {
         logger->warn("Command not supported.");
+    }
+}
+
+void Application::handle_tmux_hook(const std::string& hook)
+{
+    if (hook == "client-session-changed") {
+        canvas->show();
+    } else if (hook == "session-window-changed") {
+        canvas->toggle();
+    } else if (hook == "client-detached") {
+        canvas->hide();
+    } else if (hook == "pane-mode-changed") {
+        // TODO: what to do here?
+    } else {
+        logger->warn("TMUX hook not recognized");
     }
 }
 

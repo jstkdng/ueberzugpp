@@ -37,6 +37,9 @@ public:
     void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
     void draw() override;
     void clear() override;
+    void toggle() override;
+    void hide() override;
+    void show() override;
 
 private:
     X11Util xutil;

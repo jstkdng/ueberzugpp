@@ -59,6 +59,27 @@ auto X11Canvas::draw() -> void
     });
 }
 
+void X11Canvas::toggle()
+{
+    for (const auto& [wid, window]: windows) {
+        window->toggle();
+    }
+}
+
+void X11Canvas::show()
+{
+    for (const auto& [wid, window]: windows) {
+        window->show();
+    }
+}
+
+void X11Canvas::hide()
+{
+    for (const auto& [wid, window]: windows) {
+        window->hide();
+    }
+}
+
 auto X11Canvas::handle_events() -> void
 {
     discard_leftover_events();

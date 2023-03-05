@@ -38,6 +38,7 @@ public:
 
     void execute(const std::string& cmd);
     void command_loop(const std::atomic<bool>& flag);
+    void handle_tmux_hook(const std::string& hook);
 
     static void print_version();
 

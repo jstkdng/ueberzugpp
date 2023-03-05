@@ -32,8 +32,12 @@ public:
 
     virtual auto init(const Dimensions& dimensions,
             std::shared_ptr<Image> image) -> void = 0;
-    virtual auto draw() -> void = 0;
-    virtual auto clear() -> void = 0;
+    virtual void draw() = 0;
+    virtual void clear() = 0;
+
+    virtual void show() {}
+    virtual void hide() {}
+    virtual void toggle() {}
 };
 
 #endif
