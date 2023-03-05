@@ -20,6 +20,14 @@
 
 #include <string>
 #include <fmt/format.h>
+#include <iostream>
+
+std::vector<std::string_view> tmux::hooks = {
+    "client-session-changed",
+    "session-window-changed",
+    "pane-mode-changed",
+    "client-detached"
+};
 
 std::string tmux::get_session_id()
 {
@@ -93,4 +101,25 @@ void tmux::handle_hook(std::string_view hook, const Flags& flags)
 {
     auto msg = fmt::format("{{\"action\": \"tmux\", \"hook\": \"{}\"}}\n", hook);
     util::send_tcp_message(msg, flags.tcp_port);
+}
+
+void tmux::register_hooks()
+{
+    if (!is_used()) return;
+    for (const auto& hook: hooks) {
+        auto cmd = fmt::format(
+                "tmux set-hook -t {} {} \"run-shell 'ueberzug tmux {}'\"",
+                get_pane(), hook, hook);
+        os::exec(cmd);
+    }
+}
+
+void tmux::unregister_hooks()
+{
+    if (!is_used()) return;
+    for (const auto& hook: hooks) {
+        auto cmd = fmt::format(
+                "tmux set-hook -u -t {} {}", get_pane(), hook);
+        os::exec(cmd);
+    }
 }

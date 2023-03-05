@@ -50,7 +50,7 @@ auto Terminal::supports_sixel() const -> bool
         if (flags.force_sixel && !flags.force_x11) return true;
         else if (flags.force_x11 && !flags.force_sixel) return false;
     }
-    std::unordered_set<std::string> supported_terms {
+    std::unordered_set<std::string_view> supported_terms {
         "contour", "foot", "xterm-256color-sixel", "yaft-256color",
         "BlackBox", "WezTerm"
     };

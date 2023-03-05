@@ -19,11 +19,12 @@
 
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace os
 {
-    std::string exec(std::string const& cmd);
-    auto getenv(std::string const& var) -> std::optional<std::string>;
+    std::string exec(std::string_view cmd);
+    auto getenv(std::string_view var) -> std::optional<std::string>;
 
     int get_pid();
 

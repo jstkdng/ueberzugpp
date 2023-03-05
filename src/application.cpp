@@ -19,6 +19,7 @@
 #include "version.hpp"
 #include "util.hpp"
 #include "flags.hpp"
+#include "tmux.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -41,6 +42,7 @@ flags(flags)
     canvas = Canvas::create(terminal, *logger);
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
+    tmux::register_hooks();
     tcp_thread = std::jthread([&] {
         logger->info("Listenning on port {}.", flags.tcp_port);
         tcp_loop();
@@ -57,6 +59,7 @@ Application::~Application()
     canvas->clear();
     if (f_stderr) std::fclose(f_stderr);
     util::send_tcp_message("EXIT", flags.tcp_port);
+    tmux::unregister_hooks();
 }
 
 void Application::execute(const std::string& cmd)

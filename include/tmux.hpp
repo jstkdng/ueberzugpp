@@ -26,6 +26,8 @@
 
 namespace tmux
 {
+    extern std::vector<std::string_view> hooks;
+
     std::string get_session_id();
 
     std::string get_pane();
@@ -43,6 +45,8 @@ namespace tmux
     int get_statusbar_offset();
 
     void handle_hook(std::string_view hook, const Flags& flags);
+    void register_hooks();
+    void unregister_hooks();
 }
 
 #endif
