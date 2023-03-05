@@ -19,11 +19,28 @@
 
 Dimensions::Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h):
 terminal(terminal),
-x(x), y(y), max_w(max_w), max_h(max_h)
+orig_x(x), orig_y(y), max_w(max_w), max_h(max_h)
+{
+    read_offsets();
+
+    // keep delta for further reloads
+    width_delta = terminal.cols - max_w;
+    height_delta = terminal.rows - max_h;
+}
+
+void Dimensions::reload()
+{
+    read_offsets();
+
+    this->max_w = terminal.cols - width_delta;
+    this->max_h = terminal.rows - height_delta;
+}
+
+void Dimensions::read_offsets()
 {
     auto [offset_x, offset_y] = tmux::get_offset();
-    this->x += offset_x;
-    this->y += offset_y;
+    this->x = orig_x + offset_x;
+    this->y = orig_y + offset_y;
 }
 
 int Dimensions::xpixels() const

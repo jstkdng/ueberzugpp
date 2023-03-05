@@ -31,9 +31,15 @@ public:
 
     double font_width;
     double font_height;
+    int rows;
+    int cols;
     std::string name;
 
-    auto supports_sixel() const -> bool;
+    bool supports_sixel() const;
+
+    int height_pixels() const;
+    int width_pixels() const;
+    void reload();
 
 private:
     auto get_terminal_size() -> void;
@@ -50,8 +56,6 @@ private:
     int pid;
     double padding_horizontal;
     double padding_vertical;
-    int rows;
-    int cols;
     int xpixel;
     int ypixel;
 

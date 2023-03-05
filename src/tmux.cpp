@@ -25,8 +25,8 @@
 std::vector<std::string_view> tmux::hooks = {
     "client-session-changed",
     "session-window-changed",
-    "pane-mode-changed",
-    "client-detached"
+    "client-detached",
+    "window-layout-changed"
 };
 
 std::string tmux::get_session_id()

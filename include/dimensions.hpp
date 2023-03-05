@@ -25,6 +25,8 @@ public:
     Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h);
     ~Dimensions() = default;
 
+    void reload();
+
     int xpixels() const;
     int ypixels() const;
     int max_wpixels() const;
@@ -37,6 +39,13 @@ public:
 
 private:
     const Terminal& terminal;
+
+    int width_delta;
+    int height_delta;
+    int orig_x;
+    int orig_y;
+
+    void read_offsets();
 };
 
 #endif

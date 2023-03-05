@@ -44,6 +44,21 @@ Terminal::~Terminal()
     close(this->pty_fd);
 }
 
+int Terminal::width_pixels() const
+{
+    return cols * font_width;
+}
+
+int Terminal::height_pixels() const
+{
+    return rows * font_height;
+}
+
+void Terminal::reload()
+{
+    get_terminal_size();
+}
+
 auto Terminal::supports_sixel() const -> bool
 {
     if (flags.force_sixel != flags.force_x11) {

@@ -62,6 +62,7 @@ auto Image::load(const Terminal& terminal,
 
 auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
 {
+    return orig_path;
     std::string cache_filename = util::get_b2_hash(orig_path) + orig_path.extension().string(),
                 cache_dir = util::get_cache_path();
     fs::path cache_path = cache_dir + cache_filename;

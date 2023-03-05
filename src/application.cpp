@@ -47,6 +47,7 @@ flags(flags)
         logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
+    std::cout << tmux::get_pane() << std::endl;
 }
 
 Application::~Application()
@@ -55,6 +56,7 @@ Application::~Application()
     if (f_stderr) std::fclose(f_stderr);
     util::send_tcp_message("EXIT");
     tmux::unregister_hooks();
+    fs::remove(util::get_socket_path());
 }
 
 void Application::execute(const std::string& cmd)
@@ -94,8 +96,12 @@ void Application::handle_tmux_hook(const std::string& hook)
         canvas->toggle();
     } else if (hook == "client-detached") {
         canvas->hide();
-    } else if (hook == "pane-mode-changed") {
-        // TODO: what to do here?
+    } else if (hook == "window-layout-changed") {
+        terminal.reload();
+        dimensions->reload(terminal.width_pixels(), terminal.height_pixels());
+        canvas->clear();
+        canvas->init(*dimensions, image);
+        canvas->draw();
     } else {
         logger->warn("TMUX hook not recognized");
     }
