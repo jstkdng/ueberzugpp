@@ -1,5 +1,6 @@
 import socket
 import time
+import os
 
 cmd1 = """
 {"action":"add","identifier":"preview","max_height":21,"max_width":118,"path":"/tmp/img1.png","x":10,"y":15}
@@ -13,11 +14,11 @@ cmd_exit = """
 {"action":"remove","identifier":"preview"}
 """
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 connected = False
 while not connected:
     try:
-        s.connect(("127.0.0.1", 56988))
+        s.connect(f"/tmp/ueberzug_{os.getenv('USER')}.sock")
         connected = True
     except Exception:
         time.sleep(0.05)

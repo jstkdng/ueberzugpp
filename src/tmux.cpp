@@ -97,10 +97,10 @@ int tmux::get_statusbar_offset()
     return std::stoi(output[0]);
 }
 
-void tmux::handle_hook(std::string_view hook, const Flags& flags)
+void tmux::handle_hook(std::string_view hook)
 {
     auto msg = fmt::format("{{\"action\": \"tmux\", \"hook\": \"{}\"}}\n", hook);
-    util::send_tcp_message(msg, flags.tcp_port);
+    util::send_tcp_message(msg);
 }
 
 void tmux::register_hooks()

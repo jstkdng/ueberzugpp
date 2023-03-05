@@ -44,7 +44,7 @@ namespace tmux
 
     int get_statusbar_offset();
 
-    void handle_hook(std::string_view hook, const Flags& flags);
+    void handle_hook(std::string_view hook);
     void register_hooks();
     void unregister_hooks();
 }

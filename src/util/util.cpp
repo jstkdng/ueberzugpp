@@ -20,11 +20,14 @@
 
 #include <memory>
 #include <regex>
+#include <filesystem>
 #include <xcb/xcb.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
 #include <fmt/format.h>
 #include <zmq.hpp>
+
+namespace fs = std::filesystem;
 
 auto util::str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>
 {
@@ -64,9 +67,14 @@ auto util::get_log_filename() -> std::string
     return fmt::format("ueberzug_{}.log", os::getenv("USER").value());
 }
 
-void util::send_tcp_message(std::string_view msg, int port)
+auto util::get_socket_path() -> std::string
 {
-    auto endpoint = fmt::format("tcp://127.0.0.1:{}", port);
+    return fmt::format("{}/ueberzug_{}.sock", fs::temp_directory_path().string(), os::getenv("USER").value());
+}
+
+void util::send_tcp_message(std::string_view msg)
+{
+    auto endpoint = fmt::format("ipc://{}", get_socket_path());
     zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
     socket.set(zmq::sockopt::linger, 2);

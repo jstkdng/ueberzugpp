@@ -23,7 +23,6 @@ public:
     Flags() = default;
     ~Flags() = default;
 
-    int tcp_port = 56988;
     bool no_stdin = false;
     bool force_x11 = false;
     bool force_sixel = false;

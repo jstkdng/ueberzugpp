@@ -44,21 +44,16 @@ flags(flags)
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
     tmux::register_hooks();
     tcp_thread = std::jthread([&] {
-        logger->info("Listenning on port {}.", flags.tcp_port);
+        logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
-    cv::ocl::Context ctx = cv::ocl::Context::getDefault();
-    if (ctx.ptr()) {
-        auto device = ctx.device(0);
-        logger->info("OpenCL supported. Using device {}.", device.name());
-    }
 }
 
 Application::~Application()
 {
     canvas->clear();
     if (f_stderr) std::fclose(f_stderr);
-    util::send_tcp_message("EXIT", flags.tcp_port);
+    util::send_tcp_message("EXIT");
     tmux::unregister_hooks();
 }
 
@@ -165,7 +160,7 @@ void Application::tcp_loop()
 {
     zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
-    socket.bind(fmt::format("tcp://127.0.0.1:{}", flags.tcp_port));
+    socket.bind(fmt::format("ipc://{}", util::get_socket_path()));
     int data[256];
     auto idbuf = zmq::buffer(data);
     while (true) {
