@@ -47,7 +47,6 @@ flags(flags)
         logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
-    std::cout << tmux::get_pane() << std::endl;
 }
 
 Application::~Application()
