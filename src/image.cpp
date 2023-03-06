@@ -60,6 +60,7 @@ auto Image::load(const Terminal& terminal,
     return nullptr;
 }
 
+// TODO: fix cache
 auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
 {
     return orig_path;

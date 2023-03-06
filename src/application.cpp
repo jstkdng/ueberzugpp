@@ -97,11 +97,7 @@ void Application::handle_tmux_hook(const std::string& hook)
     } else if (hook == "client-detached") {
         canvas->hide();
     } else if (hook == "window-layout-changed") {
-        terminal.reload();
-        dimensions->reload(terminal.width_pixels(), terminal.height_pixels());
-        canvas->clear();
-        canvas->init(*dimensions, image);
-        canvas->draw();
+        canvas->hide();
     } else {
         logger->warn("TMUX hook not recognized");
     }

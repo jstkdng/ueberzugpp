@@ -77,6 +77,7 @@ void Window::toggle()
 
 void Window::show()
 {
+    if (visible) return;
     visible = true;
     xcb_map_window(connection, window);
     xcb_flush(connection);
@@ -84,6 +85,7 @@ void Window::show()
 
 void Window::hide()
 {
+    if (!visible) return;
     visible = false;
     xcb_unmap_window(connection, window);
     xcb_flush(connection);
