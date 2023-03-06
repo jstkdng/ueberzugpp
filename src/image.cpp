@@ -21,7 +21,7 @@
 #include "util.hpp"
 
 #include <opencv2/imgcodecs.hpp>
-#include <vips/vips8>
+#include <vips/vips.h>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
 
@@ -71,13 +71,14 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
                 cache_dir = util::get_cache_path();
     fs::path cache_path = cache_dir + cache_filename;
     if (!fs::exists(cache_path)) return orig_path;
+
     auto cache_img = cv::imread(cache_path, cv::IMREAD_UNCHANGED);
-    if (dimensions.max_wpixels() >= cache_img.cols &&
-            dimensions.max_hpixels() >= cache_img.rows) {
-        if (dimensions.max_wpixels() - cache_img.cols <= 10 ||
-                dimensions.max_hpixels() - cache_img.rows <= 10) {
-            return cache_path;
-        }
+    int img_width = cache_img.cols, img_height = cache_img.rows;
+    int dim_width = dimensions.max_wpixels(), dim_height = dimensions.max_hpixels();
+
+    if ((dim_width >= img_width && dim_height >= img_height) &&
+        ((dim_width - img_width) <= 10 || (dim_height - img_height) <= 10)) {
+        return cache_path;
     }
     return orig_path;
 }

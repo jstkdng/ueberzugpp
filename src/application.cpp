@@ -90,13 +90,20 @@ void Application::execute(const std::string& cmd)
 void Application::handle_tmux_hook(const std::string& hook)
 {
     if (hook == "client-session-changed") {
-        canvas->show();
+        if (tmux::is_window_focused()) canvas->show();
     } else if (hook == "session-window-changed") {
-        canvas->toggle();
+        if (tmux::is_window_focused()) {
+            canvas->show();
+        } else {
+            canvas->hide();
+        }
     } else if (hook == "client-detached") {
         canvas->hide();
     } else if (hook == "window-layout-changed") {
-        canvas->hide();
+        if (tmux::is_window_focused() &&
+                !os::getenv("RANGER_LEVEL").has_value()) {
+            canvas->hide();
+        }
     } else {
         logger->warn("TMUX hook not recognized");
     }
