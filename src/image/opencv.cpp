@@ -72,7 +72,6 @@ auto OpencvImage::resize_image() -> void
 
 auto OpencvImage::process_image() -> void
 {
-    //image.copyTo(uimage);
     resize_image();
 
     if (terminal.supports_sixel()) {

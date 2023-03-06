@@ -49,29 +49,35 @@ auto Image::load(const Terminal& terminal,
         load_libvips = true;
     }
 
-    if (load_libvips) { 
-        logger.info("Loading image with libvips.");
+    std::string_view cache_msg = "Image is not cached";
+    if (in_cache) {
+        cache_msg = "Image is cached";
+    }
+
+    if (load_libvips) {
+        logger.info("{}. Loading with libvips.", cache_msg);
         return std::make_shared<LibvipsImage>(terminal, dimensions, image_path, is_anim, in_cache);
     }
     if (load_opencv) {
-        logger.info("Loading image with opencv.");
+        logger.info("{}. Loading with opencv.", cache_msg);
         return std::make_shared<OpencvImage>(terminal, dimensions, image_path, in_cache);
     }
     return nullptr;
 }
 
-// TODO: fix cache
 auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
 {
-    return orig_path;
     std::string cache_filename = util::get_b2_hash(orig_path) + orig_path.extension().string(),
                 cache_dir = util::get_cache_path();
     fs::path cache_path = cache_dir + cache_filename;
     if (!fs::exists(cache_path)) return orig_path;
-    auto cache_img = vips::VImage::new_from_file(cache_path.c_str());
-    if (cache_img.width() == dimensions.max_wpixels() ||
-        cache_img.height() == dimensions.max_hpixels()) {
-        return cache_path;
+    auto cache_img = cv::imread(cache_path, cv::IMREAD_UNCHANGED);
+    if (dimensions.max_wpixels() >= cache_img.cols &&
+            dimensions.max_hpixels() >= cache_img.rows) {
+        if (dimensions.max_wpixels() - cache_img.cols <= 10 ||
+                dimensions.max_hpixels() - cache_img.rows <= 10) {
+            return cache_path;
+        }
     }
     return orig_path;
 }
