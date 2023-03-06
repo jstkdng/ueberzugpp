@@ -36,9 +36,6 @@ public:
     std::string name;
 
     bool supports_sixel() const;
-
-    int height_pixels() const;
-    int width_pixels() const;
     void reload();
 
 private:
@@ -46,9 +43,9 @@ private:
     auto guess_padding(int chars, double pixels) -> double;
     auto guess_font_size(int chars, double pixels, double padding) -> double;
 
-    auto init_termios() -> void;
-    auto reset_termios() -> void;
-    auto get_terminal_size_escape_code() -> void;
+    void init_termios();
+    void reset_termios();
+    void get_terminal_size_escape_code();
     void get_terminal_size_pixels_fallback();
     void open_first_pty();
 
@@ -60,11 +57,10 @@ private:
     int ypixel;
 
     const Flags& flags;
+    const X11Util xutil;
 
     struct termios old_term;
     struct termios new_term;
-
-    const X11Util xutil;
 };
 
 #endif

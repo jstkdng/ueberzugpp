@@ -44,16 +44,6 @@ Terminal::~Terminal()
     close(this->pty_fd);
 }
 
-int Terminal::width_pixels() const
-{
-    return cols * font_width;
-}
-
-int Terminal::height_pixels() const
-{
-    return rows * font_height;
-}
-
 void Terminal::reload()
 {
     get_terminal_size();
@@ -160,6 +150,7 @@ void Terminal::get_terminal_size_pixels_fallback()
 void Terminal::open_first_pty()
 {
     auto tree = util::get_process_tree(pid);
+    tree.pop_back();
     std::reverse(tree.begin(), tree.end());
     for (const auto& pid: tree) {
         auto proc = Process(pid);
