@@ -30,32 +30,33 @@ Advantages over w3mimgdisplay and ueberzug:
 
 # Usage
 
-1. The only command currently provided is "layer" to make Ueberzug listen.
-  - Layer accepts the following options
+1. Ueberzugpp provides two commands, `layer` and `tmux`. `layer` is used to send
+commands to ueberzugpp, `tmux` is used internally. 
+
+- Layer accepts the following options
   
     ```bash
     $ ueberzug layer -h
+    Display images on the terminal.
     Usage: ueberzug layer [OPTIONS]
     
     Options:
       -h,--help                   Print this help message and exit
-      -s,--silent                 Print stderr to /dev/null
-      --tcp                       Send commands through a tcp socket on port 56988
-      --tcp-port INT Needs: --tcp Change tcp port used
-      --x11 Excludes: --sixel     Force X11 output
+      -s,--silent                 Print stderr to /dev/null.
+      --no-stdin                  Don't listen on stdin for commands.
+      --x11 Excludes: --sixel     Force X11 output.
       --sixel Excludes: --x11     Force sixel output
-      -p,--parser                 **UNUSED**, only present for backwards compatibility
-      -l,--loader                 **UNUSED**, only present for backwards compatibility
+      -p,--parser                 **UNUSED**, only present for backwards compatibility.
+      -l,--loader                 **UNUSED**, only present for backwards compatibility.
     ```
 
 2. By default, commands are sent to ueberzug++ through stdin, this is enough in
 some cases. In some terminals and application combinations (e.g. ranger + wezterm + zellij)
 using stdin to send commands doesn't work properly or ueberzug++ could fail to
 start altogether. In those cases, the user may send commands to ueberzug++ through
-a TCP socket. By default, ueberzug++ will listen to commands on port 56988, the user
-may change this port by passing the `--tcp-port` option.
+a unix socket. By default, ueberzug++ will listen to commands on /tmp/ueberzug_{$USER}.sock.
 
-New software is encouraged to use tcp instead of stdin as tcp covers most cases.
+New software is encouraged to use sockets instead of stdin as they cover more cases.
 
 3. You can then feed Ueberzug with json objects to display an image or make it disappear.
   - json object to display the image:
