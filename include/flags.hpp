@@ -17,6 +17,8 @@
 #ifndef __FLAGS__
 #define __FLAGS__
 
+#include <string>
+
 class Flags
 {
 public:
@@ -28,6 +30,9 @@ public:
     bool force_sixel = false;
     bool silent = false;
     bool print_version = false;
+    std::string output;
 };
+
+extern Flags flags;
 
 #endif
