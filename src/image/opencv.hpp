@@ -23,7 +23,6 @@
 
 #include <string>
 #include <opencv2/core.hpp>
-#include <opencv2/videoio.hpp>
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -55,7 +54,7 @@ private:
     int max_height;
     bool in_cache;
 
-    auto process_image() -> void;
+    void process_image();
 };
 
 #endif

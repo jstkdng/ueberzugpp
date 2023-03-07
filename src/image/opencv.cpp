@@ -19,6 +19,7 @@
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include <iostream>
 
 OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
             const std::string& filename, bool in_cache):
@@ -28,7 +29,7 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
-    uimage = cv::imread(filename, cv::IMREAD_UNCHANGED).getUMat(cv::ACCESS_RW | cv::ACCESS_FAST);
+    image = cv::imread(filename, cv::IMREAD_UNCHANGED);
     process_image();
 }
 
@@ -39,12 +40,12 @@ OpencvImage::~OpencvImage()
 
 auto OpencvImage::width() const-> int
 {
-    return uimage.cols;
+    return image.cols;
 }
 
 auto OpencvImage::height() const -> int
 {
-    return uimage.rows;
+    return image.rows;
 }
 
 auto OpencvImage::size() const -> unsigned long
@@ -57,17 +58,19 @@ auto OpencvImage::data() const -> const unsigned char*
     return image.data;
 }
 
+// only use opencl if required
 auto OpencvImage::resize_image() -> void
 {
     if (in_cache) return;
     auto [new_width, new_height] = get_new_sizes(max_width, max_height);
     if (new_width == 0 && new_height == 0) return;
-    cv::resize(uimage, uimage, cv::Size(new_width, new_height),
-            0, 0, cv::INTER_AREA);
+    uimage = image.getUMat(cv::ACCESS_RW);
+    cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
     std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
     try {
         cv::imwrite(save_location, uimage);
     } catch (const cv::Exception& ex) {}
+    image = uimage.getMat(cv::ACCESS_READ);
 }
 
 auto OpencvImage::process_image() -> void
@@ -76,17 +79,16 @@ auto OpencvImage::process_image() -> void
 
     if (terminal.supports_sixel()) {
         if (image.channels() == 4) {
-            cv::cvtColor(uimage, uimage, cv::COLOR_BGRA2RGB);
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
         } else {
-            cv::cvtColor(uimage, uimage, cv::COLOR_BGR2RGB);
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
     } else {
         if (image.channels() < 4) {
             // alpha channel required
-            cv::cvtColor(uimage, uimage, cv::COLOR_BGR2BGRA);
+            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
     }
 
-    _size = uimage.total() * uimage.elemSize();
-    image = uimage.getMat(cv::ACCESS_READ | cv::ACCESS_FAST);
+    _size = image.total() * image.elemSize();
 }

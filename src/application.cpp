@@ -70,8 +70,18 @@ void Application::execute(const std::string& cmd)
     }
     logger->info("Command received: {}", j.dump());
     if (j["action"] == "add") {
+using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
         set_dimensions_from_json(j);
+        auto t1 = high_resolution_clock::now();
         image = Image::load(terminal, *dimensions, j["path"], *logger);
+        auto t2 = high_resolution_clock::now();
+        /* Getting number of milliseconds as a double. */
+    duration<double, std::milli> ms_double = t2 - t1;
+
+    std::cout << ms_double.count() << "ms\n";
         if (!image) {
             logger->error("Unable to load image file.");
             return;

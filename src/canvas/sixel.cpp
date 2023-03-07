@@ -133,7 +133,7 @@ auto SixelCanvas::draw_frame() -> void
     std::cout << stream.rdbuf() << std::flush;
 }
 
-auto SixelCanvas::move_cursor(int row, int col) -> void
+void SixelCanvas::move_cursor(int row, int col)
 {
     std::cout << "\033[" << row << ";" << col << "f" << std::flush;
 }
