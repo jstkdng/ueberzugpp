@@ -28,6 +28,7 @@
 #include <opencv2/core/ocl.hpp>
 #include <fmt/format.h>
 #include <zmq.hpp>
+#include <unordered_map>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -89,22 +90,36 @@ void Application::execute(const std::string& cmd)
 
 void Application::handle_tmux_hook(const std::string& hook)
 {
-    if (hook == "client-session-changed") {
-        if (tmux::is_window_focused()) canvas->show();
-    } else if (hook == "session-window-changed") {
-        if (tmux::is_window_focused()) {
-            canvas->show();
-        } else {
-            canvas->hide();
-        }
-    } else if (hook == "client-detached") {
-        canvas->hide();
-    } else if (hook == "window-layout-changed") {
-        if (tmux::is_window_focused() &&
-                !os::getenv("RANGER_LEVEL").has_value()) {
-            canvas->hide();
-        }
-    } else {
+    std::unordered_map<std::string_view, std::function<void()>> hook_fns {
+        {"client-session-changed",
+            [&] {
+                if (tmux::is_window_focused())
+                    canvas->show();
+            }},
+        {"session-window-changed",
+            [&] {
+                if (tmux::is_window_focused()) {
+                    canvas->show();
+                } else {
+                    canvas->hide();
+                }
+            }},
+        {"client-detached",
+            [&] {
+                canvas->hide();
+            }},
+        {"window-layout-changed",
+            [&] {
+                if (tmux::is_window_focused() &&
+                        !os::getenv("RANGER_LEVEL").has_value()) {
+                    canvas->hide();
+                }
+            }},
+    };
+
+    try {
+        hook_fns.at(hook)();
+    } catch (const std::out_of_range& oor) {
         logger->warn("TMUX hook not recognized");
     }
 }
