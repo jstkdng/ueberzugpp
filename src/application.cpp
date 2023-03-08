@@ -24,11 +24,12 @@
 #include <filesystem>
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <opencv2/core/ocl.hpp>
 #include <fmt/format.h>
 #include <zmq.hpp>
-#include <unordered_map>
+#include <vips/vips.h>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
@@ -48,11 +49,15 @@ flags(flags)
         logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
+    if (VIPS_INIT("ueberzug")) {
+        vips_error_exit(nullptr);
+    }
 }
 
 Application::~Application()
 {
     canvas->clear();
+    vips_shutdown();
     if (f_stderr) std::fclose(f_stderr);
     util::send_tcp_message("EXIT");
     tmux::unregister_hooks();
@@ -223,7 +228,7 @@ void Application::print_header()
 void Application::set_silent()
 {
     if (!flags.silent) return;
-    f_stderr = freopen("/dev/null", "w", stderr);
+    f_stderr = std::freopen("/dev/null", "w", stderr);
 }
 
 void Application::print_version()

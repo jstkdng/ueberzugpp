@@ -127,7 +127,7 @@ auto LibvipsImage::process_image() -> void
 {
     resize_image();
 
-    if (terminal.supports_sixel()) {
+    if (terminal.supports_sixel) {
         // sixel expects RGB888
         if (image.has_alpha()) {
             image = image.flatten();

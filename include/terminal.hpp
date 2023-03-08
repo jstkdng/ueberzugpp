@@ -35,7 +35,9 @@ public:
     int cols;
     std::string name;
 
-    bool supports_sixel() const;
+    bool supports_sixel = false;
+    bool supports_kitty = false;
+    bool supports_iterm = false;
     void reload();
 
 private:
@@ -45,9 +47,12 @@ private:
 
     void init_termios();
     void reset_termios();
+    void get_sixel_support_escape_code();
     void get_terminal_size_escape_code();
-    void get_terminal_size_pixels_fallback();
+    void get_terminal_size_x11();
     void open_first_pty();
+
+    auto read_raw_str(const std::string& esc) -> std::string;
 
     int pty_fd;
     int pid;

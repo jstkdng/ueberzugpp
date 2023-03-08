@@ -21,8 +21,6 @@
 #include "process.hpp"
 
 #include <cmath>
-#include <stdexcept>
-#include <unordered_set>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
@@ -30,6 +28,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <poll.h>
 
 Terminal::Terminal(int pid, const Flags& flags):
 pid(pid), flags(flags)
@@ -49,23 +48,6 @@ void Terminal::reload()
     get_terminal_size();
 }
 
-auto Terminal::supports_sixel() const -> bool
-{
-    if (flags.force_sixel != flags.force_x11) {
-        if (flags.force_sixel && !flags.force_x11) return true;
-        else if (flags.force_x11 && !flags.force_sixel) return false;
-    }
-    std::unordered_set<std::string_view> supported_terms {
-        "contour", "foot", "xterm-256color-sixel", "yaft-256color",
-        "BlackBox", "WezTerm"
-    };
-    auto term_program = os::getenv("TERM_PROGRAM");
-    if (term_program.has_value()) {
-        return supported_terms.contains(term_program.value());
-    }
-    return supported_terms.contains(name) && !os::getenv("VTE_VERSION").has_value();
-}
-
 auto Terminal::get_terminal_size() -> void
 {
     struct winsize sz;
@@ -74,12 +56,12 @@ auto Terminal::get_terminal_size() -> void
     rows = sz.ws_row;
     xpixel = sz.ws_xpixel;
     ypixel = sz.ws_ypixel;
-    if (cols <= 0 || rows <= 0) {
-        throw std::runtime_error("received wrong terminal sizes.");
-    }
-    if (xpixel <= 0 || ypixel <= 0) {
-        get_terminal_size_pixels_fallback();
-    }
+
+    init_termios();
+    get_sixel_support_escape_code();
+    if (xpixel == 0 && ypixel == 0) get_terminal_size_escape_code();
+    reset_termios();
+    if (xpixel == 0 && ypixel == 0) get_terminal_size_x11();
 
     double padding_horiz = guess_padding(cols, xpixel);
     double padding_vert = guess_padding(rows, ypixel);
@@ -104,21 +86,39 @@ auto Terminal::guess_font_size(int chars, double pixels, double padding)
     return (pixels - 2 * padding) / chars;
 }
 
-auto Terminal::get_terminal_size_escape_code() -> void
+void Terminal::get_terminal_size_escape_code()
 {
-    init_termios();
-    char c;
-    std::stringstream ss;
-    std::cout << "\033[14t" << std::flush;
-    while (true) {
-        int r = read(0, &c, 1);
-        if (c == 't') break;
-        ss << c;
-    }
-    reset_termios();
-    auto sizes = util::str_split(ss.str().erase(0, 4), ";");
+    auto resp = read_raw_str("\033[14t").erase(0, 4);
+    if (resp.empty()) return;
+    auto sizes = util::str_split(resp, ";");
     ypixel = std::stoi(sizes[0]);
     xpixel = std::stoi(sizes[1]);
+}
+
+void Terminal::get_sixel_support_escape_code()
+{
+    auto resp = read_raw_str("\033[?1;1;0S").erase(0, 3);
+    auto vals = util::str_split(resp, ";");
+    if (vals.size() > 2) supports_sixel = true;
+}
+
+auto Terminal::read_raw_str(const std::string& esc) -> std::string
+{
+    char c;
+    std::stringstream ss;
+    std::cout << esc << std::flush;
+    struct pollfd input[1] = {{.fd = STDIN_FILENO, .events = POLLIN}};
+    while (true) {
+        // some terminals take some time to write, 100ms seems like enough
+        // time to wait for input
+        int r = poll(input, 1, 100);
+        if (r <= 0) return "";
+        r = read(STDIN_FILENO, &c, 1);
+        if (r == -1) return "";
+        if (c == esc.back()) break;
+        ss << c;
+    }
+    return ss.str();
 }
 
 auto Terminal::init_termios() -> void
@@ -135,16 +135,13 @@ auto Terminal::reset_termios() -> void
     tcsetattr(0, TCSANOW, &old_term);
 }
 
-void Terminal::get_terminal_size_pixels_fallback()
+void Terminal::get_terminal_size_x11()
 {
-    if (xutil.connected) {
-        auto window = xutil.get_parent_window(os::get_pid());
-        auto dims = xutil.get_window_dimensions(window);
-        xpixel = dims.first;
-        ypixel = dims.second;
-    }
-    if (xpixel != 0 && ypixel != 0) return;
-    get_terminal_size_escape_code();
+    if (!xutil.connected) return;
+    auto window = xutil.get_parent_window(os::get_pid());
+    auto dims = xutil.get_window_dimensions(window);
+    xpixel = dims.first;
+    ypixel = dims.second;
 }
 
 void Terminal::open_first_pty()

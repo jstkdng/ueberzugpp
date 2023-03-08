@@ -22,7 +22,7 @@
 
 auto Canvas::create(const Terminal& terminal, spdlog::logger& logger) -> std::unique_ptr<Canvas>
 {
-    if (terminal.supports_sixel()) {
+    if (terminal.supports_sixel) {
         logger.info("Terminal is {}, using sixel output.", terminal.name);
         return std::make_unique<SixelCanvas>();
     }

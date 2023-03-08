@@ -19,7 +19,6 @@
 #include <CLI/Config.hpp>
 #include <atomic>
 #include <csignal>
-#include <vips/vips.h>
 
 #include "application.hpp"
 #include "flags.hpp"
@@ -88,14 +87,8 @@ int main(int argc, char *argv[])
     }
 
     if (layer_command->parsed()) {
-        if (VIPS_INIT(argv[0])) {
-            vips_error_exit(nullptr);
-        }
-
         Application application(flags);
         application.command_loop(stop_flag);
-
-        vips_shutdown();
     }
 
     if (tmux_command->parsed()) {

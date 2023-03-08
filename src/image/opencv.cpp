@@ -77,7 +77,7 @@ auto OpencvImage::process_image() -> void
 {
     resize_image();
 
-    if (terminal.supports_sixel()) {
+    if (terminal.supports_sixel) {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
         } else {
