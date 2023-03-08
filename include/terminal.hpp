@@ -47,7 +47,7 @@ private:
 
     void init_termios();
     void reset_termios();
-    void get_sixel_support_escape_code();
+    void check_sixel_support();
     void get_terminal_size_escape_code();
     void get_terminal_size_x11();
     void open_first_pty();

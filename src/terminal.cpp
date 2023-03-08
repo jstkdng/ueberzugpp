@@ -24,6 +24,7 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <unordered_set>
 
 #include <fcntl.h>
 #include <unistd.h>
@@ -58,7 +59,7 @@ auto Terminal::get_terminal_size() -> void
     ypixel = sz.ws_ypixel;
 
     init_termios();
-    get_sixel_support_escape_code();
+    check_sixel_support();
     if (xpixel == 0 && ypixel == 0) get_terminal_size_escape_code();
     reset_termios();
     if (xpixel == 0 && ypixel == 0) get_terminal_size_x11();
@@ -95,11 +96,15 @@ void Terminal::get_terminal_size_escape_code()
     xpixel = std::stoi(sizes[1]);
 }
 
-void Terminal::get_sixel_support_escape_code()
+void Terminal::check_sixel_support()
 {
+    // some terminals support sixel but don't respond to escape sequences
+    auto supported_terms = std::unordered_set<std::string_view> {
+        "yaft-256color"
+    };
     auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
-    if (vals.size() > 2) supports_sixel = true;
+    if (vals.size() > 2 || supported_terms.contains(name)) supports_sixel = true;
 }
 
 auto Terminal::read_raw_str(const std::string& esc) -> std::string
