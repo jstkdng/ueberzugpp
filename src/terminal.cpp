@@ -88,7 +88,7 @@ auto Terminal::guess_font_size(int chars, double pixels, double padding)
 
 void Terminal::get_terminal_size_escape_code()
 {
-    auto resp = read_raw_str("\033[14t").erase(0, 4);
+    auto resp = read_raw_str("\e[14t").erase(0, 4);
     if (resp.empty()) return;
     auto sizes = util::str_split(resp, ";");
     ypixel = std::stoi(sizes[0]);
@@ -97,7 +97,7 @@ void Terminal::get_terminal_size_escape_code()
 
 void Terminal::get_sixel_support_escape_code()
 {
-    auto resp = read_raw_str("\033[?1;1;0S").erase(0, 3);
+    auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
     if (vals.size() > 2) supports_sixel = true;
 }
