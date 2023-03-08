@@ -20,7 +20,6 @@
 
 #include <string>
 #include <fmt/format.h>
-#include <iostream>
 
 std::vector<std::string_view> tmux::hooks = {
     "client-session-changed",
