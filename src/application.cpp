@@ -115,8 +115,7 @@ void Application::handle_tmux_hook(const std::string& hook)
             }},
         {"window-layout-changed",
             [&] {
-                if (tmux::is_window_focused() &&
-                        !os::getenv("RANGER_LEVEL").has_value()) {
+                if (tmux::is_window_focused()) {
                     canvas->hide();
                 }
             }},
@@ -200,7 +199,9 @@ void Application::tcp_loop()
         auto str_response = request.to_string();
         if (!str_response.empty()) {
             if (str_response == "EXIT") break;
-            execute(str_response);
+            for (const auto& cmd: util::str_split(str_response, "\n")) {
+                if (!cmd.empty()) execute(cmd);
+            }
         }
     }
     socket.close();

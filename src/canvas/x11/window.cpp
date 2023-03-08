@@ -59,9 +59,7 @@ void Window::create_window()
             screen->root_visual,
             value_mask,
             value_list.get());
-    xcb_map_window(connection, window);
-    this->visible = true;
-    xcb_flush(connection);
+    show();
 }
 
 void Window::toggle()

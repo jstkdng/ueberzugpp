@@ -40,7 +40,7 @@ X11Canvas::~X11Canvas()
     xcb_disconnect(connection);
 }
 
-auto X11Canvas::draw() -> void
+void X11Canvas::draw()
 {
     if (!image->is_animated()) {
         for (const auto& [wid, window]: windows) {
@@ -117,7 +117,8 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
     });
 
     if (tmux::is_used()) {
-        client_pids = tmux::get_client_pids().value();
+        auto tmp_pids = tmux::get_client_pids();
+        if (tmp_pids.has_value()) client_pids = tmp_pids.value();
         pid_window_map = xutil.get_pid_window_map();
     } else if (wid.has_value()) {
         auto window_id = xcb_generate_id(connection);
@@ -137,8 +138,6 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
                     (connection, screen, window_id, search->second, dimensions, *image)});
         }
     }
-
-    if (windows.empty()) throw std::runtime_error("UNABLE TO CREATE X11 WINDOWS");
 }
 
 auto X11Canvas::clear() -> void
@@ -153,7 +152,6 @@ auto X11Canvas::clear() -> void
 
 void X11Canvas::discard_leftover_events()
 {
-    std::scoped_lock lock (windows_mutex);
     std::unique_ptr<xcb_generic_event_t, free_delete> event {
         xcb_poll_for_event(this->connection)
     };
