@@ -23,10 +23,10 @@ while not connected:
     except Exception:
         time.sleep(0.05)
 
-s.sendall(str.encode(cmd1))
+s.sendall(str.encode(cmd1 + "\n"))
 time.sleep(2)
-s.sendall(str.encode(cmd_exit))
-s.sendall(str.encode(cmd2))
+s.sendall(str.encode(cmd_exit + "\n"))
+s.sendall(str.encode(cmd2 + "\n"))
 time.sleep(2)
-s.sendall(str.encode(cmd_exit))
+s.sendall(str.encode(cmd_exit + "\n"))
 s.close()

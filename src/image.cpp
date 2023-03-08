@@ -27,8 +27,8 @@
 
 namespace fs = std::filesystem;
 
-auto Image::load(const Terminal& terminal,
-            const Dimensions& dimensions, const std::string& filename, spdlog::logger& logger)
+auto Image::load(const Terminal& terminal, const Dimensions& dimensions,
+        const std::string& filename, spdlog::logger& logger)
     -> std::shared_ptr<Image>
 {
     if (!fs::exists(filename)) return nullptr;
