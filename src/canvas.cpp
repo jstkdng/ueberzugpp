@@ -16,16 +16,24 @@
 
 #include "canvas.hpp"
 #include "canvas/sixel.hpp"
+#include "canvas/kitty.hpp"
 #include "canvas/x11/x11.hpp"
 
 #include <spdlog/spdlog.h>
 
 auto Canvas::create(const Terminal& terminal, spdlog::logger& logger) -> std::unique_ptr<Canvas>
 {
+    if (terminal.supports_kitty) {
+        logger.info("Terminal is {}, using kitty output.",
+                terminal.term_program.empty() ? terminal.term : terminal.term_program);
+        return std::make_unique<KittyCanvas>();
+    }
     if (terminal.supports_sixel) {
-        logger.info("Terminal is {}, using sixel output.", terminal.name);
+        logger.info("Terminal is {}, using sixel output.",
+                terminal.term_program.empty() ? terminal.term : terminal.term_program);
         return std::make_unique<SixelCanvas>();
     }
-    logger.info("Terminal is {}, using X11 output.", terminal.name);
+    logger.info("Terminal is {}, using X11 output.",
+            terminal.term_program.empty() ? terminal.term : terminal.term_program);
     return std::make_unique<X11Canvas>();
 }

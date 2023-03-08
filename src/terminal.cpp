@@ -34,7 +34,8 @@
 Terminal::Terminal(int pid, const Flags& flags):
 pid(pid), flags(flags)
 {
-    name = os::getenv("TERM").value_or("xterm-256color");
+    term = os::getenv("TERM").value_or("xterm-256color");
+    term_program = os::getenv("TERM_PROGRAM").value_or("");
     open_first_pty();
     get_terminal_size();
 }
@@ -58,6 +59,7 @@ auto Terminal::get_terminal_size() -> void
     xpixel = sz.ws_xpixel;
     ypixel = sz.ws_ypixel;
 
+    check_kitty_support();
     init_termios();
     check_sixel_support();
     if (xpixel == 0 && ypixel == 0) get_terminal_size_escape_code();
@@ -104,7 +106,17 @@ void Terminal::check_sixel_support()
     };
     auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
-    if (vals.size() > 2 || supported_terms.contains(name)) supports_sixel = true;
+    if (vals.size() > 2 || supported_terms.contains(term)) supports_sixel = true;
+}
+
+void Terminal::check_kitty_support()
+{
+    auto supported_terms = std::unordered_set<std::string_view> {
+        "xterm-kitty", "WezTerm"
+    };
+    if (supported_terms.contains(term) || supported_terms.contains(term_program)) {
+        supports_kitty = true;
+    }
 }
 
 auto Terminal::read_raw_str(const std::string& esc) -> std::string

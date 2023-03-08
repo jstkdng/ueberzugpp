@@ -33,7 +33,8 @@ public:
     double font_height;
     int rows;
     int cols;
-    std::string name;
+    std::string term;
+    std::string term_program;
 
     bool supports_sixel = false;
     bool supports_kitty = false;
@@ -48,6 +49,7 @@ private:
     void init_termios();
     void reset_termios();
     void check_sixel_support();
+    void check_kitty_support();
     void get_terminal_size_escape_code();
     void get_terminal_size_x11();
     void open_first_pty();
