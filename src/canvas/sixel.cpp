@@ -16,6 +16,7 @@
 
 #include "sixel.hpp"
 #include "os.hpp"
+#include "util.hpp"
 
 #include <string>
 #include <chrono>
@@ -106,11 +107,11 @@ auto SixelCanvas::clear() -> void
 
     // clear terminal
     for (int i = y; i <= max_height; ++i) {
-        move_cursor(i, x);
+        util::move_cursor(i, x);
         std::cout << std::string(max_width, ' ');
     }
     std::cout << std::flush;
-    move_cursor(y, x);
+    util::move_cursor(y, x);
 }
 
 auto SixelCanvas::draw_frame() -> void
@@ -129,11 +130,6 @@ auto SixelCanvas::draw_frame() -> void
     // write whole file to stdout
     stream.clear();
     stream.seekg(0);
-    move_cursor(y, x);
+    util::move_cursor(y, x);
     std::cout << stream.rdbuf() << std::flush;
-}
-
-void SixelCanvas::move_cursor(int row, int col)
-{
-    std::cout << "\033[" << row << ";" << col << "f" << std::flush;
 }

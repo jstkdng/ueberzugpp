@@ -58,6 +58,11 @@ auto OpencvImage::data() const -> const unsigned char*
     return image.data;
 }
 
+auto OpencvImage::channels() const -> int
+{
+    return image.channels();
+}
+
 // only use opencl if required
 auto OpencvImage::resize_image() -> void
 {
@@ -77,7 +82,13 @@ auto OpencvImage::process_image() -> void
 {
     resize_image();
 
-    if (terminal.supports_sixel) {
+    if (terminal.supports_kitty) {
+        if (image.channels() == 4) {
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
+        } else {
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+        }
+    } else if (terminal.supports_sixel) {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
         } else {

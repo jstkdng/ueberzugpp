@@ -30,6 +30,8 @@ namespace util
     auto get_log_filename() -> std::string;
     void send_tcp_message(std::string_view msg);
     auto get_socket_path() -> std::string;
+    auto base64_encode(const uint8_t input[], size_t length) -> std::string;
+    void move_cursor(int row, int col);
 }
 
 #endif

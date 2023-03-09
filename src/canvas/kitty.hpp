@@ -31,6 +31,10 @@ public:
 
 private:
     std::shared_ptr<Image> image;
+    std::string encoded_img;
+
+    int x;
+    int y;
 };
 
 #endif

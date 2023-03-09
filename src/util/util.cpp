@@ -24,8 +24,10 @@
 #include <xcb/xcb.h>
 #include <botan/hash.h>
 #include <botan/hex.h>
+#include <botan/base64.h>
 #include <fmt/format.h>
 #include <zmq.hpp>
+#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -85,4 +87,14 @@ void util::send_tcp_message(std::string_view msg)
     socket.send(msg_req, zmq::send_flags::none);
     socket.close();
     context.close();
+}
+
+auto util::base64_encode(const uint8_t input[], size_t length) -> std::string
+{
+    return Botan::base64_encode(input, length);
+}
+
+void util::move_cursor(int row, int col)
+{
+    std::cout << "\033[" << row << ";" << col << "f" << std::flush;
 }

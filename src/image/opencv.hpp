@@ -38,6 +38,7 @@ public:
     auto height() const -> int override;
     auto size() const -> unsigned long override;
     auto data() const -> const unsigned char* override;
+    auto channels() const -> int override;
 
     auto resize_image() -> void override;
 private:

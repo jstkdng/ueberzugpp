@@ -74,6 +74,11 @@ auto LibvipsImage::data() const -> const unsigned char*
     return _data.get();
 }
 
+auto LibvipsImage::channels() const -> int
+{
+    return image.bands();
+}
+
 auto LibvipsImage::is_animated() const -> bool
 {
     return is_anim;
@@ -132,7 +137,7 @@ auto LibvipsImage::process_image() -> void
         if (image.has_alpha()) {
             image = image.flatten();
         }
-    } else {
+    } else if (!terminal.supports_kitty) {
         // alpha channel required
         if (!image.has_alpha()) image = image.bandjoin(255);
         // convert from RGB to BGR

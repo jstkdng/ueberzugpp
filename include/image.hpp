@@ -39,6 +39,7 @@ public:
     virtual auto height() const -> int = 0;
     virtual auto size() const -> unsigned long = 0;
     virtual auto data() const -> const unsigned char* = 0;
+    virtual auto channels() const -> int = 0;
 
     virtual auto resize_image() -> void = 0;
     virtual auto frame_delay() const -> int { return -1; }
