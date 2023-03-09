@@ -18,11 +18,12 @@
 #define __FLAGS__
 
 #include <string>
+#include <filesystem>
 
 class Flags
 {
 public:
-    Flags() = default;
+    Flags();
     ~Flags() = default;
 
     bool no_stdin = false;
@@ -30,6 +31,11 @@ public:
     bool use_escape_codes;
     bool print_version = false;
     std::string output;
+
+private:
+    std::filesystem::path config_file;
+
+    void read_config_file();
 };
 
 extern Flags flags;

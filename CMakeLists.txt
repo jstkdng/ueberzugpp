@@ -48,6 +48,7 @@ set(UEBERZUGPP_SOURCES
     "src/process.cpp"
     "src/terminal.cpp"
     "src/dimensions.cpp"
+    "src/flags.cpp"
     "src/util/x11.cpp"
     "src/util/util.cpp"
 
