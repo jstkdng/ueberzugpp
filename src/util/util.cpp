@@ -22,13 +22,17 @@
 #include <regex>
 #include <filesystem>
 #include <xcb/xcb.h>
-#include <botan/hash.h>
-#include <botan/hex.h>
-#include <botan/base64.h>
 #include <fmt/format.h>
 #include <zmq.hpp>
 #include <openssl/evp.h>
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+
+struct free_delete
+{
+    void operator()(void* x) { free(x); }
+};
 
 namespace fs = std::filesystem;
 
@@ -50,14 +54,6 @@ auto util::get_process_tree(int pid) -> std::vector<int>
         runner = pproc;
     }
     return res;
-}
-
-auto util::get_b2_hash(const std::string& str) -> std::string
-{
-    using namespace Botan;
-    std::unique_ptr<HashFunction> hash (HashFunction::create("BLAKE2b"));
-    hash->update(str);
-    return hex_encode(hash->final());
 }
 
 auto util::get_cache_path() -> std::string
@@ -90,24 +86,40 @@ void util::send_tcp_message(std::string_view msg)
     context.close();
 }
 
-auto util::base64_encode(const uint8_t input[], size_t length) -> std::string
-{
-    return Botan::base64_encode(input, length);
-}
-
-auto util::base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<char[]>
+auto util::base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>
 {
     const auto pl = 4*((length+2)/3);
-    auto res = std::make_unique<char[]>(pl + 1);
-    const auto ol = EVP_EncodeBlock(reinterpret_cast<unsigned char *>(res.get()), input, length);
-    if (pl != ol) {
-        std::cerr << "Whoops, encode predicted " << pl << " but we got " << ol << "\n";
-    }
+    auto res = std::make_unique<unsigned char[]>(pl + 1);
+    const auto ol = EVP_EncodeBlock(res.get(), input, length);
+    if (pl != ol) return nullptr;
     return res;
 }
 
+auto util::get_b2_hash_ssl(const std::string& str) -> std::string
+{
+    std::stringstream ss;
+    auto mdctx = std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> (
+        EVP_MD_CTX_new(), [](EVP_MD_CTX* g) { EVP_MD_CTX_free(g); }
+    );
+    auto digest = std::make_unique<unsigned char[]>(EVP_MD_size(EVP_blake2b512()));
+
+    EVP_DigestInit_ex(mdctx.get(), EVP_blake2b512(), nullptr);
+    EVP_DigestUpdate(mdctx.get(), str.c_str(), str.size());
+    unsigned int digest_len = 0;
+    EVP_DigestFinal_ex(mdctx.get(), digest.get(), &digest_len);
+
+    for (int i = 0; i < digest_len; ++i) {
+        ss << std::hex << std::setw(2) << std::setfill('0') << (int)digest[i];
+    }
+    return ss.str();
+}
 
 void util::move_cursor(int row, int col)
 {
     std::cout << "\033[" << row << ";" << col << "f" << std::flush;
+}
+
+auto util::get_cache_file_save_location(const std::filesystem::path &path) -> std::string
+{
+    return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path), path.extension().string());
 }

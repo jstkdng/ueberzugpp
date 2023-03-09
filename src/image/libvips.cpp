@@ -122,7 +122,8 @@ auto LibvipsImage::resize_image() -> void
     }
     image = VImage::thumbnail(path.c_str(), new_width)
         .colourspace(VIPS_INTERPRETATION_sRGB);
-    std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
+
+    auto save_location = util::get_cache_file_save_location(path);
     try {
         image.write_to_file(save_location.c_str());
     } catch (const VError& err) {}

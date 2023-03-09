@@ -21,18 +21,19 @@
 #include <vector>
 #include <string_view>
 #include <memory>
+#include <filesystem>
 
 namespace util
 {
     auto str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>;
     auto get_process_tree(int pid) -> std::vector<int>;
-    auto get_b2_hash(const std::string& str) -> std::string;
+    auto get_b2_hash_ssl(const std::string& str) -> std::string;
     auto get_cache_path() -> std::string;
+    auto get_cache_file_save_location(const std::filesystem::path &path) -> std::string;
     auto get_log_filename() -> std::string;
     void send_tcp_message(std::string_view msg);
     auto get_socket_path() -> std::string;
-    auto base64_encode(const uint8_t input[], size_t length) -> std::string;
-    auto base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<char[]>;
+    auto base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>;
     void move_cursor(int row, int col);
 }
 

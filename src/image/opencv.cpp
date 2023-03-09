@@ -71,7 +71,8 @@ auto OpencvImage::resize_image() -> void
     if (new_width == 0 && new_height == 0) return;
     uimage = image.getUMat(cv::ACCESS_RW);
     cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
-    std::string save_location = util::get_cache_path() + util::get_b2_hash(path) + path.extension().string();
+
+    auto save_location = util::get_cache_file_save_location(path);
     try {
         cv::imwrite(save_location, uimage);
     } catch (const cv::Exception& ex) {}
