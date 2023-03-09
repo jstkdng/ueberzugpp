@@ -20,19 +20,17 @@
 
 #include <memory>
 #include <regex>
-#include <filesystem>
-#include <xcb/xcb.h>
 #include <fmt/format.h>
 #include <zmq.hpp>
-#include <openssl/evp.h>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
 
-struct free_delete
-{
-    void operator()(void* x) { free(x); }
-};
+#include <openssl/evp.h>
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#  define EVP_MD_CTX_new   EVP_MD_CTX_create
+#  define EVP_MD_CTX_free  EVP_MD_CTX_destroy
+#endif
 
 namespace fs = std::filesystem;
 
@@ -98,12 +96,13 @@ auto util::base64_encode_ssl(const unsigned char *input, int length) -> std::uni
 auto util::get_b2_hash_ssl(const std::string& str) -> std::string
 {
     std::stringstream ss;
+    auto evp = EVP_blake2b512();
     auto mdctx = std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> (
         EVP_MD_CTX_new(), [](EVP_MD_CTX* g) { EVP_MD_CTX_free(g); }
     );
-    auto digest = std::make_unique<unsigned char[]>(EVP_MD_size(EVP_blake2b512()));
+    auto digest = std::make_unique<unsigned char[]>(EVP_MD_size(evp));
 
-    EVP_DigestInit_ex(mdctx.get(), EVP_blake2b512(), nullptr);
+    EVP_DigestInit_ex(mdctx.get(), evp, nullptr);
     EVP_DigestUpdate(mdctx.get(), str.c_str(), str.size());
     unsigned int digest_len = 0;
     EVP_DigestFinal_ex(mdctx.get(), digest.get(), &digest_len);
@@ -119,7 +118,7 @@ void util::move_cursor(int row, int col)
     std::cout << "\033[" << row << ";" << col << "f" << std::flush;
 }
 
-auto util::get_cache_file_save_location(const std::filesystem::path &path) -> std::string
+auto util::get_cache_file_save_location(const fs::path &path) -> std::string
 {
     return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path), path.extension().string());
 }

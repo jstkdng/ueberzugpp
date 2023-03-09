@@ -67,9 +67,7 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions,
 
 auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
 {
-    std::string cache_filename = util::get_b2_hash_ssl(orig_path) + orig_path.extension().string(),
-                cache_dir = util::get_cache_path();
-    fs::path cache_path = cache_dir + cache_filename;
+    fs::path cache_path = util::get_cache_file_save_location(orig_path);
     if (!fs::exists(cache_path)) return orig_path;
 
     auto cache_img = cv::imread(cache_path, cv::IMREAD_UNCHANGED);
