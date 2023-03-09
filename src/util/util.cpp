@@ -27,6 +27,7 @@
 #include <botan/base64.h>
 #include <fmt/format.h>
 #include <zmq.hpp>
+#include <openssl/evp.h>
 #include <iostream>
 
 namespace fs = std::filesystem;
@@ -93,6 +94,18 @@ auto util::base64_encode(const uint8_t input[], size_t length) -> std::string
 {
     return Botan::base64_encode(input, length);
 }
+
+auto util::base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<char[]>
+{
+    const auto pl = 4*((length+2)/3);
+    auto res = std::make_unique<char[]>(pl + 1);
+    const auto ol = EVP_EncodeBlock(reinterpret_cast<unsigned char *>(res.get()), input, length);
+    if (pl != ol) {
+        std::cerr << "Whoops, encode predicted " << pl << " but we got " << ol << "\n";
+    }
+    return res;
+}
+
 
 void util::move_cursor(int row, int col)
 {

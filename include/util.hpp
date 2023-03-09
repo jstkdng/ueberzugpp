@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <string_view>
+#include <memory>
 
 namespace util
 {
@@ -31,6 +32,7 @@ namespace util
     void send_tcp_message(std::string_view msg);
     auto get_socket_path() -> std::string;
     auto base64_encode(const uint8_t input[], size_t length) -> std::string;
+    auto base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<char[]>;
     void move_cursor(int row, int col);
 }
 

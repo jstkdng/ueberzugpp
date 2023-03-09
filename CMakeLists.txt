@@ -30,6 +30,7 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(fmt REQUIRED)
+find_package(OpenSSL REQUIRED)
 find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
 
 pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
@@ -84,6 +85,7 @@ target_link_libraries(ueberzug PUBLIC
     opencv_imgproc
     opencv_imgcodecs
     opencv_videoio
+    OpenSSL::SSL
 )
 
 install(TARGETS ueberzug

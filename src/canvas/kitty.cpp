@@ -49,20 +49,20 @@ void KittyCanvas::draw_frame()
         << ",f=" << image->channels() * 8
         << ",s=" << image->width()
         << ",v=" << image->height()
-        << ";" << util::base64_encode(image->data(), 4096)
+        << ";" << util::base64_encode_ssl(image->data(), 4096)
         << "\e\\";
 
     // regular chunks
     auto ptr = image->data() + 4096;
     for (int i = 0; i < num_chunks - 1; ++i, ptr += 4096) {
         ss  << "\e_Gm=1,q=2;"
-            << util::base64_encode(ptr, 4096)
+            << util::base64_encode_ssl(ptr, 4096)
             << "\e\\";
     }
 
     // final data chunk
     ss  << "\e_Gm=0,q=2;"
-        << util::base64_encode(ptr, last_cunk_size)
+        << util::base64_encode_ssl(ptr, last_cunk_size)
         << "\e\\";
 
     util::move_cursor(y, x);
