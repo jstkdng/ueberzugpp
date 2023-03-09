@@ -19,6 +19,8 @@
 
 #include "canvas.hpp"
 
+#include <thread>
+
 class KittyCanvas : public Canvas
 {
 public:
@@ -33,8 +35,11 @@ private:
     std::shared_ptr<Image> image;
     std::string encoded_img;
 
+    std::unique_ptr<std::jthread> draw_thread;
     int x;
     int y;
+
+    void draw_frame();
 };
 
 #endif

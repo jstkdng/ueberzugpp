@@ -36,25 +36,31 @@ void KittyCanvas::init(const Dimensions& dimensions, std::shared_ptr<Image> imag
 
 void KittyCanvas::draw()
 {
-    util::move_cursor(y, x);
+    draw_frame();
+}
+
+void KittyCanvas::draw_frame()
+{
+    std::stringstream ss;
     int num_chunks = image->size() / 4096;
     int last_cunk_size = image->size() % 4096;
 
     // initial data chunk
-    std::cout << "\033_Gm=1,a=T,f=" << 8 * image->channels() << ",s="
-              << image->width() << ",v=" << image->height() << ";"
-              << util::base64_encode(image->data(), 4096) << "\033\\";
+    ss << "\033_Gm=1,i=13,p=37,q=1,f=" << 8 * image->channels() << ",s="
+        << image->width() << ",v=" << image->height() << ";"
+        << util::base64_encode(image->data(), 4096) << "\033\\";
 
     // regular chunks
     auto ptr = image->data() + 4096;
     for (int i = 0; i < num_chunks - 1; ++i, ptr += 4096) {
-        std::cout << "\033_Gm=1;" << util::base64_encode(ptr, 4096)
-                  << "\033\\";
+        ss << "\033_Gm=1;" << util::base64_encode(ptr, 4096) << "\033\\";
     }
 
     // final data chunk
-    std::cout << "\033_Gm=0;" << util::base64_encode(ptr, last_cunk_size)
-              << "\033\\" << std::flush;
+    ss << "\033_Gm=0;" << util::base64_encode(ptr, last_cunk_size) << "\033\\";
+
+    util::move_cursor(y, x);
+    std::cout << ss.str() << "\033_Ga=p,i=13,q=1\033\\" << std::flush;
 }
 
 void KittyCanvas::clear()
