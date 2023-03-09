@@ -38,7 +38,16 @@ Flags::Flags()
 void Flags::read_config_file()
 {
     std::ifstream ifs(config_file);
-    json data = json::parse(ifs);
-    if (data.contains("output")) output = data["output"];
-    if (data.contains("use-escape-codes")) use_escape_codes = data["use-escape-codes"];
+    try {
+        json data = json::parse(ifs);
+        if (!data.contains("layer")) return;
+        data = data["layer"];
+        if (data.contains("silent")) output = data["silent"];
+        if (data.contains("use-escape-codes")) use_escape_codes = data["use-escape-codes"];
+        if (data.contains("no-stdin")) no_stdin = data["no-stdin"];
+        if (data.contains("output")) output = data["output"];
+    } catch (const json::parse_error& e) {
+        std::cerr << "Could not parse config file." << std::endl;
+        std::exit(1);
+    }
 }
