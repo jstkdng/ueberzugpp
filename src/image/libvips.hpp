@@ -29,7 +29,7 @@
 class LibvipsImage : public Image
 {
 public:
-    LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
+    LibvipsImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string &filename, bool is_anim, bool in_cache);
 
     auto width() const -> int override;
@@ -50,6 +50,7 @@ private:
     std::unique_ptr<unsigned char> _data;
     std::filesystem::path path;
     const Terminal& terminal;
+    const Flags& flags;
 
     int max_width;
     int max_height;

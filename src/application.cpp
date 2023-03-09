@@ -34,14 +34,14 @@
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
-Application::Application(const Flags& flags):
+Application::Application(Flags& flags):
 terminal(os::get_pid(), flags),
 flags(flags)
 {
     print_header();
     setup_logger();
     set_silent();
-    canvas = Canvas::create(terminal, *logger);
+    canvas = Canvas::create(terminal, flags, *logger);
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
     tmux::register_hooks();
@@ -76,7 +76,7 @@ void Application::execute(const std::string& cmd)
     logger->info("Command received: {}", j.dump());
     if (j["action"] == "add") {
         set_dimensions_from_json(j);
-        image = Image::load(terminal, *dimensions, j["path"], *logger);
+        image = Image::load(terminal, *dimensions, flags, j["path"], *logger);
         if (!image) {
             logger->error("Unable to load image file.");
             return;

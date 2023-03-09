@@ -96,10 +96,10 @@ auto util::base64_encode_ssl(const unsigned char *input, int length) -> std::uni
 auto util::get_b2_hash_ssl(const std::string& str) -> std::string
 {
     std::stringstream ss;
-    auto evp = EVP_blake2b512();
     auto mdctx = std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> (
         EVP_MD_CTX_new(), [](EVP_MD_CTX* g) { EVP_MD_CTX_free(g); }
     );
+    auto evp = EVP_blake2b512();
     auto digest = std::make_unique<unsigned char[]>(EVP_MD_size(evp));
 
     EVP_DigestInit_ex(mdctx.get(), evp, nullptr);
@@ -110,7 +110,7 @@ auto util::get_b2_hash_ssl(const std::string& str) -> std::string
     for (int i = 0; i < digest_len; ++i) {
         ss << std::hex << std::setw(2) << std::setfill('0') << (int)digest[i];
     }
-    return ss.str();
+    return std::move(ss).str();
 }
 
 void util::move_cursor(int row, int col)

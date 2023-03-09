@@ -33,7 +33,7 @@
 class Application
 {
 public:
-    Application(const Flags& flags);
+    Application(Flags& flags);
     ~Application();
 
     void execute(const std::string& cmd);

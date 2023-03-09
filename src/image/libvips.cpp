@@ -22,9 +22,10 @@
 
 using namespace vips;
 
-LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions,
+LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string &filename, bool is_anim, bool in_cache):
 terminal(terminal),
+flags(flags),
 path(filename),
 is_anim(is_anim),
 max_width(dimensions.max_wpixels()),
@@ -133,12 +134,12 @@ auto LibvipsImage::process_image() -> void
 {
     resize_image();
 
-    if (terminal.supports_sixel) {
+    if (flags.output == "sixel") {
         // sixel expects RGB888
         if (image.has_alpha()) {
             image = image.flatten();
         }
-    } else if (!terminal.supports_kitty) {
+    } else if (flags.output == "x11") {
         // alpha channel required
         if (!image.has_alpha()) image = image.bandjoin(255);
         // convert from RGB to BGR

@@ -26,7 +26,7 @@
 class Terminal
 {
 public:
-    Terminal(int pid, const Flags& flags);
+    Terminal(int pid, Flags& flags);
     ~Terminal();
 
     double font_width;
@@ -36,9 +36,6 @@ public:
     std::string term;
     std::string term_program;
 
-    bool supports_sixel = false;
-    bool supports_kitty = false;
-    bool supports_iterm = false;
     void reload();
 
 private:
@@ -63,7 +60,7 @@ private:
     int xpixel;
     int ypixel;
 
-    const Flags& flags;
+    Flags& flags;
     const X11Util xutil;
 
     struct termios old_term;

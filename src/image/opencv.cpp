@@ -21,9 +21,10 @@
 #include <opencv2/imgproc.hpp>
 #include <iostream>
 
-OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
+OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string& filename, bool in_cache):
 terminal(terminal),
+flags(flags),
 path(filename),
 max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
@@ -83,19 +84,19 @@ auto OpencvImage::process_image() -> void
 {
     resize_image();
 
-    if (terminal.supports_kitty) {
+    if (flags.output == "kitty") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
-    } else if (terminal.supports_sixel) {
+    } else if (flags.output == "sixel") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
-    } else {
+    } else if (flags.output == "x11") {
         if (image.channels() < 4) {
             // alpha channel required
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);

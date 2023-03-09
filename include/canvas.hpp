@@ -27,7 +27,7 @@
 class Canvas
 {
 public:
-    static auto create(const Terminal& terminal, spdlog::logger& logger) -> std::unique_ptr<Canvas>;
+    static auto create(const Terminal& terminal, Flags& flags, spdlog::logger& logger) -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
     virtual auto init(const Dimensions& dimensions,

@@ -30,7 +30,7 @@ namespace fs = std::filesystem;
 class OpencvImage : public Image
 {
 public:
-    OpencvImage(const Terminal& terminal, const Dimensions& dimensions,
+    OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string& filename, bool in_cache);
     ~OpencvImage();
 
@@ -47,6 +47,7 @@ private:
 
     fs::path path;
     const Terminal& terminal;
+    const Flags& flags;
 
     int _width;
     int _height;

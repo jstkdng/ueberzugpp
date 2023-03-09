@@ -31,7 +31,7 @@
 #include <sys/ioctl.h>
 #include <poll.h>
 
-Terminal::Terminal(int pid, const Flags& flags):
+Terminal::Terminal(int pid, Flags& flags):
 pid(pid), flags(flags)
 {
     term = os::getenv("TERM").value_or("xterm-256color");
@@ -59,11 +59,15 @@ auto Terminal::get_terminal_size() -> void
     xpixel = sz.ws_xpixel;
     ypixel = sz.ws_ypixel;
 
-    init_termios();
-    check_sixel_support();
-    check_kitty_support();
-    if (xpixel == 0 && ypixel == 0) get_terminal_size_escape_code();
-    reset_termios();
+    if (flags.use_escape_codes) {
+        init_termios();
+        if (xpixel == 0 && ypixel == 0) get_terminal_size_escape_code();
+        if (flags.output.empty()) {
+            check_sixel_support();
+            check_kitty_support();
+        }
+        reset_termios();
+    }
     if (xpixel == 0 && ypixel == 0) get_terminal_size_x11();
 
     double padding_horiz = guess_padding(cols, xpixel);
@@ -106,14 +110,16 @@ void Terminal::check_sixel_support()
     };
     auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
-    if (vals.size() > 2 || supported_terms.contains(term)) supports_sixel = true;
+    if (vals.size() > 2 || supported_terms.contains(term)) {
+        flags.output = "sixel";
+    }
 }
 
 void Terminal::check_kitty_support()
 {
     auto resp = read_raw_str("\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\\e[c");
     if (resp.find("OK") != std::string::npos && term_program != "WezTerm") {
-        supports_kitty = true;
+        flags.output = "kitty";
     }
 }
 

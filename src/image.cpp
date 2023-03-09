@@ -27,7 +27,7 @@
 
 namespace fs = std::filesystem;
 
-auto Image::load(const Terminal& terminal, const Dimensions& dimensions,
+auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
         const std::string& filename, spdlog::logger& logger)
     -> std::shared_ptr<Image>
 {
@@ -56,11 +56,11 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions,
 
     if (load_libvips) {
         logger.info("{}. Loading with libvips.", cache_msg);
-        return std::make_shared<LibvipsImage>(terminal, dimensions, image_path, is_anim, in_cache);
+        return std::make_shared<LibvipsImage>(terminal, dimensions, flags, image_path, is_anim, in_cache);
     }
     if (load_opencv) {
         logger.info("{}. Loading with opencv.", cache_msg);
-        return std::make_shared<OpencvImage>(terminal, dimensions, image_path, in_cache);
+        return std::make_shared<OpencvImage>(terminal, dimensions, flags, image_path, in_cache);
     }
     return nullptr;
 }

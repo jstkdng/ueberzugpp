@@ -64,11 +64,10 @@ int main(int argc, char *argv[])
     program.add_flag("-V,--version", flags.print_version, "Print version information.");
     CLI::App *layer_command = program.add_subcommand("layer", "Display images on the terminal.");
     layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null.");
+    layer_command->add_flag("--use-escape-codes", flags.use_escape_codes, "Use escape codes to get terminal capabilities.")->default_val(false);
     layer_command->add_flag("--no-stdin", flags.no_stdin, "Don't listen on stdin for commands.");
     layer_command->add_option("-o,--output", flags.output, "Image output method")
         ->check(CLI::IsMember({"x11", "sixel", "kitty", "iterm2"}));
-    layer_command->add_flag("--x11", flags.force_x11, "Force X11 output.");
-    layer_command->add_flag("--sixel", flags.force_sixel, "Force sixel output")->excludes("--x11");
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
