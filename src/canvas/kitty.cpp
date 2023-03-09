@@ -18,7 +18,6 @@
 #include "util.hpp"
 
 #include <iostream>
-#include <fstream>
 #include <sstream>
 
 KittyCanvas::KittyCanvas()
@@ -46,24 +45,31 @@ void KittyCanvas::draw_frame()
     int last_cunk_size = image->size() % 4096;
 
     // initial data chunk
-    ss << "\033_Gm=1,i=13,p=37,q=1,f=" << 8 * image->channels() << ",s="
-        << image->width() << ",v=" << image->height() << ";"
-        << util::base64_encode(image->data(), 4096) << "\033\\";
+    ss  << "\e_Gm=1,i=1337,q=2"
+        << ",f=" << image->channels() * 8
+        << ",s=" << image->width()
+        << ",v=" << image->height()
+        << ";" << util::base64_encode(image->data(), 4096)
+        << "\e\\";
 
     // regular chunks
     auto ptr = image->data() + 4096;
     for (int i = 0; i < num_chunks - 1; ++i, ptr += 4096) {
-        ss << "\033_Gm=1;" << util::base64_encode(ptr, 4096) << "\033\\";
+        ss  << "\e_Gm=1,q=2;"
+            << util::base64_encode(ptr, 4096)
+            << "\e\\";
     }
 
     // final data chunk
-    ss << "\033_Gm=0;" << util::base64_encode(ptr, last_cunk_size) << "\033\\";
+    ss  << "\e_Gm=0,q=2;"
+        << util::base64_encode(ptr, last_cunk_size)
+        << "\e\\";
 
     util::move_cursor(y, x);
-    std::cout << ss.str() << "\033_Ga=p,i=13,q=1\033\\" << std::flush;
+    std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2;\e\\" << std::flush;
 }
 
 void KittyCanvas::clear()
 {
-    std::cout << "\033_Ga=d\033\\" << std::flush;
+    std::cout << "\e_Ga=d\e\\" << std::flush;
 }

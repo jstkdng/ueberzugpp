@@ -60,8 +60,8 @@ auto Terminal::get_terminal_size() -> void
     ypixel = sz.ws_ypixel;
 
     init_termios();
-    check_kitty_support();
     check_sixel_support();
+    check_kitty_support();
     if (xpixel == 0 && ypixel == 0) get_terminal_size_escape_code();
     reset_termios();
     if (xpixel == 0 && ypixel == 0) get_terminal_size_x11();
@@ -112,7 +112,7 @@ void Terminal::check_sixel_support()
 void Terminal::check_kitty_support()
 {
     auto resp = read_raw_str("\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\\e[c");
-    if (resp.find("OK") != std::string::npos) {
+    if (resp.find("OK") != std::string::npos && term_program != "WezTerm") {
         supports_kitty = true;
     }
 }
