@@ -1,6 +1,6 @@
 # Überzug++
 
-Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using child windows or using sixel on supported terminals. 
+Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using X11 child windows, sixels or the kitty image protocol.
 
 This project intends to be a drop-in replacement for the now defunct [ueberzug](https://github.com/seebye/ueberzug) project. If some tool doesn't work,
 feel free to open an issue.
@@ -35,22 +35,44 @@ commands to ueberzugpp, `tmux` is used internally.
 
 - Layer accepts the following options
   
-    ```bash
-    $ ueberzug layer -h
-    Display images on the terminal.
-    Usage: ueberzug layer [OPTIONS]
-    
-    Options:
-      -h,--help                   Print this help message and exit
-      -s,--silent                 Print stderr to /dev/null.
-      --no-stdin                  Don't listen on stdin for commands.
-      --x11 Excludes: --sixel     Force X11 output.
-      --sixel Excludes: --x11     Force sixel output
-      -p,--parser                 **UNUSED**, only present for backwards compatibility.
-      -l,--loader                 **UNUSED**, only present for backwards compatibility.
-    ```
+```bash
+$ ueberzug layer -h
+Display images on the terminal.
+Usage: ueberzug layer [OPTIONS]
 
-2. By default, commands are sent to ueberzug++ through stdin, this is enough in
+Options:
+  -h,--help                   Print this help message and exit
+  -s,--silent                 Print stderr to /dev/null.
+  --use-escape-codes [0]      Use escape codes to get terminal capabilities.
+  --no-stdin                  Don't listen on stdin for commands.
+  -o,--output TEXT:{x11,sixel,kitty,iterm2}
+                              Image output method
+  -p,--parser                 **UNUSED**, only present for backwards compatibility.
+  -l,--loader                 **UNUSED**, only present for backwards compatibility.
+```
+
+2. You can also configure ueberzugpp with a json file. The file should be located
+on `$XDG_CONFIG_HOME/ueberzugpp/config.json`, in case XDG_CONFIG_HOME isn't set,
+ueberzugpp will look for the configuration at `~/.config/ueberzugpp/config.json`
+
+Application flags have precedence over the configuration file.
+The configuration file should have this format.
+
+```json
+{
+    "layer": {
+        "silent": true,
+        "use-escape-codes": false,
+        "no-stdin": false,
+        "output": "sixel"
+    }
+}
+```
+
+The most helpful is the `output` variable as that can be used to force
+ueberzugpp to output images with a particular method.
+
+3. By default, commands are sent to ueberzug++ through stdin, this is enough in
 some cases. In some terminals and application combinations (e.g. ranger + wezterm + zellij)
 using stdin to send commands doesn't work properly or ueberzug++ could fail to
 start altogether. In those cases, the user may send commands to ueberzug++ through
@@ -58,7 +80,7 @@ a unix socket. By default, ueberzug++ will listen to commands on /tmp/ueberzug_{
 
 New software is encouraged to use sockets instead of stdin as they cover more cases.
 
-3. You can then feed Ueberzug with json objects to display an image or make it disappear.
+4. You can then feed Ueberzug with json objects to display an image or make it disappear.
   - json object to display the image:
   
     ```json
@@ -86,7 +108,7 @@ This project uses C++20 features so you must use a recent compiler.
 - nlohmann-json
 - cli11
 - libsixel
-- botan
+- openssl
 - spdlog
 - fmt
 - zeromq
