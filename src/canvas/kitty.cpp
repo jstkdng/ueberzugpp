@@ -41,15 +41,18 @@ void KittyCanvas::draw()
 void KittyCanvas::draw_frame()
 {
     std::stringstream ss;
-    int num_chunks = image->size() / 4096;
-    int last_cunk_size = image->size() % 4096;
+    const int num_chunks = image->size() / 4096;
+    const int last_chunk_size = image->size() % 4096;
+    const int initial_chunk_size = (num_chunks > 0) ? 4096 : last_chunk_size;
 
     // initial data chunk
-    ss  << "\e_Gm=1,i=1337,q=2"
+    ss  << "\e_G";
+    if (num_chunks > 0) ss << "m=1";
+    ss  << ",i=1337,q=2"
         << ",f=" << image->channels() * 8
         << ",s=" << image->width()
         << ",v=" << image->height()
-        << ";" << util::base64_encode_ssl(image->data(), 4096)
+        << ";" << util::base64_encode_ssl(image->data(), initial_chunk_size)
         << "\e\\";
 
     // regular chunks
@@ -61,9 +64,12 @@ void KittyCanvas::draw_frame()
     }
 
     // final data chunk
-    ss  << "\e_Gm=0,q=2;"
-        << util::base64_encode_ssl(ptr, last_cunk_size)
-        << "\e\\";
+    if (num_chunks > 0 && last_chunk_size != 0) {
+        ss  << "\e_Gm=0,q=2;"
+            << util::base64_encode_ssl(ptr, last_chunk_size)
+            << "\e\\";
+    }
+
 
     util::move_cursor(y, x);
     std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2;\e\\" << std::flush;

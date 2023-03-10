@@ -55,6 +55,7 @@ set(UEBERZUGPP_SOURCES
     "src/canvas.cpp"
     "src/canvas/sixel.cpp"
     "src/canvas/kitty.cpp"
+    "src/canvas/iterm2.cpp"
     "src/canvas/x11/x11.cpp"
     "src/canvas/x11/window.cpp"
 
