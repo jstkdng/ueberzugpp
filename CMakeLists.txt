@@ -76,7 +76,7 @@ target_link_libraries(ueberzug PUBLIC
     Threads::Threads
     spdlog::spdlog
     fmt::fmt
-    OpenSSL::SSL
+    OpenSSL::Crypto
     PkgConfig::XCBIMAGE
     PkgConfig::VIPS
     PkgConfig::SIXEL
