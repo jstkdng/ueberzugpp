@@ -66,7 +66,7 @@ auto util::get_log_filename() -> std::string
 
 auto util::get_socket_path() -> std::string
 {
-    return fmt::format("{}/ueberzug_{}.sock", fs::temp_directory_path().string(), os::getenv("USER").value());
+    return fmt::format("{}/ueberzug_{}_{}.sock", fs::temp_directory_path().string(), os::getenv("USER").value(), os::get_pid());
 }
 
 void util::send_tcp_message(std::string_view msg)
