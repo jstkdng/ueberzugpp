@@ -17,16 +17,12 @@
 #include "util/x11.hpp"
 #include "util.hpp"
 #include "os.hpp"
+#include "util/ptr.hpp"
 
 #include <xcb/xcb.h>
 #include <string>
 #include <memory>
 #include <iostream>
-
-struct free_delete
-{
-    void operator()(void* x) { free(x); }
-};
 
 X11Util::X11Util()
 {
@@ -50,9 +46,9 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
     return windows;
 }
 
-auto X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) const -> void
+void X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) const
 {
-    auto reply = std::unique_ptr<xcb_query_tree_reply_t, free_delete> {
+    auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
         xcb_query_tree_reply(connection, cookie, nullptr)
     };
     if (!reply.get()) throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
@@ -85,13 +81,13 @@ int X11Util::get_window_pid(xcb_window_t window) const
 
     auto atom_cookie = xcb_intern_atom_unchecked
         (connection, false, atom_str.size(), atom_str.c_str());
-    auto atom_reply = std::unique_ptr<xcb_intern_atom_reply_t, free_delete> {
+    auto atom_reply = unique_C_ptr<xcb_intern_atom_reply_t> {
         xcb_intern_atom_reply(connection, atom_cookie, nullptr)
     };
 
     auto property_cookie = xcb_get_property_unchecked(
             connection, false, window, atom_reply->atom, XCB_ATOM_ANY, 0, 1);
-    auto property_reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
+    auto property_reply = unique_C_ptr<xcb_get_property_reply_t> {
         xcb_get_property_reply(connection, property_cookie, nullptr),
     };
 
@@ -112,7 +108,7 @@ auto X11Util::get_pid_window_map() const -> std::unordered_map<unsigned int, xcb
 bool X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type) const
 {
     auto cookie = xcb_get_property_unchecked(connection, false, window, property, type, 0, 4);
-    auto reply = std::unique_ptr<xcb_get_property_reply_t, free_delete> {
+    auto reply = unique_C_ptr<xcb_get_property_reply_t> {
         xcb_get_property_reply(connection, cookie, nullptr)
     };
     if (!reply.get()) return false;
@@ -122,7 +118,7 @@ bool X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_
 auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>
 {
     auto cookie = xcb_get_geometry_unchecked(connection, window);
-    auto reply = std::unique_ptr<xcb_get_geometry_reply_t, free_delete> {
+    auto reply = unique_C_ptr<xcb_get_geometry_reply_t> {
         xcb_get_geometry_reply(connection, cookie, nullptr)
     };
     if (!reply.get()) return std::make_pair(0, 0);

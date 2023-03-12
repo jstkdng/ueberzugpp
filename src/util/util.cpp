@@ -17,6 +17,7 @@
 #include "util.hpp"
 #include "process.hpp"
 #include "os.hpp"
+#include "util/ptr.hpp"
 
 #include <memory>
 #include <regex>
@@ -96,9 +97,9 @@ auto util::base64_encode_ssl(const unsigned char *input, int length) -> std::uni
 auto util::get_b2_hash_ssl(const std::string& str) -> std::string
 {
     std::stringstream ss;
-    auto mdctx = std::unique_ptr<EVP_MD_CTX, std::function<void(EVP_MD_CTX*)>> (
-        EVP_MD_CTX_new(), [](EVP_MD_CTX* g) { EVP_MD_CTX_free(g); }
-    );
+    auto mdctx = std::unique_ptr<EVP_MD_CTX, evp_md_ctx_deleter> {
+        EVP_MD_CTX_new()
+    };
     auto evp = EVP_blake2b512();
     auto digest = std::make_unique<unsigned char[]>(EVP_MD_size(evp));
 
