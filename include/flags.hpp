@@ -28,7 +28,7 @@ public:
 
     bool no_stdin = false;
     bool silent = false;
-    bool use_escape_codes;
+    bool use_escape_codes = false;
     bool print_version = false;
     std::string output;
 
