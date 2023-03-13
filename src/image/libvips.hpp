@@ -20,6 +20,7 @@
 #include "image.hpp"
 #include "terminal.hpp"
 #include "dimensions.hpp"
+#include "util/ptr.hpp"
 
 #include <string>
 #include <memory>
@@ -47,7 +48,7 @@ private:
     vips::VImage image;
     vips::VImage backup;
 
-    std::unique_ptr<unsigned char> _data;
+    unique_C_ptr<unsigned char> _data;
     std::filesystem::path path;
     const Terminal& terminal;
     const Flags& flags;

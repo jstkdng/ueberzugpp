@@ -26,6 +26,7 @@
 #include <string>
 #include <memory>
 #include <atomic>
+#include <thread>
 #include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>

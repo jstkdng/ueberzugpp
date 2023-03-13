@@ -91,8 +91,12 @@ int X11Util::get_window_pid(xcb_window_t window) const
         xcb_get_property_reply(connection, property_cookie, nullptr),
     };
 
-    return *reinterpret_cast<int*>
-        (xcb_get_property_value(property_reply.get()));
+    void *start = xcb_get_property_value(property_reply.get());
+    int length = xcb_get_property_value_length(property_reply.get());
+    if (length != sizeof(int)) {
+        return -1;
+    }
+    return *reinterpret_cast<int*>(start);
 }
 
 auto X11Util::get_pid_window_map() const -> std::unordered_map<unsigned int, xcb_window_t>
