@@ -89,6 +89,6 @@ target_link_libraries(ueberzug PUBLIC
 )
 
 install(TARGETS ueberzug
-    CONFIGURATIONS Release
+    CONFIGURATIONS Release Debug
     RUNTIME DESTINATION bin)
 
