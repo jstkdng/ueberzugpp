@@ -21,8 +21,6 @@
 
 #include <xcb/xcb.h>
 #include <string>
-#include <memory>
-#include <iostream>
 
 X11Util::X11Util()
 {
@@ -54,7 +52,7 @@ void X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     if (!reply.get()) throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
     int num_children = xcb_query_tree_children_length(reply.get());
 
-    if (!num_children) return;
+    if (num_children == 0) return;
 
     auto children = xcb_query_tree_children(reply.get());
     std::vector<xcb_query_tree_cookie_t> cookies;
@@ -91,12 +89,11 @@ int X11Util::get_window_pid(xcb_window_t window) const
         xcb_get_property_reply(connection, property_cookie, nullptr),
     };
 
-    void *start = xcb_get_property_value(property_reply.get());
-    int length = xcb_get_property_value_length(property_reply.get());
-    if (length != sizeof(int)) {
-        return -1;
-    }
-    return *reinterpret_cast<int*>(start);
+    auto property_value = xcb_get_property_value(property_reply.get());
+    auto property_length = xcb_get_property_value_length(property_reply.get());
+    if (property_length != sizeof(int)) return -1;
+
+    return *reinterpret_cast<int*>(property_value);
 }
 
 auto X11Util::get_pid_window_map() const -> std::unordered_map<unsigned int, xcb_window_t>

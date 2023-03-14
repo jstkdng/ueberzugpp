@@ -151,5 +151,7 @@ auto LibvipsImage::process_image() -> void
     }
 
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
-    _data.reset(static_cast<unsigned char*>(image.write_to_memory(&(_size))));
+    _data = unique_C_ptr<unsigned char> {
+        static_cast<unsigned char*>(image.write_to_memory(&_size))
+    };
 }

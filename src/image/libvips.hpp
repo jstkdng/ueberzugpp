@@ -23,7 +23,6 @@
 #include "util/ptr.hpp"
 
 #include <string>
-#include <memory>
 #include <vips/vips8>
 #include <filesystem>
 

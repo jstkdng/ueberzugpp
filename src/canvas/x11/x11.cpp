@@ -107,7 +107,6 @@ auto X11Canvas::handle_events() -> void
 auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void
 {
     std::vector<int> client_pids {os::get_pid()};
-    std::unordered_map<unsigned int, xcb_window_t> pid_window_map;
     this->image = image;
 
     auto wid = os::getenv("WINDOWID");
@@ -119,7 +118,6 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
     if (tmux::is_used()) {
         auto tmp_pids = tmux::get_client_pids();
         if (tmp_pids.has_value()) client_pids = tmp_pids.value();
-        pid_window_map = xutil.get_pid_window_map();
     } else if (wid.has_value()) {
         auto window_id = xcb_generate_id(connection);
         windows.insert({window_id, std::make_unique<Window>
@@ -127,6 +125,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
         return;
     }
 
+    auto pid_window_map = xutil.get_pid_window_map();
     for (const auto& pid: client_pids) {
         // calculate a map with parent's pid and window id
         auto ppids = util::get_process_tree(pid);
