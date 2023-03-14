@@ -123,3 +123,18 @@ auto util::get_cache_file_save_location(const fs::path &path) -> std::string
 {
     return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path), path.extension().string());
 }
+
+void util::benchmark(std::function<void(void)> func)
+{
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration_cast;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+
+    auto t1 = high_resolution_clock::now();
+    func();
+    auto t2 = high_resolution_clock::now();
+    duration<double, std::milli> ms_double = t2 - t1;
+
+    std::cout << ms_double.count() << "ms\n";
+}

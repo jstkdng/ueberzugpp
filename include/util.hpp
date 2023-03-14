@@ -22,6 +22,7 @@
 #include <string_view>
 #include <memory>
 #include <filesystem>
+#include <functional>
 
 namespace util
 {
@@ -35,6 +36,7 @@ namespace util
     auto get_socket_path() -> std::string;
     auto base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>;
     void move_cursor(int row, int col);
+    void benchmark(std::function<void(void)> func);
 }
 
 #endif
