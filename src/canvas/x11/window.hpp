@@ -19,10 +19,10 @@
 
 #include "image.hpp"
 #include "dimensions.hpp"
+#include "util/ptr.hpp"
 
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
-#include <thread>
 
 class Window
 {
@@ -41,11 +41,13 @@ public:
 
 private:
     xcb_connection_t *connection;
+    xcb_screen_t *screen;
+
     xcb_window_t parent;
     xcb_window_t window;
-    xcb_screen_t *screen;
     xcb_gcontext_t gc;
-    xcb_image_t *xcb_image = nullptr;
+    unique_C_ptr<xcb_image_t> xcb_image;
+    std::unique_ptr<unsigned char[]> xcb_image_buffer;
 
     Image& image;
     const Dimensions& dimensions;

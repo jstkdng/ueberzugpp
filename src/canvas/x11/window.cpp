@@ -18,11 +18,6 @@
 
 #include <xcb/xcb.h>
 
-struct free_delete
-{
-    void operator()(void* x) { free(x); }
-};
-
 Window::Window(xcb_connection_t *connection, xcb_screen_t *screen,
             xcb_window_t window, xcb_window_t parent,
             const Dimensions& dimensions, Image& image):
@@ -42,11 +37,12 @@ gc(xcb_generate_id(connection))
 void Window::create_window()
 {
     unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
-    auto value_list = std::make_unique<xcb_create_window_value_list_t>();
-    value_list->background_pixel =  screen->black_pixel;
-    value_list->border_pixel = screen->black_pixel;
-    value_list->event_mask = XCB_EVENT_MASK_EXPOSURE;
-    value_list->colormap = screen->default_colormap;
+    auto value_list = xcb_create_window_value_list_t {
+        .background_pixel = screen->black_pixel,
+        .border_pixel = screen->black_pixel,
+        .event_mask = XCB_EVENT_MASK_EXPOSURE,
+        .colormap = screen->default_colormap
+    };
 
     xcb_create_window_aux(connection,
             screen->root_depth,
@@ -58,8 +54,9 @@ void Window::create_window()
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
             value_mask,
-            value_list.get());
-    show();
+            &value_list);
+    visible = true;
+    xcb_map_window(connection, window);
 }
 
 void Window::toggle()
@@ -91,29 +88,30 @@ void Window::hide()
 
 auto Window::draw() -> void
 {
-    if (!xcb_image) return;
-    xcb_image_put(connection, window, gc, xcb_image, 0, 0, 0);
+    if (!xcb_image.get()) return;
+    xcb_image_put(connection, window, gc, xcb_image.get(), 0, 0, 0);
+    xcb_flush(connection);
 }
 
 void Window::generate_frame()
 {
-    if (xcb_image) xcb_image_destroy(xcb_image);
-    auto ptr = malloc(image.size());
-    xcb_image = xcb_image_create_native(connection,
+    xcb_image_buffer = std::make_unique<unsigned char[]>(image.size());
+    xcb_image = unique_C_ptr<xcb_image_t> {
+        xcb_image_create_native(connection,
             image.width(),
             image.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
-            ptr,
+            xcb_image_buffer.get(),
             image.size(),
-            const_cast<unsigned char*>(image.data()));
+            const_cast<unsigned char*>(image.data()))
+    };
     send_expose_event();
 }
 
 Window::~Window()
 {
     terminate_event_handler();
-    if (xcb_image) xcb_image_destroy(xcb_image);
     xcb_free_gc(connection, gc);
     xcb_unmap_window(connection, window);
     xcb_destroy_window(connection, window);
