@@ -57,17 +57,17 @@ auto util::get_process_tree(int pid) -> std::vector<int>
 
 auto util::get_cache_path() -> std::string
 {
-    return fmt::format("{}/.cache/ueberzug/", os::getenv("HOME").value());
+    return fmt::format("{}/.cache/ueberzugpp/", os::getenv("HOME").value());
 }
 
 auto util::get_log_filename() -> std::string
 {
-    return fmt::format("ueberzug_{}.log", os::getenv("USER").value());
+    return fmt::format("ueberzugpp-{}.log", os::getenv("USER").value());
 }
 
 auto util::get_socket_path() -> std::string
 {
-    return fmt::format("{}/ueberzug_{}_{}.sock", fs::temp_directory_path().string(), os::getenv("USER").value(), os::get_pid());
+    return fmt::format("{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), os::get_pid());
 }
 
 void util::send_tcp_message(std::string_view msg)
