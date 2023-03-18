@@ -70,7 +70,7 @@ auto SixelCanvas::init(const Dimensions& dimensions,
             image->width(),
             image->height(),
             SIXEL_PIXELFORMAT_RGB888,
-            SIXEL_LARGE_NORM,
+            SIXEL_LARGE_LUM,
             SIXEL_REP_CENTER_BOX,
             SIXEL_QUALITY_HIGH);
 }
