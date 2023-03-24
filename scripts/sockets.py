@@ -18,7 +18,7 @@ s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 connected = False
 while not connected:
     try:
-        s.connect(f"/tmp/ueberzug_{os.getenv('USER')}.sock")
+        s.connect(f"/tmp/ueberzugpp-30468.socket")
         connected = True
     except Exception:
         time.sleep(0.05)

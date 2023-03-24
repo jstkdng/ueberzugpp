@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     if (tmux_command->parsed()) {
         try {
             auto positionals = tmux_command->remaining();
-            tmux::handle_hook(positionals.at(0));
+            tmux::handle_hook(positionals.at(0), std::stoi(positionals.at(1)));
         } catch (const std::out_of_range& oor) {}
     }
 

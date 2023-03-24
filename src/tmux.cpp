@@ -96,10 +96,11 @@ int tmux::get_statusbar_offset()
     return std::stoi(output[0]);
 }
 
-void tmux::handle_hook(std::string_view hook)
+void tmux::handle_hook(std::string_view hook, int pid)
 {
     auto msg = fmt::format("{{\"action\":\"tmux\",\"hook\":\"{}\"}}\n", hook);
-    util::send_tcp_message(msg);
+    auto endpoint = util::get_socket_path(pid);
+    util::send_socket_message(msg, endpoint);
 }
 
 void tmux::register_hooks()
@@ -107,8 +108,8 @@ void tmux::register_hooks()
     if (!is_used()) return;
     for (const auto& hook: hooks) {
         auto cmd = fmt::format(
-                "tmux set-hook -t {} {} \"run-shell 'ueberzug tmux {}'\"",
-                get_pane(), hook, hook);
+                "tmux set-hook -t {} {} \"run-shell 'ueberzug tmux {} {}'\"",
+                get_pane(), hook, hook, os::get_pid());
         os::exec(cmd);
     }
 }

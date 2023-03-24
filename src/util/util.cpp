@@ -65,14 +65,13 @@ auto util::get_log_filename() -> std::string
     return fmt::format("ueberzugpp-{}.log", os::getenv("USER").value());
 }
 
-auto util::get_socket_path() -> std::string
+auto util::get_socket_path(int pid) -> std::string
 {
-    return fmt::format("{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), os::get_pid());
+    return fmt::format("ipc://{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), pid);
 }
 
-void util::send_tcp_message(std::string_view msg)
+void util::send_socket_message(const std::string& msg, const std::string& endpoint)
 {
-    auto endpoint = fmt::format("ipc://{}", get_socket_path());
     zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
     socket.set(zmq::sockopt::linger, 2);
