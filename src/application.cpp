@@ -46,6 +46,7 @@ flags(flags)
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
     tmux::register_hooks();
     tcp_thread = std::jthread([&] {
+        logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
     if (VIPS_INIT("ueberzug")) {
@@ -60,7 +61,7 @@ Application::~Application()
     canvas->clear();
     vips_shutdown();
     if (f_stderr) std::fclose(f_stderr);
-    util::send_socket_message("EXIT");
+    util::send_socket_message("EXIT", util::get_socket_endpoint());
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
 }
@@ -188,7 +189,7 @@ void Application::tcp_loop()
 {
     zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
-    socket.bind(util::get_socket_path());
+    socket.bind(util::get_socket_endpoint());
     int data[256];
     auto idbuf = zmq::buffer(data);
     while (true) {

@@ -35,7 +35,8 @@ namespace util
     auto get_cache_file_save_location(const std::filesystem::path &path) -> std::string;
     auto get_log_filename() -> std::string;
     auto get_socket_path(int pid = os::get_pid()) -> std::string;
-    void send_socket_message(const std::string& msg, const std::string& endpoint = get_socket_path());
+    auto get_socket_endpoint(int pid = os::get_pid()) -> std::string;
+    void send_socket_message(const std::string& msg, const std::string& endpoint);
     auto base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>;
     void move_cursor(int row, int col);
     void benchmark(std::function<void(void)> func);

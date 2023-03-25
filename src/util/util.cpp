@@ -65,9 +65,14 @@ auto util::get_log_filename() -> std::string
     return fmt::format("ueberzugpp-{}.log", os::getenv("USER").value());
 }
 
+auto util::get_socket_endpoint(int pid) -> std::string
+{
+    return fmt::format("ipc://{}", get_socket_path(pid));
+}
+
 auto util::get_socket_path(int pid) -> std::string
 {
-    return fmt::format("ipc://{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), pid);
+    return fmt::format("{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), pid);
 }
 
 void util::send_socket_message(const std::string& msg, const std::string& endpoint)

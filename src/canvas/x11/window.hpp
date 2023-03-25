@@ -53,7 +53,6 @@ private:
     const Dimensions& dimensions;
     bool visible = false;
 
-    void create_window();
     void send_expose_event(int x = 0, int y = 0);
 };
 

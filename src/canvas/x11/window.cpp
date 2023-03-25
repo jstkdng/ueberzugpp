@@ -29,13 +29,6 @@ image(image),
 dimensions(dimensions),
 gc(xcb_generate_id(connection))
 {
-    create_window();
-    xcb_create_gc(connection, gc, window, 0, nullptr);
-    xcb_flush(connection);
-}
-
-void Window::create_window()
-{
     unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     auto value_list = xcb_create_window_value_list_t {
         .background_pixel = screen->black_pixel,
@@ -55,8 +48,8 @@ void Window::create_window()
             screen->root_visual,
             value_mask,
             &value_list);
-    visible = true;
-    xcb_map_window(connection, window);
+    xcb_create_gc(connection, gc, window, 0, nullptr);
+    show();
 }
 
 void Window::toggle()
@@ -112,9 +105,8 @@ void Window::generate_frame()
 Window::~Window()
 {
     terminate_event_handler();
-    xcb_free_gc(connection, gc);
-    xcb_unmap_window(connection, window);
     xcb_destroy_window(connection, window);
+    xcb_free_gc(connection, gc);
     xcb_flush(connection);
 }
 

@@ -26,8 +26,8 @@ auto Canvas::create(const Terminal& terminal, Flags& flags, spdlog::logger& logg
 {
     if (flags.output.empty()) flags.output = "x11";
 
-    logger.info("PID = {}, TERM = {}, TERM_PROGRAM = {}, OUTPUT = {}",
-            os::get_pid(), terminal.term , terminal.term_program, flags.output);
+    logger.info("TERM=\"{}\", TERM_PROGRAM=\"{}\", OUTPUT=\"{}\"",
+            terminal.term , terminal.term_program, flags.output);
     if (flags.output == "sixel") {
         return std::make_unique<SixelCanvas>();
     }
