@@ -49,6 +49,9 @@ flags(flags)
         logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
+    if (flags.no_cache) {
+        logger->info("Image caching is disabled.");
+    }
     if (VIPS_INIT("ueberzug")) {
         vips_error_exit(nullptr);
     }

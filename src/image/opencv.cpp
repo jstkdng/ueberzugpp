@@ -72,12 +72,13 @@ auto OpencvImage::resize_image() -> void
     if (new_width == 0 && new_height == 0) return;
     uimage = image.getUMat(cv::ACCESS_RW);
     cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
+    image = uimage.getMat(cv::ACCESS_READ);
 
+    if (flags.no_cache) return;
     auto save_location = util::get_cache_file_save_location(path);
     try {
-        cv::imwrite(save_location, uimage);
+        cv::imwrite(save_location, image);
     } catch (const cv::Exception& ex) {}
-    image = uimage.getMat(cv::ACCESS_READ);
 }
 
 auto OpencvImage::process_image() -> void

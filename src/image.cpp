@@ -32,9 +32,13 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const F
     -> std::shared_ptr<Image>
 {
     if (!fs::exists(filename)) return nullptr;
-    auto image_path = check_cache(dimensions, filename);
-    bool is_anim = false, load_opencv = false, load_libvips = false,
-         in_cache = image_path != filename;
+    std::string image_path = filename;
+    bool in_cache = false;
+    if (!flags.no_cache) {
+        image_path = check_cache(dimensions, filename);
+        in_cache = image_path != filename;
+    }
+    bool is_anim = false, load_opencv = false, load_libvips = false;
     fs::path file = image_path;
     std::unordered_set<std::string> animated_formats {
         ".gif", ".webp"
@@ -49,17 +53,12 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const F
         load_libvips = true;
     }
 
-    std::string_view cache_msg = "Image is not cached";
-    if (in_cache) {
-        cache_msg = "Image is cached";
-    }
-
     if (load_libvips) {
-        logger.info("{}. Loading with libvips.", cache_msg);
+        logger.info("Loading image with libvips.");
         return std::make_shared<LibvipsImage>(terminal, dimensions, flags, image_path, is_anim, in_cache);
     }
     if (load_opencv) {
-        logger.info("{}. Loading with opencv.", cache_msg);
+        logger.info("Loading image with opencv.");
         return std::make_shared<OpencvImage>(terminal, dimensions, flags, image_path, in_cache);
     }
     return nullptr;

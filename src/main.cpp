@@ -66,6 +66,7 @@ int main(int argc, char *argv[])
     layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null.");
     layer_command->add_flag("--use-escape-codes", flags.use_escape_codes, "Use escape codes to get terminal capabilities.")->default_val(false);
     layer_command->add_flag("--no-stdin", flags.no_stdin, "Don't listen on stdin for commands.");
+    layer_command->add_flag("--no-cache", flags.no_cache, "Disable caching of resized images.");
     layer_command->add_option("-o,--output", flags.output, "Image output method")
         ->check(CLI::IsMember({"x11", "sixel", "kitty", "iterm2"}));
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");

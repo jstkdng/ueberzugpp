@@ -30,6 +30,7 @@ public:
     bool silent = false;
     bool use_escape_codes = false;
     bool print_version = false;
+    bool no_cache = false;
     std::string output;
 
 private:
