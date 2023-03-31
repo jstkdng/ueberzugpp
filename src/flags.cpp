@@ -42,7 +42,7 @@ void Flags::read_config_file()
         json data = json::parse(ifs);
         if (!data.contains("layer")) return;
         data = data["layer"];
-        if (data.contains("silent")) output = data["silent"];
+        if (data.contains("silent")) silent = data["silent"];
         if (data.contains("use-escape-codes")) use_escape_codes = data["use-escape-codes"];
         if (data.contains("no-stdin")) no_stdin = data["no-stdin"];
         if (data.contains("output")) output = data["output"];

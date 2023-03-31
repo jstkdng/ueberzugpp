@@ -117,12 +117,9 @@ auto LibvipsImage::resize_image() -> void
     if (in_cache) return;
     auto [new_width, new_height] = get_new_sizes(max_width, max_height);
     if (new_width == 0 && new_height == 0) return;
-    if (is_anim) {
-        image = image.thumbnail_image(new_width);
-        return;
-    }
-    image = VImage::thumbnail(path.c_str(), new_width)
-        .colourspace(VIPS_INTERPRETATION_sRGB);
+
+    image = image.thumbnail_image(new_width);
+    if (is_anim) return;
 
     auto save_location = util::get_cache_file_save_location(path);
     try {
@@ -151,7 +148,5 @@ auto LibvipsImage::process_image() -> void
     }
 
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
-    _data = unique_C_ptr<unsigned char> {
-        static_cast<unsigned char*>(image.write_to_memory(&_size))
-    };
+    _data.reset(static_cast<unsigned char*>(image.write_to_memory(&_size)));
 }
