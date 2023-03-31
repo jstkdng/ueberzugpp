@@ -118,7 +118,8 @@ auto LibvipsImage::resize_image() -> void
     auto [new_width, new_height] = get_new_sizes(max_width, max_height);
     if (new_width == 0 && new_height == 0) return;
 
-    image = image.thumbnail_image(new_width);
+    double scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
+    image = image.resize(scale);
     if (is_anim) return;
 
     auto save_location = util::get_cache_file_save_location(path);

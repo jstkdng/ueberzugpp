@@ -55,8 +55,6 @@ flags(flags)
     if (VIPS_INIT("ueberzug")) {
         vips_error_exit(nullptr);
     }
-    vips_concurrency_set(1);
-    vips_cache_set_max(1);
 }
 
 Application::~Application()
