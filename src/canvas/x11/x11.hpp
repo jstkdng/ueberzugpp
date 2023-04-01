@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <xcb/xproto.h>
 #include <mutex>
+#include <thread>
 
 class X11Canvas : public Canvas
 {
