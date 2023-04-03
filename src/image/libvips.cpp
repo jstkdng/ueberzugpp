@@ -120,7 +120,7 @@ auto LibvipsImage::resize_image() -> void
 
     double scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
     image = image.resize(scale);
-    if (is_anim) return;
+    if (is_anim || flags.no_cache) return;
 
     auto save_location = util::get_cache_file_save_location(path);
     try {
