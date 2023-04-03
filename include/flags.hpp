@@ -31,6 +31,7 @@ public:
     bool use_escape_codes = false;
     bool print_version = false;
     bool no_cache = false;
+    bool no_opencv = false;
     std::string output;
 
 private:

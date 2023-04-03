@@ -44,9 +44,10 @@ void Flags::read_config_file()
         data = data["layer"];
         if (data.contains("silent")) silent = data["silent"];
         if (data.contains("use-escape-codes")) use_escape_codes = data["use-escape-codes"];
-        if (data.contains("no-stdin")) no_stdin = data["no-stdin"];
         if (data.contains("output")) output = data["output"];
+        if (data.contains("no-stdin")) no_stdin = data["no-stdin"];
         if (data.contains("no-cache")) no_cache = data["no-cache"];
+        if (data.contains("no-opencv")) no_opencv = data["no-opencv"];
     } catch (const json::parse_error& e) {
         std::cerr << "Could not parse config file." << std::endl;
         std::exit(1);
