@@ -38,7 +38,7 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const F
         image_path = check_cache(dimensions, filename);
         in_cache = image_path != filename;
     }
-    bool is_anim = false, load_opencv = false, load_libvips = false;
+    bool is_anim = false, load_opencv = false, load_libvips = flags.no_opencv;
     fs::path file = image_path;
     std::unordered_set<std::string> animated_formats {
         ".gif", ".webp"

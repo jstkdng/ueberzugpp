@@ -34,7 +34,7 @@
 class Application
 {
 public:
-    Application(Flags& flags);
+    Application(Flags& flags, const std::string& executable);
     ~Application();
 
     void execute(const std::string& cmd);
