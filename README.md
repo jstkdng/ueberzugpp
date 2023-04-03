@@ -44,7 +44,9 @@ Options:
   -h,--help                   Print this help message and exit
   -s,--silent                 Print stderr to /dev/null.
   --use-escape-codes [0]      Use escape codes to get terminal capabilities.
-  --no-stdin                  Don't listen on stdin for commands.
+  --no-stdin                  Do not listen on stdin for commands.
+  --no-cache                  Disable caching of resized images.
+  --no-opencv                 Do not use OpenCV, use Libvips instead.
   -o,--output TEXT:{x11,sixel,kitty,iterm2}
                               Image output method
   -p,--parser                 **UNUSED**, only present for backwards compatibility.
