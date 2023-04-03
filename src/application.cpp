@@ -29,12 +29,12 @@
 #include <opencv2/core/ocl.hpp>
 #include <fmt/format.h>
 #include <zmq.hpp>
-#include <vips/vips.h>
+#include <vips/vips8>
 
 namespace fs = std::filesystem;
 using json = nlohmann::json;
 
-Application::Application(Flags& flags):
+Application::Application(Flags& flags, const std::string& executable):
 terminal(os::get_pid(), flags),
 flags(flags)
 {
@@ -52,9 +52,10 @@ flags(flags)
     if (flags.no_cache) {
         logger->info("Image caching is disabled.");
     }
-    if (VIPS_INIT("ueberzug")) {
+    if (VIPS_INIT(executable.c_str())) {
         vips_error_exit(nullptr);
     }
+    vips_cache_set_max(1);
 }
 
 Application::~Application()

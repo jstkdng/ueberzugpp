@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     }
 
     if (layer_command->parsed()) {
-        Application application(flags);
+        Application application(flags, argv[0]);
         application.command_loop(stop_flag);
     }
 
