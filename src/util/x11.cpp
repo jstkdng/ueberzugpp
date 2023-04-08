@@ -59,12 +59,7 @@ void X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
 
     for (int i = 0; i < num_children; ++i) {
         auto child = children[i];
-        bool is_complete_window = (
-            window_has_property(child, XCB_ATOM_WM_NAME, XCB_ATOM_STRING) &&
-            window_has_property(child, XCB_ATOM_WM_CLASS, XCB_ATOM_STRING) &&
-            window_has_property(child, XCB_ATOM_WM_NORMAL_HINTS)
-        );
-        if (is_complete_window) windows.push_back(child);
+        windows.push_back(child);
         cookies.push_back(xcb_query_tree_unchecked(connection, child));
     }
 
@@ -96,12 +91,12 @@ int X11Util::get_window_pid(xcb_window_t window) const
     return *reinterpret_cast<int*>(property_value);
 }
 
-auto X11Util::get_pid_window_map() const -> std::unordered_map<unsigned int, xcb_window_t>
+auto X11Util::get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>
 {
-    std::unordered_map<unsigned int, xcb_window_t> res;
+    std::unordered_map<int, xcb_window_t> res;
     for (auto window: get_server_window_ids()) {
         auto pid = get_window_pid(window);
-        res[pid] = window;
+        res.insert_or_assign(pid, window);
     }
     return res;
 }

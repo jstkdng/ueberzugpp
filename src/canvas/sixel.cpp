@@ -22,6 +22,7 @@
 #include <chrono>
 #include <iostream>
 
+#include <fmt/format.h>
 #include <unistd.h>
 #include <cstdlib>
 
@@ -34,9 +35,8 @@ int sixel_draw_callback(char *data, int size, void* priv)
 
 SixelCanvas::SixelCanvas()
 {
-    std::string tmppath = (fs::temp_directory_path() / "sixelXXXXXX").string();
-    char *name = tmppath.data();
-    int fd = mkstemp(name);
+    std::string tmppath = fmt::format("{}/sixelXXXXXX", fs::temp_directory_path().string());
+    int fd = mkstemp(tmppath.data());
     close(fd); // fd not required
     out_file = tmppath;
 

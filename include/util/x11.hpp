@@ -30,7 +30,7 @@ public:
     ~X11Util();
 
     auto get_server_window_ids() const -> std::vector<xcb_window_t>;
-    auto get_pid_window_map() const -> std::unordered_map<unsigned int, xcb_window_t>;
+    auto get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>;
     auto get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>;
     auto get_parent_window(int pid) const -> xcb_window_t;
 
