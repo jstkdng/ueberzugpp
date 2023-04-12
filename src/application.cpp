@@ -85,6 +85,7 @@ void Application::execute(const std::string& cmd)
             logger->error("Unable to load image file.");
             return;
         }
+        canvas->clear();
         canvas->init(*dimensions, image);
         canvas->draw();
     } else if (j["action"] == "remove") {
