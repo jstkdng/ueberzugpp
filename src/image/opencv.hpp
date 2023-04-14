@@ -56,6 +56,7 @@ private:
     int max_width;
     int max_height;
     bool in_cache;
+    bool opencl_available;
 
     void process_image();
 };

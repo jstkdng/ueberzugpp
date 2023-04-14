@@ -19,6 +19,7 @@
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/core/ocl.hpp>
 
 OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string& filename, bool in_cache):
@@ -30,7 +31,11 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
-    image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    image = cv::imread(filename, cv::IMREAD_COLOR);
+
+    auto opencl_ctx = cv::ocl::Context::getDefault();
+    opencl_available = opencl_ctx.ptr() != nullptr;
+
     process_image();
 }
 
@@ -70,9 +75,14 @@ auto OpencvImage::resize_image() -> void
     if (in_cache) return;
     auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
     if (new_width == 0 && new_height == 0) return;
-    uimage = image.getUMat(cv::ACCESS_RW);
-    cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
-    image = uimage.getMat(cv::ACCESS_RW);
+
+    if (opencl_available) {
+        uimage = image.getUMat(cv::ACCESS_RW);
+        cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
+        image = uimage.getMat(cv::ACCESS_RW);
+    } else {
+        cv::resize(image, image, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
+    }
 
     if (flags.no_cache) return;
     auto save_location = util::get_cache_file_save_location(path);
@@ -81,27 +91,14 @@ auto OpencvImage::resize_image() -> void
     } catch (const cv::Exception& ex) {}
 }
 
-auto OpencvImage::process_image() -> void
+void OpencvImage::process_image()
 {
     resize_image();
 
-    if (flags.output == "kitty") {
-        if (image.channels() == 4) {
-            cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
-        } else {
-            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
-        }
-    } else if (flags.output == "sixel") {
-        if (image.channels() == 4) {
-            cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
-        } else {
-            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
-        }
+    if (flags.output == "kitty" || flags.output == "sixel") {
+        cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
     } else if (flags.output == "x11") {
-        if (image.channels() < 4) {
-            // alpha channel required
-            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
-        }
+        cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
     }
 
     _size = image.total() * image.elemSize();
