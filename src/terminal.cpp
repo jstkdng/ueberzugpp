@@ -118,7 +118,7 @@ void Terminal::check_sixel_support()
 void Terminal::check_kitty_support()
 {
     auto resp = read_raw_str("\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\\e[c");
-    if (resp.find("OK") != std::string::npos && term_program != "WezTerm") {
+    if (resp.find("OK") != std::string::npos) {
         flags.output = "kitty";
     }
 }
