@@ -48,6 +48,7 @@ private:
     fs::path path;
     const Terminal& terminal;
     const Flags& flags;
+    const Dimensions& dimensions;
 
     int _width;
     int _height;

@@ -80,7 +80,7 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
     return orig_path;
 }
 
-auto Image::get_new_sizes(double max_width, double max_height)
+auto Image::get_new_sizes(double max_width, double max_height, const std::string& scaler)
     -> std::pair<const int, const int>
 {
     int _width = width(), _height = height(), new_width, new_height;
@@ -102,6 +102,12 @@ auto Image::get_new_sizes(double max_width, double max_height)
         }
     } else if (_width > max_width) {
         new_scale = max_width / _width;
+    } else if (scaler == "fit_contain" || scaler == "forced_cover") {
+        // I believe these should work the same
+        new_scale = max_height / _height;
+        if (_width > _height) {
+            new_scale = max_width / _width;
+        }
     }
     new_width = _width * new_scale;
     new_height = _height * new_scale;

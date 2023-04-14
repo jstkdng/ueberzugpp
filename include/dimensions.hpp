@@ -22,7 +22,7 @@
 class Dimensions
 {
 public:
-    Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h);
+    Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h, const std::string& scaler);
     ~Dimensions() = default;
 
     void reload();
@@ -36,6 +36,7 @@ public:
     int y;
     int max_w;
     int max_h;
+    std::string scaler;
 
 private:
     const Terminal& terminal;

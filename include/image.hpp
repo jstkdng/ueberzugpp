@@ -47,7 +47,7 @@ public:
     virtual auto is_animated() const -> bool { return false; }
 
 protected:
-    auto get_new_sizes(double max_width, double max_height)
+    auto get_new_sizes(double max_width, double max_height, const std::string& scaler)
         -> std::pair<const int, const int>;
 };
 

@@ -19,12 +19,12 @@
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
-#include <iostream>
 
 OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string& filename, bool in_cache):
 terminal(terminal),
 flags(flags),
+dimensions(dimensions),
 path(filename),
 max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
@@ -67,12 +67,13 @@ auto OpencvImage::channels() const -> int
 // only use opencl if required
 auto OpencvImage::resize_image() -> void
 {
-    if (in_cache) return;
-    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
+    //if (in_cache) return;
+    const auto& [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
     if (new_width == 0 && new_height == 0) return;
     uimage = image.getUMat(cv::ACCESS_RW);
     cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
-    image = uimage.getMat(cv::ACCESS_READ);
+    //cv::resize(uimage, uimage, cv::Size(600, 600), 0, 0, cv::INTER_AREA);
+    image = uimage.getMat(cv::ACCESS_RW);
 
     if (flags.no_cache) return;
     auto save_location = util::get_cache_file_save_location(path);

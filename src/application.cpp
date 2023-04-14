@@ -137,7 +137,10 @@ void Application::set_dimensions_from_json(const json& j)
 {
     using std::string;
     int x, y, max_width, max_height;
-    string width_key = "max_width", height_key = "max_height";
+    string width_key = "max_width", height_key = "max_height", scaler = "contain";
+    if (j.contains("scaler")) {
+        scaler = j["scaler"];
+    }
     if (j.contains("width")) {
         width_key = "width";
         height_key = "height";
@@ -158,7 +161,7 @@ void Application::set_dimensions_from_json(const json& j)
         x = j["x"];
         y = j["y"];
     }
-    dimensions = std::make_unique<Dimensions>(terminal, x, y, max_width, max_height);
+    dimensions = std::make_unique<Dimensions>(terminal, x, y, max_width, max_height, scaler);
 }
 
 void Application::setup_logger()

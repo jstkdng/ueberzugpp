@@ -51,6 +51,7 @@ private:
     std::filesystem::path path;
     const Terminal& terminal;
     const Flags& flags;
+    const Dimensions& dimensions;
 
     int max_width;
     int max_height;

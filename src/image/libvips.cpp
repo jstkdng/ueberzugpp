@@ -26,6 +26,7 @@ LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimension
             const std::string &filename, bool is_anim, bool in_cache):
 terminal(terminal),
 flags(flags),
+dimensions(dimensions),
 path(filename),
 is_anim(is_anim),
 max_width(dimensions.max_wpixels()),
@@ -115,10 +116,16 @@ auto LibvipsImage::frame_delay() const -> int
 auto LibvipsImage::resize_image() -> void
 {
     if (in_cache) return;
-    auto [new_width, new_height] = get_new_sizes(max_width, max_height);
+    auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
     if (new_width == 0 && new_height == 0) return;
 
-    double scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
+    double scale = 0;
+    if (new_width > width()) {
+        scale = static_cast<double>(new_width) / width();
+    } else {
+        scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
+    }
+
     image = image.resize(scale);
     if (is_anim || flags.no_cache) return;
 

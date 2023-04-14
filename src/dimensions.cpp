@@ -17,8 +17,9 @@
 #include "dimensions.hpp"
 #include "tmux.hpp"
 
-Dimensions::Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h):
+Dimensions::Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h, const std::string& scaler):
 terminal(terminal),
+scaler(scaler),
 orig_x(x), orig_y(y), max_w(max_w), max_h(max_h)
 {
     read_offsets();
