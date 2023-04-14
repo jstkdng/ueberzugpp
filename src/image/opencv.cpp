@@ -67,12 +67,11 @@ auto OpencvImage::channels() const -> int
 // only use opencl if required
 auto OpencvImage::resize_image() -> void
 {
-    //if (in_cache) return;
-    const auto& [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
+    if (in_cache) return;
+    auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
     if (new_width == 0 && new_height == 0) return;
     uimage = image.getUMat(cv::ACCESS_RW);
     cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
-    //cv::resize(uimage, uimage, cv::Size(600, 600), 0, 0, cv::INTER_AREA);
     image = uimage.getMat(cv::ACCESS_RW);
 
     if (flags.no_cache) return;
