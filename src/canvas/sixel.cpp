@@ -106,12 +106,13 @@ auto SixelCanvas::clear() -> void
     }
 
     // clear terminal
-    for (int i = y; i <= max_height; ++i) {
+    util::save_cursor_position();
+    for (int i = y; i <= max_height + 2; ++i) {
         util::move_cursor(i, x);
         std::cout << std::string(max_width, ' ');
     }
     std::cout << std::flush;
-    util::move_cursor(y, x);
+    util::restore_cursor_position();
 }
 
 auto SixelCanvas::draw_frame() -> void
@@ -130,6 +131,9 @@ auto SixelCanvas::draw_frame() -> void
     // write whole file to stdout
     stream.clear();
     stream.seekg(0);
+
+    util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << stream.rdbuf() << std::flush;
+    util::restore_cursor_position();
 }

@@ -39,6 +39,8 @@ namespace util
     void send_socket_message(const std::string& msg, const std::string& endpoint);
     auto base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>;
     void move_cursor(int row, int col);
+    void save_cursor_position();
+    void restore_cursor_position();
     void benchmark(std::function<void(void)> func);
 }
 

@@ -123,6 +123,16 @@ void util::move_cursor(int row, int col)
     std::cout << "\033[" << row << ";" << col << "f" << std::flush;
 }
 
+void util::save_cursor_position()
+{
+    std::cout << "\0337" << std::flush;
+}
+
+void util::restore_cursor_position()
+{
+    std::cout << "\0338" << std::flush;
+}
+
 auto util::get_cache_file_save_location(const fs::path &path) -> std::string
 {
     return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path), path.extension().string());
