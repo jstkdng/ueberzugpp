@@ -70,9 +70,10 @@ void KittyCanvas::draw_frame()
             << "\e\\";
     }
 
-
+    util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2;\e\\" << std::flush;
+    util::restore_cursor_position();
 }
 
 void KittyCanvas::clear()
