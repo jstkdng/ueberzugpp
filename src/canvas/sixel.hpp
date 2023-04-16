@@ -26,10 +26,7 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <fstream>
-#include <filesystem>
-
-namespace fs = std::filesystem;
+#include <sstream>
 
 class SixelCanvas : public Canvas
 {
@@ -43,14 +40,13 @@ public:
     auto clear() -> void override;
 
 private:
-    sixel_dither_t *dither = nullptr;
+    sixel_dither_t *dither;
     sixel_output_t *output;
     std::shared_ptr<Image> image;
 
     std::unique_ptr<std::jthread> draw_thread;
     std::mutex draw_mutex;
-    std::fstream stream;
-    fs::path out_file;
+    std::stringstream ss;
 
     int x;
     int y;

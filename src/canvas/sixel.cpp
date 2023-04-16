@@ -18,8 +18,6 @@
 #include "os.hpp"
 #include "util.hpp"
 
-#include <string>
-#include <chrono>
 #include <iostream>
 
 #include <fmt/format.h>
@@ -28,30 +26,23 @@
 
 int sixel_draw_callback(char *data, int size, void* priv)
 {
-    auto stream = static_cast<std::fstream*>(priv);
-    if (stream->is_open()) stream->write(data, size);
+    auto stream = static_cast<std::stringstream*>(priv);
+    stream->write(data, size);
     return size;
 }
 
 SixelCanvas::SixelCanvas()
 {
-    std::string tmppath = fmt::format("{}/sixelXXXXXX", fs::temp_directory_path().string());
-    int fd = mkstemp(tmppath.data());
-    close(fd); // fd not required
-    out_file = tmppath;
-
-    sixel_output_new(&output, sixel_draw_callback, &stream, nullptr);
+    sixel_output_new(&output, sixel_draw_callback, &ss, nullptr);
     sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
 }
 
 SixelCanvas::~SixelCanvas()
 {
     draw_thread.reset();
-    if (stream.is_open()) stream.close();
-    fs::remove(out_file);
 
-    sixel_output_destroy(output);
-    if (dither) sixel_dither_destroy(dither);
+    sixel_output_unref(output);
+    sixel_dither_unref(dither);
 }
 
 auto SixelCanvas::init(const Dimensions& dimensions,
@@ -77,8 +68,6 @@ auto SixelCanvas::init(const Dimensions& dimensions,
 
 auto SixelCanvas::draw() -> void
 {
-    stream.open(out_file, std::ios::in | std::ios::out | std::ios::binary);
-
     if (!image->is_animated()) {
         draw_frame();
         return;
@@ -97,19 +86,16 @@ auto SixelCanvas::draw() -> void
 auto SixelCanvas::clear() -> void
 {
     if (max_width == 0 && max_height == 0) return;
-    std::scoped_lock lock {draw_mutex};
     draw_thread.reset();
-    if (stream.is_open()) stream.close();
-    if (dither) {
-        sixel_dither_destroy(dither);
-        dither = nullptr;
-    }
+    sixel_dither_unref(dither);
+    ss.str("");
 
     // clear terminal
+    auto line_clear = std::string(max_width, ' ');
     util::save_cursor_position();
     for (int i = y; i <= max_height + 2; ++i) {
         util::move_cursor(i, x);
-        std::cout << std::string(max_width, ' ');
+        std::cout << line_clear;
     }
     std::cout << std::flush;
     util::restore_cursor_position();
@@ -117,23 +103,14 @@ auto SixelCanvas::clear() -> void
 
 auto SixelCanvas::draw_frame() -> void
 {
-    std::scoped_lock lock {draw_mutex};
-    if (!stream.is_open()) return;
-
-    // output sixel content to file
-    fs::resize_file(out_file, 0);
-    stream.seekp(0);
+    // output sixel content to stream
     sixel_encode(const_cast<unsigned char*>(image->data()),
             image->width(),
             image->height(),
             3 /*unused*/, dither, output);
 
-    // write whole file to stdout
-    stream.clear();
-    stream.seekg(0);
-
     util::save_cursor_position();
     util::move_cursor(y, x);
-    std::cout << stream.rdbuf() << std::flush;
+    std::cout << ss.rdbuf() << std::flush;
     util::restore_cursor_position();
 }
