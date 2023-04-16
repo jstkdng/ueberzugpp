@@ -45,7 +45,7 @@ flags(flags)
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
     tmux::register_hooks();
-    tcp_thread = std::jthread([&] {
+    socket_thread = std::jthread([&] {
         logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
@@ -78,6 +78,7 @@ void Application::execute(const std::string& cmd)
         return;
     }
     logger->info("Command received: {}", j.dump());
+
     if (j["action"] == "add") {
         set_dimensions_from_json(j);
         image = Image::load(terminal, *dimensions, flags, j["path"], *logger);

@@ -25,7 +25,6 @@
 
 #include <string>
 #include <memory>
-#include <atomic>
 #include <thread>
 #include <cstdlib>
 #include <spdlog/spdlog.h>
@@ -45,14 +44,14 @@ public:
 
 private:
     Terminal terminal;
-    std::unique_ptr<Dimensions> dimensions;
 
+    std::unique_ptr<Dimensions> dimensions;
     std::shared_ptr<Image> image;
     std::unique_ptr<Canvas> canvas;
     std::shared_ptr<spdlog::logger> logger;
     std::FILE* f_stderr = nullptr;
     const Flags& flags;
-    std::jthread tcp_thread;
+    std::jthread socket_thread;
 
     void setup_logger();
     void set_silent();
