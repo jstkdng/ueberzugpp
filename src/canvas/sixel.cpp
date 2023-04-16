@@ -88,11 +88,10 @@ auto SixelCanvas::clear() -> void
     if (max_width == 0 && max_height == 0) return;
     draw_thread.reset();
     sixel_dither_unref(dither);
-    ss.str("");
 
     // clear terminal
-    auto line_clear = std::string(max_width, ' ');
     util::save_cursor_position();
+    auto line_clear = std::string(max_width, ' ');
     for (int i = y; i <= max_height + 2; ++i) {
         util::move_cursor(i, x);
         std::cout << line_clear;
