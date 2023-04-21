@@ -19,10 +19,12 @@
 #include <CLI/Config.hpp>
 #include <atomic>
 #include <csignal>
+#include <fmt/format.h>
 
 #include "application.hpp"
 #include "flags.hpp"
 #include "tmux.hpp"
+#include "util.hpp"
 
 std::atomic<bool> stop_flag(false);
 
@@ -73,6 +75,9 @@ int main(int argc, char *argv[])
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
+    auto cmd_comand = program.add_subcommand("cmd", "Send a command to a running ueberzugpp instance.");
+    cmd_comand->allow_extras();
+
     auto tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
     tmux_command->allow_extras();
     CLI11_PARSE(program, argc, argv);
@@ -82,7 +87,7 @@ int main(int argc, char *argv[])
         std::exit(0);
     }
 
-    if (!layer_command->parsed() && !tmux_command->parsed()) {
+    if (!layer_command->parsed() && !tmux_command->parsed() && !cmd_comand->parsed()) {
         program.exit(CLI::CallForHelp());
         std::exit(1);
     }
@@ -96,6 +101,23 @@ int main(int argc, char *argv[])
         try {
             auto positionals = tmux_command->remaining();
             tmux::handle_hook(positionals.at(0), std::stoi(positionals.at(1)));
+        } catch (const std::out_of_range& oor) {}
+    }
+
+    if (cmd_comand->parsed()) {
+        try {
+            auto positionals = cmd_comand->remaining();
+            auto socket = positionals.at(0);
+            auto x = positionals.at(1);
+            auto y = positionals.at(2);
+            auto max_width = positionals.at(3);
+            auto max_height = positionals.at(4);
+            auto file_path = positionals.at(5);
+
+            auto json = fmt::format("{{\"action\":\"add\",\"identifier\":\"preview\",\"max_width\":{},\"max_height\":{},\"x\":{},\"y\":{},\"path\":\"{}\"}}\n",
+                    max_width, max_height, x, y, file_path);
+            auto endpoint = fmt::format("ipc://{}", socket);
+            util::send_socket_message(json, endpoint);
         } catch (const std::out_of_range& oor) {}
     }
 
