@@ -26,7 +26,8 @@ struct free_delete
     void operator()(void* x) { free(x); }
 };
 
-X11Canvas::X11Canvas()
+X11Canvas::X11Canvas(std::mutex& img_lock):
+img_lock(img_lock)
 {
     connection = xcb_connect(nullptr, nullptr);
     if (xcb_connection_has_error(connection)) {
@@ -50,10 +51,13 @@ void X11Canvas::draw()
     }
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
+            std::unique_lock lock {img_lock, std::try_to_lock};
+            if (!lock.owns_lock()) return;
             for (const auto& [wid, window]: windows) {
                 window->generate_frame();
             }
             image->next_frame();
+            lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });

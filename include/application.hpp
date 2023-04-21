@@ -26,6 +26,7 @@
 #include <string>
 #include <memory>
 #include <thread>
+#include <mutex>
 #include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
@@ -52,6 +53,7 @@ private:
     std::FILE* f_stderr = nullptr;
     const Flags& flags;
     std::jthread socket_thread;
+    std::mutex img_lock;
 
     void setup_logger();
     void set_silent();

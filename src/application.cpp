@@ -41,7 +41,7 @@ flags(flags)
     print_header();
     setup_logger();
     set_silent();
-    canvas = Canvas::create(terminal, flags, *logger);
+    canvas = Canvas::create(terminal, flags, *logger, img_lock);
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
     tmux::register_hooks();
@@ -70,6 +70,7 @@ Application::~Application()
 
 void Application::execute(const std::string& cmd)
 {
+
     json j;
     try {
         j = json::parse(cmd);
@@ -79,6 +80,7 @@ void Application::execute(const std::string& cmd)
     }
     logger->info("Command received: {}", j.dump());
 
+    std::unique_lock lock {img_lock};
     if (j["action"] == "add") {
         set_dimensions_from_json(j);
         image = Image::load(terminal, *dimensions, flags, j["path"], *logger);

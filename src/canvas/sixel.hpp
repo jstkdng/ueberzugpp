@@ -31,7 +31,7 @@
 class SixelCanvas : public Canvas
 {
 public:
-    SixelCanvas();
+    SixelCanvas(std::mutex& img_lock);
     ~SixelCanvas();
 
     auto init(const Dimensions& dimensions,
@@ -45,7 +45,7 @@ private:
     std::shared_ptr<Image> image;
 
     std::unique_ptr<std::jthread> draw_thread;
-    std::mutex draw_mutex;
+    std::mutex& img_lock;
     std::stringstream ss;
 
     int x;

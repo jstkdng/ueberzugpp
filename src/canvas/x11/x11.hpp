@@ -32,7 +32,7 @@
 class X11Canvas : public Canvas
 {
 public:
-    X11Canvas();
+    X11Canvas(std::mutex& img_lock);
     ~X11Canvas();
 
     void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
@@ -52,6 +52,7 @@ private:
     std::unique_ptr<std::jthread> draw_thread;
     std::unique_ptr<std::jthread> event_handler;
     std::mutex windows_mutex;
+    std::mutex &img_lock;
 
     void handle_events();
     void discard_leftover_events();

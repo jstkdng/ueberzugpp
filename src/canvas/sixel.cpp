@@ -31,7 +31,8 @@ int sixel_draw_callback(char *data, int size, void* priv)
     return size;
 }
 
-SixelCanvas::SixelCanvas()
+SixelCanvas::SixelCanvas(std::mutex& img_lock):
+img_lock(img_lock)
 {
     sixel_output_new(&output, sixel_draw_callback, &ss, nullptr);
     sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
@@ -76,8 +77,11 @@ auto SixelCanvas::draw() -> void
     // start drawing loop
     draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
         while (!token.stop_requested()) {
+            std::unique_lock lock {img_lock, std::try_to_lock};
+            if (!lock.owns_lock()) return;
             draw_frame();
             image->next_frame();
+            lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });
