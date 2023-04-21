@@ -1,0 +1,15 @@
+#!/bin/bash
+
+ueberzugpp layer --no-stdin --silent --use-escape-codes &
+UB_PID=$!
+
+# sleep some time for U++ startup
+sleep 0.2
+
+export SOCKET=/tmp/ueberzugpp-$UB_PID.socket
+export X=$(($(tput cols) / 2 + 1))
+
+# run fzf with preview
+fzf --preview='ueberzugpp cmd $SOCKET $X 1 $FZF_PREVIEW_COLUMNS $FZF_PREVIEW_LINES {}' --reverse "$@"
+
+kill -TERM $UB_PID
