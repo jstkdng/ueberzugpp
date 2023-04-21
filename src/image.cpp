@@ -105,7 +105,7 @@ auto Image::get_new_sizes(double max_width, double max_height, const std::string
     } else if (scaler == "fit_contain" || scaler == "forced_cover") {
         // I believe these should work the same
         new_scale = max_height / _height;
-        if (_width > _height) {
+        if (_width >= _height) {
             new_scale = max_width / _width;
         }
     }
