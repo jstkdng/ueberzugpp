@@ -20,6 +20,7 @@
 #include "canvas.hpp"
 
 #include <thread>
+#include <sstream>
 
 class KittyCanvas : public Canvas
 {
@@ -34,6 +35,7 @@ public:
 private:
     std::shared_ptr<Image> image;
     std::string encoded_img;
+    std::stringstream ss;
 
     std::unique_ptr<std::jthread> draw_thread;
     int x;

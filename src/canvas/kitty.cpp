@@ -18,7 +18,6 @@
 #include "util.hpp"
 
 #include <iostream>
-#include <sstream>
 
 KittyCanvas::KittyCanvas()
 {}
@@ -40,10 +39,10 @@ void KittyCanvas::draw()
 
 void KittyCanvas::draw_frame()
 {
-    std::stringstream ss;
-    const int num_chunks = image->size() / 4096;
-    const int last_chunk_size = image->size() % 4096;
-    const int initial_chunk_size = (num_chunks > 0) ? 4096 : last_chunk_size;
+    int num_chunks = image->size() / 4096;
+    int last_chunk_size = image->size() % 4096;
+    int initial_chunk_size = (num_chunks > 0) ? 4096 : last_chunk_size;
+    if (last_chunk_size == 0) num_chunks--;
 
     // initial data chunk
     ss  << "\e_G";
@@ -63,8 +62,12 @@ void KittyCanvas::draw_frame()
             << "\e\\";
     }
 
-    // final data chunk
-    if (num_chunks > 0 && last_chunk_size != 0) {
+    // last chunk
+    if (last_chunk_size == 0) {
+        ss  << "\e_Gm=0,q=2;"
+            << util::base64_encode_ssl(ptr, 4096)
+            << "\e\\";
+    } else {
         ss  << "\e_Gm=0,q=2;"
             << util::base64_encode_ssl(ptr, last_chunk_size)
             << "\e\\";
@@ -72,7 +75,7 @@ void KittyCanvas::draw_frame()
 
     util::save_cursor_position();
     util::move_cursor(y, x);
-    std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2;\e\\" << std::flush;
+    std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2\e\\" << std::flush;
     util::restore_cursor_position();
 }
 
