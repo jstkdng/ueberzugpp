@@ -18,6 +18,7 @@
 #include "process.hpp"
 #include "os.hpp"
 #include "util/ptr.hpp"
+#include "turbob64.h"
 
 #include <memory>
 #include <regex>
@@ -89,12 +90,11 @@ void util::send_socket_message(const std::string& msg, const std::string& endpoi
     context.close();
 }
 
-auto util::base64_encode_ssl(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>
+auto util::base64_encode(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>
 {
-    const auto pl = 4*((length+2)/3);
-    auto res = std::make_unique<unsigned char[]>(pl + 1);
-    const auto ol = EVP_EncodeBlock(res.get(), input, length);
-    if (pl != ol) return nullptr;
+    auto bufsize = tb64enclen(length);
+    auto res = std::make_unique<unsigned char[]>(bufsize + 1);
+    tb64enc(input, length, res.get());
     return res;
 }
 

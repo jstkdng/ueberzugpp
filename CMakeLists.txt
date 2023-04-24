@@ -15,16 +15,25 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 3.18)
+include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
-project(ueberzugpp LANGUAGES CXX VERSION 2.7.6)
+project(ueberzugpp LANGUAGES CXX VERSION 2.7.7)
 
 option(ENABLE_X11    "Enable X11 canvas." ON)
 option(ENABLE_OPENCV "Enable OpenCV image processing." ON)
+
+FetchContent_Declare(
+  turbobase64
+  GIT_REPOSITORY https://github.com/powturbo/Turbo-Base64.git
+  GIT_TAG        c087948eb84b83e6a0f6e9135aa8c527ffe1b2c0 # release-1.10.0
+)
+FetchContent_Populate(turbobase64)
+add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
 
 find_package(nlohmann_json REQUIRED)
 find_package(CLI11 REQUIRED)
@@ -96,6 +105,7 @@ add_executable(ueberzug ${UEBERZUGPP_SOURCES})
 
 target_include_directories(ueberzug PUBLIC
     "${CMAKE_SOURCE_DIR}/include"
+    "${turbobase64_SOURCE_DIR}"
     "${PROJECT_BINARY_DIR}"
 )
 target_link_libraries(ueberzug PUBLIC
@@ -105,6 +115,7 @@ target_link_libraries(ueberzug PUBLIC
     spdlog::spdlog
     fmt::fmt
     OpenSSL::Crypto
+    base64
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::ZMQ
