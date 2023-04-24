@@ -17,7 +17,9 @@
 #include "canvas.hpp"
 #include "canvas/sixel.hpp"
 #include "canvas/kitty.hpp"
-#include "canvas/x11/x11.hpp"
+#ifdef ENABLE_X11
+    #include "canvas/x11/x11.hpp"
+#endif
 #include "os.hpp"
 
 #include <spdlog/spdlog.h>
@@ -35,5 +37,10 @@ auto Canvas::create(const Terminal& terminal, Flags& flags,
     if (flags.output == "kitty") {
         return std::make_unique<KittyCanvas>();
     }
-    return std::make_unique<X11Canvas>(img_lock);
+#ifdef ENABLE_X11
+    if (flags.output == "x11") {
+        return std::make_unique<X11Canvas>(img_lock);
+    }
+#endif
+    return nullptr;
 }

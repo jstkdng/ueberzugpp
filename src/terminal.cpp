@@ -19,6 +19,9 @@
 #include "util.hpp"
 #include "flags.hpp"
 #include "process.hpp"
+#ifdef ENABLE_X11
+    #include "util/x11.hpp"
+#endif
 
 #include <cmath>
 #include <sstream>
@@ -158,11 +161,14 @@ auto Terminal::reset_termios() -> void
 
 void Terminal::get_terminal_size_x11()
 {
+#ifdef ENABLE_X11
+    const X11Util xutil;
     if (!xutil.connected) return;
     auto window = xutil.get_parent_window(os::get_pid());
     auto dims = xutil.get_window_dimensions(window);
     xpixel = dims.first;
     ypixel = dims.second;
+#endif
 }
 
 void Terminal::open_first_pty()

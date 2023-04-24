@@ -26,7 +26,6 @@
 #include <fstream>
 #include <unordered_map>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <opencv2/core/ocl.hpp>
 #include <fmt/format.h>
 #include <zmq.hpp>
 #include <vips/vips8>
@@ -42,6 +41,10 @@ flags(flags)
     setup_logger();
     set_silent();
     canvas = Canvas::create(terminal, flags, *logger, img_lock);
+    if (!canvas) {
+        logger->error("Unable to initialize canvas.");
+        std::exit(1);
+    }
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
     tmux::register_hooks();

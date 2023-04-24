@@ -15,12 +15,16 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "image.hpp"
-#include "image/opencv.hpp"
+#ifdef ENABLE_OPENCV
+    #include "image/opencv.hpp"
+#endif
 #include "image/libvips.hpp"
 #include "os.hpp"
 #include "util.hpp"
 
-#include <opencv2/imgcodecs.hpp>
+#ifdef ENABLE_OPENCV
+    #include <opencv2/imgcodecs.hpp>
+#endif
 #include <vips/vips.h>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
@@ -47,20 +51,29 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const F
     if (animated_formats.contains(file.extension())) {
         is_anim = true;
         load_libvips = true;
-    } else if (cv::haveImageReader(image_path)) {
+    }
+#ifdef ENABLE_OPENCV
+    if (cv::haveImageReader(image_path)) {
         load_opencv = true;
     } else if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
         load_libvips = true;
     }
+#else
+    if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
+        load_libvips = true;
+    }
+#endif
 
     if (load_libvips) {
         logger.info("Loading image with libvips.");
         return std::make_shared<LibvipsImage>(terminal, dimensions, flags, image_path, is_anim, in_cache);
     }
+#ifdef ENABLE_OPENCV
     if (load_opencv) {
         logger.info("Loading image with opencv.");
         return std::make_shared<OpencvImage>(terminal, dimensions, flags, image_path, in_cache);
     }
+#endif
     return nullptr;
 }
 
@@ -69,8 +82,9 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
     fs::path cache_path = util::get_cache_file_save_location(orig_path);
     if (!fs::exists(cache_path)) return orig_path;
 
-    auto cache_img = cv::imread(cache_path, cv::IMREAD_UNCHANGED);
-    int img_width = cache_img.cols, img_height = cache_img.rows;
+    auto cache_img = vips::VImage::new_from_file(cache_path.c_str());
+    int img_width = cache_img.width(), img_height = cache_img.height();
+
     int dim_width = dimensions.max_wpixels(), dim_height = dimensions.max_hpixels();
 
     if ((dim_width >= img_width && dim_height >= img_height) &&

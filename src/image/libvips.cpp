@@ -18,7 +18,9 @@
 #include "util.hpp"
 
 #include <unordered_set>
-#include <opencv2/videoio.hpp>
+#ifdef ENABLE_OPENCV
+    #include <opencv2/videoio.hpp>
+#endif
 
 using namespace vips;
 
@@ -101,10 +103,12 @@ auto LibvipsImage::frame_delay() const -> int
     try {
         auto delays = backup.get_array_int("delay");
         if (delays.at(0) == 0) {
+#ifdef ENABLE_OPENCV
             cv::VideoCapture video (path);
             if (video.isOpened()) {
                 return (1.0 / video.get(cv::CAP_PROP_FPS)) * 1000;
             }
+#endif
             return (1.0 / npages) * 1000;
         }
         return delays.at(0);

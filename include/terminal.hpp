@@ -18,7 +18,6 @@
 #define __TERMINAL__
 
 #include "flags.hpp"
-#include "util/x11.hpp"
 
 #include <string>
 #include <termios.h>
@@ -61,7 +60,6 @@ private:
     int ypixel;
 
     Flags& flags;
-    const X11Util xutil;
 
     struct termios old_term;
     struct termios new_term;
