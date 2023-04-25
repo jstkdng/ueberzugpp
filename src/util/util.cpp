@@ -18,7 +18,9 @@
 #include "process.hpp"
 #include "os.hpp"
 #include "util/ptr.hpp"
-#include "turbob64.h"
+#ifdef ENABLE_TURBOBASE64
+#   include <turbob64.h>
+#endif
 
 #include <memory>
 #include <regex>
@@ -30,8 +32,8 @@
 
 #include <openssl/evp.h>
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-#  define EVP_MD_CTX_new   EVP_MD_CTX_create
-#  define EVP_MD_CTX_free  EVP_MD_CTX_destroy
+#   define EVP_MD_CTX_new   EVP_MD_CTX_create
+#   define EVP_MD_CTX_free  EVP_MD_CTX_destroy
 #endif
 
 namespace fs = std::filesystem;
@@ -92,9 +94,13 @@ void util::send_socket_message(const std::string& msg, const std::string& endpoi
 
 auto util::base64_encode(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>
 {
-    auto bufsize = tb64enclen(length);
+    size_t bufsize = 4*((length+2)/3);
     auto res = std::make_unique<unsigned char[]>(bufsize + 1);
+#ifdef ENABLE_TURBOBASE64
     tb64enc(input, length, res.get());
+#else
+    EVP_EncodeBlock(res.get(), input, length);
+#endif
     return res;
 }
 

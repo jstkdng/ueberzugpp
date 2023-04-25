@@ -18,7 +18,7 @@
 #include "canvas/sixel.hpp"
 #include "canvas/kitty.hpp"
 #ifdef ENABLE_X11
-    #include "canvas/x11/x11.hpp"
+#   include "canvas/x11/x11.hpp"
 #endif
 #include "os.hpp"
 

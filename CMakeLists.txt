@@ -24,16 +24,9 @@ set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
 project(ueberzugpp LANGUAGES CXX VERSION 2.7.7)
 
-option(ENABLE_X11    "Enable X11 canvas." ON)
-option(ENABLE_OPENCV "Enable OpenCV image processing." ON)
-
-FetchContent_Declare(
-  turbobase64
-  GIT_REPOSITORY https://github.com/powturbo/Turbo-Base64.git
-  GIT_TAG        c087948eb84b83e6a0f6e9135aa8c527ffe1b2c0 # release-1.10.0
-)
-FetchContent_Populate(turbobase64)
-add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
+option(ENABLE_X11           "Enable X11 canvas." ON)
+option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
+option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 
 find_package(nlohmann_json REQUIRED)
 find_package(CLI11 REQUIRED)
@@ -76,6 +69,18 @@ if(ENABLE_OPENCV)
     )
 endif()
 
+if(ENABLE_TURBOBASE64)
+    add_compile_definitions(ENABLE_TURBOBASE64)
+    FetchContent_Declare(
+      turbobase64
+      GIT_REPOSITORY https://github.com/powturbo/Turbo-Base64.git
+      GIT_TAG        c087948eb84b83e6a0f6e9135aa8c527ffe1b2c0 # release 2023.04
+    )
+    FetchContent_Populate(turbobase64)
+    add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
+    set(B64_LIBRARIES base64)
+endif()
+
 configure_file("include/version.hpp.in" version.hpp)
 
 set(UEBERZUGPP_SOURCES
@@ -115,10 +120,10 @@ target_link_libraries(ueberzug PUBLIC
     spdlog::spdlog
     fmt::fmt
     OpenSSL::Crypto
-    base64
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::ZMQ
+    ${B64_LIBRARIES}
     ${X11_LIBRARIES}
     ${OPENCV_LIBRARIES}
 )

@@ -20,7 +20,7 @@
 #include "flags.hpp"
 #include "process.hpp"
 #ifdef ENABLE_X11
-    #include "util/x11.hpp"
+#   include "util/x11.hpp"
 #endif
 
 #include <cmath>

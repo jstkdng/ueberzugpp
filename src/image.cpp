@@ -16,14 +16,14 @@
 
 #include "image.hpp"
 #ifdef ENABLE_OPENCV
-    #include "image/opencv.hpp"
+#   include "image/opencv.hpp"
 #endif
 #include "image/libvips.hpp"
 #include "os.hpp"
 #include "util.hpp"
 
 #ifdef ENABLE_OPENCV
-    #include <opencv2/imgcodecs.hpp>
+#   include <opencv2/imgcodecs.hpp>
 #endif
 #include <vips/vips.h>
 #include <spdlog/spdlog.h>
