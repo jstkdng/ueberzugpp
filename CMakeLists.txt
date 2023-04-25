@@ -14,8 +14,13 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.18)
 include(FetchContent)
+
+# Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+	cmake_policy(SET CMP0135 NEW)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -32,31 +37,45 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-FetchContent_Declare(
-    cli11
-    URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz
-    FIND_PACKAGE_ARGS NAMES CLI11
-)
+find_package(CLI11 QUIET)
+if(NOT CLI11_FOUND)
+    FetchContent_Declare(
+        cli11
+        URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz
+    )
+    set(FC_LIBS ${FC_LIBS} cli11)
+endif()
 
-FetchContent_Declare(
-    nlohmann_json
-    URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
-    FIND_PACKAGE_ARGS NAMES nlohmann_json
-)
+find_package(nlohmann_json QUIET)
+if(NOT nlohmann_json_FOUND)
+    FetchContent_Declare(
+        nlohmann_json
+        URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+    )
+    set(FC_LIBS ${FC_LIBS} nlohmann_json)
+endif()
 
-FetchContent_Declare(
-    spdlog
-    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.tar.gz
-    FIND_PACKAGE_ARGS NAMES spdlog
-)
+find_package(spdlog QUIET)
+if(NOT spdlog_FOUND)
+    FetchContent_Declare(
+        spdlog
+        URL https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.tar.gz
+    )
+    set(FC_LIBS ${FC_LIBS} spdlog)
+endif()
 
-FetchContent_Declare(
-    fmt
-    URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.tar.gz
-    FIND_PACKAGE_ARGS NAMES fmt
-)
+find_package(fmt QUIET)
+if(NOT fmt_FOUND)
+    FetchContent_Declare(
+        fmt
+        URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.tar.gz
+    )
+    set(FC_LIBS ${FC_LIBS} fmt)
+endif()
 
-FetchContent_MakeAvailable(cli11 nlohmann_json spdlog fmt)
+if(FC_LIBS)
+    FetchContent_MakeAvailable(${FC_LIBS})
+endif()
 
 if(ENABLE_X11)
     add_compile_definitions(ENABLE_X11)
