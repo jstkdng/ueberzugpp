@@ -19,7 +19,7 @@ include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
-	cmake_policy(SET CMP0135 NEW)
+    cmake_policy(SET CMP0135 NEW)
 endif()
 
 set(CMAKE_CXX_STANDARD 20)
@@ -27,7 +27,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
-project(ueberzugpp LANGUAGES CXX VERSION 2.7.7)
+project(ueberzugpp LANGUAGES CXX VERSION 2.7.8)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
