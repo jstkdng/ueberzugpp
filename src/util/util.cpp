@@ -19,7 +19,11 @@
 #include "os.hpp"
 #include "util/ptr.hpp"
 #ifdef ENABLE_TURBOBASE64
-#   include <turbob64.h>
+#   ifdef WITH_SYSTEM_TURBOBASE64
+#       include <turbobase64/turbob64.h>
+#   else
+#       include "turbob64.h"
+#   endif
 #endif
 
 #include <memory>

@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.24)
 include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -28,17 +28,35 @@ option(ENABLE_X11           "Enable X11 canvas." ON)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
 option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 
-find_package(nlohmann_json REQUIRED)
-find_package(CLI11 REQUIRED)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
-find_package(spdlog REQUIRED)
-find_package(fmt REQUIRED)
 find_package(OpenSSL REQUIRED)
 
-pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
-pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(ZMQ REQUIRED IMPORTED_TARGET libzmq)
+FetchContent_Declare(
+    cli11
+    URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz
+    FIND_PACKAGE_ARGS NAMES CLI11
+)
+
+FetchContent_Declare(
+    nlohmann_json
+    URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
+    FIND_PACKAGE_ARGS NAMES nlohmann_json
+)
+
+FetchContent_Declare(
+    spdlog
+    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.tar.gz
+    FIND_PACKAGE_ARGS NAMES spdlog
+)
+
+FetchContent_Declare(
+    fmt
+    URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.tar.gz
+    FIND_PACKAGE_ARGS NAMES fmt
+)
+
+FetchContent_MakeAvailable(cli11 nlohmann_json spdlog fmt)
 
 if(ENABLE_X11)
     add_compile_definitions(ENABLE_X11)
@@ -71,15 +89,25 @@ endif()
 
 if(ENABLE_TURBOBASE64)
     add_compile_definitions(ENABLE_TURBOBASE64)
-    FetchContent_Declare(
-      turbobase64
-      GIT_REPOSITORY https://github.com/powturbo/Turbo-Base64.git
-      GIT_TAG        c087948eb84b83e6a0f6e9135aa8c527ffe1b2c0 # release 2023.04
-    )
-    FetchContent_Populate(turbobase64)
-    add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
-    set(B64_LIBRARIES base64)
+    find_package(turbobase64 QUIET)
+    if (NOT turbobase64_FOUND)
+        FetchContent_Declare(
+            turbobase64
+            GIT_REPOSITORY https://github.com/powturbo/Turbo-Base64.git
+            GIT_TAG        c087948eb84b83e6a0f6e9135aa8c527ffe1b2c0 # release 2023.04
+        )
+        FetchContent_Populate(turbobase64)
+        add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
+        set(B64_LIBRARIES base64)
+    else()
+        add_compile_definitions(WITH_SYSTEM_TURBOBASE64)
+        set(B64_LIBRARIES turbo::base64)
+    endif()
 endif()
+
+pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
+pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
+pkg_check_modules(ZMQ REQUIRED IMPORTED_TARGET libzmq)
 
 configure_file("include/version.hpp.in" version.hpp)
 
