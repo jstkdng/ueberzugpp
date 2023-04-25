@@ -38,6 +38,7 @@ namespace util
     auto get_socket_endpoint(int pid = os::get_pid()) -> std::string;
     void send_socket_message(const std::string& msg, const std::string& endpoint);
     auto base64_encode(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>;
+    void base64_encode_v2(const unsigned char *input, int length, unsigned char *out);
     void move_cursor(int row, int col);
     void save_cursor_position();
     void restore_cursor_position();

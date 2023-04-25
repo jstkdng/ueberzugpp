@@ -108,6 +108,15 @@ auto util::base64_encode(const unsigned char *input, int length) -> std::unique_
     return res;
 }
 
+void util::base64_encode_v2(const unsigned char *input, int length, unsigned char *out)
+{
+#ifdef ENABLE_TURBOBASE64
+    tb64enc(input, length, out);
+#else
+    EVP_EncodeBlock(out, input, length);
+#endif
+}
+
 auto util::get_b2_hash_ssl(const std::string& str) -> std::string
 {
     std::stringstream ss;

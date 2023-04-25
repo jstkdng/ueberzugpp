@@ -18,6 +18,18 @@
 #include "util.hpp"
 
 #include <iostream>
+#include <vector>
+#include <execution>
+
+struct ImageChunk
+{
+    const unsigned char* ptr;
+    int size;
+    std::unique_ptr<unsigned char[]> result {nullptr};
+
+    ImageChunk(const unsigned char* ptr, int size):
+        ptr(ptr), size(size) {}
+};
 
 KittyCanvas::KittyCanvas()
 {}
@@ -41,41 +53,51 @@ void KittyCanvas::draw_frame()
 {
     int num_chunks = image->size() / 4096;
     int last_chunk_size = image->size() % 4096;
-    int initial_chunk_size = (num_chunks > 0) ? 4096 : last_chunk_size;
-    if (last_chunk_size == 0) num_chunks--;
+    if (!last_chunk_size) {
+        last_chunk_size = 4096;
+        num_chunks--;
+    }
 
-    // initial data chunk
-    ss  << "\e_G";
-    if (num_chunks > 0) ss << "m=1";
-    ss  << ",i=1337,q=2"
+    std::vector<ImageChunk> chunks;
+    chunks.reserve(num_chunks + 1);
+    auto ptr = image->data();
+
+    int i;
+    for (i = 0; i < num_chunks; i++) {
+        chunks.emplace_back(ptr + i * 4096, 4096);
+    }
+    chunks.emplace_back(ptr + i * 4096, last_chunk_size);
+
+    auto chunk_processor = [](ImageChunk& chunk) -> void
+    {
+        size_t bufsize = 4*((chunk.size+2)/3);
+        chunk.result = std::make_unique<unsigned char[]>(bufsize + 1);
+        util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.get());
+    };
+
+    std::for_each(std::execution::par_unseq, chunks.begin(), chunks.end(), chunk_processor);
+
+    ss  << "\e_Ga=T,m=1,i=1337,q=2"
         << ",f=" << image->channels() * 8
         << ",s=" << image->width()
         << ",v=" << image->height()
-        << ";" << util::base64_encode(image->data(), initial_chunk_size)
+        << ";" << chunks.front().result
         << "\e\\";
 
-    // regular chunks
-    auto ptr = image->data() + 4096;
-    for (int i = 0; i < num_chunks - 1; ++i, ptr += 4096) {
+    for (auto fut = chunks.begin() + 1; fut != chunks.end() - 1; fut++) {
         ss  << "\e_Gm=1,q=2;"
-            << util::base64_encode(ptr, 4096)
+            << fut->result
             << "\e\\";
     }
 
-    // last chunk
-    if (last_chunk_size == 0) {
-        ss  << "\e_Gm=0,q=2;"
-            << util::base64_encode(ptr, 4096)
-            << "\e\\";
-    } else {
-        ss  << "\e_Gm=0,q=2;"
-            << util::base64_encode(ptr, last_chunk_size)
-            << "\e\\";
-    }
+    ss  << "\e_Gm=0,q=2;"
+        << chunks.back().result
+        << "\e\\";
 
     util::save_cursor_position();
     util::move_cursor(y, x);
-    std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2\e\\" << std::flush;
+    //std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2\e\\" << std::flush;
+    std::cout << ss.rdbuf() << std::flush;
     util::restore_cursor_position();
 }
 

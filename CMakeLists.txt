@@ -36,6 +36,7 @@ option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(TBB REQUIRED)
 
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
@@ -167,6 +168,7 @@ target_link_libraries(ueberzug PUBLIC
     spdlog::spdlog
     fmt::fmt
     OpenSSL::Crypto
+    TBB::tbb
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::ZMQ
