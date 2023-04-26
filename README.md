@@ -127,7 +127,9 @@ This project uses C++20 features so you must use a recent compiler.
 The following feature flags are available:
 
 ENABLE_OPENCV
+
 ENABLE_X11
+
 ENABLE_TURBOBASE64
 
 You may use any of them when building the project, for example:
