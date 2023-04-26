@@ -18,8 +18,8 @@
 #include "util.hpp"
 
 #include <iostream>
-#include <vector>
 #include <execution>
+#include <iterator>
 
 struct ImageChunk
 {
@@ -49,7 +49,7 @@ void KittyCanvas::draw()
     draw_frame();
 }
 
-void KittyCanvas::draw_frame()
+auto KittyCanvas::process_chunks() -> std::vector<ImageChunk>
 {
     int num_chunks = image->size() / 4096;
     int last_chunk_size = image->size() % 4096;
@@ -75,8 +75,13 @@ void KittyCanvas::draw_frame()
         util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.get());
     };
 
-    std::for_each(std::execution::par_unseq, chunks.begin(), chunks.end(), chunk_processor);
+    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), chunk_processor);
+    return chunks;
+}
 
+void KittyCanvas::draw_frame()
+{
+    auto chunks = process_chunks();
     ss  << "\e_Ga=T,m=1,i=1337,q=2"
         << ",f=" << image->channels() * 8
         << ",s=" << image->width()
@@ -84,9 +89,9 @@ void KittyCanvas::draw_frame()
         << ";" << chunks.front().result
         << "\e\\";
 
-    for (auto fut = chunks.begin() + 1; fut != chunks.end() - 1; fut++) {
+    for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
         ss  << "\e_Gm=1,q=2;"
-            << fut->result
+            << chunk->result
             << "\e\\";
     }
 
@@ -96,7 +101,6 @@ void KittyCanvas::draw_frame()
 
     util::save_cursor_position();
     util::move_cursor(y, x);
-    //std::cout << ss.rdbuf() << "\e_Ga=p,i=1337,q=2\e\\" << std::flush;
     std::cout << ss.rdbuf() << std::flush;
     util::restore_cursor_position();
 }
