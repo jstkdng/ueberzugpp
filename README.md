@@ -9,7 +9,7 @@ Advantages over w3mimgdisplay and ueberzug:
 
 - no race conditions as a new window is created to display images
 - expose events will be processed, so images will be redrawn on switch workspaces
-- tmux support
+- tmux support on X11
 - terminals without the WINDOWID environment variable are supported
 - chars are used as position - and size unit
 - No memory leak (usage of smart pointers)
@@ -104,9 +104,10 @@ This project uses C++20 features so you must use a recent compiler.
 ## Dependencies
 
 - cmake version 3.18 ≤
-- opencv
+- opencv (optional)
+- xcb-util-image (optional)
+- turbo-base64 (optional)
 - libvips
-- xcb-util-image
 - nlohmann-json
 - cli11
 - libsixel
@@ -115,17 +116,39 @@ This project uses C++20 features so you must use a recent compiler.
 - fmt
 - zeromq
 - cppzmq (in some distributions)
+- tbb
 
 ## Build instructions
 
-1. Download and extract the latest release
-2. Run the following commands in a terminal
+1. Download and extract the latest release.
+
+2. Choose feature flags
+
+The following feature flags are available:
+
+ENABLE_OPENCV
+ENABLE_X11
+ENABLE_TURBOBASE64
+
+You may use any of them when building the project, for example:
+
+- Disable X11 and OpenCV support
 
 ```sh
 git clone https://github.com/jstkdng/ueberzugpp.git
 cd ueberzugpp
 mkdir build && cd build
-cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_X11=OFF -DENABLE_OPENCV=OFF ..
+cmake --build .
+```
+
+- Enable usage of Turbo-Base64
+
+```sh
+git clone https://github.com/jstkdng/ueberzugpp.git
+cd ueberzugpp
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_TURBOBASE64=ON ..
 cmake --build .
 ```
 
