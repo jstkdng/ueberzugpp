@@ -18,6 +18,7 @@
 #include "process.hpp"
 #include "os.hpp"
 #include "util/ptr.hpp"
+#include "flags.hpp"
 #ifdef ENABLE_TURBOBASE64
 #   ifdef WITH_SYSTEM_TURBOBASE64
 #       include <turbobase64/turbob64.h>
@@ -170,4 +171,23 @@ void util::benchmark(std::function<void(void)> func)
     duration<double, std::milli> ms_double = t2 - t1;
 
     std::cout << ms_double.count() << "ms\n";
+}
+
+void util::send_command(const Flags& flags)
+{
+    if (flags.cmd_action == "remove") {
+        auto json = fmt::format("{{\"action\":\"remove\",\"identifier\":\"{}\"}}", flags.cmd_id);
+        auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
+        util::send_socket_message(json, endpoint);
+        return;
+    }
+    auto x = std::stoi(flags.cmd_x);
+    auto y = std::stoi(flags.cmd_y);
+    auto max_width = std::stoi(flags.cmd_max_width);
+    auto max_height = std::stoi(flags.cmd_max_height);
+
+    auto json = fmt::format("{{\"action\":\"{}\",\"identifier\":\"{}\",\"max_width\":{},\"max_height\":{},\"x\":{},\"y\":{},\"path\":\"{}\"}}",
+            flags.cmd_action, flags.cmd_id, max_width, max_height, x, y, flags.cmd_file_path);
+    auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
+    util::send_socket_message(json, endpoint);
 }

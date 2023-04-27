@@ -10,6 +10,6 @@ export SOCKET=/tmp/ueberzugpp-$UB_PID.socket
 export X=$(($(tput cols) / 2 + 1))
 
 # run fzf with preview
-fzf --preview='ueberzugpp cmd $SOCKET $X 1 $FZF_PREVIEW_COLUMNS $FZF_PREVIEW_LINES {}' --reverse "$@"
+fzf --preview='ueberzugpp cmd -s $SOCKET -i fzfpreview -a add -x $X -y 1 --max-height $FZF_PREVIEW_COLUMNS --max-height $FZF_PREVIEW_LINES -f {}' --reverse "$@"
 
 kill -TERM $UB_PID

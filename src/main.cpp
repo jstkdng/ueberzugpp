@@ -76,7 +76,14 @@ int main(int argc, char *argv[])
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
     auto cmd_comand = program.add_subcommand("cmd", "Send a command to a running ueberzugpp instance.");
-    cmd_comand->allow_extras();
+    cmd_comand->add_option("-s,--socket", flags.cmd_socket, "UNIX socket of running instance");
+    cmd_comand->add_option("-i,--identifier", flags.cmd_id, "Preview identifier");
+    cmd_comand->add_option("-a,--action", flags.cmd_action, "Action to send");
+    cmd_comand->add_option("-f,--file", flags.cmd_file_path, "Path of image file");
+    cmd_comand->add_option("-x,--xpos", flags.cmd_x, "X position of preview");
+    cmd_comand->add_option("-y,--ypos", flags.cmd_y, "Y position of preview");
+    cmd_comand->add_option("--max-width", flags.cmd_max_width, "Max width of preview");
+    cmd_comand->add_option("--max-height", flags.cmd_max_height, "Max height of preview");
 
     auto tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
     tmux_command->allow_extras();
@@ -105,20 +112,7 @@ int main(int argc, char *argv[])
     }
 
     if (cmd_comand->parsed()) {
-        try {
-            auto positionals = cmd_comand->remaining();
-            auto socket = positionals.at(0);
-            auto x = positionals.at(1);
-            auto y = positionals.at(2);
-            auto max_width = positionals.at(3);
-            auto max_height = positionals.at(4);
-            auto file_path = positionals.at(5);
-
-            auto json = fmt::format("{{\"action\":\"add\",\"identifier\":\"preview\",\"max_width\":{},\"max_height\":{},\"x\":{},\"y\":{},\"path\":\"{}\"}}\n",
-                    max_width, max_height, x, y, file_path);
-            auto endpoint = fmt::format("ipc://{}", socket);
-            util::send_socket_message(json, endpoint);
-        } catch (const std::out_of_range& oor) {}
+        util::send_command(flags);
     }
 
     return 0;

@@ -213,9 +213,7 @@ void Application::tcp_loop()
         auto str_response = request.to_string();
         if (!str_response.empty()) {
             if (str_response == "EXIT") break;
-            for (const auto& cmd: util::str_split(str_response, "\n")) {
-                if (!cmd.empty()) execute(cmd);
-            }
+            execute(str_response);
         }
     }
     socket.close();

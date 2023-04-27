@@ -26,6 +26,8 @@
 
 #include "os.hpp"
 
+class Flags;
+
 namespace util
 {
     auto str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>;
@@ -43,6 +45,7 @@ namespace util
     void save_cursor_position();
     void restore_cursor_position();
     void benchmark(std::function<void(void)> func);
+    void send_command(const Flags& flags);
 }
 
 #endif

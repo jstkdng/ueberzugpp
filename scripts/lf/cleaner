@@ -1,0 +1,3 @@
+#!/bin/sh
+
+ueberzugpp cmd -s $UEBERZUGPP_SOCKET -a remove -i PREVIEW
