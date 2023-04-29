@@ -11,7 +11,7 @@ UEBERZUGPP_SOCKET=""
 
 cleanup() {
     exec 3>&-
-    kill -TERM $UEBERZUG_PID
+    kill -TERM $UEBERZUGPP_PID
 }
 
 if [ -n "$SSH_CLIENT" ] || [ -n "$SSH_TTY" ]; then
@@ -20,7 +20,7 @@ else
     [ ! -d "$HOME/.cache/lf" ] && mkdir --parents "$HOME/.cache/lf"
     ueberzugpp layer --silent --no-stdin --use-escape-codes &
     UEBERZUGPP_PID=$!
-    UEBERZUGPP_SOCKET="/tmp/ueberzugpp-${UEBERZUG_PID}.socket"
+    UEBERZUGPP_SOCKET="/tmp/ueberzugpp-${UEBERZUGPP_PID}.socket"
     export UEBERZUGPP_PID UEBERZUGPP_SOCKET
     sleep 0.2
     trap cleanup HUP INT QUIT TERM PWR EXIT
