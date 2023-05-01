@@ -46,6 +46,7 @@ namespace util
     void restore_cursor_position();
     void benchmark(std::function<void(void)> func);
     void send_command(const Flags& flags);
+    void clear_terminal_area(int x, int y, int width, int height);
 }
 
 #endif

@@ -101,11 +101,7 @@ auto util::base64_encode(const unsigned char *input, int length) -> std::unique_
 {
     size_t bufsize = 4*((length+2)/3);
     auto res = std::make_unique<unsigned char[]>(bufsize + 1);
-#ifdef ENABLE_TURBOBASE64
-    tb64enc(input, length, res.get());
-#else
-    EVP_EncodeBlock(res.get(), input, length);
-#endif
+    base64_encode_v2(input, length, res.get());
     return res;
 }
 
@@ -190,4 +186,16 @@ void util::send_command(const Flags& flags)
             flags.cmd_action, flags.cmd_id, max_width, max_height, x, y, flags.cmd_file_path);
     auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
     util::send_socket_message(json, endpoint);
+}
+
+void util::clear_terminal_area(int x, int y, int width, int height)
+{
+    save_cursor_position();
+    auto line_clear = std::string(width, ' ');
+    for (int i = y; i <= height + 2; ++i) {
+        util::move_cursor(i, x);
+        std::cout << line_clear;
+    }
+    std::cout << std::flush;
+    restore_cursor_position();
 }

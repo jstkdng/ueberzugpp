@@ -21,13 +21,13 @@
 #include <execution>
 #include <iterator>
 
-struct ImageChunk
+struct KittyChunk
 {
     const unsigned char* ptr;
     int size;
     std::unique_ptr<unsigned char[]> result {nullptr};
 
-    ImageChunk(const unsigned char* ptr, int size):
+    KittyChunk(const unsigned char* ptr, int size):
         ptr(ptr), size(size) {}
 };
 
@@ -49,7 +49,7 @@ void KittyCanvas::draw()
     draw_frame();
 }
 
-auto KittyCanvas::process_chunks() -> std::vector<ImageChunk>
+auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
 {
     int num_chunks = image->size() / 4096;
     int last_chunk_size = image->size() % 4096;
@@ -58,7 +58,7 @@ auto KittyCanvas::process_chunks() -> std::vector<ImageChunk>
         num_chunks--;
     }
 
-    std::vector<ImageChunk> chunks;
+    std::vector<KittyChunk> chunks;
     chunks.reserve(num_chunks + 1);
     auto ptr = image->data();
 
@@ -68,7 +68,7 @@ auto KittyCanvas::process_chunks() -> std::vector<ImageChunk>
     }
     chunks.emplace_back(ptr + i * 4096, last_chunk_size);
 
-    auto chunk_processor = [](ImageChunk& chunk) -> void
+    auto chunk_processor = [](KittyChunk& chunk) -> void
     {
         size_t bufsize = 4*((chunk.size+2)/3);
         chunk.result = std::make_unique<unsigned char[]>(bufsize + 1);

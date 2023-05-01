@@ -44,6 +44,11 @@ OpencvImage::~OpencvImage()
     image.release();
 }
 
+auto OpencvImage::filename() const -> std::string
+{
+    return path.string();
+}
+
 auto OpencvImage::width() const-> int
 {
     return image.cols;

@@ -42,6 +42,7 @@ public:
     auto frame_delay() const -> int override;
     auto next_frame() -> void override;
     auto is_animated() const -> bool override;
+    auto filename() const -> std::string override;
 
 private:
     vips::VImage image;

@@ -41,6 +41,7 @@ public:
     auto channels() const -> int override;
 
     auto resize_image() -> void override;
+    auto filename() const -> std::string override;
 private:
     cv::Mat image;
     cv::UMat uimage;

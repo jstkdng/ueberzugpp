@@ -22,7 +22,7 @@
 #include <sstream>
 #include <vector>
 
-struct ImageChunk;
+struct KittyChunk;
 
 class KittyCanvas : public Canvas
 {
@@ -42,7 +42,7 @@ private:
     int y;
 
     void draw_frame();
-    auto process_chunks() -> std::vector<ImageChunk>;
+    auto process_chunks() -> std::vector<KittyChunk>;
 };
 
 #endif

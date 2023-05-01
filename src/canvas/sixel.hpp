@@ -34,10 +34,10 @@ public:
     SixelCanvas(std::mutex& img_lock);
     ~SixelCanvas();
 
-    auto init(const Dimensions& dimensions,
-            std::shared_ptr<Image> image) -> void override;
-    auto draw() -> void override;
-    auto clear() -> void override;
+    void init(const Dimensions& dimensions,
+            std::shared_ptr<Image> image) override;
+    void draw() override;
+    void clear() override;
 
 private:
     sixel_dither_t *dither;
@@ -53,7 +53,7 @@ private:
     int max_width = 0;
     int max_height = 0;
 
-    auto draw_frame() -> void;
+    void draw_frame();
 };
 
 

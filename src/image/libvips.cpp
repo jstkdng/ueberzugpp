@@ -58,6 +58,11 @@ in_cache(in_cache)
     process_image();
 }
 
+auto LibvipsImage::filename() const -> std::string
+{
+    return path.string();
+}
+
 auto LibvipsImage::width() const -> int
 {
     return image.width();
