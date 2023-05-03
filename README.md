@@ -1,6 +1,6 @@
 # Überzug++
 
-Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using X11 child windows, sixels or the kitty image protocol.
+Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using X11 child windows, sixels, kitty and iterm2..
 
 This project intends to be a drop-in replacement for the now defunct [ueberzug](https://github.com/seebye/ueberzug) project. If some tool doesn't work,
 feel free to open an issue.
@@ -22,6 +22,7 @@ Advantages over w3mimgdisplay and ueberzug:
 
 - [Ranger](https://github.com/ranger/ranger)
 - [Termusic](https://github.com/tramhao/termusic/)
+- [ytfzf](https://github.com/pystardust/ytfzf)
 - ÜberzugPP is a drop in replacement for Ueberzug, so applications that worked with ueberzug should work out of the box with this project.
 
 # Download
