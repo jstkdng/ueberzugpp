@@ -38,6 +38,8 @@ img_lock(img_lock)
 
 X11Canvas::~X11Canvas()
 {
+    if (event_handler.joinable()) event_handler.join();
+    if (draw_thread.joinable()) draw_thread.join();
     xcb_disconnect(connection);
 }
 
