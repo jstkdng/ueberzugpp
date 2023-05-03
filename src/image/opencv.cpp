@@ -31,7 +31,7 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
-    image = cv::imread(filename, cv::IMREAD_COLOR);
+    image = cv::imread(filename, cv::IMREAD_UNCHANGED);
 
     auto opencl_ctx = cv::ocl::Context::getDefault();
     opencl_available = opencl_ctx.ptr() != nullptr;
@@ -100,8 +100,18 @@ void OpencvImage::process_image()
 {
     resize_image();
 
-    if (flags.output == "kitty" || flags.output == "sixel") {
-        cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+    if (flags.output == "kitty") {
+        if (image.channels() == 4) {
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
+        } else {
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+        }
+    } else if (flags.output == "sixel") {
+        if (image.channels() == 4) {
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
+        } else {
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+        }
     } else if (flags.output == "x11") {
         cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
     }

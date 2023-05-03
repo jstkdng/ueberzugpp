@@ -155,7 +155,7 @@ auto LibvipsImage::process_image() -> void
         }
     } else if (flags.output == "x11") {
         // alpha channel required
-        if (!image.has_alpha()) image = image.bandjoin(255);
+        if (!image.has_alpha()) image = image.bandjoin(0);
         // convert from RGB to BGR
         auto bands = image.bandsplit();
         auto tmp = bands[0];
