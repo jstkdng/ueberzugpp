@@ -40,8 +40,7 @@ img_lock(img_lock)
 
 SixelCanvas::~SixelCanvas()
 {
-    draw_thread.reset();
-
+    if (draw_thread.joinable()) draw_thread.join();
     sixel_output_unref(output);
     sixel_dither_unref(dither);
 }
@@ -75,8 +74,8 @@ auto SixelCanvas::draw() -> void
     }
 
     // start drawing loop
-    draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
-        while (!token.stop_requested()) {
+    draw_thread = std::thread([&] {
+        while (can_draw.load()) {
             std::unique_lock lock {img_lock, std::try_to_lock};
             if (!lock.owns_lock()) return;
             draw_frame();
@@ -90,7 +89,11 @@ auto SixelCanvas::draw() -> void
 auto SixelCanvas::clear() -> void
 {
     if (max_width == 0 && max_height == 0) return;
-    draw_thread.reset();
+
+    can_draw.store(false);
+    if (draw_thread.joinable()) draw_thread.join();
+    can_draw.store(true);
+
     sixel_dither_unref(dither);
 
     util::clear_terminal_area(x, y, max_width, max_height);

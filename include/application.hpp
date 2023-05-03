@@ -52,7 +52,7 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     std::FILE* f_stderr = nullptr;
     const Flags& flags;
-    std::jthread socket_thread;
+    std::thread socket_thread;
     std::mutex img_lock;
 
     void setup_logger();

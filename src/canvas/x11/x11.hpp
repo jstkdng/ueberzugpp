@@ -28,6 +28,7 @@
 #include <xcb/xproto.h>
 #include <mutex>
 #include <thread>
+#include <atomic>
 
 class X11Canvas : public Canvas
 {
@@ -49,10 +50,13 @@ private:
 
     std::unordered_map<xcb_window_t, std::unique_ptr<Window>> windows;
     std::shared_ptr<Image> image;
-    std::unique_ptr<std::jthread> draw_thread;
-    std::unique_ptr<std::jthread> event_handler;
     std::mutex windows_mutex;
     std::mutex &img_lock;
+
+    std::thread draw_thread;
+    std::atomic<bool> can_draw {true};
+
+    std::thread event_handler;
 
     void handle_events();
     void discard_leftover_events();

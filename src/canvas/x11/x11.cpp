@@ -49,8 +49,8 @@ void X11Canvas::draw()
         }
         return;
     }
-    draw_thread = std::make_unique<std::jthread>([&] (std::stop_token token) {
-        while (!token.stop_requested()) {
+    draw_thread = std::thread([&]  {
+        while (can_draw.load()) {
             std::unique_lock lock {img_lock, std::try_to_lock};
             if (!lock.owns_lock()) return;
             for (const auto& [wid, window]: windows) {
@@ -115,7 +115,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 
     auto wid = os::getenv("WINDOWID");
 
-    event_handler = std::make_unique<std::jthread>([&] {
+    event_handler = std::thread([&] {
         handle_events();
     });
 
@@ -149,8 +149,11 @@ auto X11Canvas::clear() -> void
         std::scoped_lock lock (windows_mutex);
         windows.clear();
     }
-    event_handler.reset();
-    draw_thread.reset();
+
+    if (event_handler.joinable()) event_handler.join();
+    can_draw.store(false);
+    if (draw_thread.joinable()) draw_thread.join();
+    can_draw.store(true);
 }
 
 void X11Canvas::discard_leftover_events()
