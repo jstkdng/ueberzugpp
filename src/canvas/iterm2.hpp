@@ -19,6 +19,8 @@
 
 #include "canvas.hpp"
 
+#include <sstream>
+
 struct Iterm2Chunk;
 
 class Iterm2Canvas : public Canvas
