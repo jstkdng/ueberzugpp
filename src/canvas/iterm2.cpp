@@ -19,8 +19,11 @@
 #include "fstream"
 
 #include <iostream>
-#include <execution>
 #include <filesystem>
+#include <algorithm>
+#ifndef __APPLE__
+#   include <execution>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -97,6 +100,10 @@ auto Iterm2Canvas::process_chunks(const std::string& filename, int chunk_size, s
                 chunk->size, chunk->result.get());
     };
 
+#ifdef __APPLE__
+    std::for_each(std::begin(chunks), std::end(chunks), chunk_processor);
+#else
     std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), chunk_processor);
+#endif
     return chunks;
 }

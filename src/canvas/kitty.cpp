@@ -18,8 +18,11 @@
 #include "util.hpp"
 
 #include <iostream>
-#include <execution>
 #include <iterator>
+#include <algorithm>
+#ifndef __APPLE__
+#   include <execution>
+#endif
 
 struct KittyChunk
 {
@@ -75,7 +78,11 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
         util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.get());
     };
 
+#ifdef __APPLE__
+    std::for_each(std::begin(chunks), std::end(chunks), chunk_processor);
+#else
     std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), chunk_processor);
+#endif
     return chunks;
 }
 
