@@ -27,16 +27,19 @@
 Process::Process(int pid):
 pid(pid)
 {
+    struct proc_bsdshortinfo sproc;
     struct proc_bsdinfo proc;
 
-    int st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
+    int st = proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &sproc, PROC_PIDT_SHORTBSDINFO_SIZE);
+    if (st == PROC_PIDT_SHORTBSDINFO_SIZE) {
+        ppid = sproc.pbsi_ppid;
+    }
 
-    ppid = 1;
+    st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
     if (st == PROC_PIDTBSDINFO_SIZE) {
-        ppid = proc.pbi_ppid;
         tty_nr = proc.e_tdev;
         minor_dev = minor(tty_nr);
-        pty_path = fmt::format("/dev/ttys00{}", minor_dev);
+        pty_path = fmt::format("/dev/ttys{:0>3}", minor_dev);
     }
 }
 
