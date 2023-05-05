@@ -27,8 +27,8 @@ struct KittyChunk;
 class KittyCanvas : public Canvas
 {
 public:
-    KittyCanvas();
-    ~KittyCanvas();
+    KittyCanvas() = default;
+    ~KittyCanvas() = default;
 
     void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
     void draw() override;

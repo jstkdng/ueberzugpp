@@ -18,10 +18,10 @@
 #include "util.hpp"
 
 #include <iostream>
-#include <iterator>
-#include <algorithm>
 #ifndef __APPLE__
 #   include <execution>
+#else
+#   include <oneapi/tbb.h>
 #endif
 
 struct KittyChunk
@@ -34,11 +34,20 @@ struct KittyChunk
         ptr(ptr), size(size) {}
 };
 
-KittyCanvas::KittyCanvas()
-{}
+void chunk_processor(KittyChunk& chunk)
+{
+    size_t bufsize = 4*((chunk.size+2)/3);
+    chunk.result = std::make_unique<unsigned char[]>(bufsize + 1);
+    util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.get());
+};
 
-KittyCanvas::~KittyCanvas()
-{}
+class ProcessKittyChunk
+{
+public:
+    void operator()(KittyChunk& chunk) const {
+        chunk_processor(chunk);
+    }
+};
 
 void KittyCanvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 {
@@ -71,15 +80,8 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
     }
     chunks.emplace_back(ptr + i * 4096, last_chunk_size);
 
-    auto chunk_processor = [](KittyChunk& chunk) -> void
-    {
-        size_t bufsize = 4*((chunk.size+2)/3);
-        chunk.result = std::make_unique<unsigned char[]>(bufsize + 1);
-        util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.get());
-    };
-
 #ifdef __APPLE__
-    std::for_each(std::begin(chunks), std::end(chunks), chunk_processor);
+    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), ProcessKittyChunk());
 #else
     std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), chunk_processor);
 #endif
