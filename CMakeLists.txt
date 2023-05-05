@@ -164,9 +164,9 @@ add_executable(ueberzug ${UEBERZUGPP_SOURCES})
 
 target_include_directories(ueberzug PUBLIC
     "${CMAKE_SOURCE_DIR}/include"
-    "${turbobase64_SOURCE_DIR}"
     "${PROJECT_BINARY_DIR}"
 )
+
 target_link_libraries(ueberzug PUBLIC
     nlohmann_json::nlohmann_json
     CLI11::CLI11
@@ -178,7 +178,6 @@ target_link_libraries(ueberzug PUBLIC
     TBB::tbb
     PkgConfig::VIPS
     PkgConfig::SIXEL
-    ${TBB_LIBRARIES}
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
     ${OPENCV_LIBRARIES}
