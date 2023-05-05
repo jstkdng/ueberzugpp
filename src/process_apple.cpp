@@ -31,6 +31,7 @@ pid(pid)
 
     int st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
 
+    ppid = 1;
     if (st == PROC_PIDTBSDINFO_SIZE) {
         ppid = proc.pbi_ppid;
         tty_nr = proc.e_tdev;
