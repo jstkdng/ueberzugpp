@@ -39,8 +39,7 @@ pid(pid), flags(flags)
 {
     term = os::getenv("TERM").value_or("xterm-256color");
     term_program = os::getenv("TERM_PROGRAM").value_or("");
-    pty_fd = STDOUT_FILENO;
-    //open_first_pty();
+    open_first_pty();
     get_terminal_size();
 }
 
@@ -181,8 +180,9 @@ void Terminal::open_first_pty()
     std::reverse(tree.begin(), tree.end());
     for (const auto& pid: tree) {
         auto proc = Process(pid);
-        pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
-        if (pty_fd != -1) return;
+        std::cout << proc.pty_path << std::endl;
+        //pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+        //if (pty_fd != -1) return;
     }
     pty_fd = STDOUT_FILENO;
 }

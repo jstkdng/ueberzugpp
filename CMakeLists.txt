@@ -37,10 +37,12 @@ find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(cppzmq REQUIRED)
+find_package(TBB REQUIRED)
 
-if (NOT APPLE)
-    find_package(TBB REQUIRED)
-    set(TBB_LIBRARIES TBB::tbb)
+if (APPLE)
+    set(PROC_SOURCES src/process_apple.cpp)
+else()
+    set(PROC_SOURCES src/process.cpp)
 endif()
 
 find_package(CLI11 QUIET)
@@ -140,7 +142,6 @@ set(UEBERZUGPP_SOURCES
     "src/application.cpp"
     "src/os.cpp"
     "src/tmux.cpp"
-    "src/process.cpp"
     "src/terminal.cpp"
     "src/dimensions.cpp"
     "src/flags.cpp"
@@ -154,6 +155,7 @@ set(UEBERZUGPP_SOURCES
     "src/image.cpp"
     "src/image/libvips.cpp"
 
+    ${PROC_SOURCES}
     ${X11_SOURCES}
     ${OPENCV_SOURCES}
 )
@@ -173,6 +175,7 @@ target_link_libraries(ueberzug PUBLIC
     fmt::fmt
     OpenSSL::Crypto
     cppzmq
+    TBB::tbb
     PkgConfig::VIPS
     PkgConfig::SIXEL
     ${TBB_LIBRARIES}
