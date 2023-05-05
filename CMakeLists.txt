@@ -36,6 +36,8 @@ option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(cppzmq REQUIRED)
+
 if (NOT APPLE)
     find_package(TBB REQUIRED)
     set(TBB_LIBRARIES TBB::tbb)
@@ -130,7 +132,6 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(ZMQ REQUIRED IMPORTED_TARGET libzmq)
 
 configure_file("include/version.hpp.in" version.hpp)
 
@@ -171,9 +172,9 @@ target_link_libraries(ueberzug PUBLIC
     spdlog::spdlog
     fmt::fmt
     OpenSSL::Crypto
+    cppzmq
     PkgConfig::VIPS
     PkgConfig::SIXEL
-    PkgConfig::ZMQ
     ${TBB_LIBRARIES}
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
