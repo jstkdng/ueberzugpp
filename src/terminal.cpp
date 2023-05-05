@@ -39,13 +39,16 @@ pid(pid), flags(flags)
 {
     term = os::getenv("TERM").value_or("xterm-256color");
     term_program = os::getenv("TERM_PROGRAM").value_or("");
-    open_first_pty();
+    pty_fd = STDOUT_FILENO;
+    //open_first_pty();
     get_terminal_size();
 }
 
 Terminal::~Terminal()
 {
-    close(this->pty_fd);
+    if (pty_fd > 0) {
+        close(this->pty_fd);
+    }
 }
 
 void Terminal::reload()
