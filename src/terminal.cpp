@@ -180,9 +180,8 @@ void Terminal::open_first_pty()
     std::reverse(tree.begin(), tree.end());
     for (const auto& pid: tree) {
         auto proc = Process(pid);
-        std::cout << proc.pty_path << std::endl;
-        //pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
-        //if (pty_fd != -1) return;
+        pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+        if (pty_fd != -1) return;
     }
     pty_fd = STDOUT_FILENO;
 }
