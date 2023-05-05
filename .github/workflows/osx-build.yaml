@@ -1,9 +1,0 @@
-name: 'MacOS build'
-on: [push, workflow_dispatch]
-
-jobs:
-  macos-build:
-    runs-on: macos-13
-    steps:
-      - uses: actions/checkout@v3
-      - run: tty
