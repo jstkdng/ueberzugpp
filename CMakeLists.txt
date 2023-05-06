@@ -36,13 +36,22 @@ option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(cppzmq REQUIRED)
 find_package(TBB REQUIRED)
 
 if (APPLE)
     set(PROC_SOURCES src/process_apple.cpp)
 else()
     set(PROC_SOURCES src/process.cpp)
+endif()
+
+find_package(cppzmq QUIET)
+if (NOT cppzmq_FOUND)
+    option(CPPZMQ_BUILD_TESTS OFF)
+    FetchContent_Declare(
+        cppzmq
+        URL https://github.com/zeromq/cppzmq/archive/refs/tags/v4.9.0.tar.gz
+    )
+    set(FC_LIBS ${FC_LIBS} cppzmq)
 endif()
 
 find_package(CLI11 QUIET)
@@ -120,8 +129,7 @@ if(ENABLE_TURBOBASE64)
     if (NOT turbobase64_FOUND)
         FetchContent_Declare(
             turbobase64
-            GIT_REPOSITORY https://github.com/powturbo/Turbo-Base64.git
-            GIT_TAG        c087948eb84b83e6a0f6e9135aa8c527ffe1b2c0 # release 2023.04
+            URL https://github.com/powturbo/Turbo-Base64/archive/refs/tags/2023.04.tar.gz
         )
         FetchContent_Populate(turbobase64)
         add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
