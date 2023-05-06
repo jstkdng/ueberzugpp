@@ -19,6 +19,9 @@
 
 #include "canvas.hpp"
 
+#include <sstream>
+#include <vector>
+
 struct Iterm2Chunk;
 
 class Iterm2Canvas : public Canvas
@@ -32,7 +35,6 @@ public:
     void clear() override;
 private:
     std::shared_ptr<Image> image;
-
     std::stringstream ss;
 
     int x;

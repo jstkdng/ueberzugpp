@@ -21,8 +21,9 @@
 
 #include <fstream>
 #include <string>
-#include <sys/sysmacros.h>
 #include <fmt/format.h>
+
+#define minor(x)        ((int32_t)((x) & 0xffffff))
 
 Process::Process(int pid):
 pid(pid)

@@ -45,7 +45,9 @@ pid(pid), flags(flags)
 
 Terminal::~Terminal()
 {
-    close(this->pty_fd);
+    if (pty_fd > 0) {
+        close(this->pty_fd);
+    }
 }
 
 void Terminal::reload()

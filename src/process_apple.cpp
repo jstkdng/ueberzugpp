@@ -14,35 +14,32 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_CANVAS__
-#define __KITTY_CANVAS__
+#include "process.hpp"
+#include "util.hpp"
+#include "tmux.hpp"
+#include "os.hpp"
 
-#include "canvas.hpp"
+#include <fmt/format.h>
+#include <libproc.h>
 
-#include <sstream>
-#include <vector>
+#define minor(x)        ((int32_t)((x) & 0xffffff))
 
-struct KittyChunk;
-
-class KittyCanvas : public Canvas
+Process::Process(int pid):
+pid(pid)
 {
-public:
-    KittyCanvas() = default;
-    ~KittyCanvas() = default;
+    struct proc_bsdshortinfo sproc;
+    struct proc_bsdinfo proc;
 
-    void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
-    void draw() override;
-    void clear() override;
+    int st = proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &sproc, PROC_PIDT_SHORTBSDINFO_SIZE);
+    if (st == PROC_PIDT_SHORTBSDINFO_SIZE) {
+        ppid = sproc.pbsi_ppid;
+    }
 
-private:
-    std::shared_ptr<Image> image;
-    std::stringstream ss;
+    st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
+    if (st == PROC_PIDTBSDINFO_SIZE) {
+        tty_nr = proc.e_tdev;
+        minor_dev = minor(tty_nr);
+        pty_path = fmt::format("/dev/ttys{:0>3}", minor_dev);
+    }
+}
 
-    int x;
-    int y;
-
-    void draw_frame();
-    auto process_chunks() -> std::vector<KittyChunk>;
-};
-
-#endif

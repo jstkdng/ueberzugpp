@@ -36,7 +36,14 @@ option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
+find_package(cppzmq REQUIRED)
 find_package(TBB REQUIRED)
+
+if (APPLE)
+    set(PROC_SOURCES src/process_apple.cpp)
+else()
+    set(PROC_SOURCES src/process.cpp)
+endif()
 
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
@@ -127,7 +134,6 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(ZMQ REQUIRED IMPORTED_TARGET libzmq)
 
 configure_file("include/version.hpp.in" version.hpp)
 
@@ -136,7 +142,6 @@ set(UEBERZUGPP_SOURCES
     "src/application.cpp"
     "src/os.cpp"
     "src/tmux.cpp"
-    "src/process.cpp"
     "src/terminal.cpp"
     "src/dimensions.cpp"
     "src/flags.cpp"
@@ -150,6 +155,7 @@ set(UEBERZUGPP_SOURCES
     "src/image.cpp"
     "src/image/libvips.cpp"
 
+    ${PROC_SOURCES}
     ${X11_SOURCES}
     ${OPENCV_SOURCES}
 )
@@ -158,9 +164,9 @@ add_executable(ueberzug ${UEBERZUGPP_SOURCES})
 
 target_include_directories(ueberzug PUBLIC
     "${CMAKE_SOURCE_DIR}/include"
-    "${turbobase64_SOURCE_DIR}"
     "${PROJECT_BINARY_DIR}"
 )
+
 target_link_libraries(ueberzug PUBLIC
     nlohmann_json::nlohmann_json
     CLI11::CLI11
@@ -168,10 +174,10 @@ target_link_libraries(ueberzug PUBLIC
     spdlog::spdlog
     fmt::fmt
     OpenSSL::Crypto
+    cppzmq
     TBB::tbb
     PkgConfig::VIPS
     PkgConfig::SIXEL
-    PkgConfig::ZMQ
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
     ${OPENCV_LIBRARIES}

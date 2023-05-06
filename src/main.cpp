@@ -32,6 +32,7 @@ void got_signal(const int signal)
 {
     stop_flag.store(true);
     auto logger = spdlog::get("main");
+    if (!logger) return;
     switch (signal) {
         case SIGINT:
             logger->error("SIGINT received, exiting.");

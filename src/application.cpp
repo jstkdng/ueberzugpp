@@ -48,7 +48,7 @@ flags(flags)
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) fs::create_directories(cache_path);
     tmux::register_hooks();
-    socket_thread = std::jthread([&] {
+    socket_thread = std::thread([&] {
         logger->info("Listenning for commands on socket {}.", util::get_socket_path());
         tcp_loop();
     });
@@ -67,6 +67,7 @@ Application::~Application()
     vips_shutdown();
     if (f_stderr) std::fclose(f_stderr);
     util::send_socket_message("EXIT", util::get_socket_endpoint());
+    if (socket_thread.joinable()) socket_thread.join();
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
 }
