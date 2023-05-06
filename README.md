@@ -7,6 +7,7 @@ feel free to open an issue.
 
 Advantages over w3mimgdisplay and ueberzug:
 
+- support for MacOS
 - no race conditions as a new window is created to display images
 - expose events will be processed, so images will be redrawn on switch workspaces
 - tmux support on X11
@@ -102,22 +103,35 @@ New software is encouraged to use sockets instead of stdin as they cover more ca
 
 This project uses C++20 features so you must use a recent compiler.
 
-## Dependencies
+## Required dependencies
+
+Must be installed in order to build.
 
 - cmake version 3.18 ≤
-- opencv (optional)
-- xcb-util-image (optional)
-- turbo-base64 (optional)
+- zeromq
 - libvips
-- nlohmann-json
-- cli11
 - libsixel
 - openssl
+- tbb
+
+## Downloadable dependencies
+
+Required for building, if they are not installed, they will be downloaded
+and included in the binary.
+
+- nlohmann-json
+- cli11
 - spdlog
 - fmt
-- zeromq
-- cppzmq (in some distributions)
-- tbb
+- cppzmq
+
+## Optional dependencies
+
+Not required for building, can be disabled/enabled using flags.
+
+- opencv (ON by default)
+- xcb-util-image (ON by default)
+- turbo-base64 (OFF by default)
 
 ## Build instructions
 
