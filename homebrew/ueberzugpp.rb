@@ -28,10 +28,11 @@ class Ueberzugpp < Formula
                     *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
-    bin.install "build/ueberzug" => "ueberzugpp"
+    bin.install_symlink "ueberzug" => "ueberzugpp"
   end
 
   test do
+    ENV["TMPDIR"] = testpath
     master, slave = PTY.open
     read, write = IO.pipe
     pid = spawn("#{bin}/ueberzugpp layer -o iterm2", :in=>read, :out=>slave)
