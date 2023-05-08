@@ -28,7 +28,8 @@ Advantages over w3mimgdisplay and ueberzug:
 
 # Download
 
-*ueberzugpp* is available in the [AUR](https://aur.archlinux.org/packages/ueberzugpp)
+Arch Linux: [AUR](https://aur.archlinux.org/packages/ueberzugpp)
+MacOS: [Homebrew](https://github.com/jstkdng/ueberzugpp/blob/master/homebrew/ueberzugpp.rb)
 
 # Usage
 
