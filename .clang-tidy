@@ -1,0 +1,26 @@
+---
+Checks: -*,
+        readability-*,
+        modernize-*, -modernize-use-using,
+        cppcoreguidelines-*, -cppcoreguidelines-pro-*, -cppcoreguidelines-special-member-functions, -cppcoreguidelines-owning-memory, -cppcoreguidelines-avoid-goto,
+        performance-*, -performance-unnecessary-value-param,
+        misc-*, -misc-misplaced-const,
+        bugprone-*, -bugprone-suspicious-missing-comma, -bugprone-sizeof-expression,
+        google-*, -google-runtime-references, -google-readability-todo
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'compute_samples/'
+AnalyzeTemporaryDtors: false
+FormatStyle: file
+CheckOptions:
+  - key:             readability-identifier-naming.ClassMemberCase
+    value:           lower_case
+  - key:             readability-identifier-naming.ClassMemberSuffix
+    value:           '_'
+  - key:             readability-identifier-naming.VariableCase
+    value:           lower_case
+  - key:             readability-identifier-naming.FunctionCase
+    value:           lower_case
+  - key:             readability-identifier-naming.EnumCase
+    value:           lower_case
+  - key:             readability-identifier-naming.NamespaceCase
+    value:           lower_case
