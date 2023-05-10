@@ -53,7 +53,7 @@ private:
 
     int _width;
     int _height;
-    unsigned long _size;
+    uint64 _size;
     int max_width;
     int max_height;
     bool in_cache;

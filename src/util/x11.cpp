@@ -107,7 +107,9 @@ bool X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_
     auto reply = unique_C_ptr<xcb_get_property_reply_t> {
         xcb_get_property_reply(connection, cookie, nullptr)
     };
-    if (!reply.get()) return false;
+    if (reply.get() == nullptr) {
+        return false;
+    }
     return xcb_get_property_value_length(reply.get()) != 0;
 }
 

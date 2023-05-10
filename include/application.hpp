@@ -42,6 +42,7 @@ public:
     void handle_tmux_hook(const std::string& hook);
 
     static void print_version();
+    static void print_header();
 
 private:
     Terminal terminal;
@@ -57,8 +58,7 @@ private:
 
     void setup_logger();
     void set_silent();
-    void print_header();
-    void tcp_loop();
+    void socket_loop();
     void set_dimensions_from_json(const nlohmann::json& json);
 };
 

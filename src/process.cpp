@@ -33,7 +33,8 @@ pid(pid)
     std::string out;
     std::getline(is, out);
 
-    int start = out.find('(') + 1, end = out.find(')');
+    uint64_t start = out.find('(') + 1;
+    uint64_t end = out.find(')');
     this->executable = out.substr(start, end - start);
 
     // remove pid and executable from string

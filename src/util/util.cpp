@@ -45,9 +45,9 @@ namespace fs = std::filesystem;
 
 auto util::str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>
 {
-    std::regex re {delim};
-    std::sregex_token_iterator
-        first {str.begin(), str.end(), re, -1}, last;
+    std::regex regex {delim};
+    std::sregex_token_iterator first {str.begin(), str.end(), regex, -1};
+    std::sregex_token_iterator last;
     return {first, last};
 }
 
@@ -90,22 +90,23 @@ void util::send_socket_message(const std::string& msg, const std::string& endpoi
     socket.set(zmq::sockopt::linger, 2);
     socket.connect(endpoint);
     auto id_sock = socket.get(zmq::sockopt::routing_id);
-    zmq::message_t id_req(id_sock), msg_req(msg);
+    zmq::message_t id_req(id_sock);
+    zmq::message_t msg_req(msg);
     socket.send(id_req, zmq::send_flags::sndmore);
     socket.send(msg_req, zmq::send_flags::none);
     socket.close();
     context.close();
 }
 
-auto util::base64_encode(const unsigned char *input, int length) -> std::unique_ptr<unsigned char[]>
+auto util::base64_encode(const unsigned char *input, uint64_t length) -> std::string
 {
-    size_t bufsize = 4*((length+2)/3);
-    auto res = std::make_unique<unsigned char[]>(bufsize + 1);
-    base64_encode_v2(input, length, res.get());
-    return res;
+    size_t bufsize = 4 * ((length+2)/3);
+    auto res = std::vector<char>(bufsize + 1, 0);
+    base64_encode_v2(input, length, reinterpret_cast<unsigned char*>(res.data()));
+    return { res.data() };
 }
 
-void util::base64_encode_v2(const unsigned char *input, int length, unsigned char *out)
+void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigned char *out)
 {
 #ifdef ENABLE_TURBOBASE64
     tb64enc(input, length, out);
@@ -116,22 +117,23 @@ void util::base64_encode_v2(const unsigned char *input, int length, unsigned cha
 
 auto util::get_b2_hash_ssl(const std::string& str) -> std::string
 {
-    std::stringstream ss;
+    std::stringstream sstream;
     auto mdctx = std::unique_ptr<EVP_MD_CTX, evp_md_ctx_deleter> {
         EVP_MD_CTX_new()
     };
-    auto evp = EVP_blake2b512();
-    auto digest = std::make_unique<unsigned char[]>(EVP_MD_size(evp));
+    const auto *evp = EVP_blake2b512();
+    auto digest = std::vector<char>(EVP_MD_size(evp), 0);
 
     EVP_DigestInit_ex(mdctx.get(), evp, nullptr);
     EVP_DigestUpdate(mdctx.get(), str.c_str(), str.size());
     unsigned int digest_len = 0;
-    EVP_DigestFinal_ex(mdctx.get(), digest.get(), &digest_len);
+    EVP_DigestFinal_ex(mdctx.get(),
+            reinterpret_cast<unsigned char*>(digest.data()), &digest_len);
 
     for (int i = 0; i < digest_len; ++i) {
-        ss << std::hex << std::setw(2) << std::setfill('0') << (int)digest[i];
+        sstream << std::hex << std::setw(2) << std::setfill('0') << digest[i];
     }
-    return std::move(ss).str();
+    return sstream.str();
 }
 
 void util::move_cursor(int row, int col)
@@ -161,10 +163,10 @@ void util::benchmark(std::function<void(void)> func)
     using std::chrono::duration;
     using std::chrono::milliseconds;
 
-    auto t1 = high_resolution_clock::now();
+    auto ti1 = high_resolution_clock::now();
     func();
-    auto t2 = high_resolution_clock::now();
-    duration<double, std::milli> ms_double = t2 - t1;
+    auto ti2 = high_resolution_clock::now();
+    duration<double, std::milli> ms_double = ti2 - ti1;
 
     std::cout << ms_double.count() << "ms\n";
 }
@@ -172,7 +174,7 @@ void util::benchmark(std::function<void(void)> func)
 void util::send_command(const Flags& flags)
 {
     if (flags.cmd_action == "remove") {
-        auto json = fmt::format("{{\"action\":\"remove\",\"identifier\":\"{}\"}}", flags.cmd_id);
+        auto json = fmt::format(R"({{"action":"remove","identifier":"{}"}})", flags.cmd_id);
         auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
         util::send_socket_message(json, endpoint);
         return;
@@ -182,7 +184,7 @@ void util::send_command(const Flags& flags)
     auto max_width = std::stoi(flags.cmd_max_width);
     auto max_height = std::stoi(flags.cmd_max_height);
 
-    auto json = fmt::format("{{\"action\":\"{}\",\"identifier\":\"{}\",\"max_width\":{},\"max_height\":{},\"x\":{},\"y\":{},\"path\":\"{}\"}}",
+    auto json = fmt::format(R"({{"action":"{}","identifier":"{}","max_width":{},"max_height":{},"x":{},"y":{},"path":"{}"}})",
             flags.cmd_action, flags.cmd_id, max_width, max_height, x, y, flags.cmd_file_path);
     auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
     util::send_socket_message(json, endpoint);
