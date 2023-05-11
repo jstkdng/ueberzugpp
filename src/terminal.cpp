@@ -37,6 +37,7 @@
 Terminal::Terminal(int pid, Flags& flags):
 pid(pid), flags(flags)
 {
+    logger = spdlog::get("terminal");
     term = os::getenv("TERM").value_or("xterm-256color");
     term_program = os::getenv("TERM_PROGRAM").value_or("");
     open_first_pty();
@@ -57,23 +58,28 @@ void Terminal::reload()
 
 auto Terminal::get_terminal_size() -> void
 {
-    struct winsize sz;
-    ioctl(pty_fd, TIOCGWINSZ, &sz);
-    cols = sz.ws_col;
-    rows = sz.ws_row;
-    xpixel = sz.ws_xpixel;
-    ypixel = sz.ws_ypixel;
+    struct winsize size;
+    ioctl(pty_fd, TIOCGWINSZ, &size);
+    cols = size.ws_col;
+    rows = size.ws_row;
+    xpixel = size.ws_xpixel;
+    ypixel = size.ws_ypixel;
+    logger->debug("Initial sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
 
     if (flags.use_escape_codes) {
         init_termios();
-        if (xpixel == 0 && ypixel == 0) get_terminal_size_escape_code();
+        if (xpixel == 0 && ypixel == 0) {
+            get_terminal_size_escape_code();
+        }
         if (flags.output.empty()) {
             check_sixel_support();
             check_kitty_support();
         }
         reset_termios();
     }
-    if (xpixel == 0 && ypixel == 0) get_terminal_size_x11();
+    if (xpixel == 0 || ypixel == 0) {
+        get_terminal_size_x11();
+    }
 
     double padding_horiz = guess_padding(cols, xpixel);
     double padding_vert = guess_padding(rows, ypixel);
@@ -84,6 +90,8 @@ auto Terminal::get_terminal_size() -> void
         guess_font_size(cols, xpixel, padding_horizontal);
     font_height =
         guess_font_size(rows, ypixel, padding_vertical);
+
+    logger->debug("font_width={} font_height={}", font_width, font_height);
 }
 
 auto Terminal::guess_padding(int chars, double pixels) -> double
@@ -101,7 +109,9 @@ auto Terminal::guess_font_size(int chars, double pixels, double padding)
 void Terminal::get_terminal_size_escape_code()
 {
     auto resp = read_raw_str("\e[14t").erase(0, 4);
-    if (resp.empty()) return;
+    if (resp.empty()) {
+        return;
+    }
     auto sizes = util::str_split(resp, ";");
     ypixel = std::stoi(sizes[0]);
     xpixel = std::stoi(sizes[1]);
@@ -130,21 +140,32 @@ void Terminal::check_kitty_support()
 
 auto Terminal::read_raw_str(const std::string& esc) -> std::string
 {
-    char c;
-    std::stringstream ss;
+    char chr = 0;
+    std::stringstream sstream;
     std::cout << esc << std::flush;
-    struct pollfd input[1] = {{.fd = STDIN_FILENO, .events = POLLIN}};
+    //struct pollfd input[1] = {{.fd = STDIN_FILENO, .events = POLLIN}};
+
+    std::array<struct pollfd, 1> input;
+    input.fill({.fd = STDIN_FILENO, .events = POLLIN});
+
+    const int waitms = 100;
     while (true) {
         // some terminals take some time to write, 100ms seems like enough
         // time to wait for input
-        int r = poll(input, 1, 100);
-        if (r <= 0) return "";
-        r = read(STDIN_FILENO, &c, 1);
-        if (r == -1) return "";
-        if (c == esc.back()) break;
-        ss << c;
+        size_t res = poll(input.data(), 1, waitms);
+        if (res <= 0) {
+            return "";
+        }
+        res = read(STDIN_FILENO, &chr, 1);
+        if (res == -1) {
+            return "";
+        }
+        if (chr == esc.back()) {
+            break;
+        }
+        sstream << chr;
     }
-    return ss.str();
+    return sstream.str();
 }
 
 auto Terminal::init_termios() -> void
@@ -164,12 +185,16 @@ auto Terminal::reset_termios() -> void
 void Terminal::get_terminal_size_x11()
 {
 #ifdef ENABLE_X11
+    logger->info("Obtaining sizes from x11 server");
     const X11Util xutil;
-    if (!xutil.connected) return;
+    if (!xutil.is_connected()) {
+        return;
+    }
     auto window = xutil.get_parent_window(os::get_pid());
     auto dims = xutil.get_window_dimensions(window);
     xpixel = dims.first;
     ypixel = dims.second;
+    logger->info("X11 sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
 #endif
 }
 
@@ -181,7 +206,9 @@ void Terminal::open_first_pty()
     for (const auto& pid: tree) {
         auto proc = Process(pid);
         pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
-        if (pty_fd != -1) return;
+        if (pty_fd != -1) {
+            return;
+        }
     }
     pty_fd = STDOUT_FILENO;
 }

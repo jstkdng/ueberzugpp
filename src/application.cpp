@@ -34,13 +34,14 @@ using json = nlohmann::json;
 namespace fs = std::filesystem;
 
 Application::Application(Flags& flags, const std::string& executable):
-terminal(os::get_pid(), flags),
-flags(flags)
+flags(flags),
+s(SignalSingleton::instance())
 {
     print_header();
     setup_logger();
     set_silent();
-    canvas = Canvas::create(terminal, flags, *logger, img_lock);
+    terminal = std::make_unique<Terminal>(os::get_pid(), flags);
+    canvas = Canvas::create(*terminal, flags, *logger, img_lock);
     if (!canvas) {
         logger->error("Unable to initialize canvas.");
         std::exit(1);
@@ -96,7 +97,7 @@ void Application::execute(const std::string& cmd)
             return;
         }
         set_dimensions_from_json(json_cmd);
-        image = Image::load(terminal, *dimensions, flags, json_cmd["path"], *logger);
+        image = Image::load(*terminal, *dimensions, flags, json_cmd["path"], *logger);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
@@ -178,7 +179,7 @@ void Application::set_dimensions_from_json(const json& j)
         x = j["x"];
         y = j["y"];
     }
-    dimensions = std::make_unique<Dimensions>(terminal, x, y, max_width, max_height, scaler);
+    dimensions = std::make_unique<Dimensions>(*terminal, x, y, max_width, max_height, scaler);
 }
 
 void Application::setup_logger()
@@ -186,26 +187,36 @@ void Application::setup_logger()
     std::string log_tmp = util::get_log_filename();
     fs::path log_path = fs::temp_directory_path() / log_tmp;
     try {
-        logger = spdlog::basic_logger_mt("main", log_path);
-        logger->flush_on(spdlog::level::info);
+        spdlog::flush_on(spdlog::level::info);
+        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_path);
+
+        auto main_logger = std::make_shared<spdlog::logger>("main", sink);
+        auto terminal_logger = std::make_shared<spdlog::logger>("terminal", sink);
+        auto x11_logger = std::make_shared<spdlog::logger>("X11", sink);
+
+        spdlog::initialize_logger(main_logger);
+        spdlog::initialize_logger(terminal_logger);
+        spdlog::initialize_logger(x11_logger);
+
+        logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {
         std::cout << "Log init failed: " << ex.what() << std::endl;
     }
 }
 
-void Application::command_loop(const std::atomic<bool>& stop_flag)
+void Application::command_loop()
 {
     const int sleep_time = 100;
     if (!flags.no_stdin) {
         std::string cmd;
         while (std::getline(std::cin, cmd)) {
-            if (stop_flag.load()) {
+            if (s->get_stop_flag().load()) {
                 break;
             }
             execute(cmd);
         }
     } else {
-        while (!stop_flag.load()) {
+        while (!s->get_stop_flag().load()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
         }
     }

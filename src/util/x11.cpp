@@ -21,11 +21,12 @@
 
 #include <xcb/xcb.h>
 #include <string>
+#include <iostream>
 
-X11Util::X11Util()
+X11Util::X11Util():
+connection(xcb_connect(nullptr, nullptr))
 {
-    connection = xcb_connect(nullptr, nullptr);
-    if (!xcb_connection_has_error(connection)) {
+    if (xcb_connection_has_error(connection) == 0) {
         screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
         connected = true;
     }
@@ -49,12 +50,16 @@ void X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
         xcb_query_tree_reply(connection, cookie, nullptr)
     };
-    if (!reply.get()) throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
+    if (reply.get() == nullptr) {
+        throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
+    }
     int num_children = xcb_query_tree_children_length(reply.get());
 
-    if (num_children == 0) return;
+    if (num_children == 0) {
+        return;
+    }
 
-    auto children = xcb_query_tree_children(reply.get());
+    auto *children = xcb_query_tree_children(reply.get());
     std::vector<xcb_query_tree_cookie_t> cookies;
 
     for (int i = 0; i < num_children; ++i) {
@@ -68,25 +73,27 @@ void X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, x
     }
 }
 
-int X11Util::get_window_pid(xcb_window_t window) const
+auto X11Util::get_window_pid(xcb_window_t window) const -> int
 {
     std::string atom_str = "_NET_WM_PID";
 
     auto atom_cookie = xcb_intern_atom_unchecked
-        (connection, false, atom_str.size(), atom_str.c_str());
+        (connection, 0, atom_str.size(), atom_str.c_str());
     auto atom_reply = unique_C_ptr<xcb_intern_atom_reply_t> {
         xcb_intern_atom_reply(connection, atom_cookie, nullptr)
     };
 
     auto property_cookie = xcb_get_property_unchecked(
-            connection, false, window, atom_reply->atom, XCB_ATOM_ANY, 0, 1);
+            connection, 0, window, atom_reply->atom, XCB_ATOM_ANY, 0, 1);
     auto property_reply = unique_C_ptr<xcb_get_property_reply_t> {
         xcb_get_property_reply(connection, property_cookie, nullptr),
     };
 
-    auto property_value = xcb_get_property_value(property_reply.get());
+    auto *property_value = xcb_get_property_value(property_reply.get());
     auto property_length = xcb_get_property_value_length(property_reply.get());
-    if (property_length != sizeof(int)) return -1;
+    if (property_length != sizeof(int)) {
+        return -1;
+    }
 
     return *reinterpret_cast<int*>(property_value);
 }
@@ -101,9 +108,9 @@ auto X11Util::get_pid_window_map() const -> std::unordered_map<int, xcb_window_t
     return res;
 }
 
-bool X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type) const
+auto X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type) const -> bool
 {
-    auto cookie = xcb_get_property_unchecked(connection, false, window, property, type, 0, 4);
+    auto cookie = xcb_get_property_unchecked(connection, 0, window, property, type, 0, 4);
     auto reply = unique_C_ptr<xcb_get_property_reply_t> {
         xcb_get_property_reply(connection, cookie, nullptr)
     };
@@ -119,20 +126,31 @@ auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<int,
     auto reply = unique_C_ptr<xcb_get_geometry_reply_t> {
         xcb_get_geometry_reply(connection, cookie, nullptr)
     };
-    if (!reply.get()) return std::make_pair(0, 0);
+    if (reply.get() == nullptr) {
+        return std::make_pair(0, 0);
+    }
     return std::make_pair(reply->width, reply->height);
 }
 
 auto X11Util::get_parent_window(int pid) const -> xcb_window_t
 {
     auto wid = os::getenv("WINDOWID");
-    if (pid == os::get_pid() && wid.has_value()) return std::stoi(wid.value());
+    if (pid == os::get_pid() && wid.has_value()) {
+        return std::stoi(wid.value());
+    }
 
     auto pid_window_map = get_pid_window_map();
     auto ppids = util::get_process_tree(pid);
     for (const auto& ppid: ppids) {
         auto search = pid_window_map.find(ppid);
-        if (search != pid_window_map.end()) return search->second;
+        if (search != pid_window_map.end()) {
+            return search->second;
+        }
     }
     return -1;
+}
+
+auto X11Util::is_connected() const -> bool
+{
+    return connected;
 }

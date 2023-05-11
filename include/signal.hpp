@@ -14,31 +14,34 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "process.hpp"
-#include "util.hpp"
-#include "tmux.hpp"
-#include "os.hpp"
+#ifndef __SIGNAL_SINGLETON__
+#define __SIGNAL_SINGLETON__
 
-#include <fmt/format.h>
-#include <libproc.h>
-#include <sys/types.h>
+#include <atomic>
+#include <memory>
 
-Process::Process(int pid):
-pid(pid)
+class SignalSingleton
 {
-    struct proc_bsdshortinfo sproc;
-    struct proc_bsdinfo proc;
+public:
+    static auto instance() -> std::shared_ptr<SignalSingleton>
+    {
+        static std::shared_ptr<SignalSingleton> instance {new SignalSingleton};
+        return instance;
+    }
+    
+    SignalSingleton(const SignalSingleton&) = delete;
+    SignalSingleton(SignalSingleton&) = delete;
+    auto operator=(const SignalSingleton&) -> SignalSingleton& = delete;
+    auto operator=(SignalSingleton&) -> SignalSingleton& = delete;
 
-    int st = proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &sproc, PROC_PIDT_SHORTBSDINFO_SIZE);
-    if (st == PROC_PIDT_SHORTBSDINFO_SIZE) {
-        ppid = sproc.pbsi_ppid;
+    auto get_stop_flag() -> std::atomic<bool>&
+    {
+        return stop_flag;
     }
 
-    st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
-    if (st == PROC_PIDTBSDINFO_SIZE) {
-        tty_nr = proc.e_tdev;
-        minor_dev = minor(tty_nr);
-        pty_path = fmt::format("/dev/ttys{:0>3}", minor_dev);
-    }
-}
+private:
+    SignalSingleton() = default;
+    std::atomic<bool> stop_flag;
+};
 
+#endif

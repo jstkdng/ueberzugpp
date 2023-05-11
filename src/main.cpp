@@ -25,12 +25,12 @@
 #include "flags.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
-
-std::atomic<bool> stop_flag(false);
+#include "signal.hpp"
 
 void got_signal(const int signal)
 {
-    stop_flag.store(true);
+    auto singleton = SignalSingleton::instance();
+    singleton->get_stop_flag().store(true);
     auto logger = spdlog::get("main");
     if (!logger) {
         return;
@@ -104,7 +104,7 @@ auto main(int argc, char *argv[]) -> int
 
     if (layer_command->parsed()) {
         Application application(flags, argv[0]);
-        application.command_loop(stop_flag);
+        application.command_loop();
     }
 
     if (tmux_command->parsed()) {
