@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "kitty.hpp"
+#include "chunk.hpp"
 #include "util.hpp"
 
 #include <iostream>
@@ -23,31 +24,6 @@
 #else
 #   include <oneapi/tbb.h>
 #endif
-
-struct KittyChunk
-{
-    const unsigned char* ptr;
-    uint64_t size;
-    std::vector<unsigned char> result;
-
-    KittyChunk(const unsigned char* ptr, int size):
-        ptr(ptr), size(size) {}
-};
-
-void chunk_processor(KittyChunk& chunk)
-{
-    uint64_t bufsize = 4*((chunk.size+2)/3);
-    chunk.result.resize(bufsize + 1, 0);
-    util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.data());
-};
-
-class ProcessKittyChunk
-{
-public:
-    void operator()(KittyChunk& chunk) const {
-        chunk_processor(chunk);
-    }
-};
 
 void KittyCanvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 {
@@ -82,9 +58,9 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
     chunks.emplace_back(ptr + idx * chunk_size, last_chunk_size);
 
 #ifdef __APPLE__
-    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), ProcessKittyChunk());
+    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), KittyChunk());
 #else
-    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), chunk_processor);
+    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), KittyChunk::process_chunk);
 #endif
     return chunks;
 }
@@ -97,17 +73,17 @@ void KittyCanvas::draw_frame()
         << ",f=" << image->channels() * bits_per_channel
         << ",s=" << image->width()
         << ",v=" << image->height()
-        << ";" << chunks.front().result.data()
+        << ";" << chunks.front().get_result()
         << "\e\\";
 
     for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
         ss  << "\e_Gm=1,q=2;"
-            << chunk->result.data()
+            << chunk->get_result()
             << "\e\\";
     }
 
     ss  << "\e_Gm=0,q=2;"
-        << chunks.back().result.data()
+        << chunks.back().get_result()
         << "\e\\";
 
     util::save_cursor_position();

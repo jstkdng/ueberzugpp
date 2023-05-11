@@ -14,35 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_CANVAS__
-#define __KITTY_CANVAS__
+#ifndef __KITTY_CHUNK__
+#define __KITTY_CHUNK__
 
-#include "canvas.hpp"
-
-#include <sstream>
 #include <vector>
+#include <cstdint>
 
-struct KittyChunk;
-
-class KittyCanvas : public Canvas
+class KittyChunk
 {
 public:
-    KittyCanvas() = default;
-    ~KittyCanvas() override = default;
+    KittyChunk() = default;
+    KittyChunk(const unsigned char* ptr, uint64_t size);
 
-    void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
-    void draw() override;
-    void clear() override;
+    void operator()(KittyChunk& chunk) const;
 
+    auto get_result() -> unsigned char*;
+    [[nodiscard]] auto get_ptr() const -> const unsigned char*;
+    [[nodiscard]] auto get_size() const -> uint64_t;
+
+    static void process_chunk(KittyChunk& chunk);
 private:
-    std::shared_ptr<Image> image;
-    std::stringstream ss;
-
-    int x;
-    int y;
-
-    void draw_frame();
-    auto process_chunks() -> std::vector<KittyChunk>;
+    const unsigned char* ptr;
+    uint64_t size;
+    std::vector<unsigned char> result;
 };
 
 #endif

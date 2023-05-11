@@ -157,7 +157,8 @@ set(UEBERZUGPP_SOURCES
 
     "src/canvas.cpp"
     "src/canvas/sixel.cpp"
-    "src/canvas/kitty.cpp"
+    "src/canvas/kitty/kitty.cpp"
+    "src/canvas/kitty/chunk.cpp"
     "src/canvas/iterm2.cpp"
 
     "src/image.cpp"
