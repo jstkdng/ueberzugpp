@@ -20,13 +20,9 @@
 
 #include <iostream>
 
-#include <fmt/format.h>
-#include <unistd.h>
-#include <cstdlib>
-
-int sixel_draw_callback(char *data, int size, void* priv)
+auto sixel_draw_callback(char *data, int size, void* priv) -> int
 {
-    auto stream = static_cast<std::stringstream*>(priv);
+    auto *stream = static_cast<std::stringstream*>(priv);
     stream->write(data, size);
     return size;
 }
@@ -40,7 +36,9 @@ img_lock(img_lock)
 
 SixelCanvas::~SixelCanvas()
 {
-    if (draw_thread.joinable()) draw_thread.join();
+    if (draw_thread.joinable()) {
+        draw_thread.join();
+    }
     sixel_output_unref(output);
     sixel_dither_unref(dither);
 }
@@ -77,7 +75,9 @@ auto SixelCanvas::draw() -> void
     draw_thread = std::thread([&] {
         while (can_draw.load()) {
             std::unique_lock lock {img_lock, std::try_to_lock};
-            if (!lock.owns_lock()) return;
+            if (!lock.owns_lock()) {
+                return;
+            }
             draw_frame();
             image->next_frame();
             lock.unlock();
@@ -88,10 +88,14 @@ auto SixelCanvas::draw() -> void
 
 auto SixelCanvas::clear() -> void
 {
-    if (max_width == 0 && max_height == 0) return;
+    if (max_width == 0 && max_height == 0) {
+        return;
+    }
 
     can_draw.store(false);
-    if (draw_thread.joinable()) draw_thread.join();
+    if (draw_thread.joinable()) {
+        draw_thread.join();
+    }
     can_draw.store(true);
 
     sixel_dither_unref(dither);

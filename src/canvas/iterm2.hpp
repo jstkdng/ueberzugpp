@@ -28,7 +28,7 @@ class Iterm2Canvas : public Canvas
 {
 public:
     Iterm2Canvas() = default;
-    ~Iterm2Canvas() = default;
+    ~Iterm2Canvas() override = default;
     void init(const Dimensions& dimensions,
             std::shared_ptr<Image> image) override;
     void draw() override;

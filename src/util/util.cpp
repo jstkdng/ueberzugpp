@@ -101,9 +101,9 @@ void util::send_socket_message(const std::string& msg, const std::string& endpoi
 auto util::base64_encode(const unsigned char *input, uint64_t length) -> std::string
 {
     size_t bufsize = 4 * ((length+2)/3);
-    auto res = std::vector<char>(bufsize + 1, 0);
-    base64_encode_v2(input, length, reinterpret_cast<unsigned char*>(res.data()));
-    return { res.data() };
+    auto res = std::vector<unsigned char>(bufsize + 1, 0);
+    base64_encode_v2(input, length, res.data());
+    return { reinterpret_cast<char*>(res.data()) };
 }
 
 void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigned char *out)
@@ -111,7 +111,7 @@ void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigne
 #ifdef ENABLE_TURBOBASE64
     tb64enc(input, length, out);
 #else
-    EVP_EncodeBlock(out, input, length);
+    EVP_EncodeBlock(reinterpret_cast<unsigned char*>(out), input, length);
 #endif
 }
 
@@ -122,13 +122,12 @@ auto util::get_b2_hash_ssl(const std::string& str) -> std::string
         EVP_MD_CTX_new()
     };
     const auto *evp = EVP_blake2b512();
-    auto digest = std::vector<char>(EVP_MD_size(evp), 0);
+    auto digest = std::vector<unsigned char>(EVP_MD_size(evp), 0);
 
     EVP_DigestInit_ex(mdctx.get(), evp, nullptr);
     EVP_DigestUpdate(mdctx.get(), str.c_str(), str.size());
     unsigned int digest_len = 0;
-    EVP_DigestFinal_ex(mdctx.get(),
-            reinterpret_cast<unsigned char*>(digest.data()), &digest_len);
+    EVP_DigestFinal_ex(mdctx.get(), digest.data(), &digest_len);
 
     for (int i = 0; i < digest_len; ++i) {
         sstream << std::hex << std::setw(2) << std::setfill('0') << digest[i];

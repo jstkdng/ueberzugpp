@@ -22,18 +22,19 @@
 #include "terminal.hpp"
 #include "dimensions.hpp"
 
-#include <sixel.h>
 #include <memory>
 #include <thread>
 #include <mutex>
 #include <sstream>
 #include <atomic>
 
+#include <sixel.h>
+
 class SixelCanvas : public Canvas
 {
 public:
-    SixelCanvas(std::mutex& img_lock);
-    ~SixelCanvas();
+    explicit SixelCanvas(std::mutex& img_lock);
+    ~SixelCanvas() override;
 
     void init(const Dimensions& dimensions,
             std::shared_ptr<Image> image) override;

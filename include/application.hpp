@@ -43,6 +43,7 @@ public:
 
     static void print_version();
     static void print_header();
+    static auto get_lock() -> std::atomic<bool>&;
 
 private:
     Terminal terminal;

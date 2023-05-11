@@ -27,8 +27,8 @@
 struct KittyChunk
 {
     const unsigned char* ptr;
-    int size;
-    std::unique_ptr<unsigned char[]> result {nullptr};
+    uint64_t size;
+    std::vector<unsigned char> result;
 
     KittyChunk(const unsigned char* ptr, int size):
         ptr(ptr), size(size) {}
@@ -36,9 +36,9 @@ struct KittyChunk
 
 void chunk_processor(KittyChunk& chunk)
 {
-    size_t bufsize = 4*((chunk.size+2)/3);
-    chunk.result = std::make_unique<unsigned char[]>(bufsize + 1);
-    util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.get());
+    uint64_t bufsize = 4*((chunk.size+2)/3);
+    chunk.result.resize(bufsize + 1, 0);
+    util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.data());
 };
 
 class ProcessKittyChunk
@@ -63,22 +63,23 @@ void KittyCanvas::draw()
 
 auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
 {
-    int num_chunks = image->size() / 4096;
-    int last_chunk_size = image->size() % 4096;
-    if (!last_chunk_size) {
-        last_chunk_size = 4096;
+    const uint64_t chunk_size = 4096;
+    uint64_t num_chunks = image->size() / chunk_size;
+    uint64_t last_chunk_size = image->size() % chunk_size;
+    if (last_chunk_size == 0) {
+        last_chunk_size = chunk_size;
         num_chunks--;
     }
 
     std::vector<KittyChunk> chunks;
     chunks.reserve(num_chunks + 1);
-    auto ptr = image->data();
+    const auto *ptr = image->data();
 
-    int i;
-    for (i = 0; i < num_chunks; i++) {
-        chunks.emplace_back(ptr + i * 4096, 4096);
+    int idx = 0;
+    for (; idx < num_chunks; idx++) {
+        chunks.emplace_back(ptr + idx * chunk_size, chunk_size);
     }
-    chunks.emplace_back(ptr + i * 4096, last_chunk_size);
+    chunks.emplace_back(ptr + idx * chunk_size, last_chunk_size);
 
 #ifdef __APPLE__
     oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), ProcessKittyChunk());
@@ -90,22 +91,23 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
 
 void KittyCanvas::draw_frame()
 {
+    const int bits_per_channel = 8;
     auto chunks = process_chunks();
     ss  << "\e_Ga=T,m=1,i=1337,q=2"
-        << ",f=" << image->channels() * 8
+        << ",f=" << image->channels() * bits_per_channel
         << ",s=" << image->width()
         << ",v=" << image->height()
-        << ";" << chunks.front().result
+        << ";" << chunks.front().result.data()
         << "\e\\";
 
     for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
         ss  << "\e_Gm=1,q=2;"
-            << chunk->result
+            << chunk->result.data()
             << "\e\\";
     }
 
     ss  << "\e_Gm=0,q=2;"
-        << chunks.back().result
+        << chunks.back().result.data()
         << "\e\\";
 
     util::save_cursor_position();

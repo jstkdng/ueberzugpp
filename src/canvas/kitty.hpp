@@ -28,7 +28,7 @@ class KittyCanvas : public Canvas
 {
 public:
     KittyCanvas() = default;
-    ~KittyCanvas() = default;
+    ~KittyCanvas() override = default;
 
     void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
     void draw() override;

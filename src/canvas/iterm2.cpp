@@ -30,21 +30,21 @@ namespace fs = std::filesystem;
 
 struct Iterm2Chunk
 {
-    long size;
+    uint64_t size;
     std::vector<char> buffer;
-    std::unique_ptr<unsigned char[]> result {nullptr};
+    std::vector<unsigned char> result;
 
-    Iterm2Chunk(long size) {
+    explicit Iterm2Chunk(uint64_t size) {
+        size_t bufsize = 4*((size+2)/3);
         buffer.resize(size, 0);
+        result.resize(bufsize + 1, 0);
     };
 };
 
 void chunk_processor(std::unique_ptr<Iterm2Chunk>& chunk)
 {
-    size_t bufsize = 4*((chunk->size+2)/3);
-    chunk->result = std::make_unique<unsigned char[]>(bufsize + 1);
     util::base64_encode_v2(reinterpret_cast<unsigned char*>(chunk->buffer.data()),
-            chunk->size, chunk->result.get());
+            chunk->size, chunk->result.data());
 };
 
 class ProcessIterm2Chunk
@@ -77,9 +77,10 @@ void Iterm2Canvas::draw()
         << ";height=" << image->height() << "px"
         << ":";
 
-    auto chunks = process_chunks(filename, 2046, num_bytes);
+    const int chunk_size = 2046;
+    auto chunks = process_chunks(filename, chunk_size, num_bytes);
     for (const auto& chunk: chunks) {
-        ss << chunk->result;
+        ss << chunk->result.data();
     }
 
     ss << "\a";

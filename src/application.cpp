@@ -91,6 +91,10 @@ void Application::execute(const std::string& cmd)
 
     std::unique_lock lock {img_lock};
     if (json_cmd["action"] == "add") {
+        if (!json_cmd["path"].is_string()) {
+            logger->error("Invalid path.");
+            return;
+        }
         set_dimensions_from_json(json_cmd);
         image = Image::load(terminal, *dimensions, flags, json_cmd["path"], *logger);
         if (!image) {
