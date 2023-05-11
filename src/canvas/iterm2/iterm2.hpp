@@ -43,7 +43,7 @@ private:
     int max_height = 0;
 
     void draw_frame();
-    auto process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
+    static auto process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
 };
 
 #endif
