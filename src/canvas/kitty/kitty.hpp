@@ -14,51 +14,35 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SIXEL_CANVAS__
-#define __SIXEL_CANVAS__
+#ifndef __KITTY_CANVAS__
+#define __KITTY_CANVAS__
 
 #include "canvas.hpp"
-#include "image.hpp"
-#include "terminal.hpp"
-#include "dimensions.hpp"
 
-#include <memory>
-#include <thread>
-#include <mutex>
 #include <sstream>
-#include <atomic>
+#include <vector>
 
-#include <sixel.h>
+class KittyChunk;
 
-class SixelCanvas : public Canvas
+class KittyCanvas : public Canvas
 {
 public:
-    explicit SixelCanvas(std::mutex& img_lock);
-    ~SixelCanvas() override;
+    KittyCanvas() = default;
+    ~KittyCanvas() override = default;
 
-    void init(const Dimensions& dimensions,
-            std::shared_ptr<Image> image) override;
+    void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
     void draw() override;
     void clear() override;
 
 private:
-    sixel_dither_t *dither;
-    sixel_output_t *output;
     std::shared_ptr<Image> image;
-
-    std::thread draw_thread;
-    std::atomic<bool> can_draw {true};
-
-    std::mutex& img_lock;
     std::stringstream ss;
 
     int x;
     int y;
-    int max_width = 0;
-    int max_height = 0;
 
     void draw_frame();
+    auto process_chunks() -> std::vector<KittyChunk>;
 };
-
 
 #endif

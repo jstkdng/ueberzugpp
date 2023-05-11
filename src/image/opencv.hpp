@@ -32,16 +32,16 @@ class OpencvImage : public Image
 public:
     OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string& filename, bool in_cache);
-    ~OpencvImage();
+    ~OpencvImage() override;
 
-    auto width() const -> int override;
-    auto height() const -> int override;
-    auto size() const -> unsigned long override;
-    auto data() const -> const unsigned char* override;
-    auto channels() const -> int override;
+    [[nodiscard]] auto width() const -> int override;
+    [[nodiscard]] auto height() const -> int override;
+    [[nodiscard]] auto size() const -> uint64_t override;
+    [[nodiscard]] auto data() const -> const unsigned char* override;
+    [[nodiscard]] auto channels() const -> int override;
 
+    [[nodiscard]] auto filename() const -> std::string override;
     auto resize_image() -> void override;
-    auto filename() const -> std::string override;
 private:
     cv::Mat image;
     cv::UMat uimage;
@@ -53,7 +53,7 @@ private:
 
     int _width;
     int _height;
-    unsigned long _size;
+    uint64_t _size;
     int max_width;
     int max_height;
     bool in_cache;

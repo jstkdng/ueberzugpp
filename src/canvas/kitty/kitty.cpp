@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "kitty.hpp"
+#include "chunk.hpp"
 #include "util.hpp"
 
 #include <iostream>
@@ -23,31 +24,6 @@
 #else
 #   include <oneapi/tbb.h>
 #endif
-
-struct KittyChunk
-{
-    const unsigned char* ptr;
-    int size;
-    std::unique_ptr<unsigned char[]> result {nullptr};
-
-    KittyChunk(const unsigned char* ptr, int size):
-        ptr(ptr), size(size) {}
-};
-
-void chunk_processor(KittyChunk& chunk)
-{
-    size_t bufsize = 4*((chunk.size+2)/3);
-    chunk.result = std::make_unique<unsigned char[]>(bufsize + 1);
-    util::base64_encode_v2(chunk.ptr, chunk.size, chunk.result.get());
-};
-
-class ProcessKittyChunk
-{
-public:
-    void operator()(KittyChunk& chunk) const {
-        chunk_processor(chunk);
-    }
-};
 
 void KittyCanvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 {
@@ -63,49 +39,51 @@ void KittyCanvas::draw()
 
 auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
 {
-    int num_chunks = image->size() / 4096;
-    int last_chunk_size = image->size() % 4096;
-    if (!last_chunk_size) {
-        last_chunk_size = 4096;
+    const uint64_t chunk_size = 4096;
+    uint64_t num_chunks = image->size() / chunk_size;
+    uint64_t last_chunk_size = image->size() % chunk_size;
+    if (last_chunk_size == 0) {
+        last_chunk_size = chunk_size;
         num_chunks--;
     }
 
     std::vector<KittyChunk> chunks;
     chunks.reserve(num_chunks + 1);
-    auto ptr = image->data();
+    const auto *ptr = image->data();
 
-    int i;
-    for (i = 0; i < num_chunks; i++) {
-        chunks.emplace_back(ptr + i * 4096, 4096);
+    int idx = 0;
+    for (; idx < num_chunks; idx++) {
+        chunks.emplace_back(ptr + idx * chunk_size, chunk_size);
     }
-    chunks.emplace_back(ptr + i * 4096, last_chunk_size);
+    chunks.emplace_back(ptr + idx * chunk_size, last_chunk_size);
 
 #ifdef __APPLE__
-    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), ProcessKittyChunk());
+    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), KittyChunk());
 #else
-    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), chunk_processor);
+    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), KittyChunk::process_chunk);
 #endif
     return chunks;
 }
 
 void KittyCanvas::draw_frame()
 {
+    const int bits_per_channel = 8;
     auto chunks = process_chunks();
     ss  << "\e_Ga=T,m=1,i=1337,q=2"
-        << ",f=" << image->channels() * 8
+        << ",f=" << image->channels() * bits_per_channel
         << ",s=" << image->width()
         << ",v=" << image->height()
-        << ";" << chunks.front().result
+        << ";" << chunks.front().get_result()
         << "\e\\";
 
     for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
         ss  << "\e_Gm=1,q=2;"
-            << chunk->result
+            << chunk->get_result()
             << "\e\\";
     }
 
     ss  << "\e_Gm=0,q=2;"
-        << chunks.back().result
+        << chunks.back().get_result()
         << "\e\\";
 
     util::save_cursor_position();

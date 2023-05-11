@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "iterm2.hpp"
+#include "chunk.hpp"
 #include "util.hpp"
 #include "fstream"
 
@@ -27,33 +28,6 @@
 #endif
 
 namespace fs = std::filesystem;
-
-struct Iterm2Chunk
-{
-    long size;
-    std::vector<char> buffer;
-    std::unique_ptr<unsigned char[]> result {nullptr};
-
-    Iterm2Chunk(long size) {
-        buffer.resize(size, 0);
-    };
-};
-
-void chunk_processor(std::unique_ptr<Iterm2Chunk>& chunk)
-{
-    size_t bufsize = 4*((chunk->size+2)/3);
-    chunk->result = std::make_unique<unsigned char[]>(bufsize + 1);
-    util::base64_encode_v2(reinterpret_cast<unsigned char*>(chunk->buffer.data()),
-            chunk->size, chunk->result.get());
-};
-
-class ProcessIterm2Chunk
-{
-public:
-    void operator()(std::unique_ptr<Iterm2Chunk>& chunk) const {
-        chunk_processor(chunk);
-    }
-};
 
 void Iterm2Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 {
@@ -77,11 +51,14 @@ void Iterm2Canvas::draw()
         << ";height=" << image->height() << "px"
         << ":";
 
-    auto chunks = process_chunks(filename, 2046, num_bytes);
-    for (const auto& chunk: chunks) {
-        ss << chunk->result;
-    }
+    const int chunk_size = 1023;
+    auto chunks = process_chunks(filename, chunk_size, num_bytes);
 
+    auto print_result = [&] (std::unique_ptr<Iterm2Chunk>& chunk) -> void
+    {
+        ss << chunk->get_result();
+    };
+    std::for_each(std::begin(chunks), std::end(chunks), print_result);
     ss << "\a";
 
     util::save_cursor_position();
@@ -104,15 +81,15 @@ auto Iterm2Canvas::process_chunks(const std::string& filename, int chunk_size, s
     std::ifstream ifs (filename);
     while (ifs.good()) {
         auto chunk = std::make_unique<Iterm2Chunk>(chunk_size);
-        ifs.read(chunk->buffer.data(), chunk_size);
-        chunk->size = ifs.gcount();
+        ifs.read(chunk->get_buffer(), chunk_size);
+        chunk->set_size(ifs.gcount());
         chunks.push_back(std::move(chunk));
     }
 
 #ifdef __APPLE__
-    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), ProcessIterm2Chunk());
+    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), Iterm2Chunk());
 #else
-    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), chunk_processor);
+    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), Iterm2Chunk::process_chunk);
 #endif
     return chunks;
 }

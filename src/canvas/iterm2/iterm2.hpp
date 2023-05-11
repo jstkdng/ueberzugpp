@@ -14,35 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_CANVAS__
-#define __KITTY_CANVAS__
+#ifndef __ITERM2_CANVAS__
+#define __ITERM2_CANVAS__
 
 #include "canvas.hpp"
 
 #include <sstream>
 #include <vector>
 
-struct KittyChunk;
+struct Iterm2Chunk;
 
-class KittyCanvas : public Canvas
+class Iterm2Canvas : public Canvas
 {
 public:
-    KittyCanvas() = default;
-    ~KittyCanvas() = default;
-
-    void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
+    Iterm2Canvas() = default;
+    ~Iterm2Canvas() override = default;
+    void init(const Dimensions& dimensions,
+            std::shared_ptr<Image> image) override;
     void draw() override;
     void clear() override;
-
 private:
     std::shared_ptr<Image> image;
     std::stringstream ss;
 
     int x;
     int y;
+    int max_width = 0;
+    int max_height = 0;
 
     void draw_frame();
-    auto process_chunks() -> std::vector<KittyChunk>;
+    static auto process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
 };
 
 #endif

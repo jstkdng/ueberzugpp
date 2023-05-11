@@ -14,31 +14,38 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "process.hpp"
+#include "chunk.hpp"
 #include "util.hpp"
-#include "tmux.hpp"
-#include "os.hpp"
 
-#include <fmt/format.h>
-#include <libproc.h>
-#include <sys/types.h>
-
-Process::Process(int pid):
-pid(pid)
+KittyChunk::KittyChunk(const unsigned char* ptr, uint64_t size):
+ptr(ptr),
+size(size)
 {
-    struct proc_bsdshortinfo sproc;
-    struct proc_bsdinfo proc;
-
-    int st = proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &sproc, PROC_PIDT_SHORTBSDINFO_SIZE);
-    if (st == PROC_PIDT_SHORTBSDINFO_SIZE) {
-        ppid = sproc.pbsi_ppid;
-    }
-
-    st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
-    if (st == PROC_PIDTBSDINFO_SIZE) {
-        tty_nr = proc.e_tdev;
-        minor_dev = minor(tty_nr);
-        pty_path = fmt::format("/dev/ttys{:0>3}", minor_dev);
-    }
+    uint64_t bufsize = 4*((size+2)/3);
+    result.resize(bufsize + 1, 0);
 }
 
+void KittyChunk::process_chunk(KittyChunk& chunk)
+{
+    util::base64_encode_v2(chunk.get_ptr(), chunk.get_size(), chunk.get_result());
+}
+
+void KittyChunk::operator()(KittyChunk& chunk) const
+{
+    process_chunk(chunk);
+}
+
+auto KittyChunk::get_result() -> unsigned char*
+{
+    return result.data();
+}
+
+auto KittyChunk::get_ptr() const -> const unsigned char*
+{
+    return ptr;
+}
+
+auto KittyChunk::get_size() const -> uint64_t
+{
+    return size;
+}

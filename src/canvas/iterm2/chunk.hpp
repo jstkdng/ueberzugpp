@@ -14,31 +14,32 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "process.hpp"
-#include "util.hpp"
-#include "tmux.hpp"
-#include "os.hpp"
+#ifndef __ITERM2_CHUNK__
+#define __ITERM2_CHUNK__
 
-#include <fmt/format.h>
-#include <libproc.h>
-#include <sys/types.h>
+#include <vector>
+#include <memory>
+#include <cstdint>
 
-Process::Process(int pid):
-pid(pid)
+class Iterm2Chunk
 {
-    struct proc_bsdshortinfo sproc;
-    struct proc_bsdinfo proc;
+public:
+    Iterm2Chunk() = default;
+    explicit Iterm2Chunk(uint64_t size);
 
-    int st = proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &sproc, PROC_PIDT_SHORTBSDINFO_SIZE);
-    if (st == PROC_PIDT_SHORTBSDINFO_SIZE) {
-        ppid = sproc.pbsi_ppid;
-    }
+    void operator()(std::unique_ptr<Iterm2Chunk>& chunk) const;
+    void static process_chunk(std::unique_ptr<Iterm2Chunk>& chunk);
 
-    st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
-    if (st == PROC_PIDTBSDINFO_SIZE) {
-        tty_nr = proc.e_tdev;
-        minor_dev = minor(tty_nr);
-        pty_path = fmt::format("/dev/ttys{:0>3}", minor_dev);
-    }
-}
+    [[nodiscard]] auto get_size() const -> uint64_t;
+    void set_size(uint64_t size);
+    auto get_buffer() -> char*;
+    auto get_result() -> unsigned char*;
 
+private:
+    uint64_t size;
+    std::vector<char> buffer;
+    std::vector<unsigned char> result;
+
+};
+
+#endif

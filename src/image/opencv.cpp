@@ -20,6 +20,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/ocl.hpp>
+#include <iostream>
 
 OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string& filename, bool in_cache):
@@ -32,9 +33,6 @@ max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
-
-    auto opencl_ctx = cv::ocl::Context::getDefault();
-    opencl_available = opencl_ctx.ptr() != nullptr;
 
     process_image();
 }
@@ -59,7 +57,7 @@ auto OpencvImage::height() const -> int
     return image.rows;
 }
 
-auto OpencvImage::size() const -> unsigned long
+auto OpencvImage::size() const -> uint64_t
 {
     return _size;
 }
@@ -77,9 +75,16 @@ auto OpencvImage::channels() const -> int
 // only use opencl if required
 auto OpencvImage::resize_image() -> void
 {
-    if (in_cache) return;
+    if (in_cache) {
+        return;
+    }
     auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
-    if (new_width == 0 && new_height == 0) return;
+    if (new_width <= 0 && new_height <= 0) {
+        return;
+    }
+
+    auto opencl_ctx = cv::ocl::Context::getDefault();
+    opencl_available = opencl_ctx.ptr() != nullptr;
 
     if (opencl_available) {
         uimage = image.getUMat(cv::ACCESS_RW);
@@ -89,7 +94,9 @@ auto OpencvImage::resize_image() -> void
         cv::resize(image, image, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
     }
 
-    if (flags.no_cache) return;
+    if (flags.no_cache) {
+        return;
+    }
     auto save_location = util::get_cache_file_save_location(path);
     try {
         cv::imwrite(save_location, image);

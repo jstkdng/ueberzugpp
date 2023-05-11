@@ -22,6 +22,7 @@
 #include "terminal.hpp"
 #include "flags.hpp"
 #include "dimensions.hpp"
+#include "signal.hpp"
 
 #include <string>
 #include <memory>
@@ -38,14 +39,14 @@ public:
     ~Application();
 
     void execute(const std::string& cmd);
-    void command_loop(const std::atomic<bool>& flag);
+    void command_loop();
     void handle_tmux_hook(const std::string& hook);
 
     static void print_version();
+    static void print_header();
 
 private:
-    Terminal terminal;
-
+    std::unique_ptr<Terminal> terminal;
     std::unique_ptr<Dimensions> dimensions;
     std::shared_ptr<Image> image;
     std::unique_ptr<Canvas> canvas;
@@ -54,11 +55,11 @@ private:
     const Flags& flags;
     std::thread socket_thread;
     std::mutex img_lock;
+    std::shared_ptr<SignalSingleton> s;
 
     void setup_logger();
     void set_silent();
-    void print_header();
-    void tcp_loop();
+    void socket_loop();
     void set_dimensions_from_json(const nlohmann::json& json);
 };
 

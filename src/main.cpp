@@ -25,14 +25,16 @@
 #include "flags.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
-
-std::atomic<bool> stop_flag(false);
+#include "signal.hpp"
 
 void got_signal(const int signal)
 {
-    stop_flag.store(true);
+    auto singleton = SignalSingleton::instance();
+    singleton->get_stop_flag().store(true);
     auto logger = spdlog::get("main");
-    if (!logger) return;
+    if (!logger) {
+        return;
+    }
     switch (signal) {
         case SIGINT:
             logger->error("SIGINT received, exiting.");
@@ -49,16 +51,16 @@ void got_signal(const int signal)
     }
 }
 
-int main(int argc, char *argv[])
+auto main(int argc, char *argv[]) -> int
 {
     // handle signals
-    struct sigaction sa;
-    sa.sa_handler = got_signal;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = 0;
-    sigaction(SIGINT, &sa, nullptr);
-    sigaction(SIGTERM, &sa, nullptr);
-    sigaction(SIGHUP, &sa, nullptr);
+    struct sigaction sga;
+    sga.sa_handler = got_signal;
+    sigemptyset(&sga.sa_mask);
+    sga.sa_flags = 0;
+    sigaction(SIGINT, &sga, nullptr);
+    sigaction(SIGTERM, &sga, nullptr);
+    sigaction(SIGHUP, &sga, nullptr);
 
     Flags flags;
     std::vector<std::string> available_outputs ;
@@ -76,7 +78,7 @@ int main(int argc, char *argv[])
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
-    auto cmd_comand = program.add_subcommand("cmd", "Send a command to a running ueberzugpp instance.");
+    auto *cmd_comand = program.add_subcommand("cmd", "Send a command to a running ueberzugpp instance.");
     cmd_comand->add_option("-s,--socket", flags.cmd_socket, "UNIX socket of running instance");
     cmd_comand->add_option("-i,--identifier", flags.cmd_id, "Preview identifier");
     cmd_comand->add_option("-a,--action", flags.cmd_action, "Action to send");
@@ -86,7 +88,7 @@ int main(int argc, char *argv[])
     cmd_comand->add_option("--max-width", flags.cmd_max_width, "Max width of preview");
     cmd_comand->add_option("--max-height", flags.cmd_max_height, "Max height of preview");
 
-    auto tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
+    auto *tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
     tmux_command->allow_extras();
     CLI11_PARSE(program, argc, argv);
 
@@ -102,7 +104,7 @@ int main(int argc, char *argv[])
 
     if (layer_command->parsed()) {
         Application application(flags, argv[0]);
-        application.command_loop(stop_flag);
+        application.command_loop();
     }
 
     if (tmux_command->parsed()) {

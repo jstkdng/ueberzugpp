@@ -14,36 +14,34 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __ITERM2_CANVAS__
-#define __ITERM2_CANVAS__
+#ifndef __SIGNAL_SINGLETON__
+#define __SIGNAL_SINGLETON__
 
-#include "canvas.hpp"
+#include <atomic>
+#include <memory>
 
-#include <sstream>
-#include <vector>
-
-struct Iterm2Chunk;
-
-class Iterm2Canvas : public Canvas
+class SignalSingleton
 {
 public:
-    Iterm2Canvas() = default;
-    ~Iterm2Canvas() = default;
-    void init(const Dimensions& dimensions,
-            std::shared_ptr<Image> image) override;
-    void draw() override;
-    void clear() override;
+    static auto instance() -> std::shared_ptr<SignalSingleton>
+    {
+        static std::shared_ptr<SignalSingleton> instance {new SignalSingleton};
+        return instance;
+    }
+    
+    SignalSingleton(const SignalSingleton&) = delete;
+    SignalSingleton(SignalSingleton&) = delete;
+    auto operator=(const SignalSingleton&) -> SignalSingleton& = delete;
+    auto operator=(SignalSingleton&) -> SignalSingleton& = delete;
+
+    auto get_stop_flag() -> std::atomic<bool>&
+    {
+        return stop_flag;
+    }
+
 private:
-    std::shared_ptr<Image> image;
-    std::stringstream ss;
-
-    int x;
-    int y;
-    int max_width = 0;
-    int max_height = 0;
-
-    void draw_frame();
-    auto process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
+    SignalSingleton() = default;
+    std::atomic<bool> stop_flag;
 };
 
 #endif

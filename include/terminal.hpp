@@ -21,6 +21,7 @@
 
 #include <string>
 #include <termios.h>
+#include <spdlog/spdlog.h>
 
 class Terminal
 {
@@ -39,8 +40,8 @@ public:
 
 private:
     auto get_terminal_size() -> void;
-    auto guess_padding(int chars, double pixels) -> double;
-    auto guess_font_size(int chars, double pixels, double padding) -> double;
+    static auto guess_padding(int chars, double pixels) -> double;
+    static auto guess_font_size(int chars, double pixels, double padding) -> double;
 
     void init_termios();
     void reset_termios();
@@ -50,7 +51,7 @@ private:
     void get_terminal_size_x11();
     void open_first_pty();
 
-    auto read_raw_str(const std::string& esc) -> std::string;
+    static auto read_raw_str(const std::string& esc) -> std::string;
 
     int pty_fd;
     int pid;
@@ -60,6 +61,7 @@ private:
     int ypixel;
 
     Flags& flags;
+    std::shared_ptr<spdlog::logger> logger;
 
     struct termios old_term;
     struct termios new_term;

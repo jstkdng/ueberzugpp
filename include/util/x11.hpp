@@ -24,22 +24,22 @@
 class X11Util
 {
 public:
-    bool connected = false;
-
     X11Util();
     ~X11Util();
 
-    auto get_server_window_ids() const -> std::vector<xcb_window_t>;
-    auto get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>;
-    auto get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>;
-    auto get_parent_window(int pid) const -> xcb_window_t;
+    [[nodiscard]] auto get_server_window_ids() const -> std::vector<xcb_window_t>;
+    [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>;
+    [[nodiscard]] auto get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>;
+    [[nodiscard]] auto get_parent_window(int pid) const -> xcb_window_t;
 
-    bool window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type = XCB_ATOM_ANY) const;
-    int get_window_pid(xcb_window_t window) const;
+    [[nodiscard]] auto window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type = XCB_ATOM_ANY) const -> bool;
+    [[nodiscard]] auto get_window_pid(xcb_window_t window) const -> int;
 
+    [[nodiscard]] auto is_connected() const -> bool;
 private:
     xcb_connection_t* connection;
     xcb_screen_t* screen;
+    bool connected = false;
 
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows,
         xcb_query_tree_cookie_t cookie) const -> void;
