@@ -104,7 +104,7 @@ void Application::execute(const std::string& cmd)
             return;
         }
         set_dimensions_from_json(json_cmd);
-        image = Image::load(*terminal, *dimensions, flags, json_cmd["path"], *logger);
+        image = Image::load(*terminal, *dimensions, flags, json_cmd["path"]);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
@@ -194,16 +194,20 @@ void Application::setup_logger()
     std::string log_tmp = util::get_log_filename();
     fs::path log_path = fs::temp_directory_path() / log_tmp;
     try {
-        spdlog::flush_on(spdlog::level::info);
+        spdlog::flush_on(spdlog::level::debug);
         auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_path);
 
         auto main_logger = std::make_shared<spdlog::logger>("main", sink);
         auto terminal_logger = std::make_shared<spdlog::logger>("terminal", sink);
         auto x11_logger = std::make_shared<spdlog::logger>("X11", sink);
+        auto cv_logger = std::make_shared<spdlog::logger>("opencv", sink);
+        auto vips_logger = std::make_shared<spdlog::logger>("vips", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
         spdlog::initialize_logger(x11_logger);
+        spdlog::initialize_logger(cv_logger);
+        spdlog::initialize_logger(vips_logger);
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {

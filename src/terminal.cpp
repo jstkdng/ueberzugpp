@@ -73,9 +73,6 @@ auto Terminal::get_terminal_size() -> void
     if (xutil->is_connected()) {
         detected_output = "x11";
     }
-    if (xpixel == 0 || ypixel == 0) {
-        get_terminal_size_x11();
-    }
 #endif
     if (flags.use_escape_codes) {
         init_termios();
@@ -85,6 +82,9 @@ auto Terminal::get_terminal_size() -> void
         check_sixel_support();
         check_kitty_support();
         reset_termios();
+    }
+    if (xpixel == 0 || ypixel == 0) {
+        get_terminal_size_x11();
     }
 
     double padding_horiz = guess_padding(cols, xpixel);

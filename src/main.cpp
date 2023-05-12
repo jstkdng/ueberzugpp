@@ -20,12 +20,15 @@
 #include <atomic>
 #include <csignal>
 #include <fmt/format.h>
+#include <spdlog/cfg/env.h>
 
 #include "application.hpp"
 #include "flags.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
 #include "signal.hpp"
+
+const pid_t Application::parent_pid = getppid();
 
 void got_signal(const int signal)
 {
@@ -60,6 +63,7 @@ auto main(int argc, char *argv[]) -> int
     sigaction(SIGHUP, nullptr, nullptr);
     sigaction(SIGCHLD, nullptr, nullptr);
 
+    spdlog::cfg::load_env_levels();
     Flags flags;
     std::vector<std::string> available_outputs ;
 

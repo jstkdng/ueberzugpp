@@ -29,12 +29,13 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <spdlog/spdlog.h>
 
 class X11Canvas : public Canvas
 {
 public:
-    X11Canvas(std::mutex& img_lock);
-    ~X11Canvas();
+    explicit X11Canvas(std::mutex& img_lock);
+    ~X11Canvas() override;
 
     void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
     void draw() override;
@@ -55,8 +56,9 @@ private:
 
     std::thread draw_thread;
     std::atomic<bool> can_draw {true};
-
     std::thread event_handler;
+
+    std::shared_ptr<spdlog::logger> logger;
 
     void handle_events();
     void discard_leftover_events();
