@@ -40,6 +40,9 @@ pid(pid), flags(flags)
     logger = spdlog::get("terminal");
     term = os::getenv("TERM").value_or("xterm-256color");
     term_program = os::getenv("TERM_PROGRAM").value_or("");
+#ifdef ENABLE_X11
+    xutil = std::make_unique<X11Util>();
+#endif
     open_first_pty();
     get_terminal_size();
 }
@@ -66,19 +69,22 @@ auto Terminal::get_terminal_size() -> void
     ypixel = size.ws_ypixel;
     logger->debug("Initial sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
 
-    if (flags.use_escape_codes) {
-        init_termios();
-        if (xpixel == 0 && ypixel == 0) {
-            get_terminal_size_escape_code();
-        }
-        if (flags.output.empty()) {
-            check_sixel_support();
-            check_kitty_support();
-        }
-        reset_termios();
+#ifdef ENABLE_X11
+    if (xutil->is_connected()) {
+        detected_output = "x11";
     }
     if (xpixel == 0 || ypixel == 0) {
         get_terminal_size_x11();
+    }
+#endif
+    if (flags.use_escape_codes) {
+        init_termios();
+        if (xpixel == 0 || ypixel == 0) {
+            get_terminal_size_escape_code();
+        }
+        check_sixel_support();
+        check_kitty_support();
+        reset_termios();
     }
 
     double padding_horiz = guess_padding(cols, xpixel);
@@ -108,6 +114,7 @@ auto Terminal::guess_font_size(int chars, double pixels, double padding)
 
 void Terminal::get_terminal_size_escape_code()
 {
+    logger->debug("Obtaining sizes from escape codes");
     auto resp = read_raw_str("\e[14t").erase(0, 4);
     if (resp.empty()) {
         return;
@@ -115,6 +122,7 @@ void Terminal::get_terminal_size_escape_code()
     auto sizes = util::str_split(resp, ";");
     ypixel = std::stoi(sizes[0]);
     xpixel = std::stoi(sizes[1]);
+    logger->debug("New sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
 }
 
 void Terminal::check_sixel_support()
@@ -125,8 +133,8 @@ void Terminal::check_sixel_support()
     };
     auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
-    if (vals.size() > 2 || supported_terms.contains(term)) {
-        flags.output = "sixel";
+    if ((vals.size() > 2 || supported_terms.contains(term)) && detected_output.empty()) {
+        detected_output = "sixel";
     }
 }
 
@@ -134,7 +142,7 @@ void Terminal::check_kitty_support()
 {
     auto resp = read_raw_str("\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\\e[c");
     if (resp.find("OK") != std::string::npos) {
-        flags.output = "kitty";
+        detected_output = "kitty";
     }
 }
 
@@ -185,16 +193,15 @@ auto Terminal::reset_termios() -> void
 void Terminal::get_terminal_size_x11()
 {
 #ifdef ENABLE_X11
-    logger->info("Obtaining sizes from x11 server");
-    const X11Util xutil;
-    if (!xutil.is_connected()) {
+    logger->debug("Obtaining sizes from x11 server");
+    if (!xutil->is_connected()) {
         return;
     }
-    auto window = xutil.get_parent_window(os::get_pid());
-    auto dims = xutil.get_window_dimensions(window);
+    auto window = xutil->get_parent_window(os::get_pid());
+    auto dims = xutil->get_window_dimensions(window);
     xpixel = dims.first;
     ypixel = dims.second;
-    logger->info("X11 sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
+    logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
 #endif
 }
 

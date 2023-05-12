@@ -37,7 +37,7 @@ public:
 
     [[nodiscard]] auto is_connected() const -> bool;
 private:
-    xcb_connection_t* connection;
+    xcb_connection_t* connection = nullptr;
     xcb_screen_t* screen;
     bool connected = false;
 

@@ -29,6 +29,7 @@
 #include <fmt/format.h>
 #include <zmq.hpp>
 #include <vips/vips8>
+#include <thread>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -45,6 +46,9 @@ s(SignalSingleton::instance())
     if (!canvas) {
         logger->error("Unable to initialize canvas.");
         std::exit(1);
+    }
+    if (flags.no_stdin) {
+        daemonize(flags.pid_file);
     }
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) {
@@ -66,17 +70,20 @@ s(SignalSingleton::instance())
 
 Application::~Application()
 {
+    if (!flags.no_stdin) {
+        util::send_socket_message("EXIT", util::get_socket_endpoint());
+    }
+    if (socket_thread.joinable()) {
+        socket_thread.join();
+    }
     canvas->clear();
     vips_shutdown();
     if (f_stderr != nullptr) {
         std::fclose(f_stderr);
     }
-    util::send_socket_message("EXIT", util::get_socket_endpoint());
-    if (socket_thread.joinable()) {
-        socket_thread.join();
-    }
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
+    logger->info("Exiting ueberzugpp.");
 }
 
 void Application::execute(const std::string& cmd)
@@ -204,6 +211,7 @@ void Application::setup_logger()
     }
 }
 
+
 void Application::command_loop()
 {
     const int sleep_time = 100;
@@ -216,9 +224,10 @@ void Application::command_loop()
             execute(cmd);
         }
     } else {
+        /*
         while (!s->get_stop_flag().load()) {
             std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-        }
+        }*/
     }
 }
 
@@ -279,4 +288,20 @@ void Application::print_version()
 {
     std::cout << "ueberzugpp " << ueberzugpp_VERSION_MAJOR << "." << ueberzugpp_VERSION_MINOR
         << "." << ueberzugpp_VERSION_PATCH << std::endl;
+}
+
+void Application::daemonize(const std::string& pid_file)
+{
+    pid_t pid = fork();
+    if (pid < 0) {
+        std::exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        std::exit(EXIT_SUCCESS);
+    }
+    if (setsid() < 0) {
+        std::exit(EXIT_FAILURE);
+    }
+    std::ofstream ofs (pid_file);
+    ofs << os::get_pid();
 }

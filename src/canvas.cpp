@@ -28,26 +28,25 @@
 auto Canvas::create(const Terminal& terminal, Flags& flags,
         spdlog::logger& logger, std::mutex& img_lock) -> std::unique_ptr<Canvas>
 {
-    auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
-    if (flags.output.empty() && xdg_session != "wayland") {
-        flags.output = "x11";
+    if (flags.output.empty()) {
+        flags.output = terminal.detected_output;
     }
-
     logger.info(R"(TERM="{}", TERM_PROGRAM="{}", OUTPUT="{}")",
             terminal.term , terminal.term_program, flags.output);
-    if (flags.output == "sixel") {
-        return std::make_unique<SixelCanvas>(img_lock);
-    }
+
     if (flags.output == "kitty") {
         return std::make_unique<KittyCanvas>();
-    }
-    if (flags.output == "iterm2") {
-        return std::make_unique<Iterm2Canvas>();
     }
 #ifdef ENABLE_X11
     if (flags.output == "x11") {
         return std::make_unique<X11Canvas>(img_lock);
     }
 #endif
+    if (flags.output == "iterm2") {
+        return std::make_unique<Iterm2Canvas>();
+    }
+    if (flags.output == "sixel") {
+        return std::make_unique<SixelCanvas>(img_lock);
+    }
     return nullptr;
 }

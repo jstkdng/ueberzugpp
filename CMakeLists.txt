@@ -38,12 +38,6 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(TBB REQUIRED)
 
-if (APPLE)
-    set(PROC_SOURCES src/process_apple.cpp)
-else()
-    set(PROC_SOURCES src/process.cpp)
-endif()
-
 find_package(cppzmq QUIET)
 if (NOT cppzmq_FOUND)
     option(CPPZMQ_BUILD_TESTS OFF)
@@ -142,6 +136,12 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
+
+if (APPLE)
+    set(PROC_SOURCES src/process_apple.cpp)
+else()
+    set(PROC_SOURCES src/process.cpp)
+endif()
 
 configure_file("include/version.hpp.in" version.hpp)
 

@@ -172,6 +172,11 @@ void util::benchmark(std::function<void(void)> func)
 
 void util::send_command(const Flags& flags)
 {
+    if (flags.cmd_action == "exit") {
+        auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
+        util::send_socket_message("EXIT", endpoint);
+        return;
+    }
     if (flags.cmd_action == "remove") {
         auto json = fmt::format(R"({{"action":"remove","identifier":"{}"}})", flags.cmd_id);
         auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
