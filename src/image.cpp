@@ -26,8 +26,8 @@
 #   include <opencv2/imgcodecs.hpp>
 #endif
 #include <vips/vips.h>
-#include <spdlog/spdlog.h>
 #include <unordered_set>
+#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -35,14 +35,18 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const F
         const std::string& filename)
     -> std::shared_ptr<Image>
 {
-    if (!fs::exists(filename)) return nullptr;
+    if (!fs::exists(filename)) {
+        return nullptr;
+    }
     std::string image_path = filename;
     bool in_cache = false;
     if (!flags.no_cache) {
         image_path = check_cache(dimensions, filename);
         in_cache = image_path != filename;
     }
-    bool is_anim = false, load_opencv = false, load_libvips = flags.no_opencv;
+    bool is_anim = false;
+    bool load_opencv = false; 
+    bool load_libvips = flags.no_opencv;
     fs::path file = image_path;
     std::unordered_set<std::string> animated_formats {
         ".gif", ".webp"
@@ -78,15 +82,19 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const F
 auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
 {
     fs::path cache_path = util::get_cache_file_save_location(orig_path);
-    if (!fs::exists(cache_path)) return orig_path;
+    if (!fs::exists(cache_path)) {
+        return orig_path;
+    }
 
     auto cache_img = vips::VImage::new_from_file(cache_path.c_str());
-    int img_width = cache_img.width(), img_height = cache_img.height();
-
-    int dim_width = dimensions.max_wpixels(), dim_height = dimensions.max_hpixels();
+    int img_width = cache_img.width();
+    int img_height = cache_img.height();
+    int dim_width = dimensions.max_wpixels(); 
+    int dim_height = dimensions.max_hpixels();
+    const int delta = 10;
 
     if ((dim_width >= img_width && dim_height >= img_height) &&
-        ((dim_width - img_width) <= 10 || (dim_height - img_height) <= 10)) {
+        ((dim_width - img_width) <= delta || (dim_height - img_height) <= delta)) {
         return cache_path;
     }
     return orig_path;

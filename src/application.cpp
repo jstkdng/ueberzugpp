@@ -88,23 +88,23 @@ Application::~Application()
 
 void Application::execute(const std::string& cmd)
 {
-    json json_cmd;
+    json json;
     try {
-        json_cmd = json::parse(cmd);
+        json = json::parse(cmd);
     } catch (const json::parse_error& e) {
         logger->error("There was an error parsing the command.");
         return;
     }
-    logger->info("Command received: {}", json_cmd.dump());
+    logger->info("Command received: {}", json.dump());
 
     std::unique_lock lock {img_lock};
-    if (json_cmd["action"] == "add") {
-        if (!json_cmd["path"].is_string()) {
+    if (json["action"] == "add") {
+        if (!json["path"].is_string()) {
             logger->error("Invalid path.");
             return;
         }
-        set_dimensions_from_json(json_cmd);
-        image = Image::load(*terminal, *dimensions, flags, json_cmd["path"]);
+        set_dimensions_from_json(json);
+        image = Image::load(*terminal, *dimensions, flags, json["path"]);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
@@ -112,11 +112,11 @@ void Application::execute(const std::string& cmd)
         canvas->clear();
         canvas->init(*dimensions, image);
         canvas->draw();
-    } else if (json_cmd["action"] == "remove") {
+    } else if (json["action"] == "remove") {
         logger->info("Removing image.");
         canvas->clear();
-    } else if (json_cmd["action"] == "tmux") {
-        handle_tmux_hook(json_cmd["hook"]);
+    } else if (json["action"] == "tmux") {
+        handle_tmux_hook(json["hook"]);
     } else {
         logger->warn("Command not supported.");
     }
@@ -158,35 +158,42 @@ void Application::handle_tmux_hook(const std::string& hook)
     }
 }
 
-void Application::set_dimensions_from_json(const json& j)
+void Application::set_dimensions_from_json(const json& json)
 {
     using std::string;
-    int x, y, max_width, max_height;
-    string width_key = "max_width", height_key = "max_height", scaler = "contain";
-    if (j.contains("scaler")) {
-        scaler = j["scaler"];
+    int xcoord = 0;
+    int ycoord = 0;
+    int max_width = 0;
+    int max_height = 0;
+    string width_key = "max_width";
+    string height_key = "max_height";
+    string scaler = "contain";
+    if (json.contains("scaler")) {
+        scaler = json["scaler"];
     }
-    if (j.contains("width")) {
+    if (json.contains("width")) {
         width_key = "width";
         height_key = "height";
     }
-    if (j[width_key].is_string()) {
-        string w = j[width_key], h = j[height_key];
-        max_width = std::stoi(w);
-        max_height = std::stoi(h);
+    if (json[width_key].is_string()) {
+        string width = json[width_key];
+        string height = json[height_key];
+        max_width = std::stoi(width);
+        max_height = std::stoi(height);
     } else {
-        max_width = j[width_key];
-        max_height = j[height_key];
+        max_width = json[width_key];
+        max_height = json[height_key];
     }
-    if (j["x"].is_string()) {
-        string _x = j["x"], _y = j["y"];
-        x = std::stoi(_x);
-        y = std::stoi(_y);
+    if (json["x"].is_string()) {
+        string xcoords = json["x"];
+        string ycoords = json["y"];
+        xcoord = std::stoi(xcoords);
+        ycoord = std::stoi(ycoords);
     } else {
-        x = j["x"];
-        y = j["y"];
+        xcoord = json["x"];
+        ycoord = json["y"];
     }
-    dimensions = std::make_unique<Dimensions>(*terminal, x, y, max_width, max_height, scaler);
+    dimensions = std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width, max_height, scaler);
 }
 
 void Application::setup_logger()
@@ -227,11 +234,6 @@ void Application::command_loop()
             }
             execute(cmd);
         }
-    } else {
-        /*
-        while (!s->get_stop_flag().load()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
-        }*/
     }
 }
 

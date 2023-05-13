@@ -32,7 +32,7 @@ max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
     logger = spdlog::get("opencv");
-    logger->info("Loding image {}", filename);
+    logger->info("Loading image {}", filename);
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
 
     process_image();
@@ -103,10 +103,10 @@ auto OpencvImage::resize_image() -> void
     }
 
     auto save_location = util::get_cache_file_save_location(path);
-    logger->debug("Saving resized image");
     try {
         cv::imwrite(save_location, image);
     } catch (const cv::Exception& ex) {}
+    logger->debug("Saved resized image");
 }
 
 void OpencvImage::process_image()

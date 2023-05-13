@@ -130,7 +130,7 @@ auto util::get_b2_hash_ssl(const std::string& str) -> std::string
     EVP_DigestFinal_ex(mdctx.get(), digest.data(), &digest_len);
 
     for (int i = 0; i < digest_len; ++i) {
-        sstream << std::hex << std::setw(2) << std::setfill('0') << digest[i];
+        sstream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(digest[i]);
     }
     return sstream.str();
 }
