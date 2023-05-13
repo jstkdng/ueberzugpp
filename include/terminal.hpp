@@ -31,10 +31,12 @@ public:
     Terminal(int pid, Flags& flags);
     ~Terminal();
 
-    double font_width;
-    double font_height;
-    int rows;
-    int cols;
+    uint16_t font_width;
+    uint16_t font_height;
+    uint16_t padding_horizontal;
+    uint16_t padding_vertical;
+    uint16_t rows;
+    uint16_t cols;
     std::string term;
     std::string term_program;
     std::string detected_output;
@@ -43,14 +45,15 @@ public:
 
 private:
     auto get_terminal_size() -> void;
-    static auto guess_padding(int chars, double pixels) -> double;
-    static auto guess_font_size(int chars, double pixels, double padding) -> double;
+    static auto guess_padding(uint16_t chars, double pixels) -> double;
+    static auto guess_font_size(uint16_t chars, double pixels, double padding) -> double;
 
     void init_termios();
     void reset_termios();
     void check_sixel_support();
     void check_kitty_support();
     void get_terminal_size_escape_code();
+    void get_terminal_size_xtsm();
     void get_terminal_size_x11();
     void open_first_pty();
 
@@ -58,10 +61,10 @@ private:
 
     int pty_fd;
     int pid;
-    double padding_horizontal;
-    double padding_vertical;
     int xpixel;
     int ypixel;
+    uint16_t fallback_xpixel = 0;
+    uint16_t fallback_ypixel = 0;
 
     Flags& flags;
     std::shared_ptr<spdlog::logger> logger;

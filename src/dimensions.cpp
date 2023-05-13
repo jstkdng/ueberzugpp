@@ -20,7 +20,9 @@
 Dimensions::Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h, const std::string& scaler):
 terminal(terminal),
 scaler(scaler),
-orig_x(x), orig_y(y), max_w(max_w), max_h(max_h)
+orig_x(x), orig_y(y), max_w(max_w), max_h(max_h),
+padding_horizontal(terminal.padding_horizontal),
+padding_vertical(terminal.padding_vertical)
 {
     read_offsets();
 

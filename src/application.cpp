@@ -193,7 +193,7 @@ void Application::set_dimensions_from_json(const json& json)
         xcoord = json["x"];
         ycoord = json["y"];
     }
-    dimensions = std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width, max_height, scaler);
+    dimensions = std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width - 1, max_height, scaler);
 }
 
 void Application::setup_logger()

@@ -38,8 +38,8 @@ gc(xcb_generate_id(connection))
         .colormap = screen->default_colormap
     };
 
-    int16_t xcoord = dimensions.xpixels();
-    int16_t ycoord = dimensions.ypixels();
+    int16_t xcoord = dimensions.xpixels() + dimensions.padding_horizontal;
+    int16_t ycoord = dimensions.ypixels() + dimensions.padding_vertical;
     logger->debug("Parent window: {}", parent);
     xcb_create_window_aux(connection,
             screen->root_depth,

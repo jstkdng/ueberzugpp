@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <poll.h>
+#include <gsl/util>
 
 Terminal::Terminal(int pid, Flags& flags):
 pid(pid), flags(flags)
@@ -72,6 +73,7 @@ auto Terminal::get_terminal_size() -> void
 #ifdef ENABLE_X11
     if (xutil->is_connected()) {
         detected_output = "x11";
+        get_terminal_size_x11();
     }
 #endif
     if (flags.use_escape_codes) {
@@ -79,34 +81,50 @@ auto Terminal::get_terminal_size() -> void
         if (xpixel == 0 || ypixel == 0) {
             get_terminal_size_escape_code();
         }
+        if (xpixel == 0 || ypixel == 0) {
+            get_terminal_size_xtsm();
+        }
         check_sixel_support();
         check_kitty_support();
         reset_termios();
     }
+    logger->debug("New sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
+#ifdef ENABLE_X11
     if (xpixel == 0 || ypixel == 0) {
-        get_terminal_size_x11();
+        xpixel = fallback_xpixel;
+        ypixel = fallback_ypixel;
+    }
+#endif
+    if (xpixel == 0 || ypixel == 0) {
+        throw std::runtime_error("UNABLE TO CALCULATE TERMINAL SIZES");
     }
 
     double padding_horiz = guess_padding(cols, xpixel);
     double padding_vert = guess_padding(rows, ypixel);
 
-    padding_horizontal = std::max(padding_horiz, padding_vert);
+    padding_horizontal = gsl::narrow_cast<uint16_t>(std::max(padding_horiz, padding_vert));
     padding_vertical = padding_horizontal;
-    font_width =
-        guess_font_size(cols, xpixel, padding_horizontal);
-    font_height =
-        guess_font_size(rows, ypixel, padding_vertical);
+    font_width = std::ceil(guess_font_size(cols, xpixel, padding_horizontal));
+    font_height = std::ceil(guess_font_size(rows, ypixel, padding_vertical));
 
+    if (xpixel < fallback_xpixel && ypixel < fallback_ypixel) {
+        padding_horizontal = (fallback_xpixel - xpixel) / 2;
+        padding_vertical = (fallback_ypixel - ypixel) / 2;
+        font_width = gsl::narrow_cast<uint16_t>(xpixel / cols);
+        font_height = gsl::narrow_cast<uint16_t>(ypixel / rows);
+    }
+
+    logger->debug("padding_horiz={} padding_vert={}", padding_horizontal, padding_vertical);
     logger->debug("font_width={} font_height={}", font_width, font_height);
 }
 
-auto Terminal::guess_padding(int chars, double pixels) -> double
+auto Terminal::guess_padding(uint16_t chars, double pixels) -> double
 {
     double font_size = std::floor(pixels / chars);
     return (pixels - font_size * chars) / 2;
 }
 
-auto Terminal::guess_font_size(int chars, double pixels, double padding)
+auto Terminal::guess_font_size(uint16_t chars, double pixels, double padding)
     -> double
 {
     return (pixels - 2 * padding) / chars;
@@ -122,7 +140,18 @@ void Terminal::get_terminal_size_escape_code()
     auto sizes = util::str_split(resp, ";");
     ypixel = std::stoi(sizes[0]);
     xpixel = std::stoi(sizes[1]);
-    logger->debug("New sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
+}
+
+void Terminal::get_terminal_size_xtsm()
+{
+    logger->debug("Obtaining sizes from XTSM");
+    auto resp = read_raw_str("\e[?2;1;0S").erase(0, 3);
+    auto sizes = util::str_split(resp, ";");
+    if (sizes.size() != 2) {
+        return;
+    }
+    ypixel = std::stoi(sizes[0]);
+    xpixel = std::stoi(sizes[1]);
 }
 
 void Terminal::check_sixel_support()
@@ -193,15 +222,12 @@ auto Terminal::reset_termios() -> void
 void Terminal::get_terminal_size_x11()
 {
 #ifdef ENABLE_X11
-    logger->debug("Obtaining sizes from x11 server");
-    if (!xutil->is_connected()) {
-        return;
-    }
+    logger->debug("Obtaining sizes from X11");
     auto window = xutil->get_parent_window(os::get_pid());
     auto dims = xutil->get_window_dimensions(window);
-    xpixel = dims.first;
-    ypixel = dims.second;
-    logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
+    fallback_xpixel = dims.first;
+    fallback_ypixel = dims.second;
+    logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", fallback_xpixel, fallback_ypixel);
 #endif
 }
 

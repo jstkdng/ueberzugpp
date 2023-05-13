@@ -37,6 +37,8 @@ public:
     int max_w;
     int max_h;
     std::string scaler;
+    uint16_t padding_horizontal;
+    uint16_t padding_vertical;
 
 private:
     const Terminal& terminal;
