@@ -20,7 +20,6 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/ocl.hpp>
-#include <iostream>
 
 OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string& filename, bool in_cache):
@@ -32,6 +31,8 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
+    logger = spdlog::get("opencv");
+    logger->info("Loding image {}", filename);
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
 
     process_image();
@@ -87,17 +88,22 @@ auto OpencvImage::resize_image() -> void
     opencl_available = opencl_ctx.ptr() != nullptr;
 
     if (opencl_available) {
+        logger->debug("Resizing image with opencl");
         uimage = image.getUMat(cv::ACCESS_RW);
         cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
         image = uimage.getMat(cv::ACCESS_RW);
     } else {
+        logger->debug("Resizing image");
         cv::resize(image, image, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
     }
 
     if (flags.no_cache) {
+        logger->debug("Caching is disabled");
         return;
     }
+
     auto save_location = util::get_cache_file_save_location(path);
+    logger->debug("Saving resized image");
     try {
         cv::imwrite(save_location, image);
     } catch (const cv::Exception& ex) {}
