@@ -6,7 +6,7 @@ image() {
     Y=$5
     MW=$(($2-1))
     MH=$3
-    ueberzugpp cmd -s $UEBERZUGPP_SOCKET -a add -i PREVIEW -x $X -y $Y --max-width $MW --max-height $MH -f "$FILE_PATH"
+    ueberzugpp cmd -s $UB_SOCKET -a add -i PREVIEW -x $X -y $Y --max-width $MW --max-height $MH -f "$FILE_PATH"
     exit 1
 }
 
