@@ -27,7 +27,7 @@
 #endif
 #include <vips/vips.h>
 #include <unordered_set>
-#include <iostream>
+#include <gsl/util>
 
 namespace fs = std::filesystem;
 
@@ -100,37 +100,44 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
     return orig_path;
 }
 
-auto Image::get_new_sizes(double max_width, double max_height, const std::string& scaler)
+auto Image::get_new_sizes(double max_width, double max_height, const std::string& scaler) const
     -> std::pair<const int, const int>
 {
-    int _width = width(), _height = height(), new_width, new_height;
-    double new_scale = 0, width_scale, height_scale, min_scale, max_scale;
+    int img_width = width();
+    int img_height = height();
+    int new_width = 0;
+    int new_height = 0;
+    double new_scale = 0;
+    double width_scale = 0;
+    double height_scale = 0;
+    double min_scale = 0;
+    double max_scale = 0;
 
-    if (_height > max_height) {
-        if (_width > max_width) {
-            width_scale = max_width / _width;
-            height_scale = max_height / _height;
+    if (img_height > max_height) {
+        if (img_width > max_width) {
+            width_scale = max_width / img_width;
+            height_scale = max_height / img_height;
             min_scale = std::min(width_scale, height_scale);
             max_scale = std::max(width_scale, height_scale);
-            if (_width * max_scale <= max_width && _height * max_scale <= max_height) {
+            if (img_width * max_scale <= max_width && img_height * max_scale <= max_height) {
                 new_scale = max_scale;
             } else {
                 new_scale = min_scale;
             }
         } else {
-            new_scale = max_height / _height;
+            new_scale = max_height / img_height;
         }
-    } else if (_width > max_width) {
-        new_scale = max_width / _width;
+    } else if (img_width > max_width) {
+        new_scale = max_width / img_width;
     } else if (scaler == "fit_contain" || scaler == "forced_cover") {
         // I believe these should work the same
-        new_scale = max_height / _height;
-        if (_width >= _height) {
-            new_scale = max_width / _width;
+        new_scale = max_height / img_height;
+        if (img_width >= img_height) {
+            new_scale = max_width / img_width;
         }
     }
-    new_width = _width * new_scale;
-    new_height = _height * new_scale;
+    new_width = gsl::narrow_cast<int>(img_width * new_scale);
+    new_height = gsl::narrow_cast<int>(img_height * new_scale);
 
     return std::make_pair(new_width, new_height);
 }

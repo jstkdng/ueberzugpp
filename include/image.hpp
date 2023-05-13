@@ -34,20 +34,20 @@ public:
 
     virtual ~Image() = default;
 
-    virtual auto width() const -> int = 0;
-    virtual auto height() const -> int = 0;
-    virtual auto size() const -> unsigned long = 0;
-    virtual auto data() const -> const unsigned char* = 0;
-    virtual auto channels() const -> int = 0;
+    [[nodiscard]] virtual auto width() const -> int = 0;
+    [[nodiscard]] virtual auto height() const -> int = 0;
+    [[nodiscard]] virtual auto size() const -> uint64_t = 0;
+    [[nodiscard]] virtual auto data() const -> const unsigned char* = 0;
+    [[nodiscard]] virtual auto channels() const -> int = 0;
 
+    [[nodiscard]] virtual auto frame_delay() const -> int { return -1; }
+    [[nodiscard]] virtual auto is_animated() const -> bool { return false; }
+    [[nodiscard]] virtual auto filename() const -> std::string = 0;
     virtual auto resize_image() -> void = 0;
-    virtual auto frame_delay() const -> int { return -1; }
     virtual auto next_frame() -> void {}
-    virtual auto is_animated() const -> bool { return false; }
-    virtual auto filename() const -> std::string = 0;
 
 protected:
-    auto get_new_sizes(double max_width, double max_height, const std::string& scaler)
+    [[nodiscard]] auto get_new_sizes(double max_width, double max_height, const std::string& scaler) const
         -> std::pair<const int, const int>;
 };
 

@@ -21,7 +21,7 @@
 #ifdef ENABLE_OPENCV
     #include <opencv2/videoio.hpp>
 #endif
-#include <gsl/gsl>
+#include <gsl/util>
 
 using vips::VImage;
 using vips::VError;
