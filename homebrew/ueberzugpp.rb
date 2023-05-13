@@ -3,8 +3,8 @@ require "pty"
 class Ueberzugpp < Formula
   desc "Drop in replacement for ueberzug written in C++"
   homepage "https://github.com/jstkdng/ueberzugpp"
-  url "https://github.com/jstkdng/ueberzugpp/archive/refs/tags/v2.8.1.tar.gz"
-  sha256 "c19bf5f1f29dae1fe2134bcd7e47a9b488a4125b411a92e48538ccda0d54b912"
+  url "https://github.com/jstkdng/ueberzugpp/archive/refs/tags/v2.8.2.tar.gz"
+  sha256 "202eee24b706f9120cb506de7a6cf8f46d1ea3bdf2fbca5e53513b21c5be9695"
   license "GPL-3.0-or-later"
 
   depends_on "cli11" => :build
@@ -12,6 +12,7 @@ class Ueberzugpp < Formula
   depends_on "cppzmq" => :build
   depends_on "nlohmann-json" => :build
   depends_on "pkg-config" => :build
+  depends_on "cpp-gsl" => :build
   depends_on "fmt"
   depends_on "libsixel"
   depends_on "openssl@1.1"
@@ -32,6 +33,7 @@ class Ueberzugpp < Formula
 
   test do
     ENV["TMPDIR"] = testpath
+    ENV["SPDLOG_LEVEL"] = "debug"
     __, secondary = PTY.open
     read, __ = IO.pipe
     pid = spawn("#{bin}/ueberzugpp layer -o iterm2", in: read, out: secondary)
