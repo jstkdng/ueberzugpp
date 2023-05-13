@@ -26,27 +26,25 @@
 
 namespace tmux
 {
-    extern std::vector<std::string_view> hooks;
+    extern const std::vector<std::string> hooks;
 
-    std::string get_session_id();
+    auto get_session_id() -> std::string;
+    auto get_pane() -> std::string;
 
-    std::string get_pane();
-
-    bool is_used();
-
-    bool is_window_focused();
+    auto is_used() -> bool;
+    auto is_window_focused() -> bool;
 
     auto get_client_pids() -> std::optional<std::vector<int>>;
 
-    auto get_offset() -> std::pair<const int, const int>;
+    auto get_offset() -> std::pair<int, int>;
 
-    auto get_pane_offset() -> std::pair<const int, const int>;
+    auto get_pane_offset() -> std::pair<int, int>;
 
-    int get_statusbar_offset();
+    auto get_statusbar_offset() -> int;
 
-    void handle_hook(std::string_view hook, int pid);
+    void handle_hook(const std::string& hook, int pid);
     void register_hooks();
     void unregister_hooks();
-}
+} // namespace tmux
 
 #endif

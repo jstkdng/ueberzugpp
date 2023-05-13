@@ -21,26 +21,26 @@
 #include <string>
 #include <fmt/format.h>
 
-std::vector<std::string_view> tmux::hooks = {
+const std::vector<std::string> tmux::hooks = {
     "client-session-changed",
     "session-window-changed",
     "client-detached",
     "window-layout-changed"
 };
 
-std::string tmux::get_session_id()
+auto tmux::get_session_id() -> std::string
 {
     std::string cmd =
         "tmux display -p -F '#{session_id}' -t " + tmux::get_pane();
     return os::exec(cmd);
 }
 
-bool tmux::is_used()
+auto tmux::is_used() -> bool
 {
     return !tmux::get_pane().empty();
 }
 
-bool tmux::is_window_focused()
+auto tmux::is_window_focused() -> bool
 {
     std::string cmd =
         "tmux display -p -F '#{window_active},#{pane_in_mode}' -t " + tmux::get_pane();
@@ -48,19 +48,24 @@ bool tmux::is_window_focused()
     return output == "1,0";
 }
 
-std::string tmux::get_pane()
+auto tmux::get_pane() -> std::string
 {
     return os::getenv("TMUX_PANE").value_or("");
 }
 
 auto tmux::get_client_pids() -> std::optional<std::vector<int>>
 {
-    if (!tmux::is_window_focused()) return {};
+    if (!tmux::is_used()) {
+        return {};
+    }
+    if (!tmux::is_window_focused()) {
+        return {};
+    }
 
     std::vector<int> pids;
     std::string cmd =
         "tmux list-clients -F '#{client_pid}' -t " + tmux::get_pane();
-    std::string output = os::exec(cmd), to;
+    std::string output = os::exec(cmd);
 
     for (const auto& line: util::str_split(output, "\n")) {
         pids.push_back(std::stoi(line));
@@ -69,15 +74,17 @@ auto tmux::get_client_pids() -> std::optional<std::vector<int>>
     return pids;
 }
 
-auto tmux::get_offset() -> std::pair<const int, const int>
+auto tmux::get_offset() -> std::pair<int, int>
 {
-    if (!tmux::is_used()) return std::make_pair(0, 0);
+    if (!tmux::is_used()) {
+        return std::make_pair(0, 0);
+    }
     auto [p_x, p_y] = get_pane_offset();
     auto s_y = get_statusbar_offset();
     return std::make_pair(p_x, p_y + s_y);
 }
 
-auto tmux::get_pane_offset() -> std::pair<const int, const int>
+auto tmux::get_pane_offset() -> std::pair<int, int>
 {
     std::string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
                                      #{pane_bottom},#{pane_right},\
@@ -87,28 +94,34 @@ auto tmux::get_pane_offset() -> std::pair<const int, const int>
     return std::make_pair(std::stoi(output[1]), std::stoi(output[0]));
 }
 
-int tmux::get_statusbar_offset()
+auto tmux::get_statusbar_offset() -> int
 {
     std::string cmd = "tmux display -p '#{status},#{status-position}'";
     auto output = util::str_split(os::exec(cmd), ",");
-    if (output[1] != "top" || output[0] == "off") return 0;
-    if (output[0] == "on") return 1;
+    if (output[1] != "top" || output[0] == "off") {
+        return 0;
+    }
+    if (output[0] == "on") {
+        return 1;
+    }
     return std::stoi(output[0]);
 }
 
-void tmux::handle_hook(std::string_view hook, int pid)
+void tmux::handle_hook(const std::string& hook, int pid)
 {
-    auto msg = fmt::format("{{\"action\":\"tmux\",\"hook\":\"{}\"}}\n", hook);
+    auto msg = fmt::format(R"({{"action":"tmux","hook":"{}"}})", hook);
     auto endpoint = util::get_socket_endpoint(pid);
     util::send_socket_message(msg, endpoint);
 }
 
 void tmux::register_hooks()
 {
-    if (!is_used()) return;
+    if (!is_used()) {
+        return;
+    }
     for (const auto& hook: hooks) {
         auto cmd = fmt::format(
-                "tmux set-hook -t {} {} \"run-shell 'ueberzug tmux {} {}'\"",
+                R"(tmux set-hook -t {} {} "run-shell 'ueberzug tmux {} {}'")",
                 get_pane(), hook, hook, os::get_pid());
         os::exec(cmd);
     }
@@ -116,7 +129,9 @@ void tmux::register_hooks()
 
 void tmux::unregister_hooks()
 {
-    if (!is_used()) return;
+    if (!is_used()) {
+        return;
+    }
     for (const auto& hook: hooks) {
         auto cmd = fmt::format(
                 "tmux set-hook -u -t {} {}", get_pane(), hook);
