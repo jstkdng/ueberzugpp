@@ -17,51 +17,42 @@
 #include "dimensions.hpp"
 #include "tmux.hpp"
 
-Dimensions::Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h, const std::string& scaler):
+#include <utility>
+
+Dimensions::Dimensions(const Terminal& terminal, uint16_t xcoord,
+        uint16_t ycoord, int max_w, int max_h, std::string scaler):
 terminal(terminal),
-scaler(scaler),
-orig_x(x), orig_y(y), max_w(max_w), max_h(max_h),
+scaler(std::move(scaler)),
+orig_x(xcoord), orig_y(ycoord), max_w(max_w), max_h(max_h),
 padding_horizontal(terminal.padding_horizontal),
 padding_vertical(terminal.padding_vertical)
 {
     read_offsets();
-
-    // keep delta for further reloads
-    width_delta = terminal.cols - max_w;
-    height_delta = terminal.rows - max_h;
-}
-
-void Dimensions::reload()
-{
-    read_offsets();
-
-    this->max_w = terminal.cols - width_delta;
-    this->max_h = terminal.rows - height_delta;
 }
 
 void Dimensions::read_offsets()
 {
     auto [offset_x, offset_y] = tmux::get_offset();
-    this->x = orig_x + offset_x;
-    this->y = orig_y + offset_y;
+    x = orig_x + offset_x;
+    y = orig_y + offset_y;
 }
 
-int Dimensions::xpixels() const
+auto Dimensions::xpixels() const -> uint32_t
 {
     return x * terminal.font_width;
 }
 
-int Dimensions::ypixels() const
+auto Dimensions::ypixels() const -> uint32_t
 {
     return y * terminal.font_height;
 }
 
-int Dimensions::max_wpixels() const
+auto Dimensions::max_wpixels() const -> uint32_t
 {
     return max_w * terminal.font_width;
 }
 
-int Dimensions::max_hpixels() const
+auto Dimensions::max_hpixels() const -> uint32_t
 {
     return max_h * terminal.font_height;
 }

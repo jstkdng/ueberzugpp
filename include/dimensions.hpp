@@ -22,31 +22,28 @@
 class Dimensions
 {
 public:
-    Dimensions(const Terminal& terminal, int x, int y, int max_w, int max_h, const std::string& scaler);
+    Dimensions(const Terminal& terminal, uint16_t xcoord, uint16_t ycoord,
+            int max_w, int max_h, std::string scaler);
     ~Dimensions() = default;
 
-    void reload();
+    [[nodiscard]] auto xpixels() const -> uint32_t;
+    [[nodiscard]] auto ypixels() const -> uint32_t;
+    [[nodiscard]] auto max_wpixels() const -> uint32_t;
+    [[nodiscard]] auto max_hpixels() const -> uint32_t;
 
-    int xpixels() const;
-    int ypixels() const;
-    int max_wpixels() const;
-    int max_hpixels() const;
-
-    int x;
-    int y;
-    int max_w;
-    int max_h;
-    std::string scaler;
+    uint16_t x;
+    uint16_t y;
+    uint16_t max_w;
+    uint16_t max_h;
     uint16_t padding_horizontal;
     uint16_t padding_vertical;
+    std::string scaler;
 
 private:
     const Terminal& terminal;
 
-    int width_delta;
-    int height_delta;
-    int orig_x;
-    int orig_y;
+    uint16_t orig_x;
+    uint16_t orig_y;
 
     void read_offsets();
 };

@@ -41,12 +41,11 @@ public:
     std::string term_program;
     std::string detected_output;
 
-    void reload();
-
 private:
     auto get_terminal_size() -> void;
     static auto guess_padding(uint16_t chars, double pixels) -> double;
     static auto guess_font_size(uint16_t chars, double pixels, double padding) -> double;
+    static auto read_raw_str(const std::string& esc) -> std::string;
 
     void init_termios();
     void reset_termios();
@@ -57,7 +56,6 @@ private:
     void get_terminal_size_x11();
     void open_first_pty();
 
-    static auto read_raw_str(const std::string& esc) -> std::string;
 
     int pty_fd;
     int pid;

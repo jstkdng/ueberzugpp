@@ -124,7 +124,7 @@ void Application::execute(const std::string& cmd)
 
 void Application::handle_tmux_hook(const std::string& hook)
 {
-    std::unordered_map<std::string_view, std::function<void()>> hook_fns {
+    std::unordered_map<std::string, std::function<void()>> hook_fns {
         {"client-session-changed",
             [&] {
                 if (tmux::is_window_focused()) {

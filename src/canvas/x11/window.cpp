@@ -17,6 +17,7 @@
 #include "window.hpp"
 
 #include <xcb/xcb.h>
+#include <gsl/util>
 
 Window::Window(xcb_connection_t *connection, xcb_screen_t *screen,
             xcb_window_t window, xcb_window_t parent,
@@ -38,8 +39,8 @@ gc(xcb_generate_id(connection))
         .colormap = screen->default_colormap
     };
 
-    int16_t xcoord = dimensions.xpixels() + dimensions.padding_horizontal;
-    int16_t ycoord = dimensions.ypixels() + dimensions.padding_vertical;
+    auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
+    auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
     logger->debug("Parent window: {}", parent);
     xcb_create_window_aux(connection,
             screen->root_depth,
@@ -70,7 +71,9 @@ void Window::toggle()
 
 void Window::show()
 {
-    if (visible) return;
+    if (visible) {
+        return;
+    }
     visible = true;
     xcb_map_window(connection, window);
     xcb_flush(connection);
@@ -78,7 +81,9 @@ void Window::show()
 
 void Window::hide()
 {
-    if (!visible) return;
+    if (!visible) {
+        return;
+    }
     visible = false;
     xcb_unmap_window(connection, window);
     xcb_flush(connection);
@@ -86,21 +91,23 @@ void Window::hide()
 
 auto Window::draw() -> void
 {
-    if (!xcb_image.get()) return;
+    if (xcb_image.get() == nullptr) {
+        return;
+    }
     xcb_image_put(connection, window, gc, xcb_image.get(), 0, 0, 0);
     xcb_flush(connection);
 }
 
 void Window::generate_frame()
 {
-    xcb_image_buffer = std::make_unique<unsigned char[]>(image.size());
+    xcb_image_buffer = std::vector<unsigned char>(image.size(), 0);
     xcb_image = unique_C_ptr<xcb_image_t> {
         xcb_image_create_native(connection,
             image.width(),
             image.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
-            xcb_image_buffer.get(),
+            xcb_image_buffer.data(),
             image.size(),
             const_cast<unsigned char*>(image.data()))
     };
@@ -120,15 +127,15 @@ auto Window::terminate_event_handler() -> void
     send_expose_event(69, 420);
 }
 
-auto Window::send_expose_event(int x, int y) -> void
+auto Window::send_expose_event(int xcoord, int ycoord) -> void
 {
-    auto e = std::make_unique<xcb_expose_event_t>();
-    e->response_type = XCB_EXPOSE;
-    e->window = window;
-    e->x = x;
-    e->y = y;
-    xcb_send_event(connection, false, window,
-            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(e.get()));
+    auto event = std::make_unique<xcb_expose_event_t>();
+    event->response_type = XCB_EXPOSE;
+    event->window = window;
+    event->x = xcoord;
+    event->y = ycoord;
+    xcb_send_event(connection, 0, window,
+            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(event.get()));
     xcb_flush(this->connection);
 }
 

@@ -24,16 +24,13 @@
 #include <fmt/format.h>
 #include <sys/sysmacros.h>
 
-
-//#define minor(x)        ((int32_t)((x) & 0xffffff))
-
 Process::Process(int pid):
 pid(pid)
 {
     std::string stat = fmt::format("/proc/{}/stat", pid);
-    std::ifstream is(stat);
+    std::ifstream ifs(stat);
     std::string out;
-    std::getline(is, out);
+    std::getline(ifs, out);
 
     uint64_t start = out.find('(') + 1;
     uint64_t end = out.find(')');
@@ -46,7 +43,6 @@ pid(pid)
     this->state = proc[0][0];
     this->ppid = std::stoi(proc[1]);
     this->tty_nr = std::stoi(proc[4]);
-    this->minor_dev = minor(this->tty_nr);
+    this->minor_dev = minor(std::stoi(proc[4]));
     this->pty_path = fmt::format("/dev/pts/{}", minor_dev);
-    is.close();
 }

@@ -48,14 +48,14 @@ private:
     xcb_window_t window;
     xcb_gcontext_t gc;
     unique_C_ptr<xcb_image_t> xcb_image;
-    std::unique_ptr<unsigned char[]> xcb_image_buffer;
+    std::vector<unsigned char> xcb_image_buffer;
     std::shared_ptr<spdlog::logger> logger;
 
     Image& image;
     const Dimensions& dimensions;
     bool visible = false;
 
-    void send_expose_event(int x = 0, int y = 0);
+    void send_expose_event(int xcoord = 0, int ycoord = 0);
 };
 
 #endif
