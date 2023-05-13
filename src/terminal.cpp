@@ -19,6 +19,7 @@
 #include "util.hpp"
 #include "flags.hpp"
 #include "process.hpp"
+#include "tmux.hpp"
 #ifdef ENABLE_X11
 #   include "util/x11.hpp"
 #endif
@@ -55,11 +56,6 @@ Terminal::~Terminal()
     }
 }
 
-void Terminal::reload()
-{
-    get_terminal_size();
-}
-
 auto Terminal::get_terminal_size() -> void
 {
     struct winsize size;
@@ -89,12 +85,11 @@ auto Terminal::get_terminal_size() -> void
         reset_termios();
     }
     logger->debug("New sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
-#ifdef ENABLE_X11
+
     if (xpixel == 0 || ypixel == 0) {
         xpixel = fallback_xpixel;
         ypixel = fallback_ypixel;
     }
-#endif
     if (xpixel == 0 || ypixel == 0) {
         throw std::runtime_error("UNABLE TO CALCULATE TERMINAL SIZES");
     }
@@ -233,14 +228,22 @@ void Terminal::get_terminal_size_x11()
 
 void Terminal::open_first_pty()
 {
-    auto tree = util::get_process_tree(pid);
-    tree.pop_back();
-    std::reverse(tree.begin(), tree.end());
-    for (const auto& pid: tree) {
-        auto proc = Process(pid);
-        pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
-        if (pty_fd != -1) {
-            return;
+    std::vector<int> pids {pid};
+    if (tmux::is_used()) {
+        auto clients = tmux::get_client_pids();
+        if (clients.has_value()) {
+            pids = clients.value();
+        }
+    }
+    for (const auto& spid: pids) {
+        auto tree = util::get_process_tree(spid);
+        for (const auto& tpid: tree) {
+            auto proc = Process(tpid);
+            pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+            if (pty_fd != -1) {
+                logger->debug("Opened {}" , proc.pty_path.c_str());
+                return;
+            }
         }
     }
     pty_fd = STDOUT_FILENO;
