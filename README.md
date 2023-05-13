@@ -131,9 +131,9 @@ and included in the binary.
 
 Not required for building, can be disabled/enabled using flags.
 
-- opencv (ON by default)
-- xcb-util-image (ON by default)
-- turbo-base64 (OFF by default)
+- opencv
+- xcb-util-image
+- turbo-base64
 
 ## Build instructions
 
@@ -143,13 +143,23 @@ Not required for building, can be disabled/enabled using flags.
 
 The following feature flags are available:
 
-ENABLE_OPENCV
+ENABLE_OPENCV (ON by default)
 
-ENABLE_X11
+ENABLE_X11 (ON by default)
 
-ENABLE_TURBOBASE64
+ENABLE_TURBOBASE64 (OFF by default)
 
 You may use any of them when building the project, for example:
+
+- Compile with default options
+
+```sh
+git clone https://github.com/jstkdng/ueberzugpp.git
+cd ueberzugpp
+mkdir build && cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build .
+```
 
 - Disable X11 and OpenCV support
 
@@ -161,7 +171,7 @@ cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_X11=OFF -DENABLE_OPENCV=OFF ..
 cmake --build .
 ```
 
-- Enable usage of Turbo-Base64
+- Enable support for Turbo-Base64
 
 ```sh
 git clone https://github.com/jstkdng/ueberzugpp.git
