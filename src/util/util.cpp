@@ -55,10 +55,9 @@ auto util::get_process_tree(int pid) -> std::vector<int>
 {
     std::vector<int> res;
     Process runner(pid);
-    while (runner.pid != 1) {
-        auto pproc = Process(runner.ppid);
+    while (runner.pid > 1) {
         res.push_back(runner.pid);
-        runner = pproc;
+        runner = Process(runner.ppid);
     }
     return res;
 }
