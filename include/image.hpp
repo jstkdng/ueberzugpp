@@ -36,7 +36,7 @@ public:
 
     [[nodiscard]] virtual auto width() const -> int = 0;
     [[nodiscard]] virtual auto height() const -> int = 0;
-    [[nodiscard]] virtual auto size() const -> uint64_t = 0;
+    [[nodiscard]] virtual auto size() const -> size_t = 0;
     [[nodiscard]] virtual auto data() const -> const unsigned char* = 0;
     [[nodiscard]] virtual auto channels() const -> int = 0;
 

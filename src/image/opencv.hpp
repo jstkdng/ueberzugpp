@@ -37,7 +37,7 @@ public:
 
     [[nodiscard]] auto width() const -> int override;
     [[nodiscard]] auto height() const -> int override;
-    [[nodiscard]] auto size() const -> uint64_t override;
+    [[nodiscard]] auto size() const -> size_t override;
     [[nodiscard]] auto data() const -> const unsigned char* override;
     [[nodiscard]] auto channels() const -> int override;
 

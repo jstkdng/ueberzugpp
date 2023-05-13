@@ -58,7 +58,7 @@ auto OpencvImage::height() const -> int
     return image.rows;
 }
 
-auto OpencvImage::size() const -> uint64_t
+auto OpencvImage::size() const -> size_t
 {
     return _size;
 }
