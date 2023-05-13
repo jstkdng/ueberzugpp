@@ -33,6 +33,7 @@ public:
     bool no_cache = false;
     bool no_opencv = false;
     std::string output;
+    std::string pid_file;
 
     std::string cmd_id;
     std::string cmd_action;

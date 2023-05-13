@@ -21,8 +21,10 @@
 #ifdef ENABLE_OPENCV
     #include <opencv2/videoio.hpp>
 #endif
+#include <gsl/util>
 
-using namespace vips;
+using vips::VImage;
+using vips::VError;
 
 LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string &filename, bool is_anim, bool in_cache):
@@ -35,8 +37,10 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
+    logger = spdlog::get("vips");
+    logger->info("Loading image {}", filename);
     if (is_anim) {
-        auto opts = VImage::option()->set("n", -1);
+        auto *opts = VImage::option()->set("n", -1);
         backup = VImage::new_from_file(filename.c_str(), opts)
             .colourspace(VIPS_INTERPRETATION_sRGB);
         try {
@@ -73,7 +77,7 @@ auto LibvipsImage::height() const -> int
     return image.height();
 }
 
-auto LibvipsImage::size() const -> unsigned long
+auto LibvipsImage::size() const -> uint64_t
 {
     return _size;
 }
@@ -95,26 +99,33 @@ auto LibvipsImage::is_animated() const -> bool
 
 auto LibvipsImage::next_frame() -> void
 {
-    if (!is_anim) return;
+    if (!is_anim) {
+        return;
+    }
     top += orig_height;
-    if (top == backup.height()) top = 0;
+    if (top == backup.height()) {
+        top = 0;
+    }
     image = backup.crop(0, top, backup.width(), orig_height);
     process_image();
 }
 
 auto LibvipsImage::frame_delay() const -> int
 {
-    if (!is_anim) return -1;
+    if (!is_anim) {
+        return -1;
+    }
     try {
         auto delays = backup.get_array_int("delay");
+        const int ms_per_sec = 1000;
         if (delays.at(0) == 0) {
 #ifdef ENABLE_OPENCV
             cv::VideoCapture video (path);
             if (video.isOpened()) {
-                return (1.0 / video.get(cv::CAP_PROP_FPS)) * 1000;
+                return gsl::narrow_cast<int>((1.0 / video.get(cv::CAP_PROP_FPS)) * ms_per_sec);
             }
 #endif
-            return (1.0 / npages) * 1000;
+            return gsl::narrow_cast<int>((1.0 / npages) * ms_per_sec);
         }
         return delays.at(0);
     } catch (const VError& err) {
@@ -124,9 +135,13 @@ auto LibvipsImage::frame_delay() const -> int
 
 auto LibvipsImage::resize_image() -> void
 {
-    if (in_cache) return;
+    if (in_cache) {
+        return;
+    }
     auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
-    if (new_width == 0 && new_height == 0) return;
+    if (new_width == 0 && new_height == 0) {
+        return;
+    }
 
     double scale = 0;
     if (new_width > width()) {
@@ -135,13 +150,17 @@ auto LibvipsImage::resize_image() -> void
         scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
     }
 
+    logger->debug("Resizing image");
     image = image.resize(scale);
-    if (is_anim || flags.no_cache) return;
+    if (is_anim || flags.no_cache) {
+        return;
+    }
 
     auto save_location = util::get_cache_file_save_location(path);
     try {
         image.write_to_file(save_location.c_str());
     } catch (const VError& err) {}
+    logger->debug("Saved resized image");
 }
 
 auto LibvipsImage::process_image() -> void
@@ -155,7 +174,9 @@ auto LibvipsImage::process_image() -> void
         }
     } else if (flags.output == "x11") {
         // alpha channel required
-        if (!image.has_alpha()) image = image.bandjoin(0);
+        if (!image.has_alpha()) {
+            image = image.bandjoin(0);
+        }
         // convert from RGB to BGR
         auto bands = image.bandsplit();
         auto tmp = bands[0];

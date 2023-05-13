@@ -23,6 +23,8 @@
 #include <termios.h>
 #include <spdlog/spdlog.h>
 
+class X11Util;
+
 class Terminal
 {
 public:
@@ -35,6 +37,7 @@ public:
     int cols;
     std::string term;
     std::string term_program;
+    std::string detected_output;
 
     void reload();
 
@@ -62,6 +65,7 @@ private:
 
     Flags& flags;
     std::shared_ptr<spdlog::logger> logger;
+    std::unique_ptr<X11Util> xutil;
 
     struct termios old_term;
     struct termios new_term;

@@ -130,7 +130,7 @@ auto util::get_b2_hash_ssl(const std::string& str) -> std::string
     EVP_DigestFinal_ex(mdctx.get(), digest.data(), &digest_len);
 
     for (int i = 0; i < digest_len; ++i) {
-        sstream << std::hex << std::setw(2) << std::setfill('0') << digest[i];
+        sstream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(digest[i]);
     }
     return sstream.str();
 }
@@ -172,6 +172,11 @@ void util::benchmark(std::function<void(void)> func)
 
 void util::send_command(const Flags& flags)
 {
+    if (flags.cmd_action == "exit") {
+        auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
+        util::send_socket_message("EXIT", endpoint);
+        return;
+    }
     if (flags.cmd_action == "remove") {
         auto json = fmt::format(R"({{"action":"remove","identifier":"{}"}})", flags.cmd_id);
         auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);

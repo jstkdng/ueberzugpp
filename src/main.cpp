@@ -20,12 +20,15 @@
 #include <atomic>
 #include <csignal>
 #include <fmt/format.h>
+#include <spdlog/cfg/env.h>
 
 #include "application.hpp"
 #include "flags.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
 #include "signal.hpp"
+
+const pid_t Application::parent_pid = getppid();
 
 void got_signal(const int signal)
 {
@@ -42,9 +45,6 @@ void got_signal(const int signal)
         case SIGTERM:
             logger->error("SIGTERM received, exiting.");
             break;
-        case SIGHUP:
-            logger->error("SIGHUP received, exiting.");
-            break;
         default:
             logger->error("UNKNOWN({}) signal received, exiting.", signal);
             break;
@@ -60,8 +60,10 @@ auto main(int argc, char *argv[]) -> int
     sga.sa_flags = 0;
     sigaction(SIGINT, &sga, nullptr);
     sigaction(SIGTERM, &sga, nullptr);
-    sigaction(SIGHUP, &sga, nullptr);
+    sigaction(SIGHUP, nullptr, nullptr);
+    sigaction(SIGCHLD, nullptr, nullptr);
 
+    spdlog::cfg::load_env_levels();
     Flags flags;
     std::vector<std::string> available_outputs ;
 
@@ -70,7 +72,8 @@ auto main(int argc, char *argv[]) -> int
     CLI::App *layer_command = program.add_subcommand("layer", "Display images on the terminal.");
     layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null.");
     layer_command->add_flag("--use-escape-codes", flags.use_escape_codes, "Use escape codes to get terminal capabilities.")->default_val(false);
-    layer_command->add_flag("--no-stdin", flags.no_stdin, "Do not listen on stdin for commands.");
+    layer_command->add_option("--pid-file", flags.pid_file, "Output file where to write the daemon PID.");
+    layer_command->add_flag("--no-stdin", flags.no_stdin, "Do not listen on stdin for commands.")->needs("--pid-file");
     layer_command->add_flag("--no-cache", flags.no_cache, "Disable caching of resized images.");
     layer_command->add_flag("--no-opencv", flags.no_opencv, "Do not use OpenCV, use Libvips instead.");
     layer_command->add_option("-o,--output", flags.output, "Image output method")

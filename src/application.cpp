@@ -29,6 +29,7 @@
 #include <fmt/format.h>
 #include <zmq.hpp>
 #include <vips/vips8>
+#include <thread>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -45,6 +46,9 @@ s(SignalSingleton::instance())
     if (!canvas) {
         logger->error("Unable to initialize canvas.");
         std::exit(1);
+    }
+    if (flags.no_stdin) {
+        daemonize(flags.pid_file);
     }
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) {
@@ -66,38 +70,41 @@ s(SignalSingleton::instance())
 
 Application::~Application()
 {
+    if (!flags.no_stdin) {
+        util::send_socket_message("EXIT", util::get_socket_endpoint());
+    }
+    if (socket_thread.joinable()) {
+        socket_thread.join();
+    }
     canvas->clear();
     vips_shutdown();
     if (f_stderr != nullptr) {
         std::fclose(f_stderr);
     }
-    util::send_socket_message("EXIT", util::get_socket_endpoint());
-    if (socket_thread.joinable()) {
-        socket_thread.join();
-    }
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
+    logger->info("Exiting ueberzugpp.");
 }
 
 void Application::execute(const std::string& cmd)
 {
-    json json_cmd;
+    json json;
     try {
-        json_cmd = json::parse(cmd);
+        json = json::parse(cmd);
     } catch (const json::parse_error& e) {
         logger->error("There was an error parsing the command.");
         return;
     }
-    logger->info("Command received: {}", json_cmd.dump());
+    logger->info("Command received: {}", json.dump());
 
     std::unique_lock lock {img_lock};
-    if (json_cmd["action"] == "add") {
-        if (!json_cmd["path"].is_string()) {
+    if (json["action"] == "add") {
+        if (!json["path"].is_string()) {
             logger->error("Invalid path.");
             return;
         }
-        set_dimensions_from_json(json_cmd);
-        image = Image::load(*terminal, *dimensions, flags, json_cmd["path"], *logger);
+        set_dimensions_from_json(json);
+        image = Image::load(*terminal, *dimensions, flags, json["path"]);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
@@ -105,11 +112,11 @@ void Application::execute(const std::string& cmd)
         canvas->clear();
         canvas->init(*dimensions, image);
         canvas->draw();
-    } else if (json_cmd["action"] == "remove") {
+    } else if (json["action"] == "remove") {
         logger->info("Removing image.");
         canvas->clear();
-    } else if (json_cmd["action"] == "tmux") {
-        handle_tmux_hook(json_cmd["hook"]);
+    } else if (json["action"] == "tmux") {
+        handle_tmux_hook(json["hook"]);
     } else {
         logger->warn("Command not supported.");
     }
@@ -151,35 +158,42 @@ void Application::handle_tmux_hook(const std::string& hook)
     }
 }
 
-void Application::set_dimensions_from_json(const json& j)
+void Application::set_dimensions_from_json(const json& json)
 {
     using std::string;
-    int x, y, max_width, max_height;
-    string width_key = "max_width", height_key = "max_height", scaler = "contain";
-    if (j.contains("scaler")) {
-        scaler = j["scaler"];
+    int xcoord = 0;
+    int ycoord = 0;
+    int max_width = 0;
+    int max_height = 0;
+    string width_key = "max_width";
+    string height_key = "max_height";
+    string scaler = "contain";
+    if (json.contains("scaler")) {
+        scaler = json["scaler"];
     }
-    if (j.contains("width")) {
+    if (json.contains("width")) {
         width_key = "width";
         height_key = "height";
     }
-    if (j[width_key].is_string()) {
-        string w = j[width_key], h = j[height_key];
-        max_width = std::stoi(w);
-        max_height = std::stoi(h);
+    if (json[width_key].is_string()) {
+        string width = json[width_key];
+        string height = json[height_key];
+        max_width = std::stoi(width);
+        max_height = std::stoi(height);
     } else {
-        max_width = j[width_key];
-        max_height = j[height_key];
+        max_width = json[width_key];
+        max_height = json[height_key];
     }
-    if (j["x"].is_string()) {
-        string _x = j["x"], _y = j["y"];
-        x = std::stoi(_x);
-        y = std::stoi(_y);
+    if (json["x"].is_string()) {
+        string xcoords = json["x"];
+        string ycoords = json["y"];
+        xcoord = std::stoi(xcoords);
+        ycoord = std::stoi(ycoords);
     } else {
-        x = j["x"];
-        y = j["y"];
+        xcoord = json["x"];
+        ycoord = json["y"];
     }
-    dimensions = std::make_unique<Dimensions>(*terminal, x, y, max_width, max_height, scaler);
+    dimensions = std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width, max_height, scaler);
 }
 
 void Application::setup_logger()
@@ -187,22 +201,27 @@ void Application::setup_logger()
     std::string log_tmp = util::get_log_filename();
     fs::path log_path = fs::temp_directory_path() / log_tmp;
     try {
-        spdlog::flush_on(spdlog::level::info);
+        spdlog::flush_on(spdlog::level::debug);
         auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_path);
 
         auto main_logger = std::make_shared<spdlog::logger>("main", sink);
         auto terminal_logger = std::make_shared<spdlog::logger>("terminal", sink);
         auto x11_logger = std::make_shared<spdlog::logger>("X11", sink);
+        auto cv_logger = std::make_shared<spdlog::logger>("opencv", sink);
+        auto vips_logger = std::make_shared<spdlog::logger>("vips", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
         spdlog::initialize_logger(x11_logger);
+        spdlog::initialize_logger(cv_logger);
+        spdlog::initialize_logger(vips_logger);
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {
         std::cout << "Log init failed: " << ex.what() << std::endl;
     }
 }
+
 
 void Application::command_loop()
 {
@@ -214,10 +233,6 @@ void Application::command_loop()
                 break;
             }
             execute(cmd);
-        }
-    } else {
-        while (!s->get_stop_flag().load()) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(sleep_time));
         }
     }
 }
@@ -279,4 +294,20 @@ void Application::print_version()
 {
     std::cout << "ueberzugpp " << ueberzugpp_VERSION_MAJOR << "." << ueberzugpp_VERSION_MINOR
         << "." << ueberzugpp_VERSION_PATCH << std::endl;
+}
+
+void Application::daemonize(const std::string& pid_file)
+{
+    pid_t pid = fork();
+    if (pid < 0) {
+        std::exit(EXIT_FAILURE);
+    }
+    if (pid > 0) {
+        std::exit(EXIT_SUCCESS);
+    }
+    if (setsid() < 0) {
+        std::exit(EXIT_FAILURE);
+    }
+    std::ofstream ofs (pid_file);
+    ofs << os::get_pid();
 }

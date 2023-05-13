@@ -23,12 +23,15 @@
 #include <string>
 #include <iostream>
 
-X11Util::X11Util():
-connection(xcb_connect(nullptr, nullptr))
+X11Util::X11Util()
 {
-    if (xcb_connection_has_error(connection) == 0) {
-        screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
-        connected = true;
+    auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
+    if (xdg_session != "wayland") {
+        connection = xcb_connect(nullptr, nullptr);
+        if (xcb_connection_has_error(connection) == 0) {
+            screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+            connected = true;
+        }
     }
 }
 

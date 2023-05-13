@@ -25,6 +25,7 @@
 #include <string>
 #include <vips/vips8>
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 class LibvipsImage : public Image
 {
@@ -32,17 +33,17 @@ public:
     LibvipsImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
             const std::string &filename, bool is_anim, bool in_cache);
 
-    auto width() const -> int override;
-    auto height() const -> int override;
-    auto size() const -> unsigned long override;
-    auto data() const -> const unsigned char* override;
-    auto channels() const -> int override;
+    [[nodiscard]] auto width() const -> int override;
+    [[nodiscard]] auto height() const -> int override;
+    [[nodiscard]] auto size() const -> uint64_t override;
+    [[nodiscard]] auto data() const -> const unsigned char* override;
+    [[nodiscard]] auto channels() const -> int override;
 
-    auto resize_image() -> void override;
-    auto frame_delay() const -> int override;
-    auto next_frame() -> void override;
-    auto is_animated() const -> bool override;
-    auto filename() const -> std::string override;
+    void resize_image() override;
+    void next_frame() override;
+    [[nodiscard]] auto frame_delay() const -> int override;
+    [[nodiscard]] auto is_animated() const -> bool override;
+    [[nodiscard]] auto filename() const -> std::string override;
 
 private:
     vips::VImage image;
@@ -54,9 +55,11 @@ private:
     const Flags& flags;
     const Dimensions& dimensions;
 
+    std::shared_ptr<spdlog::logger> logger;
+
     int max_width;
     int max_height;
-    unsigned long _size;
+    uint64_t _size;
 
     // for animated pictures
     int top = 0;
@@ -65,7 +68,7 @@ private:
     bool is_anim;
     bool in_cache;
 
-    auto process_image() -> void;
+    void process_image();
 };
 
 #endif

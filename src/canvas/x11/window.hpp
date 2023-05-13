@@ -23,6 +23,7 @@
 
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
+#include <spdlog/spdlog.h>
 
 class Window
 {
@@ -48,6 +49,7 @@ private:
     xcb_gcontext_t gc;
     unique_C_ptr<xcb_image_t> xcb_image;
     std::unique_ptr<unsigned char[]> xcb_image_buffer;
+    std::shared_ptr<spdlog::logger> logger;
 
     Image& image;
     const Dimensions& dimensions;

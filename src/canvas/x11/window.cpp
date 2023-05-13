@@ -29,6 +29,7 @@ image(image),
 dimensions(dimensions),
 gc(xcb_generate_id(connection))
 {
+    logger = spdlog::get("X11");
     unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     auto value_list = xcb_create_window_value_list_t {
         .background_pixel = screen->black_pixel,
@@ -37,17 +38,21 @@ gc(xcb_generate_id(connection))
         .colormap = screen->default_colormap
     };
 
+    int16_t xcoord = dimensions.xpixels();
+    int16_t ycoord = dimensions.ypixels();
+    logger->debug("Parent window: {}", parent);
     xcb_create_window_aux(connection,
             screen->root_depth,
             window,
             this->parent,
-            dimensions.xpixels(), dimensions.ypixels(),
+            xcoord, ycoord,
             image.width(), image.height(),
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
             value_mask,
             &value_list);
+    logger->debug("Created child window {} at ({},{})", window, xcoord, ycoord);
     xcb_create_gc(connection, gc, window, 0, nullptr);
     show();
 }

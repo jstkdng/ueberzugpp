@@ -24,6 +24,7 @@
 #include <string>
 #include <opencv2/core.hpp>
 #include <filesystem>
+#include <spdlog/spdlog.h>
 
 namespace fs = std::filesystem;
 
@@ -58,6 +59,8 @@ private:
     int max_height;
     bool in_cache;
     bool opencl_available;
+
+    std::shared_ptr<spdlog::logger> logger;
 
     void process_image();
 };

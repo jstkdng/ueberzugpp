@@ -38,17 +38,19 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(TBB REQUIRED)
 
-if (APPLE)
-    set(PROC_SOURCES src/process_apple.cpp)
-else()
-    set(PROC_SOURCES src/process.cpp)
+find_package(Microsoft.GSL CONFIG QUIET)
+if (NOT Microsoft.GSL_FOUND)
+    option(GSL_TEST OFF)
+    FetchContent_Declare(GSL
+        URL https://github.com/microsoft/GSL/archive/refs/tags/v4.0.0.tar.gz
+    )
+    set(FC_LIBS ${FC_LIBS} GSL)
 endif()
 
 find_package(cppzmq QUIET)
 if (NOT cppzmq_FOUND)
     option(CPPZMQ_BUILD_TESTS OFF)
-    FetchContent_Declare(
-        cppzmq
+    FetchContent_Declare(cppzmq
         URL https://github.com/zeromq/cppzmq/archive/refs/tags/v4.9.0.tar.gz
     )
     set(FC_LIBS ${FC_LIBS} cppzmq)
@@ -56,8 +58,7 @@ endif()
 
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
-    FetchContent_Declare(
-        cli11
+    FetchContent_Declare(cli11
         URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz
     )
     set(FC_LIBS ${FC_LIBS} cli11)
@@ -65,8 +66,7 @@ endif()
 
 find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
-    FetchContent_Declare(
-        nlohmann_json
+    FetchContent_Declare(nlohmann_json
         URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
     )
     set(FC_LIBS ${FC_LIBS} nlohmann_json)
@@ -74,8 +74,7 @@ endif()
 
 find_package(spdlog QUIET)
 if(NOT spdlog_FOUND)
-    FetchContent_Declare(
-        spdlog
+    FetchContent_Declare(spdlog
         URL https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.tar.gz
     )
     set(FC_LIBS ${FC_LIBS} spdlog)
@@ -83,8 +82,7 @@ endif()
 
 find_package(fmt QUIET)
 if(NOT fmt_FOUND)
-    FetchContent_Declare(
-        fmt
+    FetchContent_Declare(fmt
         URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.tar.gz
     )
     set(FC_LIBS ${FC_LIBS} fmt)
@@ -143,6 +141,12 @@ endif()
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 
+if (APPLE)
+    set(PROC_SOURCES src/process_apple.cpp)
+else()
+    set(PROC_SOURCES src/process.cpp)
+endif()
+
 configure_file("include/version.hpp.in" version.hpp)
 
 set(UEBERZUGPP_SOURCES
@@ -186,6 +190,7 @@ target_link_libraries(ueberzug PUBLIC
     OpenSSL::Crypto
     cppzmq
     TBB::tbb
+    Microsoft.GSL::GSL
     PkgConfig::VIPS
     PkgConfig::SIXEL
     ${B64_LIBRARIES}
