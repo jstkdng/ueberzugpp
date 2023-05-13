@@ -77,7 +77,7 @@ auto LibvipsImage::height() const -> int
     return image.height();
 }
 
-auto LibvipsImage::size() const -> uint64_t
+auto LibvipsImage::size() const -> size_t
 {
     return _size;
 }

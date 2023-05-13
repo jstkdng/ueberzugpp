@@ -21,6 +21,7 @@
 #include <csignal>
 #include <fmt/format.h>
 #include <spdlog/cfg/env.h>
+#include <unistd.h>
 
 #include "application.hpp"
 #include "flags.hpp"

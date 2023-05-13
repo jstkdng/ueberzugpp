@@ -65,7 +65,9 @@ private:
 
     Flags& flags;
     std::shared_ptr<spdlog::logger> logger;
+#ifdef ENABLE_X11
     std::unique_ptr<X11Util> xutil;
+#endif
 
     struct termios old_term;
     struct termios new_term;
