@@ -1,10 +1,8 @@
 #!/bin/bash
 
-ueberzugpp layer --no-stdin --silent --use-escape-codes &
-UB_PID=$!
-
-# sleep some time for U++ startup
-sleep 0.2
+UB_PID_FILE="/tmp/.$(uuidgen)"
+ueberzugpp layer --no-stdin --silent --use-escape-codes --pid-file $UB_PID_FILE
+UB_PID=$(cat $UB_PID_FILE)
 
 export SOCKET=/tmp/ueberzugpp-$UB_PID.socket
 export X=$(($(tput cols) / 2 + 1))
@@ -12,4 +10,4 @@ export X=$(($(tput cols) / 2 + 1))
 # run fzf with preview
 fzf --preview='ueberzugpp cmd -s $SOCKET -i fzfpreview -a add -x $X -y 1 --max-width $FZF_PREVIEW_COLUMNS --max-height $FZF_PREVIEW_LINES -f {}' --reverse "$@"
 
-kill -TERM $UB_PID
+ueberzugpp cmd -s $SOCKET -a exit
