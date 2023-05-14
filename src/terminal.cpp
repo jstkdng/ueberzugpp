@@ -83,6 +83,7 @@ auto Terminal::get_terminal_size() -> void
     logger->debug("x11 is not supported");
 #endif
 
+    check_iterm2_support();
     if (flags.use_escape_codes) {
         init_termios();
         if (xpixel == 0 || ypixel == 0) {
@@ -184,12 +185,12 @@ void Terminal::get_terminal_size_xtsm()
 void Terminal::check_sixel_support()
 {
     // some terminals support sixel but don't respond to escape sequences
-    auto supported_terms = std::unordered_set<std::string_view> {
-        "yaft-256color"
+    auto supported_terms = std::unordered_set<std::string> {
+        "yaft-256color", "iTerm.app"
     };
     auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
-    if (vals.size() > 2 || supported_terms.contains(term)) {
+    if (vals.size() > 2 || supported_terms.contains(term) || supported_terms.contains(term_program)) {
         supports_sixel = true;
         logger->debug("sixel is supported");
     } else {
@@ -211,7 +212,7 @@ void Terminal::check_kitty_support()
 void Terminal::check_iterm2_support()
 {
     auto supported_terms = std::unordered_set<std::string_view> {
-        "WezTerm", "Iterm2.app"
+        "WezTerm", "iTerm.app"
     };
     if (supported_terms.contains(term_program)) {
         supports_iterm2 = true;
