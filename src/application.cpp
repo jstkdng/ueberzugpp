@@ -42,9 +42,9 @@ s(SignalSingleton::instance())
     setup_logger();
     set_silent();
     terminal = std::make_unique<Terminal>(os::get_pid(), flags);
-    canvas = Canvas::create(*terminal, flags, *logger, img_lock);
+    canvas = Canvas::create(flags, img_lock);
     if (!canvas) {
-        logger->error("Unable to initialize canvas.");
+        logger->error("Unable to create canvas.");
         std::exit(1);
     }
     if (flags.no_stdin) {
@@ -56,7 +56,7 @@ s(SignalSingleton::instance())
     }
     tmux::register_hooks();
     socket_thread = std::thread([&] {
-        logger->info("Listenning for commands on socket {}.", util::get_socket_path());
+        logger->info("Listening for commands on socket {}.", util::get_socket_path());
         socket_loop();
     });
     if (flags.no_cache) {
@@ -193,7 +193,7 @@ void Application::set_dimensions_from_json(const json& json)
         xcoord = json["x"];
         ycoord = json["y"];
     }
-    dimensions = std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width - 1, max_height, scaler);
+    dimensions = std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width, max_height, scaler);
 }
 
 void Application::setup_logger()
@@ -206,15 +206,21 @@ void Application::setup_logger()
 
         auto main_logger = std::make_shared<spdlog::logger>("main", sink);
         auto terminal_logger = std::make_shared<spdlog::logger>("terminal", sink);
-        auto x11_logger = std::make_shared<spdlog::logger>("X11", sink);
         auto cv_logger = std::make_shared<spdlog::logger>("opencv", sink);
         auto vips_logger = std::make_shared<spdlog::logger>("vips", sink);
+        auto x11_logger = std::make_shared<spdlog::logger>("X11", sink);
+        auto sixel_logger = std::make_shared<spdlog::logger>("sixel", sink);
+        auto kitty_logger = std::make_shared<spdlog::logger>("kitty", sink);
+        auto iterm2_logger = std::make_shared<spdlog::logger>("iterm2", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
-        spdlog::initialize_logger(x11_logger);
         spdlog::initialize_logger(cv_logger);
         spdlog::initialize_logger(vips_logger);
+        spdlog::initialize_logger(x11_logger);
+        spdlog::initialize_logger(sixel_logger);
+        spdlog::initialize_logger(kitty_logger);
+        spdlog::initialize_logger(iterm2_logger);
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {

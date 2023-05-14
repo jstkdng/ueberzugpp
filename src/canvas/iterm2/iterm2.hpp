@@ -21,13 +21,14 @@
 
 #include <sstream>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 struct Iterm2Chunk;
 
 class Iterm2Canvas : public Canvas
 {
 public:
-    Iterm2Canvas() = default;
+    Iterm2Canvas();
     ~Iterm2Canvas() override = default;
     void init(const Dimensions& dimensions,
             std::shared_ptr<Image> image) override;
@@ -35,6 +36,7 @@ public:
     void clear() override;
 private:
     std::shared_ptr<Image> image;
+    std::shared_ptr<spdlog::logger> logger;
     std::stringstream ss;
 
     int x;

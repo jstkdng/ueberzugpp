@@ -27,6 +27,7 @@
 #include <mutex>
 #include <sstream>
 #include <atomic>
+#include <spdlog/spdlog.h>
 
 #include <sixel.h>
 
@@ -45,6 +46,7 @@ private:
     sixel_dither_t *dither;
     sixel_output_t *output;
     std::shared_ptr<Image> image;
+    std::shared_ptr<spdlog::logger> logger;
 
     std::thread draw_thread;
     std::atomic<bool> can_draw {true};

@@ -18,21 +18,18 @@
 #define __CANVAS__
 
 #include "image.hpp"
-#include "terminal.hpp"
 #include "dimensions.hpp"
+#include "flags.hpp"
 
 #include <memory>
-#include <spdlog/spdlog.h>
 
 class Canvas
 {
 public:
-    static auto create(const Terminal& terminal, Flags& flags,
-            spdlog::logger& logger, std::mutex& img_lock) -> std::unique_ptr<Canvas>;
+    static auto create(Flags& flags, std::mutex& img_lock) -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
-    virtual auto init(const Dimensions& dimensions,
-            std::shared_ptr<Image> image) -> void = 0;
+    virtual auto init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void = 0;
     virtual void draw() = 0;
     virtual void clear() = 0;
 

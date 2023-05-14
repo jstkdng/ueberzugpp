@@ -30,8 +30,10 @@ auto sixel_draw_callback(char *data, int size, void* priv) -> int
 SixelCanvas::SixelCanvas(std::mutex& img_lock):
 img_lock(img_lock)
 {
+    logger = spdlog::get("sixel");
     sixel_output_new(&output, sixel_draw_callback, &ss, nullptr);
     sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
+    logger->info("Canvas created");
 }
 
 SixelCanvas::~SixelCanvas()
@@ -39,8 +41,8 @@ SixelCanvas::~SixelCanvas()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
-    sixel_output_unref(output);
-    sixel_dither_unref(dither);
+    sixel_dither_destroy(dither);
+    sixel_output_destroy(output);
 }
 
 auto SixelCanvas::init(const Dimensions& dimensions,
@@ -98,7 +100,8 @@ auto SixelCanvas::clear() -> void
     }
     can_draw.store(true);
 
-    sixel_dither_unref(dither);
+    sixel_dither_destroy(dither);
+    dither = nullptr;
 
     util::clear_terminal_area(x, y, max_width, max_height);
 }

@@ -33,7 +33,7 @@ connection(xcb_connect(nullptr, nullptr))
     }
     screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
     logger = spdlog::get("X11");
-    logger->debug("Created X11 canvas");
+    logger->info("Canvas created");
 }
 
 X11Canvas::~X11Canvas()

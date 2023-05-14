@@ -51,11 +51,12 @@ private:
     void reset_termios();
     void check_sixel_support();
     void check_kitty_support();
+    void check_iterm2_support();
     void get_terminal_size_escape_code();
     void get_terminal_size_xtsm();
     void get_terminal_size_x11();
     void open_first_pty();
-
+    void set_detected_output();
 
     int pty_fd;
     int pid;
@@ -63,6 +64,11 @@ private:
     int ypixel;
     uint16_t fallback_xpixel = 0;
     uint16_t fallback_ypixel = 0;
+
+    bool supports_sixel = false;
+    bool supports_kitty = false;
+    bool supports_x11 = false;
+    bool supports_iterm2 = false;
 
     Flags& flags;
     std::shared_ptr<spdlog::logger> logger;

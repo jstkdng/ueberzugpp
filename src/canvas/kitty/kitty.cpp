@@ -25,6 +25,12 @@
 #   include <oneapi/tbb.h>
 #endif
 
+KittyCanvas::KittyCanvas()
+{
+    logger = spdlog::get("kitty");
+    logger->info("Canvas created");
+}
+
 void KittyCanvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 {
     this->image = image;

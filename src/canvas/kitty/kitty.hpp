@@ -21,13 +21,14 @@
 
 #include <sstream>
 #include <vector>
+#include <spdlog/spdlog.h>
 
 class KittyChunk;
 
 class KittyCanvas : public Canvas
 {
 public:
-    KittyCanvas() = default;
+    KittyCanvas();
     ~KittyCanvas() override = default;
 
     void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
@@ -36,6 +37,7 @@ public:
 
 private:
     std::shared_ptr<Image> image;
+    std::shared_ptr<spdlog::logger> logger;
     std::stringstream ss;
 
     int x;

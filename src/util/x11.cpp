@@ -37,7 +37,9 @@ X11Util::X11Util()
 
 X11Util::~X11Util()
 {
-    xcb_disconnect(connection);
+    if (connection != nullptr) {
+        xcb_disconnect(connection);
+    }
 }
 
 auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>

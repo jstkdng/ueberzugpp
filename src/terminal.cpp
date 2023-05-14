@@ -45,8 +45,10 @@ pid(pid), flags(flags)
 #ifdef ENABLE_X11
     xutil = std::make_unique<X11Util>();
 #endif
+    logger->info(R"(TERM="{}", TERM_PROGRAM="{}")", term, term_program);
     open_first_pty();
     get_terminal_size();
+    set_detected_output();
 }
 
 Terminal::~Terminal()
@@ -64,14 +66,23 @@ auto Terminal::get_terminal_size() -> void
     rows = size.ws_row;
     xpixel = size.ws_xpixel;
     ypixel = size.ws_ypixel;
-    logger->debug("Initial sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
+    logger->debug("ioctl sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
 
 #ifdef ENABLE_X11
     if (xutil->is_connected()) {
-        detected_output = "x11";
+        supports_x11 = true;
+        logger->debug("X11 is supported");
         get_terminal_size_x11();
+    } else {
+        logger->debug("X11 is not supported");
+        if (flags.output == "x11") {
+            get_terminal_size_x11();
+        }
     }
+#else
+    logger->debug("x11 is not supported");
 #endif
+
     if (flags.use_escape_codes) {
         init_termios();
         if (xpixel == 0 || ypixel == 0) {
@@ -84,7 +95,6 @@ auto Terminal::get_terminal_size() -> void
         check_kitty_support();
         reset_termios();
     }
-    logger->debug("New sizes: XPIXEL={} YPIXEL={}", xpixel, ypixel);
 
     if (xpixel == 0 || ypixel == 0) {
         xpixel = fallback_xpixel;
@@ -113,6 +123,25 @@ auto Terminal::get_terminal_size() -> void
     logger->debug("font_width={} font_height={}", font_width, font_height);
 }
 
+void Terminal::set_detected_output()
+{
+    if (supports_sixel) {
+        detected_output = "sixel";
+    }
+    if (supports_x11) {
+        detected_output = "x11";
+    }
+    if (supports_iterm2) {
+        detected_output = "iterm2";
+    }
+    if (supports_kitty) {
+        detected_output = "kitty";
+    }
+    if (flags.output.empty()) {
+        flags.output = detected_output;
+    }
+}
+
 auto Terminal::guess_padding(uint16_t chars, double pixels) -> double
 {
     double font_size = std::floor(pixels / chars);
@@ -127,7 +156,6 @@ auto Terminal::guess_font_size(uint16_t chars, double pixels, double padding)
 
 void Terminal::get_terminal_size_escape_code()
 {
-    logger->debug("Obtaining sizes from escape codes");
     auto resp = read_raw_str("\e[14t").erase(0, 4);
     if (resp.empty()) {
         return;
@@ -135,18 +163,22 @@ void Terminal::get_terminal_size_escape_code()
     auto sizes = util::str_split(resp, ";");
     ypixel = std::stoi(sizes[0]);
     xpixel = std::stoi(sizes[1]);
+    logger->debug("ESC sizes XPIXEL={} YPIXEL={}", xpixel, ypixel);
 }
 
 void Terminal::get_terminal_size_xtsm()
 {
-    logger->debug("Obtaining sizes from XTSM");
     auto resp = read_raw_str("\e[?2;1;0S").erase(0, 3);
-    auto sizes = util::str_split(resp, ";");
-    if (sizes.size() != 2) {
+    if (resp.empty()) {
         return;
     }
-    ypixel = std::stoi(sizes[0]);
-    xpixel = std::stoi(sizes[1]);
+    auto sizes = util::str_split(resp, ";");
+    if (sizes.size() != 4) {
+        return;
+    }
+    ypixel = std::stoi(sizes[3]);
+    xpixel = std::stoi(sizes[2]);
+    logger->debug("XTSM sizes XPIXEL={} YPIXEL={}", xpixel, ypixel);
 }
 
 void Terminal::check_sixel_support()
@@ -157,8 +189,11 @@ void Terminal::check_sixel_support()
     };
     auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
-    if ((vals.size() > 2 || supported_terms.contains(term)) && detected_output.empty()) {
-        detected_output = "sixel";
+    if (vals.size() > 2 || supported_terms.contains(term)) {
+        supports_sixel = true;
+        logger->debug("sixel is supported");
+    } else {
+        logger->debug("sixel is not supported");
     }
 }
 
@@ -166,7 +201,23 @@ void Terminal::check_kitty_support()
 {
     auto resp = read_raw_str("\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\\e[c");
     if (resp.find("OK") != std::string::npos) {
-        detected_output = "kitty";
+        supports_kitty = true;
+        logger->debug("kitty is supported");
+    } else {
+        logger->debug("kitty is not supported");
+    }
+}
+
+void Terminal::check_iterm2_support()
+{
+    auto supported_terms = std::unordered_set<std::string_view> {
+        "WezTerm", "Iterm2.app"
+    };
+    if (supported_terms.contains(term_program)) {
+        supports_iterm2 = true;
+        logger->debug("iterm2 is supported");
+    } else {
+        logger->debug("iterm2 is not supported");
     }
 }
 
@@ -175,7 +226,6 @@ auto Terminal::read_raw_str(const std::string& esc) -> std::string
     char chr = 0;
     std::stringstream sstream;
     std::cout << esc << std::flush;
-    //struct pollfd input[1] = {{.fd = STDIN_FILENO, .events = POLLIN}};
 
     std::array<struct pollfd, 1> input;
     input.fill({.fd = STDIN_FILENO, .events = POLLIN});
@@ -217,7 +267,6 @@ auto Terminal::reset_termios() -> void
 void Terminal::get_terminal_size_x11()
 {
 #ifdef ENABLE_X11
-    logger->debug("Obtaining sizes from X11");
     auto window = xutil->get_parent_window(os::get_pid());
     auto dims = xutil->get_window_dimensions(window);
     fallback_xpixel = dims.first;

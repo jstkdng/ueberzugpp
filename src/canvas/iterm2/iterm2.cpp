@@ -29,6 +29,12 @@
 
 namespace fs = std::filesystem;
 
+Iterm2Canvas::Iterm2Canvas()
+{
+    logger = spdlog::get("iterm2");
+    logger->info("Canvas created");
+}
+
 void Iterm2Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 {
     this->image = image;
