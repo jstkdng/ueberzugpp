@@ -35,11 +35,10 @@ public:
     [[nodiscard]] auto window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type = XCB_ATOM_ANY) const -> bool;
     [[nodiscard]] auto get_window_pid(xcb_window_t window) const -> int;
 
-    [[nodiscard]] auto is_connected() const -> bool;
+    bool connected = false;
 private:
     xcb_connection_t* connection = nullptr;
-    xcb_screen_t* screen;
-    bool connected = false;
+    xcb_screen_t* screen = nullptr;
 
     auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows,
         xcb_query_tree_cookie_t cookie) const -> void;

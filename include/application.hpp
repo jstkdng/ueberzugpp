@@ -35,7 +35,7 @@
 class Application
 {
 public:
-    Application(Flags& flags, const std::string& executable);
+    explicit Application(const std::string& executable);
     ~Application();
 
     void execute(const std::string& cmd);
@@ -51,10 +51,10 @@ private:
     std::unique_ptr<Terminal> terminal;
     std::unique_ptr<Dimensions> dimensions;
     std::shared_ptr<Image> image;
+    std::shared_ptr<Flags> flags;
     std::unique_ptr<Canvas> canvas;
     std::shared_ptr<spdlog::logger> logger;
     std::FILE* f_stderr = nullptr;
-    const Flags& flags;
     std::thread socket_thread;
     std::mutex img_lock;
     std::shared_ptr<SignalSingleton> s;

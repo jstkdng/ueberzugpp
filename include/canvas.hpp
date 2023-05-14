@@ -19,14 +19,13 @@
 
 #include "image.hpp"
 #include "dimensions.hpp"
-#include "flags.hpp"
 
 #include <memory>
 
 class Canvas
 {
 public:
-    static auto create(Flags& flags, std::mutex& img_lock) -> std::unique_ptr<Canvas>;
+    static auto create(std::mutex& img_lock) -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
     virtual auto init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void = 0;

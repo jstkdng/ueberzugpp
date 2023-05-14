@@ -24,7 +24,6 @@ class Dimensions
 public:
     Dimensions(const Terminal& terminal, uint16_t xcoord, uint16_t ycoord,
             int max_w, int max_h, std::string scaler);
-    ~Dimensions() = default;
 
     [[nodiscard]] auto xpixels() const -> uint32_t;
     [[nodiscard]] auto ypixels() const -> uint32_t;

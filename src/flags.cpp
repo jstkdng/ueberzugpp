@@ -28,11 +28,13 @@ using json = nlohmann::json;
 // read configuration file
 Flags::Flags()
 {
-    auto home = os::getenv("HOME").value();
+    auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
     auto config_home = os::getenv("XDG_CONFIG_HOME").value_or(
             fmt::format("{}/.config", home));
     config_file = fmt::format("{}/ueberzugpp/config.json", config_home);
-    if (fs::exists(config_file)) read_config_file();
+    if (fs::exists(config_file)) {
+        read_config_file();
+    }
 }
 
 void Flags::read_config_file()
@@ -40,12 +42,22 @@ void Flags::read_config_file()
     std::ifstream ifs(config_file);
     try {
         json data = json::parse(ifs);
-        if (!data.contains("layer")) return;
+        if (!data.contains("layer")) {
+            return;
+        }
         data = data["layer"];
-        if (data.contains("silent")) silent = data["silent"];
-        if (data.contains("output")) output = data["output"];
-        if (data.contains("no-cache")) no_cache = data["no-cache"];
-        if (data.contains("no-opencv")) no_opencv = data["no-opencv"];
+        if (data.contains("silent")) {
+            silent = data["silent"];
+        }
+        if (data.contains("output")) {
+            output = data["output"];
+        }
+        if (data.contains("no-cache")) {
+            no_cache = data["no-cache"];
+        }
+        if (data.contains("no-opencv")) {
+            no_opencv = data["no-opencv"];
+        }
     } catch (const json::parse_error& e) {
         std::cerr << "Could not parse config file." << std::endl;
         std::exit(1);

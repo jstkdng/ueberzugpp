@@ -36,9 +36,10 @@
 #include <poll.h>
 #include <gsl/util>
 
-Terminal::Terminal(int pid, Flags& flags):
-pid(pid), flags(flags)
+Terminal::Terminal():
+pid(os::get_pid())
 {
+    flags = Flags::instance();
     logger = spdlog::get("terminal");
     term = os::getenv("TERM").value_or("xterm-256color");
     term_program = os::getenv("TERM_PROGRAM").value_or("");
@@ -68,23 +69,11 @@ auto Terminal::get_terminal_size() -> void
     ypixel = size.ws_ypixel;
     logger->debug("ioctl sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
 
-#ifdef ENABLE_X11
-    if (xutil->is_connected()) {
-        supports_x11 = true;
-        logger->debug("X11 is supported");
-        get_terminal_size_x11();
-    } else {
-        logger->debug("X11 is not supported");
-        if (flags.output == "x11") {
-            get_terminal_size_x11();
-        }
-    }
-#else
-    logger->debug("x11 is not supported");
-#endif
+    get_fallback_terminal_sizes();
 
+    check_x11_support();
     check_iterm2_support();
-    if (flags.use_escape_codes) {
+    if (flags->use_escape_codes) {
         init_termios();
         if (xpixel == 0 || ypixel == 0) {
             get_terminal_size_escape_code();
@@ -138,8 +127,8 @@ void Terminal::set_detected_output()
     if (supports_kitty) {
         detected_output = "kitty";
     }
-    if (flags.output.empty()) {
-        flags.output = detected_output;
+    if (flags->output.empty()) {
+        flags->output = detected_output;
     }
 }
 
@@ -222,6 +211,21 @@ void Terminal::check_iterm2_support()
     }
 }
 
+void Terminal::check_x11_support()
+{
+#ifdef ENABLE_X11
+    if (xutil->connected) {
+        supports_x11 = true;
+        logger->debug("X11 is supported");
+    } else {
+        logger->debug("X11 is not supported");
+    }
+#else
+    logger->debug("x11 is not supported");
+#endif
+
+}
+
 auto Terminal::read_raw_str(const std::string& esc) -> std::string
 {
     char chr = 0;
@@ -265,9 +269,12 @@ auto Terminal::reset_termios() -> void
     tcsetattr(0, TCSANOW, &old_term);
 }
 
-void Terminal::get_terminal_size_x11()
+void Terminal::get_fallback_terminal_sizes()
 {
 #ifdef ENABLE_X11
+    if (!xutil->connected) {
+        return;
+    }
     auto window = xutil->get_parent_window(os::get_pid());
     auto dims = xutil->get_window_dimensions(window);
     fallback_xpixel = dims.first;

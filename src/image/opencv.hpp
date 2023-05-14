@@ -31,8 +31,7 @@ namespace fs = std::filesystem;
 class OpencvImage : public Image
 {
 public:
-    OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
-            const std::string& filename, bool in_cache);
+    OpencvImage(const Dimensions& dimensions, const std::string& filename, bool in_cache);
     ~OpencvImage() override;
 
     [[nodiscard]] auto width() const -> int override;
@@ -48,19 +47,16 @@ private:
     cv::UMat uimage;
 
     fs::path path;
-    const Terminal& terminal;
-    const Flags& flags;
     const Dimensions& dimensions;
 
-    int _width;
-    int _height;
     uint64_t _size;
-    int max_width;
-    int max_height;
+    uint32_t max_width;
+    uint32_t max_height;
     bool in_cache;
     bool opencl_available;
 
     std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<Flags> flags;
 
     void process_image();
 };

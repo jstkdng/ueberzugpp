@@ -26,8 +26,7 @@
 class Image
 {
 public:
-    static auto load(const Terminal& terminal, const Dimensions& dimensions,
-            const Flags& flags, const std::string& filename)
+    static auto load(const Dimensions& dimensions, const std::string& filename)
         -> std::shared_ptr<Image>;
     static auto check_cache(const Dimensions& dimensions,
             const std::filesystem::path& orig_path) -> std::string;

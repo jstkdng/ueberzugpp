@@ -21,15 +21,15 @@
 #include <csignal>
 #include <fmt/format.h>
 #include <spdlog/cfg/env.h>
-#include <unistd.h>
 
 #include "application.hpp"
 #include "flags.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
 #include "signal.hpp"
+#include "os.hpp"
 
-const pid_t Application::parent_pid_ = getppid();
+const pid_t Application::parent_pid_ = os::get_ppid();
 
 void got_signal(const int signal)
 {
@@ -65,38 +65,37 @@ auto main(int argc, char *argv[]) -> int
     sigaction(SIGCHLD, nullptr, nullptr);
 
     spdlog::cfg::load_env_levels();
-    Flags flags;
-    std::vector<std::string> available_outputs ;
+    auto flags = Flags::instance();
 
     CLI::App program("Display images in the terminal", "ueberzug");
-    program.add_flag("-V,--version", flags.print_version, "Print version information.");
+    program.add_flag("-V,--version", flags->print_version, "Print version information.");
     CLI::App *layer_command = program.add_subcommand("layer", "Display images on the terminal.");
-    layer_command->add_flag("-s,--silent", flags.silent, "Print stderr to /dev/null.");
-    layer_command->add_flag("--use-escape-codes", flags.use_escape_codes, "Use escape codes to get terminal capabilities.")->default_val(false);
-    layer_command->add_option("--pid-file", flags.pid_file, "Output file where to write the daemon PID.");
-    layer_command->add_flag("--no-stdin", flags.no_stdin, "Do not listen on stdin for commands.")->needs("--pid-file");
-    layer_command->add_flag("--no-cache", flags.no_cache, "Disable caching of resized images.");
-    layer_command->add_flag("--no-opencv", flags.no_opencv, "Do not use OpenCV, use Libvips instead.");
-    layer_command->add_option("-o,--output", flags.output, "Image output method")
+    layer_command->add_flag("-s,--silent", flags->silent, "Print stderr to /dev/null.");
+    layer_command->add_flag("--use-escape-codes", flags->use_escape_codes, "Use escape codes to get terminal capabilities.")->default_val(false);
+    layer_command->add_option("--pid-file", flags->pid_file, "Output file where to write the daemon PID.");
+    layer_command->add_flag("--no-stdin", flags->no_stdin, "Do not listen on stdin for commands.")->needs("--pid-file");
+    layer_command->add_flag("--no-cache", flags->no_cache, "Disable caching of resized images.");
+    layer_command->add_flag("--no-opencv", flags->no_opencv, "Do not use OpenCV, use Libvips instead.");
+    layer_command->add_option("-o,--output", flags->output, "Image output method")
         ->check(CLI::IsMember({"x11", "sixel", "kitty", "iterm2"}));
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
     auto *cmd_comand = program.add_subcommand("cmd", "Send a command to a running ueberzugpp instance.");
-    cmd_comand->add_option("-s,--socket", flags.cmd_socket, "UNIX socket of running instance");
-    cmd_comand->add_option("-i,--identifier", flags.cmd_id, "Preview identifier");
-    cmd_comand->add_option("-a,--action", flags.cmd_action, "Action to send");
-    cmd_comand->add_option("-f,--file", flags.cmd_file_path, "Path of image file");
-    cmd_comand->add_option("-x,--xpos", flags.cmd_x, "X position of preview");
-    cmd_comand->add_option("-y,--ypos", flags.cmd_y, "Y position of preview");
-    cmd_comand->add_option("--max-width", flags.cmd_max_width, "Max width of preview");
-    cmd_comand->add_option("--max-height", flags.cmd_max_height, "Max height of preview");
+    cmd_comand->add_option("-s,--socket", flags->cmd_socket, "UNIX socket of running instance");
+    cmd_comand->add_option("-i,--identifier", flags->cmd_id, "Preview identifier");
+    cmd_comand->add_option("-a,--action", flags->cmd_action, "Action to send");
+    cmd_comand->add_option("-f,--file", flags->cmd_file_path, "Path of image file");
+    cmd_comand->add_option("-x,--xpos", flags->cmd_x, "X position of preview");
+    cmd_comand->add_option("-y,--ypos", flags->cmd_y, "Y position of preview");
+    cmd_comand->add_option("--max-width", flags->cmd_max_width, "Max width of preview");
+    cmd_comand->add_option("--max-height", flags->cmd_max_height, "Max height of preview");
 
     auto *tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
     tmux_command->allow_extras();
     CLI11_PARSE(program, argc, argv);
 
-    if (flags.print_version) {
+    if (flags->print_version) {
         Application::print_version();
         std::exit(0);
     }
@@ -107,7 +106,7 @@ auto main(int argc, char *argv[]) -> int
     }
 
     if (layer_command->parsed()) {
-        Application application(flags, argv[0]);
+        Application application(argv[0]);
         application.command_loop();
     }
 
@@ -119,7 +118,7 @@ auto main(int argc, char *argv[]) -> int
     }
 
     if (cmd_comand->parsed()) {
-        util::send_command(flags);
+        util::send_command(*flags);
     }
 
     return 0;

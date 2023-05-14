@@ -18,7 +18,6 @@
 #include "os.hpp"
 #include "version.hpp"
 #include "util.hpp"
-#include "flags.hpp"
 #include "tmux.hpp"
 
 #include <filesystem>
@@ -34,21 +33,21 @@
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
-Application::Application(Flags& flags, const std::string& executable):
-flags(flags),
+Application::Application(const std::string& executable):
 s(SignalSingleton::instance())
 {
+    flags = Flags::instance();
     print_header();
     setup_logger();
     set_silent();
-    terminal = std::make_unique<Terminal>(os::get_pid(), flags);
-    canvas = Canvas::create(flags, img_lock);
+    terminal = std::make_unique<Terminal>();
+    if (flags->no_stdin) {
+        daemonize(flags->pid_file);
+    }
+    canvas = Canvas::create(img_lock);
     if (!canvas) {
         logger->error("Unable to create canvas.");
         std::exit(1);
-    }
-    if (flags.no_stdin) {
-        daemonize(flags.pid_file);
     }
     auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) {
@@ -59,7 +58,7 @@ s(SignalSingleton::instance())
         logger->info("Listening for commands on socket {}.", util::get_socket_path());
         socket_loop();
     });
-    if (flags.no_cache) {
+    if (flags->no_cache) {
         logger->info("Image caching is disabled.");
     }
     if (VIPS_INIT(executable.c_str())) {
@@ -70,7 +69,7 @@ s(SignalSingleton::instance())
 
 Application::~Application()
 {
-    if (!flags.no_stdin) {
+    if (!flags->no_stdin) {
         util::send_socket_message("EXIT", util::get_socket_endpoint());
     }
     if (socket_thread.joinable()) {
@@ -104,7 +103,7 @@ void Application::execute(const std::string& cmd)
             return;
         }
         set_dimensions_from_json(json);
-        image = Image::load(*terminal, *dimensions, flags, json["path"]);
+        image = Image::load(*dimensions, json["path"]);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
@@ -232,7 +231,7 @@ void Application::setup_logger()
 void Application::command_loop()
 {
     const int sleep_time = 100;
-    if (!flags.no_stdin) {
+    if (!flags->no_stdin) {
         std::string cmd;
         while (std::getline(std::cin, cmd)) {
             if (s->get_stop_flag().load()) {
@@ -290,7 +289,7 @@ void Application::print_header()
 
 void Application::set_silent()
 {
-    if (!flags.silent) {
+    if (!flags->silent) {
         return;
     }
     f_stderr = std::freopen("/dev/null", "w", stderr);

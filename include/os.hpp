@@ -27,6 +27,7 @@ namespace os
     auto getenv(std::string_view var) -> std::optional<std::string>;
 
     auto get_pid() -> int;
+    auto get_ppid() -> int;
 
     void get_process_info(int pid);
 }

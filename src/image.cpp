@@ -21,6 +21,7 @@
 #include "image/libvips.hpp"
 #include "os.hpp"
 #include "util.hpp"
+#include "flags.hpp"
 
 #ifdef ENABLE_OPENCV
 #   include <opencv2/imgcodecs.hpp>
@@ -31,22 +32,22 @@
 
 namespace fs = std::filesystem;
 
-auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
-        const std::string& filename)
+auto Image::load(const Dimensions& dimensions, const std::string& filename)
     -> std::shared_ptr<Image>
 {
     if (!fs::exists(filename)) {
         return nullptr;
     }
+    auto flags = Flags::instance();
     std::string image_path = filename;
     bool in_cache = false;
-    if (!flags.no_cache) {
+    if (!flags->no_cache) {
         image_path = check_cache(dimensions, filename);
         in_cache = image_path != filename;
     }
     bool is_anim = false;
     bool load_opencv = false; 
-    bool load_libvips = flags.no_opencv;
+    bool load_libvips = flags->no_opencv;
     fs::path file = image_path;
     std::unordered_set<std::string> animated_formats {
         ".gif", ".webp"
@@ -69,11 +70,11 @@ auto Image::load(const Terminal& terminal, const Dimensions& dimensions, const F
 #endif
 
     if (load_libvips) {
-        return std::make_shared<LibvipsImage>(terminal, dimensions, flags, image_path, is_anim, in_cache);
+        return std::make_shared<LibvipsImage>(dimensions, image_path, is_anim, in_cache);
     }
 #ifdef ENABLE_OPENCV
     if (load_opencv) {
-        return std::make_shared<OpencvImage>(terminal, dimensions, flags, image_path, in_cache);
+        return std::make_shared<OpencvImage>(dimensions, image_path, in_cache);
     }
 #endif
     return nullptr;

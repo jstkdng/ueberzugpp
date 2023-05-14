@@ -28,7 +28,7 @@ class X11Util;
 class Terminal
 {
 public:
-    Terminal(int pid, Flags& flags);
+    Terminal();
     ~Terminal();
 
     uint16_t font_width;
@@ -49,12 +49,16 @@ private:
 
     void init_termios();
     void reset_termios();
+
     void check_sixel_support();
     void check_kitty_support();
     void check_iterm2_support();
+    void check_x11_support();
+
     void get_terminal_size_escape_code();
     void get_terminal_size_xtsm();
-    void get_terminal_size_x11();
+    void get_fallback_terminal_sizes();
+
     void open_first_pty();
     void set_detected_output();
 
@@ -70,7 +74,7 @@ private:
     bool supports_x11 = false;
     bool supports_iterm2 = false;
 
-    Flags& flags;
+    std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;
 #ifdef ENABLE_X11
     std::unique_ptr<X11Util> xutil;

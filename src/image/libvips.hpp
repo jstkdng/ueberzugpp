@@ -30,8 +30,7 @@
 class LibvipsImage : public Image
 {
 public:
-    LibvipsImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
-            const std::string &filename, bool is_anim, bool in_cache);
+    LibvipsImage(const Dimensions& dimensions, const std::string &filename, bool is_anim, bool in_cache);
 
     [[nodiscard]] auto width() const -> int override;
     [[nodiscard]] auto height() const -> int override;
@@ -51,14 +50,13 @@ private:
 
     unique_C_ptr<unsigned char> _data;
     std::filesystem::path path;
-    const Terminal& terminal;
-    const Flags& flags;
     const Dimensions& dimensions;
 
+    std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;
 
-    int max_width;
-    int max_height;
+    uint32_t max_width;
+    uint32_t max_height;
     size_t _size;
 
     // for animated pictures

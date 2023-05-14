@@ -18,12 +18,8 @@
 
 #include <cstdlib>
 #include <array>
-#include <stdexcept>
-#include <unistd.h>
-#include <fstream>
-#include <sstream>
-#include <iostream>
 #include <memory>
+#include <unistd.h>
 
 auto os::exec(std::string_view cmd) -> std::string
 {
@@ -57,3 +53,7 @@ auto os::get_pid() -> int
     return getpid();
 }
 
+auto os::get_ppid() -> int
+{
+    return getppid();
+}

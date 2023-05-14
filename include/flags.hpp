@@ -19,12 +19,22 @@
 
 #include <string>
 #include <filesystem>
+#include <memory>
 
+// singleton
 class Flags
 {
 public:
-    Flags();
-    ~Flags() = default;
+    static auto instance() -> std::shared_ptr<Flags>
+    {
+        static std::shared_ptr<Flags> instance {new Flags};
+        return instance;
+    }
+
+    Flags(const Flags&) = delete;
+    Flags(Flags&) = delete;
+    auto operator=(const Flags&) -> Flags& = delete;
+    auto operator=(Flags&) -> Flags& = delete;
 
     bool no_stdin = false;
     bool silent = false;
@@ -45,11 +55,10 @@ public:
     std::string cmd_file_path;
 
 private:
+    Flags();
     std::filesystem::path config_file;
 
     void read_config_file();
 };
-
-extern Flags flags;
 
 #endif

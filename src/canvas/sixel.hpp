@@ -43,8 +43,8 @@ public:
     void clear() override;
 
 private:
-    sixel_dither_t *dither;
-    sixel_output_t *output;
+    sixel_dither_t *dither = nullptr;
+    sixel_output_t *output = nullptr;
     std::shared_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;
 

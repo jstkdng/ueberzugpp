@@ -18,18 +18,19 @@
 #include "util.hpp"
 #include "os.hpp"
 #include "util/ptr.hpp"
+#include "flags.hpp"
 
 #include <xcb/xcb.h>
 #include <string>
-#include <iostream>
 
-X11Util::X11Util()
+X11Util::X11Util():
+connection(xcb_connect(nullptr, nullptr))
 {
+    auto flags = Flags::instance();
     auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
-    if (xdg_session != "wayland") {
-        connection = xcb_connect(nullptr, nullptr);
-        if (xcb_connection_has_error(connection) == 0) {
-            screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    if (xcb_connection_has_error(connection) == 0) {
+        screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+        if (xdg_session != "wayland" || flags->output == "x11") {
             connected = true;
         }
     }
@@ -154,9 +155,4 @@ auto X11Util::get_parent_window(int pid) const -> xcb_window_t
         }
     }
     return -1;
-}
-
-auto X11Util::is_connected() const -> bool
-{
-    return connected;
 }

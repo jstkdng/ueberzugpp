@@ -26,10 +26,8 @@
 using vips::VImage;
 using vips::VError;
 
-LibvipsImage::LibvipsImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
+LibvipsImage::LibvipsImage(const Dimensions& dimensions,
             const std::string &filename, bool is_anim, bool in_cache):
-terminal(terminal),
-flags(flags),
 dimensions(dimensions),
 path(filename),
 is_anim(is_anim),
@@ -37,6 +35,7 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
+    flags = Flags::instance();
     logger = spdlog::get("vips");
     logger->info("Loading image {}", filename);
     if (is_anim) {
@@ -152,7 +151,7 @@ auto LibvipsImage::resize_image() -> void
 
     logger->debug("Resizing image");
     image = image.resize(scale);
-    if (is_anim || flags.no_cache) {
+    if (is_anim || flags->no_cache) {
         return;
     }
 
@@ -167,12 +166,12 @@ auto LibvipsImage::process_image() -> void
 {
     resize_image();
 
-    if (flags.output == "sixel") {
+    if (flags->output == "sixel") {
         // sixel expects RGB888
         if (image.has_alpha()) {
             image = image.flatten();
         }
-    } else if (flags.output == "x11") {
+    } else if (flags->output == "x11") {
         // alpha channel required
         if (!image.has_alpha()) {
             image = image.bandjoin(0);

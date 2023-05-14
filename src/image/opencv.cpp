@@ -21,10 +21,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/ocl.hpp>
 
-OpencvImage::OpencvImage(const Terminal& terminal, const Dimensions& dimensions, const Flags& flags,
-            const std::string& filename, bool in_cache):
-terminal(terminal),
-flags(flags),
+OpencvImage::OpencvImage(const Dimensions& dimensions, const std::string& filename, bool in_cache):
 dimensions(dimensions),
 path(filename),
 max_width(dimensions.max_wpixels()),
@@ -32,6 +29,7 @@ max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
     logger = spdlog::get("opencv");
+    flags = Flags::instance();
     logger->info("Loading image {}", filename);
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
 
@@ -97,7 +95,7 @@ auto OpencvImage::resize_image() -> void
         cv::resize(image, image, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
     }
 
-    if (flags.no_cache) {
+    if (flags->no_cache) {
         logger->debug("Caching is disabled");
         return;
     }
@@ -113,19 +111,19 @@ void OpencvImage::process_image()
 {
     resize_image();
 
-    if (flags.output == "kitty") {
+    if (flags->output == "kitty") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
-    } else if (flags.output == "sixel") {
+    } else if (flags->output == "sixel") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
-    } else if (flags.output == "x11") {
+    } else if (flags->output == "x11") {
         cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
     }
 
