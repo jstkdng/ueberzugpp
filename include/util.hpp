@@ -46,7 +46,7 @@ namespace util
     void restore_cursor_position();
     void benchmark(std::function<void(void)> func);
     void send_command(const Flags& flags);
-    void clear_terminal_area(int x, int y, int width, int height);
-}
+    void clear_terminal_area(int xcoord, int ycoord, int width, int height);
+} // namespace util
 
 #endif

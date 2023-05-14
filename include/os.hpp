@@ -23,10 +23,10 @@
 
 namespace os
 {
-    std::string exec(std::string_view cmd);
+    auto exec(std::string_view cmd) -> std::string;
     auto getenv(std::string_view var) -> std::optional<std::string>;
 
-    int get_pid();
+    auto get_pid() -> int;
 
     void get_process_info(int pid);
 }

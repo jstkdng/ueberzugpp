@@ -25,9 +25,10 @@
 #include <iostream>
 #include <memory>
 
-std::string os::exec(std::string_view cmd)
+auto os::exec(std::string_view cmd) -> std::string
 {
-    std::array<char, 128> buffer;
+    const int bufsize = 128;
+    std::array<char, bufsize> buffer;
     std::string result;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.data(), "r"), pclose);
     if (!pipe) {
@@ -36,18 +37,22 @@ std::string os::exec(std::string_view cmd)
     while(fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
-    if (!result.empty()) result.erase(result.length() - 1);
+    if (!result.empty()) {
+        result.erase(result.length() - 1);
+    }
     return result;
 }
 
 auto os::getenv(std::string_view var) -> std::optional<std::string>
 {
-    auto res = std::getenv(var.data());
-    if (res == nullptr) return {};
+    auto *res = std::getenv(var.data());
+    if (res == nullptr) {
+        return {};
+    }
     return res;
 }
 
-int os::get_pid()
+auto os::get_pid() -> int
 {
     return getpid();
 }

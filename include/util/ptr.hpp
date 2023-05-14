@@ -7,6 +7,7 @@
 struct free_deleter{
     template <typename T>
     void operator()(T *ptr) const {
+        // NOLINTNEXTLINE(cppcoreguidelines-no-malloc)
         std::free(const_cast<std::remove_const_t<T>*>(ptr));
     }
 };

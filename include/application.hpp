@@ -45,7 +45,7 @@ public:
     static void print_version();
     static void print_header();
     static void daemonize(const std::string& pid_file);
-    static const pid_t parent_pid;
+    static const pid_t parent_pid_;
 
 private:
     std::unique_ptr<Terminal> terminal;

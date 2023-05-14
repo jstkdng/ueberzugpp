@@ -64,12 +64,20 @@ auto util::get_process_tree(int pid) -> std::vector<int>
 
 auto util::get_cache_path() -> std::string
 {
-    return fmt::format("{}/.cache/ueberzugpp/", os::getenv("HOME").value());
+    auto home = os::getenv("HOME");
+    if (home.has_value()) {
+        return fmt::format("{}/.cache/ueberzugpp/", home.value());
+    }
+    return "";
 }
 
 auto util::get_log_filename() -> std::string
 {
-    return fmt::format("ueberzugpp-{}.log", os::getenv("USER").value());
+    auto user = os::getenv("USER");
+    if (user.has_value()) {
+        return fmt::format("ueberzugpp-{}.log", user.value());
+    }
+    return "ueberzugpp.log";
 }
 
 auto util::get_socket_endpoint(int pid) -> std::string
@@ -182,23 +190,23 @@ void util::send_command(const Flags& flags)
         util::send_socket_message(json, endpoint);
         return;
     }
-    auto x = std::stoi(flags.cmd_x);
-    auto y = std::stoi(flags.cmd_y);
+    auto xcoord = std::stoi(flags.cmd_x);
+    auto ycoord = std::stoi(flags.cmd_y);
     auto max_width = std::stoi(flags.cmd_max_width);
     auto max_height = std::stoi(flags.cmd_max_height);
 
     auto json = fmt::format(R"({{"action":"{}","identifier":"{}","max_width":{},"max_height":{},"x":{},"y":{},"path":"{}"}})",
-            flags.cmd_action, flags.cmd_id, max_width, max_height, x, y, flags.cmd_file_path);
+            flags.cmd_action, flags.cmd_id, max_width, max_height, xcoord, ycoord, flags.cmd_file_path);
     auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
     util::send_socket_message(json, endpoint);
 }
 
-void util::clear_terminal_area(int x, int y, int width, int height)
+void util::clear_terminal_area(int xcoord, int ycoord, int width, int height)
 {
     save_cursor_position();
     auto line_clear = std::string(width, ' ');
-    for (int i = y; i <= height + 2; ++i) {
-        util::move_cursor(i, x);
+    for (int i = ycoord; i <= height + 2; ++i) {
+        util::move_cursor(i, xcoord);
         std::cout << line_clear;
     }
     std::cout << std::flush;

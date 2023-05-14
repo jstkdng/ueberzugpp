@@ -50,6 +50,7 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
     return windows;
 }
 
+// NOLINTNEXTLINE(misc-no-recursion)
 void X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) const
 {
     auto reply = unique_C_ptr<xcb_query_tree_reply_t> {

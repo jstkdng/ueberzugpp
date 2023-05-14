@@ -22,7 +22,7 @@
 class Process
 {
 public:
-    Process(int pid);
+    explicit Process(int pid);
     ~Process() = default;
 
     int pid;

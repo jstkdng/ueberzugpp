@@ -29,7 +29,7 @@
 #include "util.hpp"
 #include "signal.hpp"
 
-const pid_t Application::parent_pid = getppid();
+const pid_t Application::parent_pid_ = getppid();
 
 void got_signal(const int signal)
 {

@@ -122,9 +122,9 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
 {
     logger->debug("Initializing canvas");
     std::vector<int> client_pids;
-    if (Application::parent_pid != getppid()) {
+    if (Application::parent_pid_ != getppid()) {
         logger->debug("Running in daemon mode");
-        client_pids.push_back(Application::parent_pid);
+        client_pids.push_back(Application::parent_pid_);
     } else {
         client_pids.push_back(os::get_pid());
     }
