@@ -19,14 +19,16 @@
 #include "util.hpp"
 
 #include <string>
+#include <string_view>
+#include <array>
 #include <fmt/format.h>
 
-const std::vector<std::string> tmux::hooks = {
+constexpr auto hooks = std::to_array<std::string_view>({
     "client-session-changed",
     "session-window-changed",
     "client-detached",
     "window-layout-changed"
-};
+});
 
 auto tmux::get_session_id() -> std::string
 {

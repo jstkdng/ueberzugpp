@@ -20,14 +20,9 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include <string_view>
-
-#include "flags.hpp"
 
 namespace tmux
 {
-    extern const std::vector<std::string> hooks;
-
     auto get_session_id() -> std::string;
     auto get_pane() -> std::string;
 

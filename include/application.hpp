@@ -22,7 +22,6 @@
 #include "terminal.hpp"
 #include "flags.hpp"
 #include "dimensions.hpp"
-#include "signal.hpp"
 
 #include <string>
 #include <memory>
@@ -45,19 +44,22 @@ public:
     static void print_version();
     static void print_header();
     static void daemonize(const std::string& pid_file);
+    static auto get_stop_flag() -> std::shared_ptr<std::atomic<bool>>;
     static const pid_t parent_pid_;
 
 private:
     std::unique_ptr<Terminal> terminal;
     std::unique_ptr<Dimensions> dimensions;
+    std::unique_ptr<Canvas> canvas;
+
     std::shared_ptr<Image> image;
     std::shared_ptr<Flags> flags;
-    std::unique_ptr<Canvas> canvas;
     std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<std::atomic<bool>> stop_flag;
+
     std::FILE* f_stderr = nullptr;
     std::thread socket_thread;
     std::mutex img_lock;
-    std::shared_ptr<SignalSingleton> s;
 
     void setup_logger();
     void set_silent();

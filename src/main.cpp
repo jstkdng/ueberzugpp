@@ -17,7 +17,6 @@
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
-#include <atomic>
 #include <csignal>
 #include <fmt/format.h>
 #include <spdlog/cfg/env.h>
@@ -26,15 +25,11 @@
 #include "flags.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
-#include "signal.hpp"
-#include "os.hpp"
-
-const pid_t Application::parent_pid_ = os::get_ppid();
 
 void got_signal(const int signal)
 {
-    auto singleton = SignalSingleton::instance();
-    singleton->get_stop_flag().store(true);
+    auto stop_flag = Application::get_stop_flag();
+    stop_flag->store(true);
     auto logger = spdlog::get("main");
     if (!logger) {
         return;
