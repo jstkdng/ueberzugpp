@@ -27,7 +27,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
-project(ueberzugpp LANGUAGES CXX VERSION 2.8.2)
+project(ueberzugpp LANGUAGES CXX VERSION 2.8.3)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
@@ -177,9 +177,17 @@ set(UEBERZUGPP_SOURCES
 add_executable(ueberzug ${UEBERZUGPP_SOURCES})
 
 if(MSVC)
-    target_compile_options(ueberzug PRIVATE /W4 /WX)
+    target_compile_options(ueberzug PRIVATE
+        $<$<CONFIG:Debug>:
+            /W4 /WX
+        >
+    )
 else()
-    target_compile_options(ueberzug PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_compile_options(ueberzug PRIVATE
+        $<$<CONFIG:Debug>:
+            -Wall -Wextra -Wpedantic -Werror
+        >
+    )
 endif()
 
 target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM1=69)
