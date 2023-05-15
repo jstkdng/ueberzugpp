@@ -46,7 +46,9 @@ auto Image::load(const Dimensions& dimensions, const std::string& filename)
         in_cache = image_path != filename;
     }
     bool is_anim = false;
-    bool load_opencv = false; 
+#ifdef ENABLE_OPENCV
+    bool load_opencv = false;
+#endif
     bool load_libvips = flags->no_opencv;
     fs::path file = image_path;
     std::unordered_set<std::string> animated_formats {
