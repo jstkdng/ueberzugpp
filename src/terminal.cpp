@@ -146,7 +146,7 @@ auto Terminal::guess_font_size(uint16_t chars, double pixels, double padding)
 
 void Terminal::get_terminal_size_escape_code()
 {
-    auto resp = read_raw_str("\e[14t").erase(0, 4);
+    auto resp = read_raw_str("\033[14t").erase(0, 4);
     if (resp.empty()) {
         return;
     }
@@ -158,7 +158,7 @@ void Terminal::get_terminal_size_escape_code()
 
 void Terminal::get_terminal_size_xtsm()
 {
-    auto resp = read_raw_str("\e[?2;1;0S").erase(0, 3);
+    auto resp = read_raw_str("\033[?2;1;0S").erase(0, 3);
     if (resp.empty()) {
         return;
     }
@@ -177,7 +177,7 @@ void Terminal::check_sixel_support()
     auto supported_terms = std::unordered_set<std::string> {
         "yaft-256color", "iTerm.app"
     };
-    auto resp = read_raw_str("\e[?1;1;0S").erase(0, 3);
+    auto resp = read_raw_str("\033[?1;1;0S").erase(0, 3);
     auto vals = util::str_split(resp, ";");
     if (vals.size() > 2 || supported_terms.contains(term) || supported_terms.contains(term_program)) {
         supports_sixel = true;
@@ -189,7 +189,7 @@ void Terminal::check_sixel_support()
 
 void Terminal::check_kitty_support()
 {
-    auto resp = read_raw_str("\e_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\e\\\e[c");
+    auto resp = read_raw_str("\033_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\033\\\033[c");
     if (resp.find("OK") != std::string::npos) {
         supports_kitty = true;
         logger->debug("kitty is supported");
@@ -232,19 +232,20 @@ auto Terminal::read_raw_str(const std::string& esc) -> std::string
     std::stringstream sstream;
     std::cout << esc << std::flush;
 
-    std::array<struct pollfd, 1> input;
-    input.fill({.fd = STDIN_FILENO, .events = POLLIN});
+    auto input = std::make_unique<struct pollfd>();
+    input->fd = STDIN_FILENO;
+    input->events = POLLIN;
 
     const int waitms = 100;
     while (true) {
         // some terminals take some time to write, 100ms seems like enough
         // time to wait for input
-        size_t res = poll(input.data(), 1, waitms);
-        if (res <= 0) {
+        int poll_res = poll(input.get(), 1, waitms);
+        if (poll_res <= 0) {
             return "";
         }
-        res = read(STDIN_FILENO, &chr, 1);
-        if (res == -1) {
+        ssize_t read_res = read(STDIN_FILENO, &chr, 1);
+        if (read_res == -1) {
             return "";
         }
         if (chr == esc.back()) {

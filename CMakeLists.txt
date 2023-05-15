@@ -142,9 +142,9 @@ pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 
 if (APPLE)
-    set(PROC_SOURCES src/process_apple.cpp)
+    set(PROC_SOURCES src/process/apple.cpp)
 else()
-    set(PROC_SOURCES src/process.cpp)
+    set(PROC_SOURCES src/process/linux.cpp)
 endif()
 
 configure_file("include/version.hpp.in" version.hpp)
@@ -175,6 +175,15 @@ set(UEBERZUGPP_SOURCES
 )
 
 add_executable(ueberzug ${UEBERZUGPP_SOURCES})
+
+if(MSVC)
+    target_compile_options(ueberzug PRIVATE /W4 /WX)
+else()
+    target_compile_options(ueberzug PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM1=69)
+target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM2=420)
 
 target_include_directories(ueberzug PUBLIC
     "${CMAKE_SOURCE_DIR}/include"

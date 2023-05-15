@@ -21,11 +21,14 @@
 
 Dimensions::Dimensions(const Terminal& terminal, uint16_t xcoord,
         uint16_t ycoord, int max_w, int max_h, std::string scaler):
-terminal(terminal),
-scaler(std::move(scaler)),
-orig_x(xcoord), orig_y(ycoord), max_w(max_w), max_h(max_h),
+max_w(max_w),
+max_h(max_h),
 padding_horizontal(terminal.padding_horizontal),
-padding_vertical(terminal.padding_vertical)
+padding_vertical(terminal.padding_vertical),
+scaler(std::move(scaler)),
+terminal(terminal),
+orig_x(xcoord),
+orig_y(ycoord)
 {
     read_offsets();
 }

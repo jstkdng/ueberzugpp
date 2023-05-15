@@ -25,8 +25,8 @@
 
 
 X11Canvas::X11Canvas(std::mutex& img_lock):
-img_lock(img_lock),
-connection(xcb_connect(nullptr, nullptr))
+connection(xcb_connect(nullptr, nullptr)),
+img_lock(img_lock)
 {
     if (xcb_connection_has_error(connection) != 0) {
         throw std::runtime_error("CANNOT CONNECT TO X11");
@@ -95,14 +95,15 @@ void X11Canvas::hide()
 auto X11Canvas::handle_events() -> void
 {
     discard_leftover_events();
+    const int event_mask = 0x80;
     while (true) {
         auto event = unique_C_ptr<xcb_generic_event_t> {
             xcb_wait_for_event(this->connection)
         };
-        switch (event->response_type & ~0x80) {
+        switch (event->response_type & ~event_mask) {
             case XCB_EXPOSE: {
                 auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
-                if (expose->x == 69 && expose->y == 420) {
+                if (expose->x == MAGIC_EXIT_NUM1 && expose->y == MAGIC_EXIT_NUM2) {
                     return;
                 }
                 try {

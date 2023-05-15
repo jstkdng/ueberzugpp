@@ -28,11 +28,11 @@ using vips::VError;
 
 LibvipsImage::LibvipsImage(const Dimensions& dimensions,
             const std::string &filename, bool is_anim, bool in_cache):
-dimensions(dimensions),
 path(filename),
-is_anim(is_anim),
+dimensions(dimensions),
 max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
+is_anim(is_anim),
 in_cache(in_cache)
 {
     flags = Flags::instance();

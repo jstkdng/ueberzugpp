@@ -46,7 +46,7 @@ void Iterm2Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> ima
 
 void Iterm2Canvas::draw()
 {
-    ss << "\e]1337;File=inline=1;";
+    ss << "\033]1337;File=inline=1;";
     auto filename = image->filename();
     auto num_bytes = fs::file_size(filename);
     auto encoded_filename = util::base64_encode(

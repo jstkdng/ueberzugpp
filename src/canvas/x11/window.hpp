@@ -18,12 +18,13 @@
 #define __WINDOW__
 
 #include "image.hpp"
-#include "dimensions.hpp"
 #include "util/ptr.hpp"
 
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
 #include <spdlog/spdlog.h>
+
+class Dimensions;
 
 class Window
 {
@@ -44,15 +45,15 @@ private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
 
-    xcb_window_t parent;
     xcb_window_t window;
+    xcb_window_t parent;
     xcb_gcontext_t gc;
+
     unique_C_ptr<xcb_image_t> xcb_image;
     std::vector<unsigned char> xcb_image_buffer;
     std::shared_ptr<spdlog::logger> logger;
 
     Image& image;
-    const Dimensions& dimensions;
     bool visible = false;
 
     void send_expose_event(int xcoord = 0, int ycoord = 0);

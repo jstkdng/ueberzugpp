@@ -25,6 +25,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <thread>
+#include <tuple>
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <fmt/format.h>
@@ -239,7 +240,6 @@ void Application::setup_logger()
 
 void Application::command_loop()
 {
-    const int sleep_time = 100;
     if (!flags->no_stdin) {
         std::string cmd;
         while (std::getline(std::cin, cmd)) {
@@ -263,8 +263,8 @@ void Application::socket_loop()
         zmq::message_t request;
         zmq::message_t sockid;
         try {
-            auto id_res = socket.recv(idbuf, zmq::recv_flags::none);
-            auto result = socket.recv(request, zmq::recv_flags::none);
+            std::ignore = socket.recv(idbuf, zmq::recv_flags::none);
+            std::ignore = socket.recv(request, zmq::recv_flags::none);
         } catch (const zmq::error_t& err) {}
         auto str_response = request.to_string();
         if (!str_response.empty()) {

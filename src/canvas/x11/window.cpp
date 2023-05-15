@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "window.hpp"
+#include "dimensions.hpp"
 
 #include <xcb/xcb.h>
 #include <gsl/util>
@@ -26,18 +27,16 @@ connection(connection),
 screen(screen),
 window(window),
 parent(parent),
-image(image),
-dimensions(dimensions),
-gc(xcb_generate_id(connection))
+gc(xcb_generate_id(connection)),
+image(image)
 {
     logger = spdlog::get("X11");
     unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
-    auto value_list = xcb_create_window_value_list_t {
-        .background_pixel = screen->black_pixel,
-        .border_pixel = screen->black_pixel,
-        .event_mask = XCB_EVENT_MASK_EXPOSURE,
-        .colormap = screen->default_colormap
-    };
+    auto value_list = std::make_unique<xcb_create_window_value_list_t>();
+    value_list->background_pixel = screen->black_pixel;
+    value_list->border_pixel = screen->black_pixel;
+    value_list->event_mask = XCB_EVENT_MASK_EXPOSURE;
+    value_list->colormap = screen->default_colormap;
 
     auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
@@ -52,7 +51,7 @@ gc(xcb_generate_id(connection))
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
             value_mask,
-            &value_list);
+            value_list.get());
     logger->debug("Created child window {} at ({},{})", window, xcoord, ycoord);
     xcb_create_gc(connection, gc, window, 0, nullptr);
     show();
@@ -124,7 +123,7 @@ Window::~Window()
 
 auto Window::terminate_event_handler() -> void
 {
-    send_expose_event(69, 420);
+    send_expose_event(MAGIC_EXIT_NUM1, MAGIC_EXIT_NUM2);
 }
 
 auto Window::send_expose_event(int xcoord, int ycoord) -> void

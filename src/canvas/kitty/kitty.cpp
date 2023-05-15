@@ -57,7 +57,7 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
     chunks.reserve(num_chunks + 1);
     const auto *ptr = image->data();
 
-    int idx = 0;
+    uint64_t idx = 0;
     for (; idx < num_chunks; idx++) {
         chunks.emplace_back(ptr + idx * chunk_size, chunk_size);
     }
@@ -75,22 +75,22 @@ void KittyCanvas::draw_frame()
 {
     const int bits_per_channel = 8;
     auto chunks = process_chunks();
-    ss  << "\e_Ga=T,m=1,i=1337,q=2"
+    ss  << "\033_Ga=T,m=1,i=1337,q=2"
         << ",f=" << image->channels() * bits_per_channel
         << ",s=" << image->width()
         << ",v=" << image->height()
         << ";" << chunks.front().get_result()
-        << "\e\\";
+        << "\033\\";
 
     for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
-        ss  << "\e_Gm=1,q=2;"
+        ss  << "\033_Gm=1,q=2;"
             << chunk->get_result()
-            << "\e\\";
+            << "\033\\";
     }
 
-    ss  << "\e_Gm=0,q=2;"
+    ss  << "\033_Gm=0,q=2;"
         << chunks.back().get_result()
-        << "\e\\";
+        << "\033\\";
 
     util::save_cursor_position();
     util::move_cursor(y, x);
@@ -100,5 +100,5 @@ void KittyCanvas::draw_frame()
 
 void KittyCanvas::clear()
 {
-    std::cout << "\e_Ga=d\e\\" << std::flush;
+    std::cout << "\033_Ga=d\033\\" << std::flush;
 }

@@ -22,8 +22,8 @@
 #include <opencv2/core/ocl.hpp>
 
 OpencvImage::OpencvImage(const Dimensions& dimensions, const std::string& filename, bool in_cache):
-dimensions(dimensions),
 path(filename),
+dimensions(dimensions),
 max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)

@@ -23,7 +23,7 @@
 #include <vector>
 #include <spdlog/spdlog.h>
 
-struct Iterm2Chunk;
+class Iterm2Chunk;
 
 class Iterm2Canvas : public Canvas
 {

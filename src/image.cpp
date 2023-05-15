@@ -88,8 +88,8 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
     }
 
     auto cache_img = vips::VImage::new_from_file(cache_path.c_str());
-    int img_width = cache_img.width();
-    int img_height = cache_img.height();
+    uint32_t img_width = cache_img.width();
+    uint32_t img_height = cache_img.height();
     uint32_t dim_width = dimensions.max_wpixels(); 
     uint32_t dim_height = dimensions.max_hpixels();
     const int delta = 10;
