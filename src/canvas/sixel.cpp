@@ -38,6 +38,7 @@ img_lock(img_lock)
 
 SixelCanvas::~SixelCanvas()
 {
+    can_draw.store(false);
     if (draw_thread.joinable()) {
         draw_thread.join();
     }

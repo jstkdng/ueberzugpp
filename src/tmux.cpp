@@ -32,8 +32,7 @@ constexpr auto hooks = std::to_array<std::string_view>({
 
 auto tmux::get_session_id() -> std::string
 {
-    std::string cmd =
-        "tmux display -p -F '#{session_id}' -t " + tmux::get_pane();
+    const auto cmd = fmt::format("tmux display -p -F '#{{session_id}}' -t {}", tmux::get_pane());
     return os::exec(cmd);
 }
 
@@ -44,10 +43,8 @@ auto tmux::is_used() -> bool
 
 auto tmux::is_window_focused() -> bool
 {
-    std::string cmd =
-        "tmux display -p -F '#{window_active},#{pane_in_mode}' -t " + tmux::get_pane();
-    std::string output = os::exec(cmd);
-    return output == "1,0";
+    const auto cmd = fmt::format("tmux display -p -F '#{{window_active}},#{{pane_in_mode}}' -t {}", tmux::get_pane());
+    return os::exec(cmd) == "1,0";
 }
 
 auto tmux::get_pane() -> std::string
