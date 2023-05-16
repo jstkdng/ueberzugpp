@@ -21,7 +21,7 @@
 #include <memory>
 #include <unistd.h>
 
-auto os::exec(std::string_view cmd) -> std::string
+auto os::exec(const std::string_view cmd) -> std::string
 {
     const int bufsize = 128;
     std::array<char, bufsize> buffer;
@@ -39,7 +39,7 @@ auto os::exec(std::string_view cmd) -> std::string
     return result;
 }
 
-auto os::getenv(std::string_view var) -> std::optional<std::string>
+auto os::getenv(const std::string_view var) -> std::optional<std::string>
 {
     auto *res = std::getenv(var.data());
     if (res == nullptr) {

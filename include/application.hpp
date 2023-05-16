@@ -30,16 +30,17 @@
 #include <cstdlib>
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
+#include <string_view>
 
 class Application
 {
 public:
-    explicit Application(const std::string& executable);
+    explicit Application(std::string_view executable);
     ~Application();
 
     void execute(const std::string& cmd);
     void command_loop();
-    void handle_tmux_hook(const std::string& hook);
+    void handle_tmux_hook(std::string_view hook);
 
     static void print_version();
     static void print_header();

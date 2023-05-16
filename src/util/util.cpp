@@ -64,20 +64,14 @@ auto util::get_process_tree(int pid) -> std::vector<int>
 
 auto util::get_cache_path() -> std::string
 {
-    auto home = os::getenv("HOME");
-    if (home.has_value()) {
-        return fmt::format("{}/.cache/ueberzugpp/", home.value());
-    }
-    return "";
+    const auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
+    return fmt::format("{}/.cache/ueberzugpp/", home);
 }
 
 auto util::get_log_filename() -> std::string
 {
-    auto user = os::getenv("USER");
-    if (user.has_value()) {
-        return fmt::format("ueberzugpp-{}.log", user.value());
-    }
-    return "ueberzugpp.log";
+    const auto user = os::getenv("USER").value_or("NOUSER");
+    return fmt::format("ueberzugpp-{}.log", user);
 }
 
 auto util::get_socket_endpoint(int pid) -> std::string
@@ -90,12 +84,12 @@ auto util::get_socket_path(int pid) -> std::string
     return fmt::format("{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), pid);
 }
 
-void util::send_socket_message(const std::string& msg, const std::string& endpoint)
+void util::send_socket_message(const std::string_view msg, const std::string_view endpoint)
 {
     zmq::context_t context(1);
     zmq::socket_t socket(context, zmq::socket_type::stream);
     socket.set(zmq::sockopt::linger, 2);
-    socket.connect(endpoint);
+    socket.connect(endpoint.data());
     auto id_sock = socket.get(zmq::sockopt::routing_id);
     zmq::message_t id_req(id_sock);
     zmq::message_t msg_req(msg);
@@ -122,7 +116,7 @@ void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigne
 #endif
 }
 
-auto util::get_b2_hash_ssl(const std::string& str) -> std::string
+auto util::get_b2_hash_ssl(const std::string_view str) -> std::string
 {
     std::stringstream sstream;
     auto mdctx = std::unique_ptr<EVP_MD_CTX, evp_md_ctx_deleter> {
@@ -132,7 +126,7 @@ auto util::get_b2_hash_ssl(const std::string& str) -> std::string
     auto digest = std::vector<unsigned char>(EVP_MD_size(evp), 0);
 
     EVP_DigestInit_ex(mdctx.get(), evp, nullptr);
-    EVP_DigestUpdate(mdctx.get(), str.c_str(), str.size());
+    EVP_DigestUpdate(mdctx.get(), str.data(), str.size());
     unsigned int digest_len = 0;
     EVP_DigestFinal_ex(mdctx.get(), digest.data(), &digest_len);
 
@@ -159,7 +153,7 @@ void util::restore_cursor_position()
 
 auto util::get_cache_file_save_location(const fs::path &path) -> std::string
 {
-    return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path), path.extension().string());
+    return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path.string()), path.extension().string());
 }
 
 void util::benchmark(std::function<void(void)> func)

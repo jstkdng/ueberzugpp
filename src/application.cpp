@@ -37,7 +37,7 @@ namespace fs = std::filesystem;
 
 const pid_t Application::parent_pid_ = os::get_ppid();
 
-Application::Application(const std::string& executable)
+Application::Application(std::string_view executable)
 {
     flags = Flags::instance();
     stop_flag = get_stop_flag();
@@ -65,7 +65,7 @@ Application::Application(const std::string& executable)
     if (flags->no_cache) {
         logger->info("Image caching is disabled.");
     }
-    if (VIPS_INIT(executable.c_str())) {
+    if (VIPS_INIT(executable.data())) {
         vips_error_exit(nullptr);
     }
     vips_cache_set_max(1);
@@ -125,15 +125,15 @@ void Application::execute(const std::string& cmd)
         logger->info("Removing image.");
         canvas->clear();
     } else if (json["action"] == "tmux") {
-        handle_tmux_hook(json["hook"]);
+        handle_tmux_hook(std::string{json["hook"]});
     } else {
         logger->warn("Command not supported.");
     }
 }
 
-void Application::handle_tmux_hook(const std::string& hook)
+void Application::handle_tmux_hook(const std::string_view hook)
 {
-    std::unordered_map<std::string, std::function<void()>> hook_fns {
+    std::unordered_map<std::string_view, std::function<void()>> hook_fns {
         {"client-session-changed",
             [&] {
                 if (tmux::is_window_focused()) {
