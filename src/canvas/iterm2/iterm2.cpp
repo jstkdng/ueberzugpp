@@ -35,9 +35,9 @@ Iterm2Canvas::Iterm2Canvas()
     logger->info("Canvas created");
 }
 
-void Iterm2Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
+void Iterm2Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
-    this->image = image;
+    image = std::move(new_image);
     x = dimensions.x + 1;
     y = dimensions.y + 1;
     max_width = dimensions.max_w;
@@ -76,6 +76,7 @@ void Iterm2Canvas::draw()
 void Iterm2Canvas::clear()
 {
     util::clear_terminal_area(x, y, max_width, max_height);
+    image.reset();
 }
 
 auto Iterm2Canvas::process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>

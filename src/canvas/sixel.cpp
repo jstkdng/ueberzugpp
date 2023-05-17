@@ -27,8 +27,7 @@ auto sixel_draw_callback(char *data, int size, void* priv) -> int
     return size;
 }
 
-SixelCanvas::SixelCanvas(std::mutex& img_lock):
-img_lock(img_lock)
+SixelCanvas::SixelCanvas()
 {
     logger = spdlog::get("sixel");
     sixel_output_new(&output, sixel_draw_callback, &ss, nullptr);
@@ -46,14 +45,13 @@ SixelCanvas::~SixelCanvas()
     sixel_output_destroy(output);
 }
 
-auto SixelCanvas::init(const Dimensions& dimensions,
-        std::shared_ptr<Image> image) -> void
+void SixelCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
+    image = std::move(new_image);
     x = dimensions.x + 1;
     y = dimensions.y + 1;
     max_width = dimensions.max_w;
     max_height = dimensions.max_h;
-    this->image = image;
 
     // create dither and palette from image
     sixel_dither_new(&dither, -1, nullptr);
@@ -77,13 +75,8 @@ auto SixelCanvas::draw() -> void
     // start drawing loop
     draw_thread = std::thread([&] {
         while (can_draw.load()) {
-            std::unique_lock lock {img_lock, std::try_to_lock};
-            if (!lock.owns_lock()) {
-                return;
-            }
             draw_frame();
             image->next_frame();
-            lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });

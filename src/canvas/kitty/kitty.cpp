@@ -31,9 +31,9 @@ KittyCanvas::KittyCanvas()
     logger->info("Canvas created");
 }
 
-void KittyCanvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
+void KittyCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
-    this->image = image;
+    image = std::move(new_image);
     x = dimensions.x + 1;
     y = dimensions.y + 1;
 }
@@ -101,4 +101,5 @@ void KittyCanvas::draw_frame()
 void KittyCanvas::clear()
 {
     std::cout << "\033_Ga=d\033\\" << std::flush;
+    image.reset();
 }

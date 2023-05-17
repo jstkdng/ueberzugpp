@@ -23,22 +23,23 @@
 #endif
 #include "flags.hpp"
 
-auto Canvas::create(std::mutex& img_lock) -> std::unique_ptr<Canvas>
+auto Canvas::create() -> std::unique_ptr<Canvas>
 {
-    auto flags = Flags::instance();
+    const auto flags = Flags::instance();
+
     if (flags->output == "kitty") {
         return std::make_unique<KittyCanvas>();
     }
 #ifdef ENABLE_X11
     if (flags->output == "x11") {
-        return std::make_unique<X11Canvas>(img_lock);
+        return std::make_unique<X11Canvas>();
     }
 #endif
     if (flags->output == "iterm2") {
         return std::make_unique<Iterm2Canvas>();
     }
     if (flags->output == "sixel") {
-        return std::make_unique<SixelCanvas>(img_lock);
+        return std::make_unique<SixelCanvas>();
     }
     return nullptr;
 }

@@ -24,14 +24,13 @@
 #include <xcb/xproto.h>
 
 
-X11Canvas::X11Canvas(std::mutex& img_lock):
-connection(xcb_connect(nullptr, nullptr)),
-img_lock(img_lock)
+X11Canvas::X11Canvas():
+connection(xcb_connect(nullptr, nullptr))
 {
     if (xcb_connection_has_error(connection) != 0) {
         throw std::runtime_error("CANNOT CONNECT TO X11");
     }
-    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    // screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
     logger = spdlog::get("X11");
     logger->info("Canvas created");
 }
@@ -57,15 +56,10 @@ void X11Canvas::draw()
     }
     draw_thread = std::thread([&]  {
         while (can_draw.load()) {
-            std::unique_lock lock {img_lock, std::try_to_lock};
-            if (!lock.owns_lock()) {
-                return;
-            }
             for (const auto& [wid, window]: windows) {
                 window->generate_frame();
             }
             image->next_frame();
-            lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });
@@ -119,7 +113,7 @@ auto X11Canvas::handle_events() -> void
     }
 }
 
-auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void
+auto X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) -> void
 {
     logger->debug("Initializing canvas");
     std::vector<int> client_pids;
@@ -129,7 +123,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
     } else {
         client_pids.push_back(os::get_pid());
     }
-    this->image = image;
+    image = std::move(new_image);
 
     auto wid = os::getenv("WINDOWID");
 
@@ -146,7 +140,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
     } else if (wid.has_value()) {
         auto window_id = xcb_generate_id(connection);
         windows.insert({window_id, std::make_unique<Window>
-                    (connection, screen, window_id, std::stoi(wid.value()), dimensions, *image)});
+                    (connection, window_id, std::stoi(wid.value()), dimensions, *image)});
         logger->debug("Found WINDOWID={}", wid.value());
         return;
     }
@@ -163,7 +157,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
             }
             auto window_id = xcb_generate_id(connection);
             windows.insert({window_id, std::make_unique<Window>
-                    (connection, screen, window_id, search->second, dimensions, *image)});
+                    (connection, window_id, search->second, dimensions, *image)});
         }
     }
 }

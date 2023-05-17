@@ -25,10 +25,10 @@
 class Canvas
 {
 public:
-    static auto create(std::mutex& img_lock) -> std::unique_ptr<Canvas>;
+    static auto create() -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
-    virtual auto init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void = 0;
+    virtual void init(const Dimensions& dimensions, std::unique_ptr<Image> image) = 0;
     virtual void draw() = 0;
     virtual void clear() = 0;
 

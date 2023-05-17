@@ -49,12 +49,12 @@ Application::Application(std::string_view executable)
     if (flags->no_stdin) {
         daemonize(flags->pid_file);
     }
-    canvas = Canvas::create(img_lock);
+    canvas = Canvas::create();
     if (!canvas) {
         logger->error("Unable to create canvas.");
         std::exit(1);
     }
-    auto cache_path = util::get_cache_path();
+    const auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) {
         fs::create_directories(cache_path);
     }
@@ -90,7 +90,7 @@ Application::~Application()
     logger->info("Exiting ueberzugpp.");
 }
 
-void Application::execute(const std::string& cmd)
+void Application::execute(const std::string_view cmd)
 {
     json json;
     try {
@@ -101,20 +101,19 @@ void Application::execute(const std::string& cmd)
     }
     logger->info("Command received: {}", json.dump());
 
-    std::unique_lock lock {img_lock};
     if (json["action"] == "add") {
         if (!json["path"].is_string()) {
             logger->error("Invalid path.");
             return;
         }
         set_dimensions_from_json(json);
-        image = Image::load(*dimensions, json["path"]);
+        auto image = Image::load(*dimensions, json["path"]);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
         }
         canvas->clear();
-        canvas->init(*dimensions, image);
+        canvas->init(*dimensions, std::move(image));
         canvas->draw();
     } else if (json["action"] == "remove") {
         logger->info("Removing image.");
@@ -128,7 +127,7 @@ void Application::execute(const std::string& cmd)
 
 void Application::handle_tmux_hook(const std::string_view hook)
 {
-    std::unordered_map<std::string_view, std::function<void()>> hook_fns {
+    const std::unordered_map<std::string_view, std::function<void()>> hook_fns {
         {"client-session-changed",
             [&] {
                 if (tmux::is_window_focused()) {
@@ -202,20 +201,20 @@ void Application::set_dimensions_from_json(const json& json)
 
 void Application::setup_logger()
 {
-    std::string log_tmp = util::get_log_filename();
-    fs::path log_path = fs::temp_directory_path() / log_tmp;
+    const auto log_tmp = util::get_log_filename();
+    const auto log_path = fs::temp_directory_path() / log_tmp;
     try {
         spdlog::flush_on(spdlog::level::debug);
-        auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_path);
+        const auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_path);
 
-        auto main_logger = std::make_shared<spdlog::logger>("main", sink);
-        auto terminal_logger = std::make_shared<spdlog::logger>("terminal", sink);
-        auto cv_logger = std::make_shared<spdlog::logger>("opencv", sink);
-        auto vips_logger = std::make_shared<spdlog::logger>("vips", sink);
-        auto x11_logger = std::make_shared<spdlog::logger>("X11", sink);
-        auto sixel_logger = std::make_shared<spdlog::logger>("sixel", sink);
-        auto kitty_logger = std::make_shared<spdlog::logger>("kitty", sink);
-        auto iterm2_logger = std::make_shared<spdlog::logger>("iterm2", sink);
+        const auto main_logger = std::make_shared<spdlog::logger>("main", sink);
+        const auto terminal_logger = std::make_shared<spdlog::logger>("terminal", sink);
+        const auto cv_logger = std::make_shared<spdlog::logger>("opencv", sink);
+        const auto vips_logger = std::make_shared<spdlog::logger>("vips", sink);
+        const auto x11_logger = std::make_shared<spdlog::logger>("X11", sink);
+        const auto sixel_logger = std::make_shared<spdlog::logger>("sixel", sink);
+        const auto kitty_logger = std::make_shared<spdlog::logger>("kitty", sink);
+        const auto iterm2_logger = std::make_shared<spdlog::logger>("iterm2", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
@@ -275,8 +274,8 @@ void Application::socket_loop()
 
 void Application::print_header()
 {
-    std::string log_tmp = util::get_log_filename();
-    fs::path log_path = fs::temp_directory_path() / log_tmp;
+    const auto log_tmp = util::get_log_filename();
+    const auto log_path = fs::temp_directory_path() / log_tmp;
     std::ofstream ofs(log_path, std::ios::out | std::ios::app);
     ofs << " _    _      _                                           \n"
         << "| |  | |    | |                                _     _   \n"
@@ -288,7 +287,6 @@ void Application::print_header()
         << "                                       |___/     "
         << "v" << ueberzugpp_VERSION_MAJOR << "." << ueberzugpp_VERSION_MINOR
         << "." << ueberzugpp_VERSION_PATCH << std::endl;
-    ofs.close();
 }
 
 void Application::set_silent()
