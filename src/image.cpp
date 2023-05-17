@@ -38,7 +38,7 @@ auto Image::load(const Dimensions& dimensions, const std::string& filename)
     if (!fs::exists(filename)) {
         return nullptr;
     }
-    auto flags = Flags::instance();
+    const auto flags = Flags::instance();
     std::string image_path = filename;
     bool in_cache = false;
     if (!flags->no_cache) {

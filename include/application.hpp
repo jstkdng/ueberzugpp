@@ -28,9 +28,11 @@
 #include <thread>
 #include <mutex>
 #include <cstdlib>
+#include <string_view>
+#include <atomic>
+
 #include <spdlog/spdlog.h>
 #include <nlohmann/json.hpp>
-#include <string_view>
 
 class Application
 {
@@ -42,10 +44,12 @@ public:
     void command_loop();
     void handle_tmux_hook(std::string_view hook);
 
+    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+    static std::atomic<bool> stop_flag_;
+
     static void print_version();
     static void print_header();
-    static void daemonize(const std::string& pid_file);
-    static auto get_stop_flag() -> std::shared_ptr<std::atomic<bool>>;
+    static void daemonize(std::string_view pid_file);
     static const pid_t parent_pid_;
 
 private:
@@ -56,7 +60,6 @@ private:
     std::shared_ptr<Image> image;
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;
-    std::shared_ptr<std::atomic<bool>> stop_flag;
 
     std::FILE* f_stderr = nullptr;
     std::thread socket_thread;

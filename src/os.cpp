@@ -57,3 +57,13 @@ auto os::get_ppid() -> int
 {
     return getppid();
 }
+
+auto os::fork_process() -> int
+{
+    return fork();
+}
+
+auto os::create_new_session() -> int
+{
+    return setsid();
+}

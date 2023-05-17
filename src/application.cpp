@@ -29,18 +29,19 @@
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <fmt/format.h>
-#include <zmq.hpp>
 #include <vips/vips8>
+#include <zmq.hpp>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
 
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+std::atomic<bool> Application::stop_flag_ {false};
 const pid_t Application::parent_pid_ = os::get_ppid();
 
 Application::Application(std::string_view executable)
 {
     flags = Flags::instance();
-    stop_flag = get_stop_flag();
     print_header();
     setup_logger();
     set_silent();
@@ -87,12 +88,6 @@ Application::~Application()
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
     logger->info("Exiting ueberzugpp.");
-}
-
-auto Application::get_stop_flag() -> std::shared_ptr<std::atomic<bool>>
-{
-    static auto flag = std::make_shared<std::atomic<bool>>(false);
-    return flag;
 }
 
 void Application::execute(const std::string& cmd)
@@ -243,7 +238,7 @@ void Application::command_loop()
     if (!flags->no_stdin) {
         std::string cmd;
         while (std::getline(std::cin, cmd)) {
-            if (stop_flag->load()) {
+            if (stop_flag_.load()) {
                 break;
             }
             execute(cmd);
@@ -310,18 +305,18 @@ void Application::print_version()
         << "." << ueberzugpp_VERSION_PATCH << std::endl;
 }
 
-void Application::daemonize(const std::string& pid_file)
+void Application::daemonize(const std::string_view pid_file)
 {
-    pid_t pid = fork();
+    const auto pid = os::fork_process();
     if (pid < 0) {
         std::exit(EXIT_FAILURE);
     }
     if (pid > 0) {
         std::exit(EXIT_SUCCESS);
     }
-    if (setsid() < 0) {
+    if (os::create_new_session() < 0) {
         std::exit(EXIT_FAILURE);
     }
-    std::ofstream ofs (pid_file);
+    std::ofstream ofs (pid_file.data());
     ofs << os::get_pid();
 }

@@ -27,22 +27,22 @@
 Process::Process(int pid):
 pid(pid)
 {
-    std::string stat = fmt::format("/proc/{}/stat", pid);
+    const auto stat = fmt::format("/proc/{}/stat", pid);
     std::ifstream ifs(stat);
     std::string out;
     std::getline(ifs, out);
 
-    uint64_t start = out.find('(') + 1;
-    uint64_t end = out.find(')');
+    const auto start = out.find('(') + 1;
+    auto end = out.find(')');
     this->executable = out.substr(start, end - start);
 
     // remove pid and executable from string
     end += 2;
     out = out.substr(end, out.size() - end);
-    auto proc = util::str_split(out, " ");
-    this->state = proc[0][0];
-    this->ppid = std::stoi(proc[1]);
-    this->tty_nr = std::stoi(proc[4]);
-    this->minor_dev = minor(std::stoi(proc[4]));
-    this->pty_path = fmt::format("/dev/pts/{}", minor_dev);
+    const auto proc = util::str_split(out, " ");
+    state = proc[0][0];
+    ppid = std::stoi(proc[1]);
+    tty_nr = std::stoi(proc[4]);
+    minor_dev = minor(std::stoi(proc[4]));
+    pty_path = fmt::format("/dev/pts/{}", minor_dev);
 }
