@@ -140,6 +140,7 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
+pkg_check_modules(UUID REQUIRED IMPORTED_TARGET uuid)
 
 if (APPLE)
     set(PROC_SOURCES src/process/apple.cpp)
@@ -210,6 +211,7 @@ target_link_libraries(ueberzug PUBLIC
     Microsoft.GSL::GSL
     PkgConfig::VIPS
     PkgConfig::SIXEL
+    PkgConfig::UUID
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
     ${OPENCV_LIBRARIES}

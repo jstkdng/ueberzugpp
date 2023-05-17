@@ -19,26 +19,29 @@
 #include "os.hpp"
 #include "util/ptr.hpp"
 #include "flags.hpp"
+
+#include <memory>
+#include <regex>
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+#include <random>
+#include <array>
+
+#include <fmt/format.h>
+#include <uuid/uuid.h>
+#include <zmq.hpp>
+#include <openssl/evp.h>
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+#   define EVP_MD_CTX_new   EVP_MD_CTX_create
+#   define EVP_MD_CTX_free  EVP_MD_CTX_destroy
+#endif
 #ifdef ENABLE_TURBOBASE64
 #   ifdef WITH_SYSTEM_TURBOBASE64
 #       include <turbobase64/turbob64.h>
 #   else
 #       include "turbob64.h"
 #   endif
-#endif
-
-#include <memory>
-#include <regex>
-#include <fmt/format.h>
-#include <zmq.hpp>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
-
-#include <openssl/evp.h>
-#if OPENSSL_VERSION_NUMBER < 0x10100000L
-#   define EVP_MD_CTX_new   EVP_MD_CTX_create
-#   define EVP_MD_CTX_free  EVP_MD_CTX_destroy
 #endif
 
 namespace fs = std::filesystem;
@@ -205,4 +208,14 @@ void util::clear_terminal_area(int xcoord, int ycoord, int width, int height)
     }
     std::cout << std::flush;
     restore_cursor_position();
+}
+
+auto util::generate_uuid_v4() -> std::string
+{
+    constexpr auto uuid_len = 16;
+    std::array<unsigned char, uuid_len> bin_uuid;
+    std::array<char, UUID_STR_LEN> uuid;
+    uuid_generate(bin_uuid.data());
+    uuid_unparse(bin_uuid.data(), uuid.data());
+    return {uuid.data()};
 }
