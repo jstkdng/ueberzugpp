@@ -22,6 +22,7 @@
 #include "application.hpp"
 
 #include <xcb/xproto.h>
+#include <ranges>
 
 
 X11Canvas::X11Canvas():
@@ -88,7 +89,6 @@ void X11Canvas::hide()
 
 auto X11Canvas::handle_events() -> void
 {
-    discard_leftover_events();
     const int event_mask = 0x80;
     while (true) {
         auto event = unique_C_ptr<xcb_generic_event_t> {
@@ -96,14 +96,15 @@ auto X11Canvas::handle_events() -> void
         };
         switch (event->response_type & ~event_mask) {
             case XCB_EXPOSE: {
-                auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
+                const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
                 if (expose->x == MAGIC_EXIT_NUM1 && expose->y == MAGIC_EXIT_NUM2) {
-                    return;
+                    windows.erase(expose->window);
+                    if (windows.empty()) {
+                        return;
+                    }
+                    continue;
                 }
-                try {
-                    std::scoped_lock lock (windows_mutex);
-                    windows.at(expose->window)->draw();
-                } catch (const std::out_of_range& ex) {}
+                windows.at(expose->window)->draw();
                 break;
             }
             default: {
@@ -164,27 +165,15 @@ auto X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
 
 auto X11Canvas::clear() -> void
 {
-    {
-        std::scoped_lock lock (windows_mutex);
-        windows.clear();
-    }
-
-    if (event_handler.joinable()) {
-        event_handler.join();
-    }
     can_draw.store(false);
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
-    can_draw.store(true);
-}
-
-void X11Canvas::discard_leftover_events()
-{
-    auto event = unique_C_ptr<xcb_generic_event_t> {
-        xcb_poll_for_event(connection)
-    };
-    while (event.get() != nullptr) {
-        event.reset(xcb_poll_for_event(connection));
+    for (const auto& [key, value]: windows) {
+        value->terminate_event_handler();
     }
+    if (event_handler.joinable()) {
+        event_handler.join();
+    }
+    can_draw.store(true);
 }

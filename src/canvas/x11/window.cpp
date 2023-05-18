@@ -31,15 +31,15 @@ gc(xcb_generate_id(connection)),
 image(image)
 {
     logger = spdlog::get("X11");
-    unsigned int value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
-    auto value_list = std::make_unique<xcb_create_window_value_list_t>();
+    const uint32_t value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
+    const auto value_list = std::make_unique<xcb_create_window_value_list_t>();
     value_list->background_pixel = screen->black_pixel;
     value_list->border_pixel = screen->black_pixel;
     value_list->event_mask = XCB_EVENT_MASK_EXPOSURE;
     value_list->colormap = screen->default_colormap;
 
-    auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
-    auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
+    const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
+    const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
     logger->debug("Parent window: {}", parent);
     xcb_create_window_aux(connection,
             screen->root_depth,
@@ -115,7 +115,6 @@ void Window::generate_frame()
 
 Window::~Window()
 {
-    terminate_event_handler();
     xcb_destroy_window(connection, window);
     xcb_free_gc(connection, gc);
     xcb_flush(connection);
@@ -128,7 +127,7 @@ auto Window::terminate_event_handler() -> void
 
 auto Window::send_expose_event(int xcoord, int ycoord) -> void
 {
-    auto event = std::make_unique<xcb_expose_event_t>();
+    const auto event = std::make_unique<xcb_expose_event_t>();
     event->response_type = XCB_EXPOSE;
     event->window = window;
     event->x = xcoord;

@@ -29,9 +29,9 @@
 #include <array>
 
 #include <fmt/format.h>
-#include <uuid/uuid.h>
 #include <zmq.hpp>
 #include <openssl/evp.h>
+#include <uuid/uuid.h>
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
 #   define EVP_MD_CTX_new   EVP_MD_CTX_create
 #   define EVP_MD_CTX_free  EVP_MD_CTX_destroy
@@ -213,8 +213,9 @@ void util::clear_terminal_area(int xcoord, int ycoord, int width, int height)
 auto util::generate_uuid_v4() -> std::string
 {
     constexpr auto uuid_len = 16;
+    constexpr auto uuid_str_len = 37;
     std::array<unsigned char, uuid_len> bin_uuid;
-    std::array<char, UUID_STR_LEN> uuid;
+    std::array<char, uuid_str_len> uuid;
     uuid_generate(bin_uuid.data());
     uuid_unparse(bin_uuid.data(), uuid.data());
     return {uuid.data()};
