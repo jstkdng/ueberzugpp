@@ -175,5 +175,6 @@ void X11Canvas::clear()
     if (event_handler.joinable()) {
         event_handler.join();
     }
+    image.reset();
     can_draw.store(true);
 }

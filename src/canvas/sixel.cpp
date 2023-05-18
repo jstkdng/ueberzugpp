@@ -98,6 +98,7 @@ auto SixelCanvas::clear() -> void
     dither = nullptr;
 
     util::clear_terminal_area(x, y, max_width, max_height);
+    image.reset();
 }
 
 auto SixelCanvas::draw_frame() -> void
