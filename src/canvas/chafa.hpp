@@ -40,10 +40,8 @@ private:
 
     int x;
     int y;
-    int max_width = 0;
-    int max_height = 0;
-    int horizontal_cells;
-    int vertical_cells;
+    int horizontal_cells = 0;
+    int vertical_cells = 0;
 };
 
 #endif

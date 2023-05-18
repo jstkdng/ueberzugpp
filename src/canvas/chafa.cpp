@@ -20,8 +20,7 @@
 
 #include <cmath>
 #include <iostream>
-
-#include <gsl/gsl>
+#include <algorithm>
 
 ChafaCanvas::~ChafaCanvas()
 {
@@ -35,8 +34,6 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
     image = std::move(new_image);
     x = dimensions.x + 1;
     y = dimensions.y + 1;
-    max_width = dimensions.max_w;
-    max_height = dimensions.max_h;
     horizontal_cells = std::ceil(static_cast<double>(image->width()) / dimensions.terminal.font_width);
     vertical_cells = std::ceil(static_cast<double>(image->height()) / dimensions.terminal.font_height);
 
@@ -65,24 +62,24 @@ void ChafaCanvas::draw()
     const auto result = std::unique_ptr<GString, gstring_deleter> {
         chafa_canvas_print(canvas, nullptr)
     };
-
+    auto ycoord = y;
+    const auto lines = util::str_split(result->str, "\n");
     util::save_cursor_position();
-    const auto split = util::str_split(result->str, "\n");
-    for (uint64_t i = y, j = 0; i < split.size(); ++i, ++j) {
-        util::move_cursor(gsl::narrow_cast<int>(i), x);
-        std::cout << split.at(j);
-    }
+    std::ranges::for_each(std::as_const(lines), [&] (const auto& line) {
+        util::move_cursor(ycoord++, x);
+        std::cout << line;
+    });
     std::cout << std::flush;
     util::restore_cursor_position();
 }
 
 void ChafaCanvas::clear()
 {
-    if (max_width == 0 && max_height == 0) {
+    if (horizontal_cells == 0 && vertical_cells == 0) {
         return;
     }
 
-    util::clear_terminal_area(x, y, max_width, max_height);
+    util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
     chafa_canvas_unref(canvas);
     chafa_canvas_config_unref(config);
     chafa_symbol_map_unref(symbol_map);
