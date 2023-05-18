@@ -20,11 +20,11 @@
 #include <xcb/xcb.h>
 #include <gsl/util>
 
-Window::Window(xcb_connection_t *connection,
+Window::Window(xcb_connection_t *connection, xcb_screen_t* screen,
             xcb_window_t window, xcb_window_t parent,
             const Dimensions& dimensions, Image& image):
 connection(connection),
-screen(xcb_setup_roots_iterator(xcb_get_setup(connection)).data),
+screen(screen),
 window(window),
 parent(parent),
 gc(xcb_generate_id(connection)),

@@ -29,7 +29,7 @@ class Dimensions;
 class Window
 {
 public:
-    Window(xcb_connection_t *connection,
+    Window(xcb_connection_t *connection, xcb_screen_t *screen,
             xcb_window_t window, xcb_window_t parent,
             const Dimensions& dimensions, Image& image);
     ~Window();

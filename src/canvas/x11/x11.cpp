@@ -31,7 +31,7 @@ connection(xcb_connect(nullptr, nullptr))
     if (xcb_connection_has_error(connection) != 0) {
         throw std::runtime_error("CANNOT CONNECT TO X11");
     }
-    // screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
     logger = spdlog::get("X11");
     logger->info("Canvas created");
 }
@@ -87,11 +87,11 @@ void X11Canvas::hide()
     }
 }
 
-auto X11Canvas::handle_events() -> void
+void X11Canvas::handle_events()
 {
-    const int event_mask = 0x80;
+    const auto event_mask = 0x80;
     while (true) {
-        auto event = unique_C_ptr<xcb_generic_event_t> {
+        const auto event = unique_C_ptr<xcb_generic_event_t> {
             xcb_wait_for_event(this->connection)
         };
         switch (event->response_type & ~event_mask) {
@@ -114,7 +114,7 @@ auto X11Canvas::handle_events() -> void
     }
 }
 
-auto X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) -> void
+void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     logger->debug("Initializing canvas");
     std::vector<int> client_pids;
@@ -141,7 +141,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
     } else if (wid.has_value()) {
         auto window_id = xcb_generate_id(connection);
         windows.insert({window_id, std::make_unique<Window>
-                    (connection, window_id, std::stoi(wid.value()), dimensions, *image)});
+                    (connection, screen, window_id, std::stoi(wid.value()), dimensions, *image)});
         logger->debug("Found WINDOWID={}", wid.value());
         return;
     }
@@ -158,12 +158,12 @@ auto X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
             }
             auto window_id = xcb_generate_id(connection);
             windows.insert({window_id, std::make_unique<Window>
-                    (connection, window_id, search->second, dimensions, *image)});
+                    (connection, screen, window_id, search->second, dimensions, *image)});
         }
     }
 }
 
-auto X11Canvas::clear() -> void
+void X11Canvas::clear()
 {
     can_draw.store(false);
     if (draw_thread.joinable()) {

@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <thread>
 #include <atomic>
+
 #include <xcb/xproto.h>
 #include <spdlog/spdlog.h>
 
