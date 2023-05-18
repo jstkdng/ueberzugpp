@@ -47,8 +47,6 @@ namespace util
     void benchmark(std::function<void(void)> func);
     void send_command(const Flags& flags);
     void clear_terminal_area(int xcoord, int ycoord, int width, int height);
-
-    auto generate_uuid_v4() -> std::string;
 } // namespace util
 
 #endif

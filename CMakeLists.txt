@@ -141,7 +141,6 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(UUID REQUIRED IMPORTED_TARGET uuid)
 pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa)
 
 if (APPLE)
@@ -214,7 +213,6 @@ target_link_libraries(ueberzug PUBLIC
     Microsoft.GSL::GSL
     PkgConfig::VIPS
     PkgConfig::SIXEL
-    PkgConfig::UUID
     PkgConfig::CHAFA
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
