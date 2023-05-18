@@ -18,6 +18,7 @@
 #include "os.hpp"
 #include "util.hpp"
 
+#include <cmath>
 #include <iostream>
 
 auto sixel_draw_callback(char *data, int size, void* priv) -> int
@@ -50,8 +51,8 @@ void SixelCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
     image = std::move(new_image);
     x = dimensions.x + 1;
     y = dimensions.y + 1;
-    max_width = dimensions.max_w;
-    max_height = dimensions.max_h;
+    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dimensions.terminal.font_width);
+    vertical_cells = std::ceil(static_cast<double>(image->height()) / dimensions.terminal.font_height);
 
     // create dither and palette from image
     sixel_dither_new(&dither, -1, nullptr);
@@ -65,7 +66,7 @@ void SixelCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
             SIXEL_QUALITY_HIGH);
 }
 
-auto SixelCanvas::draw() -> void
+void SixelCanvas::draw()
 {
     if (!image->is_animated()) {
         draw_frame();
@@ -82,9 +83,9 @@ auto SixelCanvas::draw() -> void
     });
 }
 
-auto SixelCanvas::clear() -> void
+void SixelCanvas::clear()
 {
-    if (max_width == 0 && max_height == 0) {
+    if (horizontal_cells == 0 && vertical_cells == 0) {
         return;
     }
 
@@ -97,11 +98,11 @@ auto SixelCanvas::clear() -> void
     sixel_dither_destroy(dither);
     dither = nullptr;
 
-    util::clear_terminal_area(x, y, max_width, max_height);
+    util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
     image.reset();
 }
 
-auto SixelCanvas::draw_frame() -> void
+void SixelCanvas::draw_frame()
 {
     // output sixel content to stream
     sixel_encode(const_cast<unsigned char*>(image->data()),

@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <openssl/evp.h>
+#include <gmodule.h>
 
 struct free_deleter{
     template <typename T>
@@ -15,6 +16,12 @@ struct free_deleter{
 struct evp_md_ctx_deleter {
     void operator()(EVP_MD_CTX* ctx) const {
         EVP_MD_CTX_free(ctx);
+    }
+};
+
+struct gstring_deleter {
+    void operator()(GString* str) const {
+        g_string_free(str, true);
     }
 };
 

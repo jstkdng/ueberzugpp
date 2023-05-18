@@ -50,10 +50,6 @@ Application::Application(std::string_view executable)
         daemonize(flags->pid_file);
     }
     canvas = Canvas::create();
-    if (!canvas) {
-        logger->error("Unable to create canvas.");
-        std::exit(1);
-    }
     const auto cache_path = util::get_cache_path();
     if (!fs::exists(cache_path)) {
         fs::create_directories(cache_path);

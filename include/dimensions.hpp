@@ -37,9 +37,9 @@ public:
     uint16_t padding_horizontal;
     uint16_t padding_vertical;
     std::string scaler;
+    const Terminal& terminal;
 
 private:
-    const Terminal& terminal;
 
     uint16_t orig_x;
     uint16_t orig_y;

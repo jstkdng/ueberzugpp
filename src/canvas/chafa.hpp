@@ -14,34 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#ifndef __CHAFA_CANVAS__
+#define __CHAFA_CANVAS__
+
 #include "canvas.hpp"
-#include "canvas/sixel.hpp"
-#include "canvas/chafa.hpp"
-#include "canvas/kitty/kitty.hpp"
-#include "canvas/iterm2/iterm2.hpp"
-#ifdef ENABLE_X11
-#   include "canvas/x11/x11.hpp"
-#endif
-#include "flags.hpp"
 
-auto Canvas::create() -> std::unique_ptr<Canvas>
+#include <chafa.h>
+
+class ChafaCanvas : public Canvas
 {
-    const auto flags = Flags::instance();
+public:
+    ChafaCanvas() = default;
+    ~ChafaCanvas() override;
 
-    if (flags->output == "kitty") {
-        return std::make_unique<KittyCanvas>();
-    }
-#ifdef ENABLE_X11
-    if (flags->output == "x11") {
-        return std::make_unique<X11Canvas>();
-    }
+    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
+    void draw() override;
+    void clear() override;
+
+private:
+    ChafaSymbolMap *symbol_map = nullptr;
+    ChafaCanvasConfig *config = nullptr;
+    ChafaCanvas *canvas = nullptr;
+
+    std::unique_ptr<Image> image;
+
+    int x;
+    int y;
+    int max_width = 0;
+    int max_height = 0;
+    int horizontal_cells;
+    int vertical_cells;
+};
+
 #endif
-    if (flags->output == "iterm2") {
-        return std::make_unique<Iterm2Canvas>();
-    }
-    if (flags->output == "sixel") {
-        return std::make_unique<SixelCanvas>();
-    }
-    flags->output = "chafa";
-    return std::make_unique<ChafaCanvas>();
-}
