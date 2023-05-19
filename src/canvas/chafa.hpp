@@ -24,7 +24,7 @@
 class ChafaCanvas : public Canvas
 {
 public:
-    ChafaCanvas() = default;
+    ChafaCanvas();
     ~ChafaCanvas() override;
 
     void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
@@ -35,6 +35,7 @@ private:
     ChafaSymbolMap *symbol_map = nullptr;
     ChafaCanvasConfig *config = nullptr;
     ChafaCanvas *canvas = nullptr;
+    ChafaTermInfo* term_info = nullptr;
 
     std::unique_ptr<Image> image;
 

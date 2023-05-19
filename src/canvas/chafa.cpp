@@ -22,11 +22,19 @@
 #include <iostream>
 #include <algorithm>
 
+ChafaCanvas::ChafaCanvas()
+{
+    gchar **envp = g_get_environ();
+    term_info = chafa_term_db_detect(chafa_term_db_get_default(), envp);
+    g_strfreev(envp);
+}
+
 ChafaCanvas::~ChafaCanvas()
 {
     chafa_canvas_unref(canvas);
     chafa_canvas_config_unref(config);
     chafa_symbol_map_unref(symbol_map);
+    chafa_term_info_unref(term_info);
 }
 
 void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
@@ -47,7 +55,7 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
 
     auto pixel_type = CHAFA_PIXEL_RGB8;
     if (image->channels() == 4) {
-        pixel_type = CHAFA_PIXEL_RGBA8_UNASSOCIATED;
+        pixel_type = CHAFA_PIXEL_RGBA8_PREMULTIPLIED;
     }
     chafa_canvas_draw_all_pixels(canvas,
             pixel_type,
@@ -60,7 +68,7 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
 void ChafaCanvas::draw()
 {
     const auto result = std::unique_ptr<GString, gstring_deleter> {
-        chafa_canvas_print(canvas, nullptr)
+        chafa_canvas_print(canvas, term_info)
     };
     auto ycoord = y;
     const auto lines = util::str_split(result->str, "\n");
