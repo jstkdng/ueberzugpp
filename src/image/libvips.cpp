@@ -171,10 +171,10 @@ auto LibvipsImage::process_image() -> void
         if (image.has_alpha()) {
             image = image.flatten();
         }
-    } else if (flags->output == "x11") {
+    } else if (flags->output == "x11" || flags->output == "chafa") {
         // alpha channel required
         if (!image.has_alpha()) {
-            image = image.bandjoin(0);
+            image = image.bandjoin(255);
         }
         // convert from RGB to BGR
         auto bands = image.bandsplit();

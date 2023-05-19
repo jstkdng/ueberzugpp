@@ -111,7 +111,7 @@ void OpencvImage::process_image()
 {
     resize_image();
 
-    if (flags->output == "kitty" || flags->output == "chafa") {
+    if (flags->output == "kitty") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
         } else {
@@ -123,7 +123,7 @@ void OpencvImage::process_image()
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
-    } else if (flags->output == "x11") {
+    } else if (flags->output == "x11" || flags->output == "chafa") {
         if (image.channels() == 3) {
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }

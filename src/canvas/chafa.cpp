@@ -50,22 +50,21 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
 
     symbol_map = chafa_symbol_map_new();
     config = chafa_canvas_config_new();
-    chafa_symbol_map_add_by_tags(symbol_map, CHAFA_SYMBOL_TAG_ALL);
+    chafa_symbol_map_add_by_tags(symbol_map, CHAFA_SYMBOL_TAG_BLOCK);
+    chafa_symbol_map_add_by_tags(symbol_map, CHAFA_SYMBOL_TAG_BORDER);
+    chafa_symbol_map_add_by_tags(symbol_map, CHAFA_SYMBOL_TAG_SPACE);
+    chafa_symbol_map_remove_by_tags(symbol_map, CHAFA_SYMBOL_TAG_WIDE);
     chafa_canvas_config_set_symbol_map(config, symbol_map);
     chafa_canvas_config_set_pixel_mode(config, CHAFA_PIXEL_MODE_SYMBOLS);
     chafa_canvas_config_set_geometry(config, horizontal_cells, vertical_cells);
     canvas = chafa_canvas_new(config);
 
-    auto pixel_type = CHAFA_PIXEL_RGB8;
-    if (image->channels() == 4) {
-        pixel_type = CHAFA_PIXEL_RGBA8_UNASSOCIATED;
-    }
     chafa_canvas_draw_all_pixels(canvas,
-            pixel_type,
+            CHAFA_PIXEL_BGRA8_UNASSOCIATED,
             image->data(),
             image->width(),
             image->height(),
-            image->width() * image->channels());
+            image->width() * 4);
 }
 
 void ChafaCanvas::draw()
