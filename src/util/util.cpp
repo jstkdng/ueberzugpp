@@ -103,9 +103,9 @@ void util::send_socket_message(const std::string_view msg, const std::string_vie
 auto util::base64_encode(const unsigned char *input, uint64_t length) -> std::string
 {
     size_t bufsize = 4 * ((length+2)/3);
-    auto res = std::vector<unsigned char>(bufsize + 1, 0);
-    base64_encode_v2(input, length, res.data());
-    return { reinterpret_cast<char*>(res.data()) };
+    auto res = std::vector<char>(bufsize + 1, 0);
+    base64_encode_v2(input, length, reinterpret_cast<unsigned char*>(res.data()));
+    return { res.data() };
 }
 
 void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigned char *out)

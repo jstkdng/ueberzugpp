@@ -28,7 +28,7 @@ public:
 
     void operator()(KittyChunk& chunk) const;
 
-    auto get_result() -> unsigned char*;
+    auto get_result() -> char*;
     [[nodiscard]] auto get_ptr() const -> const unsigned char*;
     [[nodiscard]] auto get_size() const -> uint64_t;
 
@@ -36,7 +36,7 @@ public:
 private:
     const unsigned char* ptr;
     uint64_t size;
-    std::vector<unsigned char> result;
+    std::vector<char> result;
 };
 
 #endif

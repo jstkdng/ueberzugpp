@@ -19,7 +19,7 @@
 
 #include "canvas.hpp"
 
-#include <sstream>
+#include <string>
 #include <vector>
 #include <spdlog/spdlog.h>
 
@@ -38,7 +38,7 @@ public:
 private:
     std::unique_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;
-    std::stringstream ss;
+    std::string str;
 
     int x;
     int y;

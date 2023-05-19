@@ -21,6 +21,8 @@
 
 #include <iostream>
 #include <filesystem>
+#include <ranges>
+#include <fmt/format.h>
 #ifndef __APPLE__
 #   include <execution>
 #else
@@ -42,34 +44,30 @@ void Iterm2Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new
     y = dimensions.y + 1;
     max_width = dimensions.max_w;
     max_height = dimensions.max_h;
+    str = "";
 }
 
 void Iterm2Canvas::draw()
 {
-    ss << "\033]1337;File=inline=1;";
-    auto filename = image->filename();
-    auto num_bytes = fs::file_size(filename);
-    auto encoded_filename = util::base64_encode(
+    str.append("\033]1337;File=inline=1;");
+    const auto filename = image->filename();
+    const auto num_bytes = fs::file_size(filename);
+    const auto encoded_filename = util::base64_encode(
             reinterpret_cast<const unsigned char*>(filename.c_str()), filename.size());
-    ss << "size=" << num_bytes
-        << ";name=" << encoded_filename
-        << ";width=" << image->width() << "px"
-        << ";height=" << image->height() << "px"
-        << ":";
+    str.append(fmt::format("size={};name={};width={}px;height={}px:",
+                num_bytes, encoded_filename, image->width(), image->height()));
 
     const int chunk_size = 1023;
-    auto chunks = process_chunks(filename, chunk_size, num_bytes);
+    const auto chunks = process_chunks(filename, chunk_size, num_bytes);
 
-    auto print_result = [&] (std::unique_ptr<Iterm2Chunk>& chunk) -> void
-    {
-        ss << chunk->get_result();
-    };
-    std::for_each(std::begin(chunks), std::end(chunks), print_result);
-    ss << "\a";
+    std::ranges::for_each(std::as_const(chunks), [&] (const std::unique_ptr<Iterm2Chunk>& chunk) {
+        str.append(chunk->get_result());
+    });
+    str.append("\a");
 
     util::save_cursor_position();
     util::move_cursor(y, x);
-    std::cout << ss.rdbuf() << std::flush;
+    std::cout << str << std::flush;
     util::restore_cursor_position();
 }
 
@@ -79,13 +77,13 @@ void Iterm2Canvas::clear()
     image.reset();
 }
 
-auto Iterm2Canvas::process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>
+auto Iterm2Canvas::process_chunks(const std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>
 {
-    int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
+    const int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
     std::vector<std::unique_ptr<Iterm2Chunk>> chunks;
     chunks.reserve(num_chunks);
 
-    std::ifstream ifs (filename);
+    std::ifstream ifs (filename.data());
     while (ifs.good()) {
         auto chunk = std::make_unique<Iterm2Chunk>(chunk_size);
         ifs.read(chunk->get_buffer(), chunk_size);

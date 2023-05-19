@@ -27,7 +27,8 @@ size(size)
 
 void KittyChunk::process_chunk(KittyChunk& chunk)
 {
-    util::base64_encode_v2(chunk.get_ptr(), chunk.get_size(), chunk.get_result());
+    util::base64_encode_v2(chunk.get_ptr(), chunk.get_size(),
+            reinterpret_cast<unsigned char*>(chunk.get_result()));
 }
 
 void KittyChunk::operator()(KittyChunk& chunk) const
@@ -35,7 +36,7 @@ void KittyChunk::operator()(KittyChunk& chunk) const
     process_chunk(chunk);
 }
 
-auto KittyChunk::get_result() -> unsigned char*
+auto KittyChunk::get_result() -> char*
 {
     return result.data();
 }

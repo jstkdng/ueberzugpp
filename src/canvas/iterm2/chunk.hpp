@@ -33,12 +33,12 @@ public:
     [[nodiscard]] auto get_size() const -> uint64_t;
     void set_size(uint64_t size);
     auto get_buffer() -> char*;
-    auto get_result() -> unsigned char*;
+    auto get_result() -> char*;
 
 private:
     uint64_t size;
     std::vector<char> buffer;
-    std::vector<unsigned char> result;
+    std::vector<char> result;
 
 };
 

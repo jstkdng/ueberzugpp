@@ -20,18 +20,21 @@
 
 #include <cmath>
 #include <iostream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 auto sixel_draw_callback(char *data, int size, void* priv) -> int
 {
-    auto *stream = static_cast<std::stringstream*>(priv);
-    stream->write(data, size);
+    auto *str = static_cast<std::string*>(priv);
+    str->append(data, size);
     return size;
 }
 
 SixelCanvas::SixelCanvas()
 {
     logger = spdlog::get("sixel");
-    sixel_output_new(&output, sixel_draw_callback, &ss, nullptr);
+    sixel_output_new(&output, sixel_draw_callback, &str, nullptr);
     sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
     logger->info("Canvas created");
 }
@@ -53,6 +56,10 @@ void SixelCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
     y = dimensions.y + 1;
     horizontal_cells = std::ceil(static_cast<double>(image->width()) / dimensions.terminal.font_width);
     vertical_cells = std::ceil(static_cast<double>(image->height()) / dimensions.terminal.font_height);
+
+    const auto file_size = fs::file_size(image->filename());
+    const auto reserve_ratio = 50;
+    str.reserve(file_size * reserve_ratio);
 
     // create dither and palette from image
     sixel_dither_new(&dither, -1, nullptr);
@@ -112,6 +119,7 @@ void SixelCanvas::draw_frame()
 
     util::save_cursor_position();
     util::move_cursor(y, x);
-    std::cout << ss.rdbuf() << std::flush;
+    std::cout << str << std::flush;
     util::restore_cursor_position();
+    str.clear();
 }

@@ -25,7 +25,6 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <sstream>
 #include <atomic>
 
 #include <sixel.h>
@@ -50,7 +49,7 @@ private:
     std::thread draw_thread;
     std::atomic<bool> can_draw {true};
 
-    std::stringstream ss;
+    std::string str;
 
     int x;
     int y;

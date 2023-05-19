@@ -19,8 +19,9 @@
 
 #include "canvas.hpp"
 
-#include <sstream>
+#include <string>
 #include <vector>
+#include <string_view>
 #include <spdlog/spdlog.h>
 
 class Iterm2Chunk;
@@ -36,7 +37,7 @@ public:
 private:
     std::unique_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;
-    std::stringstream ss;
+    std::string str;
 
     int x;
     int y;
@@ -44,7 +45,7 @@ private:
     int max_height = 0;
 
     void draw_frame();
-    static auto process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
+    static auto process_chunks(std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
 };
 
 #endif
