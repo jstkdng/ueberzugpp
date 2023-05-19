@@ -25,7 +25,6 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
-#include <random>
 #include <array>
 
 #include <fmt/format.h>
@@ -47,9 +46,9 @@ namespace fs = std::filesystem;
 
 auto util::str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>
 {
-    std::regex regex {delim};
-    std::sregex_token_iterator first {str.begin(), str.end(), regex, -1};
-    std::sregex_token_iterator last;
+    const std::regex regex {delim};
+    const std::sregex_token_iterator first {str.begin(), str.end(), regex, -1};
+    const std::sregex_token_iterator last;
     return {first, last};
 }
 
@@ -92,7 +91,7 @@ void util::send_socket_message(const std::string_view msg, const std::string_vie
     zmq::socket_t socket(context, zmq::socket_type::stream);
     socket.set(zmq::sockopt::linger, 2);
     socket.connect(endpoint.data());
-    auto id_sock = socket.get(zmq::sockopt::routing_id);
+    const auto id_sock = socket.get(zmq::sockopt::routing_id);
     zmq::message_t id_req(id_sock);
     zmq::message_t msg_req(msg);
     socket.send(id_req, zmq::send_flags::sndmore);
@@ -121,7 +120,7 @@ void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigne
 auto util::get_b2_hash_ssl(const std::string_view str) -> std::string
 {
     std::stringstream sstream;
-    auto mdctx = std::unique_ptr<EVP_MD_CTX, evp_md_ctx_deleter> {
+    const auto mdctx = std::unique_ptr<EVP_MD_CTX, evp_md_ctx_deleter> {
         EVP_MD_CTX_new()
     };
     const auto *evp = EVP_blake2b512();
