@@ -25,6 +25,12 @@ struct gstring_deleter {
     }
 };
 
+struct gchar_deleter {
+    void operator()(gchar **str) const {
+        g_strfreev(str);
+    }
+};
+
 template <typename T>
 using unique_C_ptr = std::unique_ptr<T, free_deleter>;
 

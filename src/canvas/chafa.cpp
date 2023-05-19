@@ -22,15 +22,18 @@
 #include <iostream>
 #include <algorithm>
 
-ChafaCanvas::ChafaCanvas()
+ChafaCanvas::ChafaCanvas():
+term_db(chafa_term_db_new())
 {
-    gchar **envp = g_get_environ();
-    term_info = chafa_term_db_detect(chafa_term_db_get_default(), envp);
-    g_strfreev(envp);
+    const auto envp = std::unique_ptr<gchar*, gchar_deleter> {
+        g_get_environ()
+    };
+    term_info = chafa_term_db_detect(term_db, envp.get());
 }
 
 ChafaCanvas::~ChafaCanvas()
 {
+    chafa_term_db_unref(term_db);
     chafa_canvas_unref(canvas);
     chafa_canvas_config_unref(config);
     chafa_symbol_map_unref(symbol_map);
@@ -55,7 +58,7 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
 
     auto pixel_type = CHAFA_PIXEL_RGB8;
     if (image->channels() == 4) {
-        pixel_type = CHAFA_PIXEL_RGBA8_PREMULTIPLIED;
+        pixel_type = CHAFA_PIXEL_RGBA8_UNASSOCIATED;
     }
     chafa_canvas_draw_all_pixels(canvas,
             pixel_type,

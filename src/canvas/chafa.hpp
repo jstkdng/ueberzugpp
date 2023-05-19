@@ -32,10 +32,11 @@ public:
     void clear() override;
 
 private:
-    ChafaSymbolMap *symbol_map = nullptr;
-    ChafaCanvasConfig *config = nullptr;
-    ChafaCanvas *canvas = nullptr;
+    ChafaSymbolMap* symbol_map = nullptr;
+    ChafaCanvasConfig* config = nullptr;
+    ChafaCanvas* canvas = nullptr;
     ChafaTermInfo* term_info = nullptr;
+    ChafaTermDb* term_db = nullptr;
 
     std::unique_ptr<Image> image;
 
