@@ -54,10 +54,10 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
         num_chunks--;
     }
     const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
-    str.reserve(num_chunks * bytes_per_chunk);
+    str.reserve((num_chunks + 2) * bytes_per_chunk);
 
     std::vector<KittyChunk> chunks;
-    chunks.reserve(num_chunks + 1);
+    chunks.reserve(num_chunks + 2);
     const auto *ptr = image->data();
 
     uint64_t idx = 0;
