@@ -23,19 +23,28 @@
 #   include "canvas/x11/x11.hpp"
 #endif
 #include "flags.hpp"
+#include "os.hpp"
 
 auto Canvas::create() -> std::unique_ptr<Canvas>
 {
     const auto flags = Flags::instance();
+    const auto logger = spdlog::get("main");
 
-    if (flags->output == "kitty") {
-        return std::make_unique<KittyCanvas>();
-    }
 #ifdef ENABLE_X11
+    auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
+    if (xdg_session == "wayland") {
+        logger->info("Wayland detected, X11 output will not be used"
+                " unless forced to");
+    }
     if (flags->output == "x11") {
         return std::make_unique<X11Canvas>();
     }
+#else
+    logger->info("X11 support not compiled in the binary");
 #endif
+    if (flags->output == "kitty") {
+        return std::make_unique<KittyCanvas>();
+    }
     if (flags->output == "iterm2") {
         return std::make_unique<Iterm2Canvas>();
     }
