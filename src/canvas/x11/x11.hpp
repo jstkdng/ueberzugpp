@@ -25,19 +25,19 @@
 
 #include <memory>
 #include <unordered_map>
-#include <xcb/xproto.h>
-#include <mutex>
 #include <thread>
 #include <atomic>
+
+#include <xcb/xproto.h>
 #include <spdlog/spdlog.h>
 
 class X11Canvas : public Canvas
 {
 public:
-    explicit X11Canvas(std::mutex& img_lock);
+    explicit X11Canvas();
     ~X11Canvas() override;
 
-    void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
+    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
     void clear() override;
     void toggle() override;
@@ -50,18 +50,15 @@ private:
     xcb_screen_t *screen;
 
     std::unordered_map<xcb_window_t, std::unique_ptr<Window>> windows;
-    std::shared_ptr<Image> image;
-    std::mutex windows_mutex;
-    std::mutex &img_lock;
+    std::unique_ptr<Image> image;
 
     std::thread draw_thread;
-    std::atomic<bool> can_draw {true};
     std::thread event_handler;
+    std::atomic<bool> can_draw {true};
 
     std::shared_ptr<spdlog::logger> logger;
 
     void handle_events();
-    void discard_leftover_events();
 };
 
 #endif

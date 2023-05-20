@@ -26,10 +26,11 @@
 #include "tmux.hpp"
 #include "util.hpp"
 
-void got_signal(const int signal)
+void signal_handler(const int signal)
 {
-    auto stop_flag = Application::get_stop_flag();
-    stop_flag->store(true);
+    auto& flag = Application::stop_flag_;
+    flag.store(true);
+
     auto logger = spdlog::get("main");
     if (!logger) {
         return;
@@ -51,7 +52,7 @@ auto main(int argc, char *argv[]) -> int
 {
     // handle signals
     struct sigaction sga;
-    sga.sa_handler = got_signal;
+    sga.sa_handler = signal_handler;
     sigemptyset(&sga.sa_mask);
     sga.sa_flags = 0;
     sigaction(SIGINT, &sga, nullptr);
@@ -64,7 +65,8 @@ auto main(int argc, char *argv[]) -> int
 
     CLI::App program("Display images in the terminal", "ueberzug");
     program.add_flag("-V,--version", flags->print_version, "Print version information.");
-    CLI::App *layer_command = program.add_subcommand("layer", "Display images on the terminal.");
+
+    auto *layer_command = program.add_subcommand("layer", "Display images on the terminal.");
     layer_command->add_flag("-s,--silent", flags->silent, "Print stderr to /dev/null.");
     layer_command->add_flag("--use-escape-codes", flags->use_escape_codes, "Use escape codes to get terminal capabilities.")->default_val(false);
     layer_command->add_option("--pid-file", flags->pid_file, "Output file where to write the daemon PID.");
@@ -72,7 +74,7 @@ auto main(int argc, char *argv[]) -> int
     layer_command->add_flag("--no-cache", flags->no_cache, "Disable caching of resized images.");
     layer_command->add_flag("--no-opencv", flags->no_opencv, "Do not use OpenCV, use Libvips instead.");
     layer_command->add_option("-o,--output", flags->output, "Image output method")
-        ->check(CLI::IsMember({"x11", "sixel", "kitty", "iterm2"}));
+        ->check(CLI::IsMember({"x11", "sixel", "kitty", "iterm2", "chafa"}));
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
@@ -88,7 +90,15 @@ auto main(int argc, char *argv[]) -> int
 
     auto *tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
     tmux_command->allow_extras();
+
+    auto *query_win_command = program.add_subcommand("query_windows", "**UNUSED**, only present for backwards compatibility.");
+    query_win_command->allow_extras();
+
     CLI11_PARSE(program, argc, argv);
+
+    if (query_win_command->parsed()) {
+        std::exit(0);
+    }
 
     if (flags->print_version) {
         Application::print_version();
@@ -107,7 +117,7 @@ auto main(int argc, char *argv[]) -> int
 
     if (tmux_command->parsed()) {
         try {
-            auto positionals = tmux_command->remaining();
+            const auto positionals = tmux_command->remaining();
             tmux::handle_hook(positionals.at(0), std::stoi(positionals.at(1)));
         } catch (const std::out_of_range& oor) {}
     }

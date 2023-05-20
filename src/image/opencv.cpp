@@ -123,8 +123,10 @@ void OpencvImage::process_image()
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
-    } else if (flags->output == "x11") {
-        cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
+    } else if (flags->output == "x11" || flags->output == "chafa") {
+        if (image.channels() == 3) {
+            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
+        }
     }
 
     _size = image.total() * image.elemSize();

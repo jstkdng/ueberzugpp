@@ -39,7 +39,7 @@ auto Iterm2Chunk::get_buffer() -> char*
     return buffer.data();
 }
 
-auto Iterm2Chunk::get_result() -> unsigned char*
+auto Iterm2Chunk::get_result() -> char*
 {
     return result.data();
 }
@@ -47,7 +47,7 @@ auto Iterm2Chunk::get_result() -> unsigned char*
 void Iterm2Chunk::process_chunk(std::unique_ptr<Iterm2Chunk>& chunk)
 {
     util::base64_encode_v2(reinterpret_cast<unsigned char*>(chunk->get_buffer()),
-            chunk->get_size(), chunk->get_result());
+            chunk->get_size(), reinterpret_cast<unsigned char*>(chunk->get_result()));
 }
 
 void Iterm2Chunk::operator()(std::unique_ptr<Iterm2Chunk>& chunk) const

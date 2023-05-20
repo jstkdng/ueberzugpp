@@ -19,7 +19,6 @@
 #include "util.hpp"
 
 #include <string>
-#include <string_view>
 #include <array>
 #include <fmt/format.h>
 
@@ -62,9 +61,8 @@ auto tmux::get_client_pids() -> std::optional<std::vector<int>>
     }
 
     std::vector<int> pids;
-    std::string cmd =
-        "tmux list-clients -F '#{client_pid}' -t " + tmux::get_pane();
-    std::string output = os::exec(cmd);
+    const auto cmd = fmt::format("tmux list-clients -F '#{{client_pid}}' -t {}", tmux::get_pane());
+    const auto output = os::exec(cmd);
 
     for (const auto& line: util::str_split(output, "\n")) {
         pids.push_back(std::stoi(line));
@@ -78,25 +76,25 @@ auto tmux::get_offset() -> std::pair<int, int>
     if (!tmux::is_used()) {
         return std::make_pair(0, 0);
     }
-    auto [p_x, p_y] = get_pane_offset();
-    auto s_y = get_statusbar_offset();
+    const auto [p_x, p_y] = get_pane_offset();
+    const auto s_y = get_statusbar_offset();
     return std::make_pair(p_x, p_y + s_y);
 }
 
 auto tmux::get_pane_offset() -> std::pair<int, int>
 {
-    std::string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
+    const std::string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
                                      #{pane_bottom},#{pane_right},\
                                      #{window_height},#{window_width}' \
                                   -t" +  tmux::get_pane();
-    auto output = util::str_split(os::exec(cmd), ",");
+    const auto output = util::str_split(os::exec(cmd), ",");
     return std::make_pair(std::stoi(output[1]), std::stoi(output[0]));
 }
 
 auto tmux::get_statusbar_offset() -> int
 {
-    std::string cmd = "tmux display -p '#{status},#{status-position}'";
-    auto output = util::str_split(os::exec(cmd), ",");
+    const std::string cmd = "tmux display -p '#{status},#{status-position}'";
+    const auto output = util::str_split(os::exec(cmd), ",");
     if (output[1] != "top" || output[0] == "off") {
         return 0;
     }
@@ -106,10 +104,10 @@ auto tmux::get_statusbar_offset() -> int
     return std::stoi(output[0]);
 }
 
-void tmux::handle_hook(const std::string& hook, int pid)
+void tmux::handle_hook(const std::string_view hook, int pid)
 {
-    auto msg = fmt::format(R"({{"action":"tmux","hook":"{}"}})", hook);
-    auto endpoint = util::get_socket_endpoint(pid);
+    const auto msg = fmt::format(R"({{"action":"tmux","hook":"{}"}})", hook);
+    const auto endpoint = util::get_socket_endpoint(pid);
     util::send_socket_message(msg, endpoint);
 }
 
@@ -119,7 +117,7 @@ void tmux::register_hooks()
         return;
     }
     for (const auto& hook: hooks) {
-        auto cmd = fmt::format(
+        const auto cmd = fmt::format(
                 R"(tmux set-hook -t {} {} "run-shell 'ueberzug tmux {} {}'")",
                 get_pane(), hook, hook, os::get_pid());
         os::exec(cmd);
@@ -132,7 +130,7 @@ void tmux::unregister_hooks()
         return;
     }
     for (const auto& hook: hooks) {
-        auto cmd = fmt::format(
+        const auto cmd = fmt::format(
                 "tmux set-hook -u -t {} {}", get_pane(), hook);
         os::exec(cmd);
     }

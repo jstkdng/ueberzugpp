@@ -18,20 +18,23 @@
 #include "os.hpp"
 #include "util.hpp"
 
+#include <cmath>
 #include <iostream>
+#include <filesystem>
+
+namespace fs = std::filesystem;
 
 auto sixel_draw_callback(char *data, int size, void* priv) -> int
 {
-    auto *stream = static_cast<std::stringstream*>(priv);
-    stream->write(data, size);
+    auto *str = static_cast<std::string*>(priv);
+    str->append(data, size);
     return size;
 }
 
-SixelCanvas::SixelCanvas(std::mutex& img_lock):
-img_lock(img_lock)
+SixelCanvas::SixelCanvas()
 {
     logger = spdlog::get("sixel");
-    sixel_output_new(&output, sixel_draw_callback, &ss, nullptr);
+    sixel_output_new(&output, sixel_draw_callback, &str, nullptr);
     sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
     logger->info("Canvas created");
 }
@@ -46,14 +49,17 @@ SixelCanvas::~SixelCanvas()
     sixel_output_destroy(output);
 }
 
-auto SixelCanvas::init(const Dimensions& dimensions,
-        std::shared_ptr<Image> image) -> void
+void SixelCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
+    image = std::move(new_image);
     x = dimensions.x + 1;
     y = dimensions.y + 1;
-    max_width = dimensions.max_w;
-    max_height = dimensions.max_h;
-    this->image = image;
+    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dimensions.terminal.font_width);
+    vertical_cells = std::ceil(static_cast<double>(image->height()) / dimensions.terminal.font_height);
+
+    const auto file_size = fs::file_size(image->filename());
+    const auto reserve_ratio = 50;
+    str.reserve(file_size * reserve_ratio);
 
     // create dither and palette from image
     sixel_dither_new(&dither, -1, nullptr);
@@ -67,7 +73,7 @@ auto SixelCanvas::init(const Dimensions& dimensions,
             SIXEL_QUALITY_HIGH);
 }
 
-auto SixelCanvas::draw() -> void
+void SixelCanvas::draw()
 {
     if (!image->is_animated()) {
         draw_frame();
@@ -77,21 +83,16 @@ auto SixelCanvas::draw() -> void
     // start drawing loop
     draw_thread = std::thread([&] {
         while (can_draw.load()) {
-            std::unique_lock lock {img_lock, std::try_to_lock};
-            if (!lock.owns_lock()) {
-                return;
-            }
             draw_frame();
             image->next_frame();
-            lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });
 }
 
-auto SixelCanvas::clear() -> void
+void SixelCanvas::clear()
 {
-    if (max_width == 0 && max_height == 0) {
+    if (horizontal_cells == 0 && vertical_cells == 0) {
         return;
     }
 
@@ -104,10 +105,11 @@ auto SixelCanvas::clear() -> void
     sixel_dither_destroy(dither);
     dither = nullptr;
 
-    util::clear_terminal_area(x, y, max_width, max_height);
+    util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
+    image.reset();
 }
 
-auto SixelCanvas::draw_frame() -> void
+void SixelCanvas::draw_frame()
 {
     // output sixel content to stream
     sixel_encode(const_cast<unsigned char*>(image->data()),
@@ -117,6 +119,7 @@ auto SixelCanvas::draw_frame() -> void
 
     util::save_cursor_position();
     util::move_cursor(y, x);
-    std::cout << ss.rdbuf() << std::flush;
+    std::cout << str << std::flush;
     util::restore_cursor_position();
+    str.clear();
 }

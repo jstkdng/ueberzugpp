@@ -24,6 +24,7 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
@@ -140,6 +141,7 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
+pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.4)
 
 if (APPLE)
     set(PROC_SOURCES src/process/apple.cpp)
@@ -161,6 +163,7 @@ set(UEBERZUGPP_SOURCES
 
     "src/canvas.cpp"
     "src/canvas/sixel.cpp"
+    "src/canvas/chafa.cpp"
     "src/canvas/kitty/kitty.cpp"
     "src/canvas/kitty/chunk.cpp"
     "src/canvas/iterm2/iterm2.cpp"
@@ -210,6 +213,7 @@ target_link_libraries(ueberzug PUBLIC
     Microsoft.GSL::GSL
     PkgConfig::VIPS
     PkgConfig::SIXEL
+    PkgConfig::CHAFA
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
     ${OPENCV_LIBRARIES}

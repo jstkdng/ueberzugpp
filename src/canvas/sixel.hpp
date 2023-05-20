@@ -25,39 +25,36 @@
 #include <memory>
 #include <thread>
 #include <mutex>
-#include <sstream>
 #include <atomic>
-#include <spdlog/spdlog.h>
 
 #include <sixel.h>
+#include <spdlog/spdlog.h>
 
 class SixelCanvas : public Canvas
 {
 public:
-    explicit SixelCanvas(std::mutex& img_lock);
+    explicit SixelCanvas();
     ~SixelCanvas() override;
 
-    void init(const Dimensions& dimensions,
-            std::shared_ptr<Image> image) override;
+    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
     void clear() override;
 
 private:
     sixel_dither_t *dither = nullptr;
     sixel_output_t *output = nullptr;
-    std::shared_ptr<Image> image;
+    std::unique_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;
 
     std::thread draw_thread;
     std::atomic<bool> can_draw {true};
 
-    std::mutex& img_lock;
-    std::stringstream ss;
+    std::string str;
 
     int x;
     int y;
-    int max_width = 0;
-    int max_height = 0;
+    int horizontal_cells = 0;
+    int vertical_cells = 0;
 
     void draw_frame();
 };

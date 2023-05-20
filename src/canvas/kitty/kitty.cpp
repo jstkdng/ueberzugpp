@@ -18,6 +18,7 @@
 #include "chunk.hpp"
 #include "util.hpp"
 
+#include <fmt/format.h>
 #include <iostream>
 #ifndef __APPLE__
 #   include <execution>
@@ -31,9 +32,9 @@ KittyCanvas::KittyCanvas()
     logger->info("Canvas created");
 }
 
-void KittyCanvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
+void KittyCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
-    this->image = image;
+    image = std::move(new_image);
     x = dimensions.x + 1;
     y = dimensions.y + 1;
 }
@@ -52,9 +53,11 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
         last_chunk_size = chunk_size;
         num_chunks--;
     }
+    const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
+    str.reserve((num_chunks + 2) * bytes_per_chunk);
 
     std::vector<KittyChunk> chunks;
-    chunks.reserve(num_chunks + 1);
+    chunks.reserve(num_chunks + 2);
     const auto *ptr = image->data();
 
     uint64_t idx = 0;
@@ -75,30 +78,25 @@ void KittyCanvas::draw_frame()
 {
     const int bits_per_channel = 8;
     auto chunks = process_chunks();
-    ss  << "\033_Ga=T,m=1,i=1337,q=2"
-        << ",f=" << image->channels() * bits_per_channel
-        << ",s=" << image->width()
-        << ",v=" << image->height()
-        << ";" << chunks.front().get_result()
-        << "\033\\";
+    str.append(fmt::format("\033_Ga=T,m=1,i=1337,q=2,f={},s={},v={};{}\033\\",
+            image->channels() * bits_per_channel, image->width(),
+            image->height(), chunks.front().get_result()));
 
     for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
-        ss  << "\033_Gm=1,q=2;"
-            << chunk->get_result()
-            << "\033\\";
+        str.append(fmt::format("\033_Gm=1,q=2;{}\033\\", chunk->get_result()));
     }
 
-    ss  << "\033_Gm=0,q=2;"
-        << chunks.back().get_result()
-        << "\033\\";
+    str.append(fmt::format("\033_Gm=0,q=2;{}\033\\", chunks.back().get_result()));
 
     util::save_cursor_position();
     util::move_cursor(y, x);
-    std::cout << ss.rdbuf() << std::flush;
+    std::cout << str << std::flush;
     util::restore_cursor_position();
+    str.clear();
 }
 
 void KittyCanvas::clear()
 {
     std::cout << "\033_Ga=d\033\\" << std::flush;
+    image.reset();
 }

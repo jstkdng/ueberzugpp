@@ -16,29 +16,45 @@
 
 #include "canvas.hpp"
 #include "canvas/sixel.hpp"
+#include "canvas/chafa.hpp"
 #include "canvas/kitty/kitty.hpp"
 #include "canvas/iterm2/iterm2.hpp"
 #ifdef ENABLE_X11
 #   include "canvas/x11/x11.hpp"
 #endif
 #include "flags.hpp"
+#include "os.hpp"
 
-auto Canvas::create(std::mutex& img_lock) -> std::unique_ptr<Canvas>
+auto Canvas::create() -> std::unique_ptr<Canvas>
 {
-    auto flags = Flags::instance();
+    const auto flags = Flags::instance();
+    const auto logger = spdlog::get("main");
+
+#ifdef ENABLE_X11
+    auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
+    if (xdg_session == "wayland") {
+        if (flags->output == "x11") {
+            logger->warn("Forcing X11 output");
+        } else {
+            logger->info("Wayland detected, X11 output will not be used"
+                " unless forced to");
+        }
+    }
+    if (flags->output == "x11") {
+        return std::make_unique<X11Canvas>();
+    }
+#else
+    logger->debug("X11 support not compiled in the binary");
+#endif
     if (flags->output == "kitty") {
         return std::make_unique<KittyCanvas>();
     }
-#ifdef ENABLE_X11
-    if (flags->output == "x11") {
-        return std::make_unique<X11Canvas>(img_lock);
-    }
-#endif
     if (flags->output == "iterm2") {
         return std::make_unique<Iterm2Canvas>();
     }
     if (flags->output == "sixel") {
-        return std::make_unique<SixelCanvas>(img_lock);
+        return std::make_unique<SixelCanvas>();
     }
-    return nullptr;
+    flags->output = "chafa";
+    return std::make_unique<ChafaCanvas>();
 }

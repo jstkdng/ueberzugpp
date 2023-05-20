@@ -22,11 +22,11 @@
 #include "application.hpp"
 
 #include <xcb/xproto.h>
+#include <ranges>
 
 
-X11Canvas::X11Canvas(std::mutex& img_lock):
-connection(xcb_connect(nullptr, nullptr)),
-img_lock(img_lock)
+X11Canvas::X11Canvas():
+connection(xcb_connect(nullptr, nullptr))
 {
     if (xcb_connection_has_error(connection) != 0) {
         throw std::runtime_error("CANNOT CONNECT TO X11");
@@ -57,15 +57,10 @@ void X11Canvas::draw()
     }
     draw_thread = std::thread([&]  {
         while (can_draw.load()) {
-            std::unique_lock lock {img_lock, std::try_to_lock};
-            if (!lock.owns_lock()) {
-                return;
-            }
             for (const auto& [wid, window]: windows) {
                 window->generate_frame();
             }
             image->next_frame();
-            lock.unlock();
             std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
         }
     });
@@ -92,24 +87,24 @@ void X11Canvas::hide()
     }
 }
 
-auto X11Canvas::handle_events() -> void
+void X11Canvas::handle_events()
 {
-    discard_leftover_events();
-    const int event_mask = 0x80;
+    const auto event_mask = 0x80;
     while (true) {
-        auto event = unique_C_ptr<xcb_generic_event_t> {
+        const auto event = unique_C_ptr<xcb_generic_event_t> {
             xcb_wait_for_event(this->connection)
         };
         switch (event->response_type & ~event_mask) {
             case XCB_EXPOSE: {
-                auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
+                const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
                 if (expose->x == MAGIC_EXIT_NUM1 && expose->y == MAGIC_EXIT_NUM2) {
-                    return;
+                    windows.erase(expose->window);
+                    if (windows.empty()) {
+                        return;
+                    }
+                    continue;
                 }
-                try {
-                    std::scoped_lock lock (windows_mutex);
-                    windows.at(expose->window)->draw();
-                } catch (const std::out_of_range& ex) {}
+                windows.at(expose->window)->draw();
                 break;
             }
             default: {
@@ -119,7 +114,7 @@ auto X11Canvas::handle_events() -> void
     }
 }
 
-auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image) -> void
+void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     logger->debug("Initializing canvas");
     std::vector<int> client_pids;
@@ -129,7 +124,7 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
     } else {
         client_pids.push_back(os::get_pid());
     }
-    this->image = image;
+    image = std::move(new_image);
 
     auto wid = os::getenv("WINDOWID");
 
@@ -168,29 +163,18 @@ auto X11Canvas::init(const Dimensions& dimensions, std::shared_ptr<Image> image)
     }
 }
 
-auto X11Canvas::clear() -> void
+void X11Canvas::clear()
 {
-    {
-        std::scoped_lock lock (windows_mutex);
-        windows.clear();
-    }
-
-    if (event_handler.joinable()) {
-        event_handler.join();
-    }
     can_draw.store(false);
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
-    can_draw.store(true);
-}
-
-void X11Canvas::discard_leftover_events()
-{
-    auto event = unique_C_ptr<xcb_generic_event_t> {
-        xcb_poll_for_event(connection)
-    };
-    while (event.get() != nullptr) {
-        event.reset(xcb_poll_for_event(connection));
+    for (const auto& [key, value]: windows) {
+        value->terminate_event_handler();
     }
+    if (event_handler.joinable()) {
+        event_handler.join();
+    }
+    image.reset();
+    can_draw.store(true);
 }

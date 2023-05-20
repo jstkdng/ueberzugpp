@@ -14,29 +14,40 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_CHUNK__
-#define __KITTY_CHUNK__
+#ifndef __CHAFA_CANVAS__
+#define __CHAFA_CANVAS__
 
-#include <vector>
-#include <cstdint>
+#include "canvas.hpp"
 
-class KittyChunk
+#include <memory>
+#include <spdlog/spdlog.h>
+#include <chafa.h>
+
+class ChafaCanvas : public Canvas
 {
 public:
-    KittyChunk() = default;
-    KittyChunk(const unsigned char* ptr, uint64_t size);
+    ChafaCanvas();
+    ~ChafaCanvas() override;
 
-    void operator()(KittyChunk& chunk) const;
+    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
+    void draw() override;
+    void clear() override;
 
-    auto get_result() -> char*;
-    [[nodiscard]] auto get_ptr() const -> const unsigned char*;
-    [[nodiscard]] auto get_size() const -> uint64_t;
-
-    static void process_chunk(KittyChunk& chunk);
 private:
-    const unsigned char* ptr;
-    uint64_t size;
-    std::vector<char> result;
+    ChafaSymbolMap* symbol_map = nullptr;
+    ChafaCanvasConfig* config = nullptr;
+    ChafaCanvas* canvas = nullptr;
+#if CHAFA_VERSION_CUR_STABLE >= 0x10600
+    ChafaTermInfo* term_info = nullptr;
+#endif
+
+    std::unique_ptr<Image> image;
+    std::shared_ptr<spdlog::logger> logger;
+
+    int x;
+    int y;
+    int horizontal_cells = 0;
+    int vertical_cells = 0;
 };
 
 #endif

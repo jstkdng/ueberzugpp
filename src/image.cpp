@@ -33,12 +33,12 @@
 namespace fs = std::filesystem;
 
 auto Image::load(const Dimensions& dimensions, const std::string& filename)
-    -> std::shared_ptr<Image>
+    -> std::unique_ptr<Image>
 {
     if (!fs::exists(filename)) {
         return nullptr;
     }
-    auto flags = Flags::instance();
+    const auto flags = Flags::instance();
     std::string image_path = filename;
     bool in_cache = false;
     if (!flags->no_cache) {
@@ -72,11 +72,11 @@ auto Image::load(const Dimensions& dimensions, const std::string& filename)
 #endif
 
     if (load_libvips) {
-        return std::make_shared<LibvipsImage>(dimensions, image_path, is_anim, in_cache);
+        return std::make_unique<LibvipsImage>(dimensions, image_path, is_anim, in_cache);
     }
 #ifdef ENABLE_OPENCV
     if (load_opencv) {
-        return std::make_shared<OpencvImage>(dimensions, image_path, in_cache);
+        return std::make_unique<OpencvImage>(dimensions, image_path, in_cache);
     }
 #endif
     return nullptr;

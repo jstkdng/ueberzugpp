@@ -118,14 +118,14 @@ void Terminal::set_detected_output()
     if (supports_sixel) {
         detected_output = "sixel";
     }
-    if (supports_x11) {
-        detected_output = "x11";
+    if (supports_kitty) {
+        detected_output = "kitty";
     }
     if (supports_iterm2) {
         detected_output = "iterm2";
     }
-    if (supports_kitty) {
-        detected_output = "kitty";
+    if (supports_x11) {
+        detected_output = "x11";
     }
     if (flags->output.empty()) {
         flags->output = detected_output;

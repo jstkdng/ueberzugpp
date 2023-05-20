@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <optional>
+#include <string_view>
 
 namespace tmux
 {
@@ -37,7 +38,7 @@ namespace tmux
 
     auto get_statusbar_offset() -> int;
 
-    void handle_hook(const std::string& hook, int pid);
+    void handle_hook(std::string_view hook, int pid);
     void register_hooks();
     void unregister_hooks();
 } // namespace tmux

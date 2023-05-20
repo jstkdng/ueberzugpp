@@ -19,7 +19,7 @@
 
 #include "canvas.hpp"
 
-#include <sstream>
+#include <string>
 #include <vector>
 #include <spdlog/spdlog.h>
 
@@ -31,14 +31,14 @@ public:
     KittyCanvas();
     ~KittyCanvas() override = default;
 
-    void init(const Dimensions& dimensions, std::shared_ptr<Image> image) override;
+    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
     void clear() override;
 
 private:
-    std::shared_ptr<Image> image;
+    std::unique_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;
-    std::stringstream ss;
+    std::string str;
 
     int x;
     int y;
