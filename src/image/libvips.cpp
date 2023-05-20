@@ -174,7 +174,8 @@ auto LibvipsImage::process_image() -> void
     } else if (flags->output == "x11" || flags->output == "chafa") {
         // alpha channel required
         if (!image.has_alpha()) {
-            image = image.bandjoin(255);
+            const int alpha_value = 255;
+            image = image.bandjoin(alpha_value);
         }
         // convert from RGB to BGR
         auto bands = image.bandsplit();
