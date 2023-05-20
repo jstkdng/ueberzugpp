@@ -211,6 +211,7 @@ void Application::setup_logger()
         const auto sixel_logger = std::make_shared<spdlog::logger>("sixel", sink);
         const auto kitty_logger = std::make_shared<spdlog::logger>("kitty", sink);
         const auto iterm2_logger = std::make_shared<spdlog::logger>("iterm2", sink);
+        const auto chafa_logger = std::make_shared<spdlog::logger>("chafa", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
@@ -220,6 +221,7 @@ void Application::setup_logger()
         spdlog::initialize_logger(sixel_logger);
         spdlog::initialize_logger(kitty_logger);
         spdlog::initialize_logger(iterm2_logger);
+        spdlog::initialize_logger(chafa_logger);
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {
