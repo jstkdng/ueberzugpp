@@ -59,6 +59,9 @@ void Iterm2Canvas::draw()
 
     const int chunk_size = 1023;
     const auto chunks = process_chunks(filename, chunk_size, num_bytes);
+    const int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
+    const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
+    str.reserve((num_chunks + 2) * bytes_per_chunk);
 
     std::ranges::for_each(std::as_const(chunks), [&] (const std::unique_ptr<Iterm2Chunk>& chunk) {
         str.append(chunk->get_result());
@@ -81,7 +84,7 @@ auto Iterm2Canvas::process_chunks(const std::string_view filename, int chunk_siz
 {
     const int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
     std::vector<std::unique_ptr<Iterm2Chunk>> chunks;
-    chunks.reserve(num_chunks);
+    chunks.reserve(num_chunks + 2);
 
     std::ifstream ifs (filename.data());
     while (ifs.good()) {
