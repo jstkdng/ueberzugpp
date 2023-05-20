@@ -33,14 +33,18 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
 #ifdef ENABLE_X11
     auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
     if (xdg_session == "wayland") {
-        logger->info("Wayland detected, X11 output will not be used"
+        if (flags->output == "x11") {
+            logger->warn("Forcing X11 output");
+        } else {
+            logger->info("Wayland detected, X11 output will not be used"
                 " unless forced to");
+        }
     }
     if (flags->output == "x11") {
         return std::make_unique<X11Canvas>();
     }
 #else
-    logger->info("X11 support not compiled in the binary");
+    logger->debug("X11 support not compiled in the binary");
 #endif
     if (flags->output == "kitty") {
         return std::make_unique<KittyCanvas>();
