@@ -141,7 +141,7 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa)
+pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.4)
 
 if (APPLE)
     set(PROC_SOURCES src/process/apple.cpp)

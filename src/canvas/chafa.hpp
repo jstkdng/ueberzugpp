@@ -19,6 +19,8 @@
 
 #include "canvas.hpp"
 
+#include <memory>
+#include <spdlog/spdlog.h>
 #include <chafa.h>
 
 class ChafaCanvas : public Canvas
@@ -35,10 +37,12 @@ private:
     ChafaSymbolMap* symbol_map = nullptr;
     ChafaCanvasConfig* config = nullptr;
     ChafaCanvas* canvas = nullptr;
+#if CHAFA_VERSION_CUR_STABLE >= 0x10600
     ChafaTermInfo* term_info = nullptr;
-    ChafaTermDb* term_db = nullptr;
+#endif
 
     std::unique_ptr<Image> image;
+    std::shared_ptr<spdlog::logger> logger;
 
     int x;
     int y;

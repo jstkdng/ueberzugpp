@@ -22,22 +22,29 @@
 #include <iostream>
 #include <algorithm>
 
-ChafaCanvas::ChafaCanvas():
-term_db(chafa_term_db_new())
+ChafaCanvas::ChafaCanvas()
 {
+#if CHAFA_VERSION_CUR_STABLE >= 0x10600
     const auto envp = std::unique_ptr<gchar*, gchar_deleter> {
         g_get_environ()
     };
-    term_info = chafa_term_db_detect(term_db, envp.get());
+    term_info = chafa_term_db_detect(chafa_term_db_get_default(), envp.get());
+#endif
+    logger = spdlog::get("chafa");
+    logger->info("Canvas created");
+    logger->warn("This canvas is meant to be used as a last resort. Please"
+            " use the X11 output or switch to a terminal that has kitty,"
+            " sixel or iterm2 support.");
 }
 
 ChafaCanvas::~ChafaCanvas()
 {
-    chafa_term_db_unref(term_db);
     chafa_canvas_unref(canvas);
     chafa_canvas_config_unref(config);
     chafa_symbol_map_unref(symbol_map);
+#if CHAFA_VERSION_CUR_STABLE >= 0x10600
     chafa_term_info_unref(term_info);
+#endif
 }
 
 void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
@@ -70,7 +77,11 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
 void ChafaCanvas::draw()
 {
     const auto result = std::unique_ptr<GString, gstring_deleter> {
+#if CHAFA_VERSION_CUR_STABLE >= 0x10600
         chafa_canvas_print(canvas, term_info)
+#else
+        chafa_canvas_build_ansi(canvas)
+#endif
     };
     auto ycoord = y;
     const auto lines = util::str_split(result->str, "\n");
