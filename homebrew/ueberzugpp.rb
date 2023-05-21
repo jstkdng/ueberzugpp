@@ -3,8 +3,8 @@ require "pty"
 class Ueberzugpp < Formula
   desc "Drop in replacement for ueberzug written in C++"
   homepage "https://github.com/jstkdng/ueberzugpp"
-  url "https://github.com/jstkdng/ueberzugpp/archive/refs/tags/v2.8.3.tar.gz"
-  sha256 "9901087eceb3d1fed233703684610f33fa6516aa39155dbbc6ed64dad5ec5e1e"
+  url "https://github.com/jstkdng/ueberzugpp/archive/refs/tags/v2.8.4.tar.gz"
+  sha256 "580c6f6ac029438194ff9027867a1bcc9dcbaa2a5f3766b22cd2f62c6325909d"
   license "GPL-3.0-or-later"
 
   depends_on "cli11" => :build
@@ -19,6 +19,7 @@ class Ueberzugpp < Formula
   depends_on "spdlog"
   depends_on "tbb"
   depends_on "vips"
+  depends_on "chafa"
   depends_on "zeromq"
 
   def install
