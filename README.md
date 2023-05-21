@@ -103,16 +103,18 @@ New software is encouraged to use sockets instead of stdin as they cover more ca
 
 # Build from source
 
-This project uses C++20 features so you must use a recent compiler.
+This project uses C++20 features so you must use a recent compiler. GCC 10.1 is
+the minimum supported version.
 
 ## Required dependencies
 
 Must be installed in order to build.
 
-- cmake version 3.18 ≤
+- cmake (3.18 <= )
 - zeromq
 - libvips
 - libsixel
+- chafa (1.6 <= )
 - openssl
 - tbb
 
