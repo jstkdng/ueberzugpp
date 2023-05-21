@@ -232,20 +232,18 @@ void Terminal::check_x11_support()
 #else
     logger->debug("x11 is not supported");
 #endif
-
 }
 
 auto Terminal::read_raw_str(const std::string_view esc) -> std::string
 {
     char chr = 0;
     std::string str;
-    std::cout << esc << std::flush;
-
+    const auto waitms = 100;
     const auto input = std::make_unique<struct pollfd>();
     input->fd = STDIN_FILENO;
     input->events = POLLIN;
 
-    const int waitms = 100;
+    std::cout << esc << std::flush;
     while (true) {
         // some terminals take some time to write, 100ms seems like enough
         // time to wait for input
