@@ -37,7 +37,12 @@ option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
+
 find_package(TBB REQUIRED)
+set(TBB_LIBRARIES TBB::tbb)
+if (NOT TARGET ${TBB_LIBRARIES})
+    set(TBB_LIBRARIES tbb)
+endif()
 
 find_package(Microsoft.GSL CONFIG QUIET)
 if (NOT Microsoft.GSL_FOUND)
@@ -208,12 +213,12 @@ target_link_libraries(ueberzug PUBLIC
     spdlog::spdlog
     fmt::fmt
     OpenSSL::Crypto
-    cppzmq
-    TBB::tbb
     Microsoft.GSL::GSL
+    cppzmq
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::CHAFA
+    ${TBB_LIBRARIES}
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
     ${OPENCV_LIBRARIES}

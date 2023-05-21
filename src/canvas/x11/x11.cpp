@@ -118,7 +118,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
 {
     logger->debug("Initializing canvas");
     std::vector<int> client_pids;
-    if (Application::parent_pid_ != getppid()) {
+    if (Application::parent_pid_ != os::get_ppid()) {
         logger->debug("Running in daemon mode");
         client_pids.push_back(Application::parent_pid_);
     } else {
@@ -126,7 +126,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
     }
     image = std::move(new_image);
 
-    auto wid = os::getenv("WINDOWID");
+    const auto wid = os::getenv("WINDOWID");
 
     event_handler = std::thread([&] {
         logger->debug("Started event handler");

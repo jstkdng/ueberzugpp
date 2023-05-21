@@ -20,6 +20,8 @@
 #include "flags.hpp"
 
 #include <string>
+#include <string_view>
+
 #include <termios.h>
 #include <spdlog/spdlog.h>
 
@@ -45,7 +47,7 @@ private:
     auto get_terminal_size() -> void;
     static auto guess_padding(uint16_t chars, double pixels) -> double;
     static auto guess_font_size(uint16_t chars, double pixels, double padding) -> double;
-    static auto read_raw_str(const std::string& esc) -> std::string;
+    static auto read_raw_str(std::string_view esc) -> std::string;
 
     void init_termios();
     void reset_termios();

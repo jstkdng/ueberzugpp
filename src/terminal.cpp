@@ -94,8 +94,8 @@ auto Terminal::get_terminal_size() -> void
         throw std::runtime_error("UNABLE TO CALCULATE TERMINAL SIZES");
     }
 
-    double padding_horiz = guess_padding(cols, xpixel);
-    double padding_vert = guess_padding(rows, ypixel);
+    const double padding_horiz = guess_padding(cols, xpixel);
+    const double padding_vert = guess_padding(rows, ypixel);
 
     padding_horizontal = gsl::narrow_cast<uint16_t>(std::max(padding_horiz, padding_vert));
     padding_vertical = padding_horizontal;
@@ -134,35 +134,44 @@ void Terminal::set_detected_output()
 
 auto Terminal::guess_padding(uint16_t chars, double pixels) -> double
 {
-    double font_size = std::floor(pixels / chars);
+    const double font_size = std::floor(pixels / chars);
     return (pixels - font_size * chars) / 2;
 }
 
-auto Terminal::guess_font_size(uint16_t chars, double pixels, double padding)
-    -> double
+auto Terminal::guess_font_size(uint16_t chars, double pixels, double padding) -> double
 {
     return (pixels - 2 * padding) / chars;
 }
 
 void Terminal::get_terminal_size_escape_code()
 {
-    auto resp = read_raw_str("\033[14t").erase(0, 4);
+    const auto resp = read_raw_str("\033[14t").erase(0, 4);
     if (resp.empty()) {
         return;
     }
-    auto sizes = util::str_split(resp, ";");
+    const auto sizes = util::str_split(resp, ";");
     ypixel = std::stoi(sizes[0]);
     xpixel = std::stoi(sizes[1]);
+    // some old vte terminals respond to this values in a different order
+    // assume everything older than 7000 is broken
+    const auto vte_ver_str = os::getenv("VTE_VERSION").value_or("");
+    if (!vte_ver_str.empty()) {
+        const auto vte_ver = std::stoi(vte_ver_str);
+        const auto working_ver = 7000;
+        if (vte_ver <= working_ver) {
+            std::swap(ypixel, xpixel);
+        }
+    }
     logger->debug("ESC sizes XPIXEL={} YPIXEL={}", xpixel, ypixel);
 }
 
 void Terminal::get_terminal_size_xtsm()
 {
-    auto resp = read_raw_str("\033[?2;1;0S").erase(0, 3);
+    const auto resp = read_raw_str("\033[?2;1;0S").erase(0, 3);
     if (resp.empty()) {
         return;
     }
-    auto sizes = util::str_split(resp, ";");
+    const auto sizes = util::str_split(resp, ";");
     if (sizes.size() != 4) {
         return;
     }
@@ -174,11 +183,11 @@ void Terminal::get_terminal_size_xtsm()
 void Terminal::check_sixel_support()
 {
     // some terminals support sixel but don't respond to escape sequences
-    auto supported_terms = std::unordered_set<std::string> {
+    const auto supported_terms = std::unordered_set<std::string_view> {
         "yaft-256color", "iTerm.app"
     };
-    auto resp = read_raw_str("\033[?1;1;0S").erase(0, 3);
-    auto vals = util::str_split(resp, ";");
+    const auto resp = read_raw_str("\033[?1;1;0S").erase(0, 3);
+    const auto vals = util::str_split(resp, ";");
     if (vals.size() > 2 || supported_terms.contains(term) || supported_terms.contains(term_program)) {
         supports_sixel = true;
         logger->debug("sixel is supported");
@@ -189,7 +198,7 @@ void Terminal::check_sixel_support()
 
 void Terminal::check_kitty_support()
 {
-    auto resp = read_raw_str("\033_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\033\\\033[c");
+    const auto resp = read_raw_str("\033_Gi=31,s=1,v=1,a=q,t=d,f=24;AAAA\033\\\033[c");
     if (resp.find("OK") != std::string::npos) {
         supports_kitty = true;
         logger->debug("kitty is supported");
@@ -200,7 +209,7 @@ void Terminal::check_kitty_support()
 
 void Terminal::check_iterm2_support()
 {
-    auto supported_terms = std::unordered_set<std::string_view> {
+    const auto supported_terms = std::unordered_set<std::string_view> {
         "WezTerm", "iTerm.app"
     };
     if (supported_terms.contains(term_program)) {
@@ -226,13 +235,13 @@ void Terminal::check_x11_support()
 
 }
 
-auto Terminal::read_raw_str(const std::string& esc) -> std::string
+auto Terminal::read_raw_str(const std::string_view esc) -> std::string
 {
     char chr = 0;
-    std::stringstream sstream;
+    std::string str;
     std::cout << esc << std::flush;
 
-    auto input = std::make_unique<struct pollfd>();
+    const auto input = std::make_unique<struct pollfd>();
     input->fd = STDIN_FILENO;
     input->events = POLLIN;
 
@@ -240,20 +249,20 @@ auto Terminal::read_raw_str(const std::string& esc) -> std::string
     while (true) {
         // some terminals take some time to write, 100ms seems like enough
         // time to wait for input
-        int poll_res = poll(input.get(), 1, waitms);
+        const auto poll_res = poll(input.get(), 1, waitms);
         if (poll_res <= 0) {
             return "";
         }
-        ssize_t read_res = read(STDIN_FILENO, &chr, 1);
+        const auto read_res = read(STDIN_FILENO, &chr, 1);
         if (read_res == -1) {
             return "";
         }
         if (chr == esc.back()) {
             break;
         }
-        sstream << chr;
+        str.push_back(chr);
     }
-    return sstream.str();
+    return str;
 }
 
 auto Terminal::init_termios() -> void
@@ -276,8 +285,8 @@ void Terminal::get_fallback_terminal_sizes()
     if (!xutil->connected) {
         return;
     }
-    auto window = xutil->get_parent_window(os::get_pid());
-    auto dims = xutil->get_window_dimensions(window);
+    const auto window = xutil->get_parent_window(os::get_pid());
+    const auto dims = xutil->get_window_dimensions(window);
     fallback_xpixel = dims.first;
     fallback_ypixel = dims.second;
     logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", fallback_xpixel, fallback_ypixel);
@@ -288,15 +297,15 @@ void Terminal::open_first_pty()
 {
     std::vector<int> pids {pid};
     if (tmux::is_used()) {
-        auto clients = tmux::get_client_pids();
+        const auto clients = tmux::get_client_pids();
         if (clients.has_value()) {
             pids = clients.value();
         }
     }
     for (const auto& spid: pids) {
-        auto tree = util::get_process_tree(spid);
+        const auto tree = util::get_process_tree(spid);
         for (const auto& tpid: tree) {
-            auto proc = Process(tpid);
+            const auto proc = Process(tpid);
             pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
             if (pty_fd != -1) {
                 logger->debug("Opened {}" , proc.pty_path.c_str());
