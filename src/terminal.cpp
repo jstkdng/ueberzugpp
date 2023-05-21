@@ -239,15 +239,15 @@ auto Terminal::read_raw_str(const std::string_view esc) -> std::string
     char chr = 0;
     std::string str;
     const auto waitms = 100;
-    const auto input = std::make_unique<struct pollfd>();
-    input->fd = STDIN_FILENO;
-    input->events = POLLIN;
+    struct pollfd input;
+    input.fd = STDIN_FILENO;
+    input.events = POLLIN;
 
     std::cout << esc << std::flush;
     while (true) {
         // some terminals take some time to write, 100ms seems like enough
         // time to wait for input
-        const auto poll_res = poll(input.get(), 1, waitms);
+        const auto poll_res = poll(&input, 1, waitms);
         if (poll_res <= 0) {
             return "";
         }
