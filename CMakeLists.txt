@@ -37,12 +37,7 @@ option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
-
 find_package(TBB REQUIRED)
-set(TBB_LIBRARIES TBB::tbb)
-if (NOT TARGET ${TBB_LIBRARIES})
-    set(TBB_LIBRARIES tbb)
-endif()
 
 find_package(Microsoft.GSL CONFIG QUIET)
 if (NOT Microsoft.GSL_FOUND)
@@ -146,7 +141,7 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.4)
+pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
 
 if (APPLE)
     set(PROC_SOURCES src/process/apple.cpp)
@@ -214,11 +209,11 @@ target_link_libraries(ueberzug PUBLIC
     fmt::fmt
     OpenSSL::Crypto
     Microsoft.GSL::GSL
+    TBB::tbb
     cppzmq
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::CHAFA
-    ${TBB_LIBRARIES}
     ${B64_LIBRARIES}
     ${X11_LIBRARIES}
     ${OPENCV_LIBRARIES}
