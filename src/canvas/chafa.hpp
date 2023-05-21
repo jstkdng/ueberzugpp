@@ -37,9 +37,7 @@ private:
     ChafaSymbolMap* symbol_map = nullptr;
     ChafaCanvasConfig* config = nullptr;
     ChafaCanvas* canvas = nullptr;
-#if CHAFA_VERSION_CUR_STABLE >= 0x10600
     ChafaTermInfo* term_info = nullptr;
-#endif
 
     std::unique_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;

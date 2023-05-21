@@ -141,7 +141,7 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.4)
+pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
 
 if (APPLE)
     set(PROC_SOURCES src/process/apple.cpp)
@@ -208,9 +208,9 @@ target_link_libraries(ueberzug PUBLIC
     spdlog::spdlog
     fmt::fmt
     OpenSSL::Crypto
-    cppzmq
-    TBB::tbb
     Microsoft.GSL::GSL
+    TBB::tbb
+    cppzmq
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::CHAFA

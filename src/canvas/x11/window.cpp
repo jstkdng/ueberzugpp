@@ -32,11 +32,11 @@ image(image)
 {
     logger = spdlog::get("X11");
     const uint32_t value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
-    const auto value_list = std::make_unique<xcb_create_window_value_list_t>();
-    value_list->background_pixel = screen->black_pixel;
-    value_list->border_pixel = screen->black_pixel;
-    value_list->event_mask = XCB_EVENT_MASK_EXPOSURE;
-    value_list->colormap = screen->default_colormap;
+    struct xcb_create_window_value_list_t value_list;
+    value_list.background_pixel = screen->black_pixel;
+    value_list.border_pixel = screen->black_pixel;
+    value_list.event_mask = XCB_EVENT_MASK_EXPOSURE;
+    value_list.colormap = screen->default_colormap;
 
     const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
@@ -51,7 +51,7 @@ image(image)
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
             value_mask,
-            value_list.get());
+            &value_list);
     logger->debug("Created child window {} at ({},{})", window, xcoord, ycoord);
     xcb_create_gc(connection, gc, window, 0, nullptr);
     show();
