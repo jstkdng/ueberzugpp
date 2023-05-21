@@ -28,7 +28,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
-project(ueberzugpp LANGUAGES CXX VERSION 2.8.3)
+project(ueberzugpp LANGUAGES CXX VERSION 2.8.4)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
