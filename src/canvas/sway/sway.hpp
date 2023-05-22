@@ -21,6 +21,8 @@
 #include "dimensions.hpp"
 #include "terminal.hpp"
 #include "shm.hpp"
+#include "wayland-xdg-shell-client-protocol.h"
+
 
 #include <wayland-client.h>
 #include <memory>
@@ -40,7 +42,11 @@ public:
     void draw() override;
     void clear() override;
 
-    wl_compositor *compositor = nullptr;
+    wl_compositor* compositor = nullptr;
+    wl_surface* surface = nullptr;
+    struct xdg_wm_base* xdg_base = nullptr;
+    struct xdg_surface* xdg_surface = nullptr;
+    struct xdg_toplevel* xdg_toplevel = nullptr;
     std::unique_ptr<SwayShm> shm;
 
 private:

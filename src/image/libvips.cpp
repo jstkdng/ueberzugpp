@@ -183,6 +183,12 @@ auto LibvipsImage::process_image() -> void
         bands[0] = bands[2];
         bands[2] = tmp;
         image = VImage::bandjoin(bands);
+    } else if (flags->output == "sway") {
+        // alpha channel required
+        if (!image.has_alpha()) {
+            const int alpha_value = 255;
+            image = image.bandjoin(alpha_value);
+        }
     }
 
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());

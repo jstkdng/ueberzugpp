@@ -28,8 +28,10 @@ public:
     ~SwayShm();
     void allocate_pool_buffers();
     auto get_data(uint32_t offset = 0) -> uint32_t*;
+    static void release_buffer(void *data, wl_buffer *wl_buffer);
 
     wl_shm* shm = nullptr;
+    wl_buffer* buffer = nullptr;
 private:
     void create_shm_file();
 

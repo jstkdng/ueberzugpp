@@ -127,6 +127,12 @@ void OpencvImage::process_image()
         if (image.channels() == 3) {
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
+    } else if (flags->output == "sway") {
+        if (image.channels() == 3) {
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGBA);
+        } else {
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
+        }
     }
 
     _size = image.total() * image.elemSize();

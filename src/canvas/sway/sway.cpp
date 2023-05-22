@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sway.hpp"
-//#include "wayland-xdg-shell-client-protocol.h"
 
 #include <iostream>
 #include <array>
