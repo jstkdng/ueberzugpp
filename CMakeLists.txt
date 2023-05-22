@@ -29,10 +29,29 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
 project(ueberzugpp LANGUAGES CXX VERSION 2.8.4)
+add_executable(ueberzug)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
+option(ENABLE_SWAY          "Enable Sway canvas" OFF)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
 option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
+
+if(MSVC)
+    target_compile_options(ueberzug PRIVATE
+        $<$<CONFIG:Debug>:
+            /W4 /WX
+        >
+    )
+else()
+    target_compile_options(ueberzug PRIVATE
+        $<$<CONFIG:Debug>:
+            -Wall -Wextra -Wpedantic -Werror
+        >
+    )
+endif()
+
+target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM1=69)
+target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM2=420)
 
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
@@ -45,7 +64,7 @@ if (NOT Microsoft.GSL_FOUND)
     FetchContent_Declare(GSL
         URL https://github.com/microsoft/GSL/archive/refs/tags/v4.0.0.tar.gz
     )
-    set(FC_LIBS ${FC_LIBS} GSL)
+    list(APPEND FC_LIBS GSL)
 endif()
 
 find_package(cppzmq QUIET)
@@ -54,7 +73,7 @@ if (NOT cppzmq_FOUND)
     FetchContent_Declare(cppzmq
         URL https://github.com/zeromq/cppzmq/archive/refs/tags/v4.9.0.tar.gz
     )
-    set(FC_LIBS ${FC_LIBS} cppzmq)
+    list(APPEND FC_LIBS cppzmq)
 endif()
 
 find_package(CLI11 QUIET)
@@ -62,7 +81,7 @@ if(NOT CLI11_FOUND)
     FetchContent_Declare(cli11
         URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz
     )
-    set(FC_LIBS ${FC_LIBS} cli11)
+    list(APPEND FC_LIBS cli11)
 endif()
 
 find_package(nlohmann_json QUIET)
@@ -70,7 +89,7 @@ if(NOT nlohmann_json_FOUND)
     FetchContent_Declare(nlohmann_json
         URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz
     )
-    set(FC_LIBS ${FC_LIBS} nlohmann_json)
+    list(APPEND FC_LIBS nlohmann_json)
 endif()
 
 find_package(spdlog QUIET)
@@ -78,7 +97,7 @@ if(NOT spdlog_FOUND)
     FetchContent_Declare(spdlog
         URL https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.tar.gz
     )
-    set(FC_LIBS ${FC_LIBS} spdlog)
+    list(APPEND FC_LIBS spdlog)
 endif()
 
 find_package(fmt QUIET)
@@ -86,7 +105,7 @@ if(NOT fmt_FOUND)
     FetchContent_Declare(fmt
         URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.tar.gz
     )
-    set(FC_LIBS ${FC_LIBS} fmt)
+    list(APPEND FC_LIBS fmt)
 endif()
 
 if(FC_LIBS)
@@ -97,24 +116,42 @@ if(ENABLE_X11)
     add_compile_definitions(ENABLE_X11)
     find_package(X11 REQUIRED)
     pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
-    set(X11_SOURCES
+    list(APPEND UEBERZUG_SOURCES
         "src/util/x11.cpp"
         "src/canvas/x11/x11.cpp"
         "src/canvas/x11/window.cpp"
     )
-    set(X11_LIBRARIES
+    list(APPEND UEBERZUG_LIBRARIES
         X11::xcb
         PkgConfig::XCBIMAGE
+    )
+endif()
+
+if(ENABLE_SWAY)
+    find_package(ECM REQUIRED NO_MODULE)
+    set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+
+    find_package(Wayland REQUIRED COMPONENTS Client)
+    find_package(WaylandProtocols REQUIRED)
+    find_package(WaylandScanner REQUIRED)
+
+    ecm_add_wayland_client_protocol(ueberzug
+        PROTOCOL "${WaylandProtocols_DATADIR}/stable/xdg-shell/xdg-shell.xml"
+        BASENAME "xdg-shell")
+
+    list(APPEND UEBERZUG_LIBRARIES
+        Wayland::Client
     )
 endif()
 
 if(ENABLE_OPENCV)
     add_compile_definitions(ENABLE_OPENCV)
     find_package(OpenCV REQUIRED COMPONENTS core imgproc imgcodecs videoio)
-    set(OPENCV_SOURCES
+
+    list(APPEND UEBERZUG_SOURCES
         "src/image/opencv.cpp"
     )
-    set(OPENCV_LIBRARIES
+    list(APPEND UEBERZUG_LIBRARIES
         opencv_core
         opencv_imgproc
         opencv_imgcodecs
@@ -132,10 +169,10 @@ if(ENABLE_TURBOBASE64)
         )
         FetchContent_Populate(turbobase64)
         add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
-        set(B64_LIBRARIES base64)
+        list(APPEND UEBERZUG_LIBRARIES base64)
     else()
         add_compile_definitions(WITH_SYSTEM_TURBOBASE64)
-        set(B64_LIBRARIES turbo::base64)
+        list(APPEND UEBERZUG_LIBRARIES turbo::base64)
     endif()
 endif()
 
@@ -144,14 +181,14 @@ pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
 
 if (APPLE)
-    set(PROC_SOURCES src/process/apple.cpp)
+    list(APPEND UEBERZUG_SOURCES src/process/apple.cpp)
 else()
-    set(PROC_SOURCES src/process/linux.cpp)
+    list(APPEND UEBERZUG_SOURCES src/process/linux.cpp)
 endif()
 
 configure_file("include/version.hpp.in" version.hpp)
 
-set(UEBERZUGPP_SOURCES
+list(APPEND UEBERZUG_SOURCES
     "src/main.cpp"
     "src/application.cpp"
     "src/os.cpp"
@@ -171,37 +208,9 @@ set(UEBERZUGPP_SOURCES
 
     "src/image.cpp"
     "src/image/libvips.cpp"
-
-    ${PROC_SOURCES}
-    ${X11_SOURCES}
-    ${OPENCV_SOURCES}
 )
 
-add_executable(ueberzug ${UEBERZUGPP_SOURCES})
-
-if(MSVC)
-    target_compile_options(ueberzug PRIVATE
-        $<$<CONFIG:Debug>:
-            /W4 /WX
-        >
-    )
-else()
-    target_compile_options(ueberzug PRIVATE
-        $<$<CONFIG:Debug>:
-            -Wall -Wextra -Wpedantic -Werror
-        >
-    )
-endif()
-
-target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM1=69)
-target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM2=420)
-
-target_include_directories(ueberzug PUBLIC
-    "${CMAKE_SOURCE_DIR}/include"
-    "${PROJECT_BINARY_DIR}"
-)
-
-target_link_libraries(ueberzug PUBLIC
+list(APPEND UEBERZUG_LIBRARIES
     nlohmann_json::nlohmann_json
     CLI11::CLI11
     Threads::Threads
@@ -214,10 +223,14 @@ target_link_libraries(ueberzug PUBLIC
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::CHAFA
-    ${B64_LIBRARIES}
-    ${X11_LIBRARIES}
-    ${OPENCV_LIBRARIES}
 )
+
+target_include_directories(ueberzug PRIVATE
+    "${CMAKE_SOURCE_DIR}/include"
+    "${PROJECT_BINARY_DIR}"
+)
+target_sources(ueberzug PRIVATE ${UEBERZUG_SOURCES})
+target_link_libraries(ueberzug PRIVATE ${UEBERZUG_LIBRARIES})
 
 install(TARGETS ueberzug
     CONFIGURATIONS Release Debug None
