@@ -22,6 +22,9 @@
 #ifdef ENABLE_X11
 #   include "canvas/x11/x11.hpp"
 #endif
+#ifdef ENABLE_SWAY
+#   include "canvas/sway.hpp"
+#endif
 #include "flags.hpp"
 #include "os.hpp"
 
@@ -46,6 +49,9 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
 #else
     logger->debug("X11 support not compiled in the binary");
 #endif
+    if (flags->output == "sway") {
+        return std::make_unique<SwayCanvas>();
+    }
     if (flags->output == "kitty") {
         return std::make_unique<KittyCanvas>();
     }

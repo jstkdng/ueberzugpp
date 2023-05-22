@@ -113,7 +113,7 @@ if(FC_LIBS)
 endif()
 
 if(ENABLE_X11)
-    add_compile_definitions(ENABLE_X11)
+    target_compile_definitions(ueberzug PRIVATE ENABLE_X11)
     find_package(X11 REQUIRED)
     pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
     list(APPEND UEBERZUG_SOURCES
@@ -128,16 +128,21 @@ if(ENABLE_X11)
 endif()
 
 if(ENABLE_SWAY)
+    target_compile_definitions(ueberzug PRIVATE ENABLE_SWAY)
     find_package(ECM REQUIRED NO_MODULE)
-    set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
+    list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
     find_package(Wayland REQUIRED COMPONENTS Client)
     find_package(WaylandProtocols REQUIRED)
     find_package(WaylandScanner REQUIRED)
 
-    ecm_add_wayland_client_protocol(ueberzug
+    ecm_add_wayland_client_protocol(UEBERZUG_SOURCES
         PROTOCOL "${WaylandProtocols_DATADIR}/stable/xdg-shell/xdg-shell.xml"
         BASENAME "xdg-shell")
+
+    list(APPEND UEBERZUG_SOURCES
+        "src/canvas/sway.cpp"
+    )
 
     list(APPEND UEBERZUG_LIBRARIES
         Wayland::Client

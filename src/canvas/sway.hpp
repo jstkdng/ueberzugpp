@@ -14,49 +14,39 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SIXEL_CANVAS__
-#define __SIXEL_CANVAS__
+#ifndef __SWAY_CANVAS__
+#define __SWAY_CANVAS__
 
 #include "canvas.hpp"
-#include "image.hpp"
-#include "terminal.hpp"
 #include "dimensions.hpp"
+#include "terminal.hpp"
 
-#include <memory>
-#include <thread>
-#include <atomic>
+#include <wayland-client.h>
 
-#include <sixel.h>
-#include <spdlog/spdlog.h>
-
-class SixelCanvas : public Canvas
+class SwayCanvas : public Canvas
 {
 public:
-    explicit SixelCanvas();
-    ~SixelCanvas() override;
+    explicit SwayCanvas();
+    ~SwayCanvas() override;
+
+    static void registry_handle_global(void *data, struct wl_registry *registry,
+        uint32_t name, const char *interface, uint32_t version);
+    static void registry_handle_global_remove(void *data, struct wl_registry *registry,
+        uint32_t name);
 
     void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
     void clear() override;
 
 private:
-    sixel_dither_t *dither = nullptr;
-    sixel_output_t *output = nullptr;
-    std::unique_ptr<Image> image;
-    std::shared_ptr<spdlog::logger> logger;
-
-    std::thread draw_thread;
-    std::atomic<bool> can_draw {true};
-
-    std::string str;
+    struct wl_display* display = nullptr;
+    struct wl_registry* registry = nullptr;
+    struct wl_shm *shm = nullptr;
 
     int x;
     int y;
-    int horizontal_cells = 0;
-    int vertical_cells = 0;
 
-    void draw_frame();
+    std::unique_ptr<Image> image;
 };
-
 
 #endif
