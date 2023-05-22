@@ -20,8 +20,10 @@
 #include "canvas.hpp"
 #include "dimensions.hpp"
 #include "terminal.hpp"
+#include "shm.hpp"
 
 #include <wayland-client.h>
+#include <memory>
 
 class SwayCanvas : public Canvas
 {
@@ -29,21 +31,21 @@ public:
     explicit SwayCanvas();
     ~SwayCanvas() override;
 
-    static void registry_handle_global(void *data, struct wl_registry *registry,
+    static void registry_handle_global(void *data, wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version);
-    static void registry_handle_global_remove(void *data, struct wl_registry *registry,
+    static void registry_handle_global_remove(void *data, wl_registry *registry,
         uint32_t name);
 
     void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
     void clear() override;
 
-    struct wl_compositor *compositor = nullptr;
-    struct wl_shm *shm = nullptr;
+    wl_compositor *compositor = nullptr;
+    std::unique_ptr<SwayShm> shm;
 
 private:
-    struct wl_display* display = nullptr;
-    struct wl_registry* registry = nullptr;
+    wl_display* display = nullptr;
+    wl_registry* registry = nullptr;
 
     int x;
     int y;

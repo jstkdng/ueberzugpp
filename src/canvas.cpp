@@ -23,7 +23,7 @@
 #   include "canvas/x11/x11.hpp"
 #endif
 #ifdef ENABLE_SWAY
-#   include "canvas/sway.hpp"
+#   include "canvas/sway/sway.hpp"
 #endif
 #include "flags.hpp"
 #include "os.hpp"

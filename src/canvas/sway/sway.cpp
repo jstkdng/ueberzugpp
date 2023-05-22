@@ -22,23 +22,23 @@
 #include <string_view>
 #include <fmt/format.h>
 
-void SwayCanvas::registry_handle_global(void *data, struct wl_registry *registry,
+void SwayCanvas::registry_handle_global(void *data, wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version)
 {
     std::string_view interface_str { interface };
     auto *canvas = reinterpret_cast<SwayCanvas*>(data);
     if (interface_str == wl_compositor_interface.name) {
-        canvas->compositor = reinterpret_cast<struct wl_compositor*>(
+        canvas->compositor = reinterpret_cast<wl_compositor*>(
             wl_registry_bind(registry, name, &wl_compositor_interface, version)
         );
     } else if (interface_str == wl_shm_interface.name) {
-        canvas->shm = reinterpret_cast<struct wl_shm*>(
+        canvas->shm->shm = reinterpret_cast<wl_shm*>(
             wl_registry_bind(registry, name, &wl_shm_interface, version)
         );
     }
 }
 
-void SwayCanvas::registry_handle_global_remove(void *data, struct wl_registry *registry,
+void SwayCanvas::registry_handle_global_remove(void *data, wl_registry *registry,
         uint32_t name)
 {
     std::ignore = data;
@@ -46,7 +46,7 @@ void SwayCanvas::registry_handle_global_remove(void *data, struct wl_registry *r
     std::ignore = name;
 }
 
-constexpr struct wl_registry_listener registry_listener = {
+constexpr wl_registry_listener registry_listener = {
     .global = SwayCanvas::registry_handle_global,
     .global_remove = SwayCanvas::registry_handle_global_remove
 };
@@ -58,12 +58,24 @@ display(wl_display_connect(nullptr))
         throw std::runtime_error("Failed to connect to wayland display.");
     }
     registry = wl_display_get_registry(display);
+    constexpr int screen_width = 1920;
+    constexpr int screen_height = 1080;
+    shm = std::make_unique<SwayShm>(screen_width, screen_height);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
+
+    shm->allocate_pool_buffers();
 }
 
 SwayCanvas::~SwayCanvas()
 {
+    shm.reset();
+    if (compositor != nullptr) {
+        wl_compositor_destroy(compositor);
+    }
+    if (registry != nullptr) {
+        wl_registry_destroy(registry);
+    }
     wl_display_disconnect(display);
 }
 
