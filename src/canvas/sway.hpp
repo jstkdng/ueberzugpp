@@ -38,10 +38,12 @@ public:
     void draw() override;
     void clear() override;
 
+    struct wl_compositor *compositor = nullptr;
+    struct wl_shm *shm = nullptr;
+
 private:
     struct wl_display* display = nullptr;
     struct wl_registry* registry = nullptr;
-    struct wl_shm *shm = nullptr;
 
     int x;
     int y;

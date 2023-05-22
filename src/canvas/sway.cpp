@@ -18,20 +18,24 @@
 //#include "wayland-xdg-shell-client-protocol.h"
 
 #include <iostream>
+#include <array>
 #include <string_view>
 #include <fmt/format.h>
 
 void SwayCanvas::registry_handle_global(void *data, struct wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version)
 {
-    std::ignore = registry;
-    std::ignore = data;
-    std::string_view interface_str = interface;
-    if (interface_str == wl_shm_interface.name) {
-        std::cout << "bruh" << std::endl;
+    std::string_view interface_str { interface };
+    auto *canvas = reinterpret_cast<SwayCanvas*>(data);
+    if (interface_str == wl_compositor_interface.name) {
+        canvas->compositor = reinterpret_cast<struct wl_compositor*>(
+            wl_registry_bind(registry, name, &wl_compositor_interface, version)
+        );
+    } else if (interface_str == wl_shm_interface.name) {
+        canvas->shm = reinterpret_cast<struct wl_shm*>(
+            wl_registry_bind(registry, name, &wl_shm_interface, version)
+        );
     }
-    std::cout << fmt::format(R"(interface: "{}", version: {}, name: {})",
-            interface, version, name) << std::endl;
 }
 
 void SwayCanvas::registry_handle_global_remove(void *data, struct wl_registry *registry,
