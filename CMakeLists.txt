@@ -132,6 +132,7 @@ if(ENABLE_SWAY)
     find_package(ECM REQUIRED NO_MODULE)
     list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
+    find_library(LIBRT rt REQUIRED)
     find_package(Wayland REQUIRED COMPONENTS Client)
     find_package(WaylandProtocols REQUIRED)
     find_package(WaylandScanner REQUIRED)
@@ -147,6 +148,7 @@ if(ENABLE_SWAY)
 
     list(APPEND UEBERZUG_LIBRARIES
         Wayland::Client
+        ${LIBRT}
     )
 endif()
 
