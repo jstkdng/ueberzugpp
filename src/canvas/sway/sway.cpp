@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sway.hpp"
-#include "application.hpp"
 
 #include <iostream>
 #include <array>
@@ -48,7 +47,7 @@ void SwayCanvas::registry_handle_global(void *data, wl_registry *registry,
             wl_registry_bind(registry, name, &wl_compositor_interface, version)
         );
     } else if (interface_str == wl_shm_interface.name) {
-        canvas->shm->shm = reinterpret_cast<struct wl_shm*>(
+        canvas->wl_shm = reinterpret_cast<struct wl_shm*>(
             wl_registry_bind(registry, name, &wl_shm_interface, version)
         );
     } else if (interface_str == xdg_wm_base_interface.name) {
@@ -78,23 +77,18 @@ void SwayCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_surfa
     auto *canvas = reinterpret_cast<SwayCanvas*>(data);
     xdg_surface_ack_configure(xdg_surface, serial);
 
-    if (canvas->shm->buffer == nullptr) {
-        return;
-    }
-
+    std::memcpy(canvas->shm->get_data(), canvas->image->data(), canvas->image->size());
     wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
     wl_surface_commit(canvas->surface);
 }
 
 SwayCanvas::SwayCanvas():
-display(wl_display_connect(nullptr)),
-stop_flag(Application::stop_flag_)
+display(wl_display_connect(nullptr))
 {
     if (display == nullptr) {
         throw std::runtime_error("Failed to connect to wayland display.");
     }
     registry = wl_display_get_registry(display);
-    shm = std::make_unique<SwayShm>();
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
 }
@@ -122,6 +116,7 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
     width = image->width();
     height = image->height();
 
+    shm = std::make_unique<SwayShm>(width, height, wl_shm);
     surface = wl_compositor_create_surface(compositor);
     xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this);
@@ -129,11 +124,19 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
     xdg_toplevel_set_title(xdg_toplevel, "Example client");
     wl_surface_commit(surface);
 
+    event_handler = std::thread([&] {
+        handle_events();
+    });
+}
+
+void SwayCanvas::handle_events()
+{
+    const int waitms = 100;
     struct pollfd fds;
     fds.fd = wl_display_get_fd(display);
     fds.events = POLLIN;
 
-    while (true) {
+    while (!stop_flag.load()) {
         // prepare to read wayland events
         while (wl_display_prepare_read(display) != 0) {
             wl_display_dispatch_pending(display);
@@ -141,11 +144,8 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
         wl_display_flush(display);
 
         // poll events
-        if (poll(&fds, 1, 100) <= 0) {
+        if (poll(&fds, 1, waitms) <= 0) {
             wl_display_cancel_read(display);
-            if (stop_flag.load()) {
-                break;
-            }
             continue;
         }
 
@@ -161,11 +161,33 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
 
 void SwayCanvas::draw()
 {
-    shm->initialize(image->width(), image->height());
-    std::memcpy(shm->get_data(), image->data(), image->size());
-    wl_surface_attach(surface, shm->buffer, 0, 0);
-    wl_surface_commit(surface);
+    //std::memcpy(shm->get_data(), image->data(), image->size());
+    //wl_surface_attach(surface, shm->buffer, 0, 0);
+    //wl_surface_commit(surface);
 }
 
 void SwayCanvas::clear()
-{}
+{
+    if (surface == nullptr) {
+        return;
+    }
+    stop_flag.store(true);
+    wl_surface_attach(surface, shm->buffer, 0, 0);
+    wl_surface_commit(surface);
+    if (event_handler.joinable()) {
+        event_handler.join();
+    }
+    stop_flag.store(false);
+    if (xdg_toplevel != nullptr) {
+        xdg_toplevel_destroy(xdg_toplevel);
+    }
+    if (xdg_surface != nullptr) {
+        xdg_surface_destroy(xdg_surface);
+    }
+    if (surface != nullptr) {
+        wl_surface_destroy(surface);
+        surface = nullptr;
+    }
+    wl_display_flush(display);
+    shm.reset();
+}

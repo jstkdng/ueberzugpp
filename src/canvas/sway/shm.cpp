@@ -27,21 +27,14 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-constexpr wl_buffer_listener buffer_listener = {
-    .release = SwayShm::release_buffer
-};
-
-SwayShm::SwayShm()
+SwayShm::SwayShm(int width, int height, struct wl_shm* shm):
+shm(shm),
+width(width),
+height(height),
+stride(width * 4),
+pool_size(height * stride * 2)
 {
     shm_path = fmt::format("/{}", util::generate_uuid_v4());
-}
-
-void SwayShm::initialize(int width, int height)
-{
-    this->width = width;
-    this->height = height;
-    stride = width * 4;
-    pool_size = height * stride * 2;
     create_shm_file();
     allocate_pool_buffers();
 }
@@ -63,7 +56,6 @@ void SwayShm::allocate_pool_buffers()
     }
     pool = wl_shm_create_pool(shm, fd, pool_size);
     buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
-    //wl_buffer_add_listener(buffer, &buffer_listener, nullptr);
 }
 
 auto SwayShm::get_data(uint32_t offset) -> uint32_t*
@@ -82,17 +74,7 @@ SwayShm::~SwayShm()
     if (pool != nullptr) {
         wl_shm_pool_destroy(pool);
     }
-    if (shm != nullptr) {
-        wl_shm_destroy(shm);
-    }
     if (buffer != nullptr) {
         wl_buffer_destroy(buffer);
     }
 }
-
-void SwayShm::release_buffer(void *data, struct wl_buffer *wl_buffer)
-{
-    std::ignore = data;
-    wl_buffer_destroy(wl_buffer);
-}
-

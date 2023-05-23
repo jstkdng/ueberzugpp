@@ -26,6 +26,7 @@
 #include <wayland-client.h>
 #include <memory>
 #include <atomic>
+#include <thread>
 
 class SwayCanvas : public Canvas
 {
@@ -46,6 +47,7 @@ public:
 
     struct wl_compositor* compositor = nullptr;
     struct wl_surface* surface = nullptr;
+    struct wl_shm* wl_shm = nullptr;
     struct xdg_wm_base* xdg_base = nullptr;
     struct xdg_surface* xdg_surface = nullptr;
     struct xdg_toplevel* xdg_toplevel = nullptr;
@@ -58,7 +60,10 @@ public:
 private:
     struct wl_display* display = nullptr;
     struct wl_registry* registry = nullptr;
-    const std::atomic<bool>& stop_flag;
+    std::atomic<bool> stop_flag {false};
+    std::thread event_handler;
+
+    void handle_events();
 
     int x;
     int y;

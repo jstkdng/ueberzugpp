@@ -24,19 +24,17 @@
 class SwayShm
 {
 public:
-    SwayShm();
+    SwayShm(int width, int height, struct wl_shm* shm);
     ~SwayShm();
-    void initialize(int width, int height);
     auto get_data(uint32_t offset = 0) -> uint32_t*;
-    static void release_buffer(void *data, struct wl_buffer *wl_buffer);
 
-    struct wl_shm* shm = nullptr;
     struct wl_buffer* buffer = nullptr;
 private:
     void create_shm_file();
     void allocate_pool_buffers();
 
     struct wl_shm_pool* pool = nullptr;
+    struct wl_shm* shm = nullptr;
 
     int fd = 0;
     std::string shm_path;
