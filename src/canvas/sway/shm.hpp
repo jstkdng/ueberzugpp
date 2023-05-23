@@ -24,28 +24,29 @@
 class SwayShm
 {
 public:
-    SwayShm(int width, int height);
+    SwayShm();
     ~SwayShm();
-    void allocate_pool_buffers();
+    void initialize(int width, int height);
     auto get_data(uint32_t offset = 0) -> uint32_t*;
-    static void release_buffer(void *data, wl_buffer *wl_buffer);
+    static void release_buffer(void *data, struct wl_buffer *wl_buffer);
 
-    wl_shm* shm = nullptr;
-    wl_buffer* buffer = nullptr;
+    struct wl_shm* shm = nullptr;
+    struct wl_buffer* buffer = nullptr;
 private:
     void create_shm_file();
+    void allocate_pool_buffers();
 
-    wl_shm_pool* pool = nullptr;
+    struct wl_shm_pool* pool = nullptr;
 
     int fd = 0;
     std::string shm_path;
     uint8_t *pool_data;
     std::vector<wl_buffer*> buffers;
 
-    const int width = 0;
-    const int height = 0;
-    const int stride = 0;
-    const int pool_size = 0;
+    int width = 0;
+    int height = 0;
+    int stride = 0;
+    int pool_size = 0;
 };
 
 #endif

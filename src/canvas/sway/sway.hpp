@@ -23,9 +23,9 @@
 #include "shm.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 
-
 #include <wayland-client.h>
 #include <memory>
+#include <atomic>
 
 class SwayCanvas : public Canvas
 {
@@ -33,30 +33,35 @@ public:
     explicit SwayCanvas();
     ~SwayCanvas() override;
 
-    static void registry_handle_global(void *data, wl_registry *registry,
+    static void registry_handle_global(void *data, struct wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version);
-    static void registry_handle_global_remove(void *data, wl_registry *registry,
+    static void registry_handle_global_remove(void *data, struct wl_registry *registry,
         uint32_t name);
+    static void xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
+    static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
 
     void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
     void clear() override;
 
-    wl_compositor* compositor = nullptr;
-    wl_surface* surface = nullptr;
+    struct wl_compositor* compositor = nullptr;
+    struct wl_surface* surface = nullptr;
     struct xdg_wm_base* xdg_base = nullptr;
     struct xdg_surface* xdg_surface = nullptr;
     struct xdg_toplevel* xdg_toplevel = nullptr;
     std::unique_ptr<SwayShm> shm;
+    std::unique_ptr<Image> image;
+
+    int width;
+    int height;
 
 private:
-    wl_display* display = nullptr;
-    wl_registry* registry = nullptr;
+    struct wl_display* display = nullptr;
+    struct wl_registry* registry = nullptr;
+    const std::atomic<bool>& stop_flag;
 
     int x;
     int y;
-
-    std::unique_ptr<Image> image;
 };
 
 #endif
