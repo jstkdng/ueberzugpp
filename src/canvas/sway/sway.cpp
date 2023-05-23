@@ -45,15 +45,15 @@ void SwayCanvas::registry_handle_global(void *data, wl_registry *registry,
     auto *canvas = reinterpret_cast<SwayCanvas*>(data);
     if (interface_str == wl_compositor_interface.name) {
         canvas->compositor = reinterpret_cast<struct wl_compositor*>(
-            wl_registry_bind(registry, name, &wl_compositor_interface, 4)
+            wl_registry_bind(registry, name, &wl_compositor_interface, version)
         );
     } else if (interface_str == wl_shm_interface.name) {
         canvas->shm->shm = reinterpret_cast<struct wl_shm*>(
-            wl_registry_bind(registry, name, &wl_shm_interface, 1)
+            wl_registry_bind(registry, name, &wl_shm_interface, version)
         );
     } else if (interface_str == xdg_wm_base_interface.name) {
         canvas->xdg_base = reinterpret_cast<struct xdg_wm_base*>(
-            wl_registry_bind(registry, name, &xdg_wm_base_interface, 1)
+            wl_registry_bind(registry, name, &xdg_wm_base_interface, version)
         );
         xdg_wm_base_add_listener(canvas->xdg_base, &xdg_wm_base_listener, canvas);
     }
@@ -78,8 +78,9 @@ void SwayCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_surfa
     auto *canvas = reinterpret_cast<SwayCanvas*>(data);
     xdg_surface_ack_configure(xdg_surface, serial);
 
-    auto *img_data = canvas->shm->get_data();
-    std::memcpy(img_data, canvas->image->data(), canvas->image->size());
+    if (canvas->shm->buffer == nullptr) {
+        return;
+    }
 
     wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
     wl_surface_commit(canvas->surface);
@@ -96,9 +97,6 @@ stop_flag(Application::stop_flag_)
     shm = std::make_unique<SwayShm>();
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
-
-    surface = wl_compositor_create_surface(compositor);
-    xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
 }
 
 SwayCanvas::~SwayCanvas()
@@ -110,6 +108,9 @@ SwayCanvas::~SwayCanvas()
     if (registry != nullptr) {
         wl_registry_destroy(registry);
     }
+    if (surface != nullptr) {
+        wl_surface_destroy(surface);
+    }
     wl_display_disconnect(display);
 }
 
@@ -120,7 +121,9 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
     y = dimensions.y;
     width = image->width();
     height = image->height();
-    shm->initialize(image->width(), image->height());
+
+    surface = wl_compositor_create_surface(compositor);
+    xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this);
     xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
     xdg_toplevel_set_title(xdg_toplevel, "Example client");
@@ -157,7 +160,12 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
 }
 
 void SwayCanvas::draw()
-{}
+{
+    shm->initialize(image->width(), image->height());
+    std::memcpy(shm->get_data(), image->data(), image->size());
+    wl_surface_attach(surface, shm->buffer, 0, 0);
+    wl_surface_commit(surface);
+}
 
 void SwayCanvas::clear()
 {}
