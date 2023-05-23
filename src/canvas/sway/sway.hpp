@@ -46,6 +46,7 @@ public:
     void clear() override;
 
     struct wl_compositor* compositor = nullptr;
+    struct wl_output* output = nullptr;
     struct wl_surface* surface = nullptr;
     struct wl_shm* wl_shm = nullptr;
     struct xdg_wm_base* xdg_base = nullptr;
