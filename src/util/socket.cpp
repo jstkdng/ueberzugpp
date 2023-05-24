@@ -46,17 +46,30 @@ fd(socket(AF_UNIX, SOCK_STREAM, 0))
 
 void UnixSocket::write(const void* data, std::size_t len) const
 {
-    const auto status = send(fd, data, len, 0);
-    if (status == -1) {
-        throw std::runtime_error(std::strerror(errno));
+    const auto *runner = reinterpret_cast<const uint8_t*>(data);
+    while (len != 0) {
+        const auto status = send(fd, runner, len, MSG_NOSIGNAL);
+        if (status == -1) {
+            throw std::runtime_error(std::strerror(errno));
+        }
+        len -= status;
+        runner += status;
     }
 }
 
 void UnixSocket::read(void* data, std::size_t len) const
 {
-    const auto status = recv(fd, data, len, 0);
-    if (status == -1) {
-        throw std::runtime_error(std::strerror(errno));
+    auto *runner = reinterpret_cast<uint8_t*>(data);
+    while (len != 0) {
+        const auto status = recv(fd, runner, len, 0);
+        if (status == 0) {
+            return; // no data
+        }
+        if (status == -1) {
+            throw std::runtime_error(std::strerror(errno));
+        }
+        len -= status;
+        runner += status;
     }
 }
 

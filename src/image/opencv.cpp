@@ -125,20 +125,10 @@ void OpencvImage::process_image()
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
         }
-    } else if (flags->output == "x11" || flags->output == "chafa") {
+    } else if (flags->output == "x11" || flags->output == "chafa" || flags->output == "sway") {
         if (image.channels() == 3) {
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
-    } else if (flags->output == "sway") {
-        if (image.channels() == 3) {
-            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
-        }
-        cv::Mat abgr(image.size(), image.type());
-        const auto from_to = std::to_array<int>({
-            0,3, 1,1, 2,2, 3,0
-        });
-        cv::mixChannels(&image, 1, &image, 1, from_to.data(), 4);
     }
-
     _size = image.total() * image.elemSize();
 }

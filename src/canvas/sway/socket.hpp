@@ -37,6 +37,7 @@ public:
     auto current_window() -> nlohmann::json;
     auto current_workspace() -> nlohmann::json;
     auto ipc_command(std::string_view appid, std::string_view command) -> nlohmann::json;
+    auto ipc_command(std::string_view command) -> nlohmann::json;
 
 private:
     std::unique_ptr<UnixSocket> socket;

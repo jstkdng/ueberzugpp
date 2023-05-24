@@ -18,6 +18,7 @@
 #include "util.hpp"
 
 #include <unordered_set>
+#include <algorithm>
 #ifdef ENABLE_OPENCV
     #include <opencv2/videoio.hpp>
 #endif
@@ -171,7 +172,7 @@ auto LibvipsImage::process_image() -> void
         if (image.has_alpha()) {
             image = image.flatten();
         }
-    } else if (flags->output == "x11" || flags->output == "chafa") {
+    } else if (flags->output == "x11" || flags->output == "chafa" || flags->output == "sway") {
         // alpha channel required
         if (!image.has_alpha()) {
             const int alpha_value = 255;
@@ -183,14 +184,7 @@ auto LibvipsImage::process_image() -> void
         bands[0] = bands[2];
         bands[2] = tmp;
         image = VImage::bandjoin(bands);
-    } else if (flags->output == "sway") {
-        // alpha channel required
-        if (!image.has_alpha()) {
-            const int alpha_value = 255;
-            image = image.bandjoin(alpha_value);
-        }
     }
-
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
     _data.reset(static_cast<unsigned char*>(image.write_to_memory(&_size)));
 }

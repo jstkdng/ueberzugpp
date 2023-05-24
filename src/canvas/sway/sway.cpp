@@ -45,10 +45,6 @@ void SwayCanvas::registry_handle_global(void *data, wl_registry *registry,
         canvas->compositor = reinterpret_cast<struct wl_compositor*>(
             wl_registry_bind(registry, name, &wl_compositor_interface, version)
         );
-    } else if (interface_str == wl_output_interface.name) {
-        canvas->output = reinterpret_cast<struct wl_output*>(
-            wl_registry_bind(registry, name, &wl_output_interface, version)
-        );
     } else if (interface_str == wl_shm_interface.name) {
         canvas->wl_shm = reinterpret_cast<struct wl_shm*>(
             wl_registry_bind(registry, name, &wl_shm_interface, version)
@@ -98,10 +94,10 @@ display(wl_display_connect(nullptr))
     const auto& win_rect = cur_window["window_rect"];
     const auto& global_rect = cur_window["rect"];
     const auto& wrks_rect = cur_workspace["rect"];
-    x = static_cast<int>(win_rect["x"]) +
+    sway_x = static_cast<int>(win_rect["x"]) +
         static_cast<int>(global_rect["x"]) -
         static_cast<int>(wrks_rect["x"]);
-    y = static_cast<int>(win_rect["y"]) +
+    sway_y = static_cast<int>(win_rect["y"]) +
         static_cast<int>(global_rect["y"]) -
         static_cast<int>(wrks_rect["y"]);
 }
@@ -111,9 +107,6 @@ SwayCanvas::~SwayCanvas()
     shm.reset();
     if (wl_shm != nullptr) {
         wl_shm_destroy(wl_shm);
-    }
-    if (output != nullptr) {
-        wl_output_destroy(output);
     }
     if (compositor != nullptr) {
         wl_compositor_destroy(compositor);
@@ -130,11 +123,13 @@ SwayCanvas::~SwayCanvas()
 void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     image = std::move(new_image);
-    x += dimensions.xpixels();
-    y += dimensions.ypixels();
+    x = sway_x + dimensions.xpixels();
+    y = sway_y + dimensions.ypixels();
     width = image->width();
     height = image->height();
 
+    // TODO: change appid
+    socket.ipc_command("no_focus [app_id=ueberzugpp]");
     socket.ipc_command("ueberzugpp", "floating enable");
     socket.ipc_command("ueberzugpp", fmt::format("move absolute position {} {}", x, y));
 

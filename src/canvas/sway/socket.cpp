@@ -101,3 +101,8 @@ auto SwaySocket::ipc_command(std::string_view appid, std::string_view command) -
     const auto cmd = fmt::format("for_window [app_id={}] {}", appid, command);
     return ipc_message(IPC_COMMAND, cmd);
 }
+
+auto SwaySocket::ipc_command(std::string_view command) -> nlohmann::json
+{
+    return ipc_message(IPC_COMMAND, command);
+}

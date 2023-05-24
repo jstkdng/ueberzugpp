@@ -47,7 +47,6 @@ public:
     void clear() override;
 
     struct wl_compositor* compositor = nullptr;
-    struct wl_output* output = nullptr;
     struct wl_surface* surface = nullptr;
     struct wl_shm* wl_shm = nullptr;
     struct xdg_wm_base* xdg_base = nullptr;
@@ -69,8 +68,10 @@ private:
 
     void handle_events();
 
-    int x;
-    int y;
+    int sway_x = 0;
+    int sway_y = 0;
+    int x = 0;
+    int y = 0;
 };
 
 #endif
