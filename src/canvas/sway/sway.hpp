@@ -46,6 +46,10 @@ public:
     void draw() override;
     void clear() override;
 
+    void show() override;
+    void hide() override;
+    void toggle() override;
+
     struct wl_compositor* compositor = nullptr;
     struct wl_surface* surface = nullptr;
     struct wl_shm* wl_shm = nullptr;
@@ -72,6 +76,7 @@ private:
     int sway_y = 0;
     int x = 0;
     int y = 0;
+    bool visible = false;
 };
 
 #endif

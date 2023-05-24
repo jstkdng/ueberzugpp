@@ -110,6 +110,34 @@ display(wl_display_connect(nullptr))
     socket.ipc_command("ueberzugpp", "floating enable");
 }
 
+void SwayCanvas::toggle()
+{
+    if (visible) {
+        clear();
+    } else {
+        draw();
+    }
+    visible = !visible;
+}
+
+void SwayCanvas::show()
+{
+    if (visible) {
+        return;
+    }
+    visible = true;
+    draw();
+}
+
+void SwayCanvas::hide()
+{
+    if (!visible) {
+        return;
+    }
+    visible = false;
+    clear();
+}
+
 SwayCanvas::~SwayCanvas()
 {
     stop_flag.store(true);
@@ -184,6 +212,7 @@ void SwayCanvas::draw()
     xdg_toplevel_set_app_id(xdg_toplevel, "ueberzugpp");
     xdg_toplevel_set_title(xdg_toplevel, "ueberzugpp: image window");
     wl_surface_commit(surface);
+    visible = true;
 }
 
 void SwayCanvas::clear()
