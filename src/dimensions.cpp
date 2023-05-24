@@ -40,22 +40,22 @@ void Dimensions::read_offsets()
     y = orig_y + offset_y;
 }
 
-auto Dimensions::xpixels() const -> uint32_t
+auto Dimensions::xpixels() const -> int
 {
     return x * terminal.font_width;
 }
 
-auto Dimensions::ypixels() const -> uint32_t
+auto Dimensions::ypixels() const -> int
 {
     return y * terminal.font_height;
 }
 
-auto Dimensions::max_wpixels() const -> uint32_t
+auto Dimensions::max_wpixels() const -> int
 {
     return max_w * terminal.font_width;
 }
 
-auto Dimensions::max_hpixels() const -> uint32_t
+auto Dimensions::max_hpixels() const -> int
 {
     return max_h * terminal.font_height;
 }

@@ -14,37 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __DIMENSIONS__
-#define __DIMENSIONS__
+#ifndef __UTIL_SOCKET__
+#define __UTIL_SOCKET__
 
-#include "terminal.hpp"
+#include <string_view>
+#include <cstdint>
 
-class Dimensions
+class UnixSocket
 {
 public:
-    Dimensions(const Terminal& terminal, uint16_t xcoord, uint16_t ycoord,
-            int max_w, int max_h, std::string scaler);
+    explicit UnixSocket(std::string_view endpoint);
 
-    [[nodiscard]] auto xpixels() const -> int;
-    [[nodiscard]] auto ypixels() const -> int;
-    [[nodiscard]] auto max_wpixels() const -> int;
-    [[nodiscard]] auto max_hpixels() const -> int;
+    void write(const void* data, std::size_t len) const;
+    void read(void* data, std::size_t len) const;
 
-    uint16_t x;
-    uint16_t y;
-    uint16_t max_w;
-    uint16_t max_h;
-    uint16_t padding_horizontal;
-    uint16_t padding_vertical;
-    std::string scaler;
-    const Terminal& terminal;
-
+    ~UnixSocket();
 private:
-
-    uint16_t orig_x;
-    uint16_t orig_y;
-
-    void read_offsets();
+    int fd;
 };
 
 #endif

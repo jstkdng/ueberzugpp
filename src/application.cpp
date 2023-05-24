@@ -253,7 +253,6 @@ void Application::socket_loop()
     auto idbuf = zmq::buffer(data);
     while (true) {
         zmq::message_t request;
-        zmq::message_t sockid;
         try {
             std::ignore = socket.recv(idbuf, zmq::recv_flags::none);
             std::ignore = socket.recv(request, zmq::recv_flags::none);

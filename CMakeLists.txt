@@ -144,6 +144,7 @@ if(ENABLE_SWAY)
     list(APPEND UEBERZUG_SOURCES
         "src/canvas/sway/sway.cpp"
         "src/canvas/sway/shm.cpp"
+        "src/canvas/sway/socket.cpp"
     )
 
     list(APPEND UEBERZUG_LIBRARIES
@@ -206,6 +207,7 @@ list(APPEND UEBERZUG_SOURCES
     "src/dimensions.cpp"
     "src/flags.cpp"
     "src/util/util.cpp"
+    "src/util/socket.cpp"
 
     "src/canvas.cpp"
     "src/canvas/sixel.cpp"

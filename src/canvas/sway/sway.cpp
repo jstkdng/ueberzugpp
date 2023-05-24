@@ -92,6 +92,18 @@ display(wl_display_connect(nullptr))
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
+
+    const auto cur_window = socket.current_window();
+    const auto cur_workspace = socket.current_workspace();
+    const auto& win_rect = cur_window["window_rect"];
+    const auto& global_rect = cur_window["rect"];
+    const auto& wrks_rect = cur_workspace["rect"];
+    x = static_cast<int>(win_rect["x"]) +
+        static_cast<int>(global_rect["x"]) -
+        static_cast<int>(wrks_rect["x"]);
+    y = static_cast<int>(win_rect["y"]) +
+        static_cast<int>(global_rect["y"]) -
+        static_cast<int>(wrks_rect["y"]);
 }
 
 SwayCanvas::~SwayCanvas()
@@ -118,10 +130,13 @@ SwayCanvas::~SwayCanvas()
 void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     image = std::move(new_image);
-    x = dimensions.x;
-    y = dimensions.y;
+    x += dimensions.xpixels();
+    y += dimensions.ypixels();
     width = image->width();
     height = image->height();
+
+    socket.ipc_command("ueberzugpp", "floating enable");
+    socket.ipc_command("ueberzugpp", fmt::format("move absolute position {} {}", x, y));
 
     event_handler = std::thread([&] {
         handle_events();
@@ -165,8 +180,8 @@ void SwayCanvas::draw()
     xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this);
     xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
-    xdg_toplevel_set_title(xdg_toplevel, "ueberzugpp: image window");
     xdg_toplevel_set_app_id(xdg_toplevel, "ueberzugpp");
+    xdg_toplevel_set_title(xdg_toplevel, "ueberzugpp: image window");
     wl_surface_commit(surface);
 }
 

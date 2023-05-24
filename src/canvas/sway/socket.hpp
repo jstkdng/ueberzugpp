@@ -14,37 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __DIMENSIONS__
-#define __DIMENSIONS__
+#ifndef __SWAY_SOCKET__
+#define __SWAY_SOCKET__
 
-#include "terminal.hpp"
+#include "util/socket.hpp"
 
-class Dimensions
+#include <string_view>
+#include <memory>
+#include <nlohmann/json.hpp>
+
+enum ipc_message_type {
+    IPC_COMMAND = 0,
+    IPC_GET_WORKSPACES = 1,
+    IPC_GET_TREE = 4
+};
+
+class SwaySocket
 {
 public:
-    Dimensions(const Terminal& terminal, uint16_t xcoord, uint16_t ycoord,
-            int max_w, int max_h, std::string scaler);
-
-    [[nodiscard]] auto xpixels() const -> int;
-    [[nodiscard]] auto ypixels() const -> int;
-    [[nodiscard]] auto max_wpixels() const -> int;
-    [[nodiscard]] auto max_hpixels() const -> int;
-
-    uint16_t x;
-    uint16_t y;
-    uint16_t max_w;
-    uint16_t max_h;
-    uint16_t padding_horizontal;
-    uint16_t padding_vertical;
-    std::string scaler;
-    const Terminal& terminal;
+    SwaySocket();
+    ~SwaySocket() = default;
+    auto current_window() -> nlohmann::json;
+    auto current_workspace() -> nlohmann::json;
+    auto ipc_command(std::string_view appid, std::string_view command) -> nlohmann::json;
 
 private:
-
-    uint16_t orig_x;
-    uint16_t orig_y;
-
-    void read_offsets();
+    std::unique_ptr<UnixSocket> socket;
+    auto ipc_message(ipc_message_type type, std::string_view payload = "") -> nlohmann::json;
 };
 
 #endif

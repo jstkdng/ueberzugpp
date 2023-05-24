@@ -21,6 +21,7 @@
 #include "dimensions.hpp"
 #include "terminal.hpp"
 #include "shm.hpp"
+#include "socket.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 
 #include <wayland-client.h>
@@ -63,6 +64,8 @@ private:
     struct wl_registry* registry = nullptr;
     std::atomic<bool> stop_flag {false};
     std::thread event_handler;
+
+    SwaySocket socket;
 
     void handle_events();
 
