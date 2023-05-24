@@ -104,6 +104,10 @@ display(wl_display_connect(nullptr))
     sway_y = static_cast<int>(win_rect["y"]) +
         static_cast<int>(global_rect["y"]) -
         static_cast<int>(wrks_rect["y"]);
+
+    // TODO: change appid
+    socket.ipc_command("no_focus [app_id=ueberzugpp]");
+    socket.ipc_command("ueberzugpp", "floating enable");
 }
 
 SwayCanvas::~SwayCanvas()
@@ -137,9 +141,6 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
     width = image->width();
     height = image->height();
 
-    // TODO: change appid
-    socket.ipc_command("no_focus [app_id=ueberzugpp]");
-    socket.ipc_command("ueberzugpp", "floating enable");
     socket.ipc_command("ueberzugpp", fmt::format("move absolute position {} {}", x, y));
 }
 
