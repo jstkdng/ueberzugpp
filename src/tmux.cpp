@@ -118,7 +118,7 @@ void tmux::register_hooks()
     }
     for (const auto& hook: hooks) {
         const auto cmd = fmt::format(
-                R"(tmux set-hook -t {} {} "run-shell 'ueberzug tmux {} {}'")",
+                R"(tmux set-hook -t {} {} "run-shell 'ueberzugpp tmux {} {}'")",
                 get_pane(), hook, hook, os::get_pid());
         os::exec(cmd);
     }
