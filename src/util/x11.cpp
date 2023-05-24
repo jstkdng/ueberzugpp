@@ -20,16 +20,15 @@
 #include "util/ptr.hpp"
 #include "flags.hpp"
 
-#include <xcb/xcb.h>
 #include <string>
-#include <spdlog/spdlog.h>
+#include <stack>
+#include <xcb/xcb.h>
 
 X11Util::X11Util():
 connection(xcb_connect(nullptr, nullptr))
 {
     auto flags = Flags::instance();
     auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
-    const auto logger = spdlog::get("main");
     if (xcb_connection_has_error(connection) == 0) {
         screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
         if (xdg_session != "wayland" || flags->output == "x11") {
@@ -38,46 +37,50 @@ connection(xcb_connect(nullptr, nullptr))
     }
 }
 
+X11Util::X11Util(xcb_connection_t* connection):
+connection(connection),
+screen(xcb_setup_roots_iterator(xcb_get_setup(connection)).data),
+owns_connection(false)
+{}
+
 X11Util::~X11Util()
 {
-    xcb_disconnect(connection);
+    if (owns_connection) {
+        xcb_disconnect(connection);
+    }
 }
 
 auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
 {
-    const auto cookie = xcb_query_tree_unchecked(connection, screen->root);
     std::vector<xcb_window_t> windows;
-    get_server_window_ids_helper(windows, cookie);
+    std::stack<xcb_query_tree_cookie_t> cookies_st;
+
+    cookies_st.push(xcb_query_tree_unchecked(connection, screen->root));
+
+    while (!cookies_st.empty()) {
+        auto cookie = cookies_st.top();
+        cookies_st.pop();
+
+        auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
+            xcb_query_tree_reply(connection, cookie, nullptr)
+        };
+        if (reply.get() == nullptr) {
+            throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
+        }
+
+        const auto num_children = xcb_query_tree_children_length(reply.get());
+        if (num_children == 0) {
+            continue;
+        }
+        const auto *children = xcb_query_tree_children(reply.get());
+        for (int i = 0; i < num_children; ++i) {
+            auto child = children[i];
+            windows.push_back(child);
+            cookies_st.push(xcb_query_tree_unchecked(connection, child));
+        }
+    }
+
     return windows;
-}
-
-// NOLINTNEXTLINE(misc-no-recursion)
-void X11Util::get_server_window_ids_helper(std::vector<xcb_window_t> &windows, xcb_query_tree_cookie_t cookie) const
-{
-    auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
-        xcb_query_tree_reply(connection, cookie, nullptr)
-    };
-    if (reply.get() == nullptr) {
-        throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
-    }
-    const auto num_children = xcb_query_tree_children_length(reply.get());
-
-    if (num_children == 0) {
-        return;
-    }
-
-    const auto *children = xcb_query_tree_children(reply.get());
-    std::vector<xcb_query_tree_cookie_t> cookies;
-
-    for (int i = 0; i < num_children; ++i) {
-        auto child = children[i];
-        windows.push_back(child);
-        cookies.push_back(xcb_query_tree_unchecked(connection, child));
-    }
-
-    for (const auto new_cookie: cookies) {
-        get_server_window_ids_helper(windows, new_cookie);
-    }
 }
 
 auto X11Util::get_window_pid(xcb_window_t window) const -> int

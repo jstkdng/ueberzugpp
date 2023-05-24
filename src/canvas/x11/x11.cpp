@@ -26,7 +26,8 @@
 
 
 X11Canvas::X11Canvas():
-connection(xcb_connect(nullptr, nullptr))
+connection(xcb_connect(nullptr, nullptr)),
+xutil(connection)
 {
     if (xcb_connection_has_error(connection) != 0) {
         throw std::runtime_error("CANNOT CONNECT TO X11");

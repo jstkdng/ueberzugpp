@@ -45,9 +45,9 @@ public:
     void show() override;
 
 private:
-    X11Util xutil;
     xcb_connection_t *connection;
     xcb_screen_t *screen;
+    X11Util xutil;
 
     std::unordered_map<xcb_window_t, std::unique_ptr<Window>> windows;
     std::unique_ptr<Image> image;

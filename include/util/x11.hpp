@@ -25,6 +25,7 @@ class X11Util
 {
 public:
     X11Util();
+    explicit X11Util(xcb_connection_t* connection);
     ~X11Util();
 
     [[nodiscard]] auto get_server_window_ids() const -> std::vector<xcb_window_t>;
@@ -39,9 +40,7 @@ public:
 private:
     xcb_connection_t* connection = nullptr;
     xcb_screen_t* screen = nullptr;
-
-    auto get_server_window_ids_helper(std::vector<xcb_window_t> &windows,
-        xcb_query_tree_cookie_t cookie) const -> void;
+    bool owns_connection = true;
 };
 
 #endif
