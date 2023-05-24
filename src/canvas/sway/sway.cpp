@@ -89,6 +89,10 @@ display(wl_display_connect(nullptr))
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
 
+    event_handler = std::thread([&] {
+        handle_events();
+    });
+
     const auto cur_window = socket.current_window();
     const auto cur_workspace = socket.current_workspace();
     const auto& win_rect = cur_window["window_rect"];
@@ -104,6 +108,11 @@ display(wl_display_connect(nullptr))
 
 SwayCanvas::~SwayCanvas()
 {
+    stop_flag.store(true);
+    if (event_handler.joinable()) {
+        event_handler.join();
+    }
+    stop_flag.store(false);
     shm.reset();
     if (wl_shm != nullptr) {
         wl_shm_destroy(wl_shm);
@@ -132,10 +141,6 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
     socket.ipc_command("no_focus [app_id=ueberzugpp]");
     socket.ipc_command("ueberzugpp", "floating enable");
     socket.ipc_command("ueberzugpp", fmt::format("move absolute position {} {}", x, y));
-
-    event_handler = std::thread([&] {
-        handle_events();
-    });
 }
 
 void SwayCanvas::handle_events()
@@ -185,13 +190,6 @@ void SwayCanvas::clear()
     if (surface == nullptr) {
         return;
     }
-    stop_flag.store(true);
-    //wl_surface_attach(surface, shm->buffer, 0, 0);
-    wl_surface_commit(surface);
-    if (event_handler.joinable()) {
-        event_handler.join();
-    }
-    stop_flag.store(false);
     if (xdg_toplevel != nullptr) {
         xdg_toplevel_destroy(xdg_toplevel);
     }
