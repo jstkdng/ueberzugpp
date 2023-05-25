@@ -15,13 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sway.hpp"
+#include "os.hpp"
 
 #include <iostream>
 #include <array>
 #include <string_view>
-#include <fmt/format.h>
 #include <cstring>
-#include <poll.h>
 
 constexpr struct wl_registry_listener registry_listener = {
     .global = SwayCanvas::registry_handle_global,
@@ -110,7 +109,6 @@ void SwayCanvas::wl_surface_frame_done(void *data, struct wl_callback *callback,
     wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
     wl_surface_damage_buffer(canvas->surface, 0, 0, canvas->width, canvas->height);
     wl_surface_commit(canvas->surface);
-
 }
 
 SwayCanvas::SwayCanvas():
@@ -213,9 +211,7 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
 void SwayCanvas::handle_events()
 {
     const int waitms = 100;
-    struct pollfd fds;
-    fds.fd = wl_display_get_fd(display);
-    fds.events = POLLIN;
+    const auto wl_fd = wl_display_get_fd(display);
 
     while (!stop_flag.load()) {
         // prepare to read wayland events
@@ -225,16 +221,15 @@ void SwayCanvas::handle_events()
         wl_display_flush(display);
 
         // poll events
-        if (poll(&fds, 1, waitms) <= 0) {
-            wl_display_cancel_read(display);
-            continue;
-        }
-
-        // read and handle wayland events
-        if ((fds.revents & POLLIN) != 0) {
-            wl_display_read_events(display);
-            wl_display_dispatch_pending(display);
-        } else {
+        try {
+            const auto in_event = os::wait_for_data_on_fd(wl_fd, waitms);
+            if (in_event) {
+                wl_display_read_events(display);
+                wl_display_dispatch_pending(display);
+            } else {
+                wl_display_cancel_read(display);
+            }
+        } catch (const std::system_error& err) {
             wl_display_cancel_read(display);
         }
     }
