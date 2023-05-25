@@ -70,10 +70,10 @@ Application::Application(std::string_view executable)
 
 Application::~Application()
 {
-    logger->info("Exiting ueberzugpp.");
     if (socket_thread.joinable()) {
         socket_thread.join();
     }
+    logger->info("Exiting ueberzugpp.");
     canvas->clear();
     vips_shutdown();
     if (f_stderr != nullptr) {
@@ -231,11 +231,15 @@ void Application::setup_logger()
 void Application::command_loop()
 {
     if (!flags->no_stdin) {
-        std::string cmd;
-        while (std::getline(std::cin, cmd)) {
+        while (true) {
+            const auto in_event = os::wait_for_data_on_stdin(100);
             if (stop_flag_.load()) {
                 break;
             }
+            if (!in_event) {
+                continue;
+            }
+            const auto cmd = os::read_data_from_stdin();
             execute(cmd);
         }
     }
@@ -249,7 +253,7 @@ void Application::socket_loop()
 
     while (true) {
         const int conn = socket.wait_for_connections(waitms);
-        if (Application::stop_flag_.load()) {
+        if (stop_flag_.load()) {
             break;
         }
         if (conn == -1) {
@@ -257,6 +261,7 @@ void Application::socket_loop()
         }
         const auto data = UnixSocket::read_data_from_connection(conn);
         if (data == "EXIT") {
+            stop_flag_.store(true);
             break;
         }
         execute(data);

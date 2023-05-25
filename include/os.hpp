@@ -25,6 +25,10 @@ namespace os
 {
     auto exec(std::string_view cmd) -> std::string;
     auto getenv(std::string_view var) -> std::optional<std::string>;
+    auto read_data_from_fd(int filde) -> std::string;
+    auto read_data_from_stdin() -> std::string;
+    auto wait_for_data_on_fd(int filde, int waitms) -> bool;
+    auto wait_for_data_on_stdin(int waitms) -> bool;
 
     auto get_pid() -> int;
     auto get_ppid() -> int;

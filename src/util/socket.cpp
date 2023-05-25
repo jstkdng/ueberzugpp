@@ -16,18 +16,19 @@
 
 #include "util/socket.hpp"
 
-#include <stdexcept>
 #include <iostream>
+#include <system_error>
 #include <memory>
 #include <filesystem>
-#include <cstring>
 #include <cerrno>
+#include <cstring>
 #include <array>
 
 #include <unistd.h>
-#include <poll.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+
+#include "os.hpp"
 
 namespace fs = std::filesystem;
 
@@ -35,7 +36,7 @@ UnixSocket::UnixSocket(const std::string_view endpoint):
 fd(socket(AF_UNIX, SOCK_STREAM, 0))
 {
     if (fd == -1) {
-        throw std::runtime_error(std::strerror(errno));
+        throw std::system_error(errno, std::generic_category());
     }
     connect_to_endpoint(endpoint);
 }
@@ -44,7 +45,7 @@ UnixSocket::UnixSocket():
 fd(socket(AF_UNIX, SOCK_STREAM, 0))
 {
     if (fd == -1) {
-        throw std::runtime_error(std::strerror(errno));
+        throw std::system_error(errno, std::generic_category());
     }
 }
 
@@ -62,7 +63,7 @@ void UnixSocket::connect_to_endpoint(const std::string_view endpoint)
     int res = connect(fd, reinterpret_cast<const struct sockaddr*>(&sock),
             sizeof(struct sockaddr_un));
     if (res == -1) {
-        throw std::runtime_error(std::strerror(errno));
+        throw std::system_error(errno, std::generic_category());
     }
 }
 
@@ -76,25 +77,18 @@ void UnixSocket::bind_to_endpoint(const std::string_view endpoint) const
     int res = bind(fd, reinterpret_cast<const struct sockaddr*>(&sock),
             sizeof(struct sockaddr_un));
     if (res == -1) {
-        throw std::runtime_error(std::strerror(errno));
+        throw std::system_error(errno, std::generic_category());
     }
     res = listen(fd, SOMAXCONN);
     if (res == -1) {
-        throw std::runtime_error(std::strerror(errno));
+        throw std::system_error(errno, std::generic_category());
     }
 }
 
 auto UnixSocket::wait_for_connections(int waitms) const -> int
 {
-    struct pollfd conn;
-    conn.fd = fd;
-    conn.events = POLLIN;
-
-    const int res = poll(&conn, 1, waitms);
-    if (res <= 0) {
-        return -1;
-    }
-    if ((conn.revents & POLLIN) != 0) {
+    const auto in_event = os::wait_for_data_on_fd(fd, waitms);
+    if (in_event) {
         return accept(fd, nullptr, nullptr);
     }
     return -1;
@@ -102,20 +96,9 @@ auto UnixSocket::wait_for_connections(int waitms) const -> int
 
 auto UnixSocket::read_data_from_connection(int filde) -> std::string
 {
-    const int bufsize = 16;
-    std::string res;
-    std::array<char, bufsize> buffer;
-
-    while (true) {
-        const auto status = recv(filde, buffer.data(), bufsize, MSG_DONTWAIT);
-        if (status == 0 || errno == EWOULDBLOCK) {
-            break;
-        }
-        res.append(buffer.data(), status);
-    }
+    auto response = os::read_data_from_fd(filde);
     close(filde);
-
-    return res;
+    return response;
 }
 
 void UnixSocket::write(const void* data, std::size_t len) const
@@ -127,7 +110,7 @@ void UnixSocket::write(const void* data, std::size_t len) const
     while (len != 0) {
         const auto status = send(fd, runner, len, MSG_NOSIGNAL);
         if (status == -1) {
-            throw std::runtime_error(std::strerror(errno));
+            throw std::system_error(errno, std::generic_category());
         }
         len -= status;
         runner += status;
@@ -146,7 +129,7 @@ void UnixSocket::read(void* data, std::size_t len) const
             return; // no data
         }
         if (status == -1) {
-            throw std::runtime_error(std::strerror(errno));
+            throw std::system_error(errno, std::generic_category());
         }
         len -= status;
         runner += status;

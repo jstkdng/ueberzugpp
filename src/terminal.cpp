@@ -33,7 +33,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <poll.h>
 #include <gsl/util>
 
 Terminal::Terminal():
@@ -258,16 +257,12 @@ auto Terminal::read_raw_str(const std::string_view esc) -> std::string
     char chr = 0;
     std::string str;
     const auto waitms = 100;
-    struct pollfd input;
-    input.fd = STDIN_FILENO;
-    input.events = POLLIN;
-
     std::cout << esc << std::flush;
     while (true) {
         // some terminals take some time to write, 100ms seems like enough
         // time to wait for input
-        const auto poll_res = poll(&input, 1, waitms);
-        if (poll_res <= 0) {
+        const auto in_event = os::wait_for_data_on_stdin(waitms);
+        if (!in_event) {
             return "";
         }
         const auto read_res = read(STDIN_FILENO, &chr, 1);
