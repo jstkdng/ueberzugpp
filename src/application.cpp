@@ -230,18 +230,19 @@ void Application::setup_logger()
 
 void Application::command_loop()
 {
-    if (!flags->no_stdin) {
-        while (true) {
-            const auto in_event = os::wait_for_data_on_stdin(100);
-            if (stop_flag_.load()) {
-                break;
-            }
-            if (!in_event) {
-                continue;
-            }
-            const auto cmd = os::read_data_from_stdin();
-            execute(cmd);
+    if (flags->no_stdin) {
+        return;
+    }
+    while (true) {
+        const auto in_event = os::wait_for_data_on_stdin(100);
+        if (stop_flag_.load()) {
+            break;
         }
+        if (!in_event) {
+            continue;
+        }
+        const auto cmd = os::read_data_from_stdin();
+        execute(cmd);
     }
 }
 

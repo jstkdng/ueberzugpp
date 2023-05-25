@@ -16,6 +16,7 @@
 
 #include "sway.hpp"
 #include "os.hpp"
+#include "util.hpp"
 
 #include <iostream>
 #include <array>
@@ -138,9 +139,12 @@ display(wl_display_connect(nullptr))
         static_cast<int>(global_rect["y"]) -
         static_cast<int>(wrks_rect["y"]);
 
+    const int idlength = 10;
+    appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
+
     // TODO: change appid
-    socket.ipc_command("no_focus [app_id=ueberzugpp]");
-    socket.ipc_command("ueberzugpp", "floating enable");
+    socket.ipc_command(fmt::format(R"(no_focus [app_id="{}"])", appid));
+    socket.ipc_command(appid, "floating enable");
     logger->info("Canvas created");
 }
 
@@ -205,7 +209,7 @@ void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_i
     width = image->width();
     height = image->height();
 
-    socket.ipc_command("ueberzugpp", fmt::format("move absolute position {} {}", x, y));
+    socket.ipc_command(appid, fmt::format("move absolute position {} {}", x, y));
 }
 
 void SwayCanvas::handle_events()
@@ -242,7 +246,7 @@ void SwayCanvas::draw()
     xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this);
     xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
-    xdg_toplevel_set_app_id(xdg_toplevel, "ueberzugpp");
+    xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
     xdg_toplevel_set_title(xdg_toplevel, "ueberzugpp: image window");
     wl_surface_commit(surface);
 

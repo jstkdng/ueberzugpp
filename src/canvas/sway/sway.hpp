@@ -73,6 +73,7 @@ public:
 private:
     struct wl_display* display = nullptr;
     struct wl_registry* registry = nullptr;
+    std::string appid;
     std::atomic<bool> stop_flag {false};
     std::thread event_handler;
 

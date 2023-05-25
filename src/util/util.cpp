@@ -27,6 +27,7 @@
 #include <sstream>
 #include <iomanip>
 #include <array>
+#include <random>
 
 #include <fmt/format.h>
 #include <openssl/evp.h>
@@ -202,4 +203,20 @@ auto util::generate_uuid_v4() -> std::string
     uuid_generate(bin_uuid.data());
     uuid_unparse(bin_uuid.data(), uuid.data());
     return {uuid.data()};
+}
+
+auto util::generate_random_string(std::size_t length) -> std::string
+{
+    constexpr auto chars = std::to_array({
+        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
+        'u', 'v', 'w', 'x', 'y', 'z'
+    });
+    auto rng_dev = std::random_device();
+    auto rng = std::mt19937(rng_dev());
+    auto dist = std::uniform_int_distribution{{}, chars.size() - 1};
+    std::string result(length, 0);
+    std::generate_n(std::begin(result), length, [&] { return chars[dist(rng)]; });
+    return result;
 }
