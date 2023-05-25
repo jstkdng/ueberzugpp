@@ -67,15 +67,6 @@ if (NOT Microsoft.GSL_FOUND)
     list(APPEND FC_LIBS GSL)
 endif()
 
-find_package(cppzmq QUIET)
-if (NOT cppzmq_FOUND)
-    option(CPPZMQ_BUILD_TESTS OFF)
-    FetchContent_Declare(cppzmq
-        URL https://github.com/zeromq/cppzmq/archive/refs/tags/v4.9.0.tar.gz
-    )
-    list(APPEND FC_LIBS cppzmq)
-endif()
-
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
     FetchContent_Declare(cli11
@@ -230,7 +221,6 @@ list(APPEND UEBERZUG_LIBRARIES
     OpenSSL::Crypto
     Microsoft.GSL::GSL
     TBB::tbb
-    cppzmq
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::CHAFA

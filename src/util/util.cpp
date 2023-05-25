@@ -18,6 +18,7 @@
 #include "process.hpp"
 #include "os.hpp"
 #include "util/ptr.hpp"
+#include "util/socket.hpp"
 #include "flags.hpp"
 
 #include <memory>
@@ -28,7 +29,6 @@
 #include <array>
 
 #include <fmt/format.h>
-#include <zmq.hpp>
 #include <openssl/evp.h>
 #include <uuid/uuid.h>
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -76,11 +76,6 @@ auto util::get_log_filename() -> std::string
     return fmt::format("ueberzugpp-{}.log", user);
 }
 
-auto util::get_socket_endpoint(int pid) -> std::string
-{
-    return fmt::format("ipc://{}", get_socket_path(pid));
-}
-
 auto util::get_socket_path(int pid) -> std::string
 {
     return fmt::format("{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), pid);
@@ -88,17 +83,9 @@ auto util::get_socket_path(int pid) -> std::string
 
 void util::send_socket_message(const std::string_view msg, const std::string_view endpoint)
 {
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, zmq::socket_type::stream);
-    socket.set(zmq::sockopt::linger, 2);
-    socket.connect(endpoint.data());
-    const auto id_sock = socket.get(zmq::sockopt::routing_id);
-    zmq::message_t id_req(id_sock);
-    zmq::message_t msg_req(msg);
-    socket.send(id_req, zmq::send_flags::sndmore);
-    socket.send(msg_req, zmq::send_flags::none);
-    socket.close();
-    context.close();
+    UnixSocket socket;
+    socket.connect_to_endpoint(endpoint);
+    socket.write(msg.data(), msg.size());
 }
 
 auto util::base64_encode(const unsigned char *input, uint64_t length) -> std::string
@@ -165,10 +152,10 @@ void util::benchmark(std::function<void(void)> func)
     using std::chrono::duration;
     using std::chrono::milliseconds;
 
-    auto ti1 = high_resolution_clock::now();
+    const auto ti1 = high_resolution_clock::now();
     func();
-    auto ti2 = high_resolution_clock::now();
-    duration<double, std::milli> ms_double = ti2 - ti1;
+    const auto ti2 = high_resolution_clock::now();
+    const duration<double, std::milli> ms_double = ti2 - ti1;
 
     std::cout << ms_double.count() << "ms\n";
 }
@@ -176,31 +163,28 @@ void util::benchmark(std::function<void(void)> func)
 void util::send_command(const Flags& flags)
 {
     if (flags.cmd_action == "exit") {
-        auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
-        util::send_socket_message("EXIT", endpoint);
+        util::send_socket_message("EXIT", flags.cmd_socket);
         return;
     }
     if (flags.cmd_action == "remove") {
-        auto json = fmt::format(R"({{"action":"remove","identifier":"{}"}})", flags.cmd_id);
-        auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
-        util::send_socket_message(json, endpoint);
+        const auto json = fmt::format(R"({{"action":"remove","identifier":"{}"}})", flags.cmd_id);
+        util::send_socket_message(json, flags.cmd_socket);
         return;
     }
-    auto xcoord = std::stoi(flags.cmd_x);
-    auto ycoord = std::stoi(flags.cmd_y);
-    auto max_width = std::stoi(flags.cmd_max_width);
-    auto max_height = std::stoi(flags.cmd_max_height);
+    const auto xcoord = std::stoi(flags.cmd_x);
+    const auto ycoord = std::stoi(flags.cmd_y);
+    const auto max_width = std::stoi(flags.cmd_max_width);
+    const auto max_height = std::stoi(flags.cmd_max_height);
 
-    auto json = fmt::format(R"({{"action":"{}","identifier":"{}","max_width":{},"max_height":{},"x":{},"y":{},"path":"{}"}})",
+    const auto json = fmt::format(R"({{"action":"{}","identifier":"{}","max_width":{},"max_height":{},"x":{},"y":{},"path":"{}"}})",
             flags.cmd_action, flags.cmd_id, max_width, max_height, xcoord, ycoord, flags.cmd_file_path);
-    auto endpoint = fmt::format("ipc://{}", flags.cmd_socket);
-    util::send_socket_message(json, endpoint);
+    util::send_socket_message(json, flags.cmd_socket);
 }
 
 void util::clear_terminal_area(int xcoord, int ycoord, int width, int height)
 {
     save_cursor_position();
-    auto line_clear = std::string(width, ' ');
+    const auto line_clear = std::string(width, ' ');
     for (int i = ycoord; i <= height + 2; ++i) {
         util::move_cursor(i, xcoord);
         std::cout << line_clear;

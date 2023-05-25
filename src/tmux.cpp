@@ -107,7 +107,7 @@ auto tmux::get_statusbar_offset() -> int
 void tmux::handle_hook(const std::string_view hook, int pid)
 {
     const auto msg = fmt::format(R"({{"action":"tmux","hook":"{}"}})", hook);
-    const auto endpoint = util::get_socket_endpoint(pid);
+    const auto endpoint = util::get_socket_path(pid);
     util::send_socket_message(msg, endpoint);
 }
 

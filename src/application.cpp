@@ -18,6 +18,7 @@
 #include "os.hpp"
 #include "version.hpp"
 #include "util.hpp"
+#include "util/socket.hpp"
 #include "tmux.hpp"
 
 #include <filesystem>
@@ -30,7 +31,6 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <fmt/format.h>
 #include <vips/vips8>
-#include <zmq.hpp>
 
 using json = nlohmann::json;
 namespace fs = std::filesystem;
@@ -70,9 +70,7 @@ Application::Application(std::string_view executable)
 
 Application::~Application()
 {
-    if (!flags->no_stdin) {
-        util::send_socket_message("EXIT", util::get_socket_endpoint());
-    }
+    logger->info("Exiting ueberzugpp.");
     if (socket_thread.joinable()) {
         socket_thread.join();
     }
@@ -83,7 +81,6 @@ Application::~Application()
     }
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
-    logger->info("Exiting ueberzugpp.");
 }
 
 void Application::execute(const std::string_view cmd)
@@ -212,6 +209,7 @@ void Application::setup_logger()
         const auto kitty_logger = std::make_shared<spdlog::logger>("kitty", sink);
         const auto iterm2_logger = std::make_shared<spdlog::logger>("iterm2", sink);
         const auto chafa_logger = std::make_shared<spdlog::logger>("chafa", sink);
+        const auto sway_logger = std::make_shared<spdlog::logger>("sway", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
@@ -222,13 +220,13 @@ void Application::setup_logger()
         spdlog::initialize_logger(kitty_logger);
         spdlog::initialize_logger(iterm2_logger);
         spdlog::initialize_logger(chafa_logger);
+        spdlog::initialize_logger(sway_logger);
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {
         std::cout << "Log init failed: " << ex.what() << std::endl;
     }
 }
-
 
 void Application::command_loop()
 {
@@ -245,28 +243,24 @@ void Application::command_loop()
 
 void Application::socket_loop()
 {
-    zmq::context_t context(1);
-    zmq::socket_t socket(context, zmq::socket_type::stream);
-    socket.bind(util::get_socket_endpoint());
-    const int data_size = 256;
-    std::array<int, data_size> data;
-    auto idbuf = zmq::buffer(data);
+    UnixSocket socket;
+    socket.bind_to_endpoint(util::get_socket_path());
+    const int waitms = 100;
+
     while (true) {
-        zmq::message_t request;
-        try {
-            std::ignore = socket.recv(idbuf, zmq::recv_flags::none);
-            std::ignore = socket.recv(request, zmq::recv_flags::none);
-        } catch (const zmq::error_t& err) {}
-        auto str_response = request.to_string();
-        if (!str_response.empty()) {
-            if (str_response == "EXIT") {
-                break;
-            }
-            execute(str_response);
+        const int conn = socket.wait_for_connections(waitms);
+        if (Application::stop_flag_.load()) {
+            break;
         }
+        if (conn == -1) {
+            continue;
+        }
+        const auto data = UnixSocket::read_data_from_connection(conn);
+        if (data == "EXIT") {
+            break;
+        }
+        execute(data);
     }
-    socket.close();
-    context.close();
 }
 
 void Application::print_header()

@@ -37,7 +37,6 @@ namespace util
     auto get_cache_file_save_location(const std::filesystem::path &path) -> std::string;
     auto get_log_filename() -> std::string;
     auto get_socket_path(int pid = os::get_pid()) -> std::string;
-    auto get_socket_endpoint(int pid = os::get_pid()) -> std::string;
     void send_socket_message(std::string_view msg, std::string_view endpoint);
     auto base64_encode(const unsigned char *input, uint64_t length) -> std::string;
     void base64_encode_v2(const unsigned char *input, uint64_t length, unsigned char *out);

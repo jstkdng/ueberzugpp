@@ -56,6 +56,7 @@ private:
     void check_kitty_support();
     void check_iterm2_support();
     void check_x11_support();
+    void check_sway_support();
 
     void get_terminal_size_escape_code();
     void get_terminal_size_xtsm();
@@ -75,6 +76,7 @@ private:
     bool supports_kitty = false;
     bool supports_x11 = false;
     bool supports_iterm2 = false;
+    bool supports_sway = false;
 
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;

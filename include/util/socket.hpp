@@ -23,14 +23,19 @@
 class UnixSocket
 {
 public:
+    UnixSocket();
     explicit UnixSocket(std::string_view endpoint);
+    ~UnixSocket();
 
+    void connect_to_endpoint(std::string_view endpoint);
+    void bind_to_endpoint(std::string_view endpoint) const;
+    [[nodiscard]] auto wait_for_connections(int waitms) const -> int;
+    [[nodiscard]] static auto read_data_from_connection(int filde) -> std::string;
     void write(const void* data, std::size_t len) const;
     void read(void* data, std::size_t len) const;
-
-    ~UnixSocket();
 private:
     int fd;
+    bool connected = true;
 };
 
 #endif
