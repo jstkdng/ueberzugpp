@@ -1,12 +1,13 @@
 # Überzug++
 
-Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using X11 child windows, sixels, kitty and iterm2..
+Überzug++ is a command line utility written in C++ which allows to draw images on terminals by using X11/wayland child windows, sixels, kitty and iterm2..
 
 This project intends to be a drop-in replacement for the now defunct [ueberzug](https://github.com/seebye/ueberzug) project. If some tool doesn't work,
 feel free to open an issue.
 
 Advantages over w3mimgdisplay and ueberzug:
 
+- support for wayland (sway only)
 - support for MacOS
 - no race conditions as a new window is created to display images
 - expose events will be processed, so images will be redrawn on switch workspaces
@@ -111,7 +112,6 @@ the minimum supported version.
 Must be installed in order to build.
 
 - cmake (3.18 <= )
-- zeromq
 - libvips
 - libsixel
 - chafa (1.6 <= )
@@ -127,7 +127,6 @@ and included in the binary.
 - cli11
 - spdlog
 - fmt
-- cppzmq
 
 ## Optional dependencies
 
@@ -136,6 +135,8 @@ Not required for building, can be disabled/enabled using flags.
 - opencv
 - xcb-util-image
 - turbo-base64
+- wayland (libwayland)
+- wayland-protocols
 
 ## Build instructions
 
@@ -150,6 +151,8 @@ ENABLE_OPENCV (ON by default)
 ENABLE_X11 (ON by default)
 
 ENABLE_TURBOBASE64 (OFF by default)
+
+ENABLE_SWAY (OFF by default)
 
 You may use any of them when building the project, for example:
 
