@@ -36,6 +36,10 @@ constexpr struct xdg_surface_listener xdg_surface_listener = {
     .configure = SwayCanvas::xdg_surface_configure,
 };
 
+constexpr struct wl_callback_listener frame_listener = {
+    .done = SwayCanvas::wl_surface_frame_done
+};
+
 void SwayCanvas::registry_handle_global(void *data, wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version)
 {
@@ -74,9 +78,39 @@ void SwayCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_surfa
     auto *canvas = reinterpret_cast<SwayCanvas*>(data);
     xdg_surface_ack_configure(xdg_surface, serial);
 
+    std::unique_lock lock {canvas->draw_mutex, std::defer_lock};
+    if (canvas->image->is_animated()) {
+        lock.lock();
+        if (!canvas->can_draw.load()) {
+            return;
+        }
+    }
+
     std::memcpy(canvas->shm->get_data(), canvas->image->data(), canvas->image->size());
     wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
     wl_surface_commit(canvas->surface);
+}
+
+void SwayCanvas::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
+{
+    auto *canvas = reinterpret_cast<SwayCanvas*>(data);
+    wl_callback_destroy(callback);
+    std::unique_lock lock {canvas->draw_mutex};
+    if (!canvas->can_draw.load()) {
+        return;
+    }
+    std::this_thread::sleep_for(std::chrono::milliseconds(canvas->image->frame_delay()));
+
+    // request another callback
+    callback = wl_surface_frame(canvas->surface);
+    wl_callback_add_listener(callback, &frame_listener, canvas);
+
+    canvas->image->next_frame();
+    std::memcpy(canvas->shm->get_data(), canvas->image->data(), canvas->image->size());
+    wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
+    wl_surface_damage_buffer(canvas->surface, 0, 0, canvas->width, canvas->height);
+    wl_surface_commit(canvas->surface);
+
 }
 
 SwayCanvas::SwayCanvas():
@@ -140,6 +174,8 @@ void SwayCanvas::hide()
 
 SwayCanvas::~SwayCanvas()
 {
+    can_draw.store(false);
+    std::unique_lock lock {draw_mutex};
     stop_flag.store(true);
     if (event_handler.joinable()) {
         event_handler.join();
@@ -212,6 +248,12 @@ void SwayCanvas::draw()
     xdg_toplevel_set_app_id(xdg_toplevel, "ueberzugpp");
     xdg_toplevel_set_title(xdg_toplevel, "ueberzugpp: image window");
     wl_surface_commit(surface);
+
+    if (image->is_animated()) {
+        callback =  wl_surface_frame(surface);
+        wl_callback_add_listener(callback, &frame_listener, this);
+        can_draw.store(true);
+    }
     visible = true;
 }
 
@@ -220,6 +262,8 @@ void SwayCanvas::clear()
     if (surface == nullptr) {
         return;
     }
+    can_draw.store(false);
+    std::unique_lock lock {draw_mutex};
     if (xdg_toplevel != nullptr) {
         xdg_toplevel_destroy(xdg_toplevel);
     }

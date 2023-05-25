@@ -28,6 +28,7 @@
 #include <memory>
 #include <atomic>
 #include <thread>
+#include <mutex>
 
 class SwayCanvas : public Canvas
 {
@@ -41,6 +42,7 @@ public:
         uint32_t name);
     static void xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
+    static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
 
     void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
@@ -53,11 +55,14 @@ public:
     struct wl_compositor* compositor = nullptr;
     struct wl_surface* surface = nullptr;
     struct wl_shm* wl_shm = nullptr;
+    struct wl_callback* callback = nullptr;
     struct xdg_wm_base* xdg_base = nullptr;
     struct xdg_surface* xdg_surface = nullptr;
     struct xdg_toplevel* xdg_toplevel = nullptr;
     std::unique_ptr<SwayShm> shm;
     std::unique_ptr<Image> image;
+    std::mutex draw_mutex;
+    std::atomic<bool> can_draw {false};
 
     int width;
     int height;
