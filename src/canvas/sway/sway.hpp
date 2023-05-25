@@ -24,11 +24,13 @@
 #include "socket.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 
-#include <wayland-client.h>
 #include <memory>
 #include <atomic>
 #include <thread>
 #include <mutex>
+
+#include <fmt/format.h>
+#include <wayland-client.h>
 
 class SwayCanvas : public Canvas
 {
@@ -61,6 +63,7 @@ public:
     struct xdg_toplevel* xdg_toplevel = nullptr;
     std::unique_ptr<SwayShm> shm;
     std::unique_ptr<Image> image;
+    std::shared_ptr<spdlog::logger> logger;
     std::mutex draw_mutex;
     std::atomic<bool> can_draw {false};
 

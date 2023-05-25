@@ -72,6 +72,7 @@ auto Terminal::get_terminal_size() -> void
     get_fallback_terminal_sizes();
 
     check_x11_support();
+    check_sway_support();
     check_iterm2_support();
     if (flags->use_escape_codes) {
         init_termios();
@@ -126,6 +127,9 @@ void Terminal::set_detected_output()
     }
     if (supports_x11) {
         detected_output = "x11";
+    }
+    if (supports_sway) {
+        detected_output = "sway";
     }
     if (flags->output.empty()) {
         flags->output = detected_output;
@@ -231,6 +235,21 @@ void Terminal::check_x11_support()
     }
 #else
     logger->debug("x11 is not supported");
+#endif
+}
+
+void Terminal::check_sway_support()
+{
+#ifdef ENABLE_SWAY
+    const auto sock = os::getenv("SWAYSOCK");
+    if (sock.has_value()) {
+        supports_sway = true;
+        logger->debug("Sway is supported");
+    } else {
+        logger->debug("Sway is not supported");
+    }
+#else
+    logger->debug("Sway is not supported");
 #endif
 }
 

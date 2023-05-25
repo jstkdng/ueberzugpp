@@ -119,6 +119,7 @@ display(wl_display_connect(nullptr))
     if (display == nullptr) {
         throw std::runtime_error("Failed to connect to wayland display.");
     }
+    logger = spdlog::get("sway");
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
@@ -142,6 +143,7 @@ display(wl_display_connect(nullptr))
     // TODO: change appid
     socket.ipc_command("no_focus [app_id=ueberzugpp]");
     socket.ipc_command("ueberzugpp", "floating enable");
+    logger->info("Canvas created");
 }
 
 void SwayCanvas::toggle()
