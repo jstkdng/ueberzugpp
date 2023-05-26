@@ -33,7 +33,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <gsl/util>
+#include <gsl/gsl>
 
 Terminal::Terminal():
 pid(os::get_pid())

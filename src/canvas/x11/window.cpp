@@ -18,7 +18,7 @@
 #include "dimensions.hpp"
 
 #include <xcb/xcb.h>
-#include <gsl/util>
+#include <gsl/gsl>
 
 Window::Window(xcb_connection_t *connection, xcb_screen_t* screen,
             xcb_window_t window, xcb_window_t parent,

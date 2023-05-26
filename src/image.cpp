@@ -28,7 +28,7 @@
 #endif
 #include <vips/vips.h>
 #include <unordered_set>
-#include <gsl/util>
+#include <gsl/gsl>
 
 namespace fs = std::filesystem;
 
