@@ -46,7 +46,7 @@ auto os::exec(const std::string_view cmd) -> std::string
     return result;
 }
 
-auto os::read_data_from_fd(int filde) -> std::string
+auto os::read_data_from_fd(int filde, char sep) -> std::string
 {
     std::string response;
     char readch = 0;
@@ -62,7 +62,7 @@ auto os::read_data_from_fd(int filde) -> std::string
             }
             break;
         }
-        if (readch == '\n') {
+        if (readch == sep) {
             break;
         }
         response.push_back(readch);
@@ -70,9 +70,9 @@ auto os::read_data_from_fd(int filde) -> std::string
     return response;
 }
 
-auto os::read_data_from_stdin() -> std::string
+auto os::read_data_from_stdin(char sep) -> std::string
 {
-    return read_data_from_fd(STDIN_FILENO);
+    return read_data_from_fd(STDIN_FILENO, sep);
 }
 
 auto os::wait_for_data_on_fd(int filde, int waitms) -> bool

@@ -254,27 +254,17 @@ void Terminal::check_sway_support()
 
 auto Terminal::read_raw_str(const std::string_view esc) -> std::string
 {
-    char chr = 0;
-    std::string str;
     const auto waitms = 100;
     std::cout << esc << std::flush;
-    while (true) {
-        // some terminals take some time to write, 100ms seems like enough
-        // time to wait for input
+    try {
         const auto in_event = os::wait_for_data_on_stdin(waitms);
         if (!in_event) {
             return "";
         }
-        const auto read_res = read(STDIN_FILENO, &chr, 1);
-        if (read_res == -1) {
-            return "";
-        }
-        if (chr == esc.back()) {
-            break;
-        }
-        str.push_back(chr);
+        return os::read_data_from_stdin(esc.back());;
+    } catch (const std::system_error& err) {
+        return "";
     }
-    return str;
 }
 
 auto Terminal::init_termios() -> void
