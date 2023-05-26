@@ -1,0 +1,164 @@
+.TH UEBERZUGPP 26 "2023 May" "Ueberzugpp 2.8.5"
+
+.SH NAME
+ueberzugpp \- display images in a terminal
+
+.SH SYNOPSIS
+.SY ueberzugpp
+.RI [ options ]
+
+.SH DESCRIPTION
+.PP
+.B ueberzugpp
+is a program meant to display images in a terminal in a with an IPC.
+
+.SH OPTIONS
+
+.TP
+.BR \-h ", " \-\-help
+Show help text.
+
+.TP
+.BR \-\-version
+Show version
+
+.TP
+.BR \-\-use\-escape\-codes
+Use escape codes to get terminal capabilities
+
+.TP
+.BR \-\-no\-stdin
+Do not listen on stdin for commands
+
+.TP
+.BR \-\-no\-cache
+Dsiable caching of resized images
+
+.TP
+.BR \-\-no\-opencv
+Do not use OpenCV, use Libvips instead
+
+.TP
+.BR \-o ", " \-\-output
+Image output method, valid values for this include:
+.PP
+.RS
+.I x11
+.br
+.I sixel
+.br
+.I kitty
+.br
+.I iterm2
+.br
+.I sway
+.RE
+
+.TP
+.BR \-p ", " \-\-parser
+.B UNUSED ", "
+only present for backwards compatibility
+
+.TP
+.BR \-l ", " \-\-loader
+.B UNUSED ", "
+only present for backwards compatibility
+
+.SH STDIN
+
+.PP
+Ueberzugpp reads commands through stdin.
+.PP
+Commands should be in JSON form, as described in the JSON IPC section
+
+.SH JSON IPC
+
+.PP
+There are two actions,
+.I add
+and
+.I remove
+.PP
+
+.SS
+.B add
+action json schema
+.PP
+Requried Keys
+
+.RE
+.TP
+.B action " (string)"
+should be
+.I add
+
+.TP
+.B path " (string)"
+the path to the image to use
+
+.TP
+.B identifier " (string)"
+an identifier for the image, so that it can be removed with the remove action
+
+.TP
+.B width " (integer)"
+width of the image
+
+.TP
+.B height " (integer)"
+height of the image
+
+.TP
+.B x " (integer)"
+the column position in the terminal
+
+.TP
+.B y " (integer)"
+the row position in the terminal
+
+.PP
+Optional keys
+
+.TP
+.B max_width " (integer)"
+maximum width of the image
+
+.TP
+.B min_width " (integer)"
+minimum width of the image
+
+.TP
+.B scaler " (string)"
+can be fit_contain or forced_cover.
+.br
+Both base the scale on whichever is larger, the width, or height of the image
+
+.RE
+
+.SS
+.B remove
+action json schema
+.PP
+Requried Keys
+
+.RS
+.TP
+.B action " (string)"
+should be remove
+
+.TP
+.B identifier " (string)"
+The identifier of the image to remove
+
+.RE
+
+.SH EXAMPLE
+
+.PP
+Create a fifo file named fifo, and have an image in the current folder named image.png for this example to work
+
+.PP
+ueberzugpp layer -o sixel < fifo &
+
+.PP
+echo '{"path": "./image.png", "action": "add", "identifier": "image", "x": 0, "y": 0, "width": 20, "height": 20}' > fifo
