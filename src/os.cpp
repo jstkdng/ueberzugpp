@@ -48,12 +48,11 @@ auto os::exec(const std::string_view cmd) -> std::string
 
 auto os::read_data_from_fd(int filde) -> std::string
 {
-    const int bufsize = 128;
     std::string response;
-    std::array<char, bufsize> buffer;
+    char readch = 0;
 
     while (true) {
-        const auto status = read(filde, buffer.data(), bufsize);
+        const auto status = read(filde, &readch, 1);
         if (status == -1) {
             throw std::system_error(errno, std::generic_category());
         }
@@ -63,19 +62,17 @@ auto os::read_data_from_fd(int filde) -> std::string
             }
             break;
         }
-        response.append(buffer.data(), status);
-        if (buffer[status - 1] == '\n' && filde == STDIN_FILENO) {
+        if (readch == '\n') {
             break;
         }
+        response.push_back(readch);
     }
     return response;
 }
 
 auto os::read_data_from_stdin() -> std::string
 {
-    auto response = read_data_from_fd(STDIN_FILENO);
-    response.pop_back();
-    return response;
+    return read_data_from_fd(STDIN_FILENO);
 }
 
 auto os::wait_for_data_on_fd(int filde, int waitms) -> bool

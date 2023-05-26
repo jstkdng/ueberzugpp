@@ -73,7 +73,6 @@ Application::~Application()
     if (socket_thread.joinable()) {
         socket_thread.join();
     }
-    logger->info("Exiting ueberzugpp.");
     canvas->clear();
     vips_shutdown();
     if (f_stderr != nullptr) {
@@ -81,6 +80,7 @@ Application::~Application()
     }
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
+    logger->info("Exited ueberzugpp.");
 }
 
 void Application::execute(const std::string_view cmd)
