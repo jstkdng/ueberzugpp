@@ -80,16 +80,20 @@ auto os::read_data_from_stdin() -> std::string
 
 auto os::wait_for_data_on_fd(int filde, int waitms) -> bool
 {
-    struct pollfd conn;
-    std::memset(&conn, 0, sizeof(struct pollfd));
-    conn.fd = filde;
-    conn.events = POLLIN;
+    struct pollfd fds;
+    std::memset(&fds, 0, sizeof(struct pollfd));
+    fds.fd = filde;
+    fds.events = POLLIN;
 
-    const int res = poll(&conn, 1, waitms);
-    if (res == -1 && errno != EINTR) {
+    const int res = poll(&fds, 1, waitms);
+
+    if (((fds.revents & POLLERR) != 0) ||
+        ((fds.revents & POLLNVAL) != 0) ||
+        (res == -1 && errno != EINTR)) {
         throw std::system_error(errno, std::generic_category());
     }
-    return (conn.revents & POLLIN) != 0;
+    // read all remaining data after a POLLHUP
+    return (fds.revents & POLLIN) != 0 || (fds.revents & POLLHUP) != 0;
 }
 
 auto os::wait_for_data_on_stdin(int waitms) -> bool

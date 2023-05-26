@@ -22,7 +22,11 @@
 #include <fstream>
 #include <string>
 #include <fmt/format.h>
-#include <sys/sysmacros.h>
+#ifdef __FreeBSD__
+#   include <sys/types.h>
+#else
+#   include <sys/sysmacros.h>
+#endif
 
 Process::Process(int pid):
 pid(pid)
