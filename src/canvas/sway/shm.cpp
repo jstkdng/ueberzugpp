@@ -19,13 +19,14 @@
 
 #include <algorithm>
 #include <ranges>
-#include <iostream>
+#include <system_error>
 
 #include <fmt/format.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <cerrno>
 
 SwayShm::SwayShm(int width, int height, struct wl_shm* shm):
 shm(shm),
@@ -43,7 +44,13 @@ void SwayShm::create_shm_file()
 {
     const mode_t shm_mode = 0600;
     fd = shm_open(shm_path.c_str(), O_RDWR | O_CREAT | O_EXCL, shm_mode);
-    ftruncate(fd, pool_size);
+    if (fd == -1) {
+        throw std::system_error(errno, std::system_category());
+    }
+    int res = ftruncate(fd, pool_size);
+    if (res == -1) {
+        throw std::system_error(errno, std::system_category());
+    }
     pool_data = reinterpret_cast<uint8_t*>(
         mmap(nullptr, pool_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
     );
@@ -51,9 +58,6 @@ void SwayShm::create_shm_file()
 
 void SwayShm::allocate_pool_buffers()
 {
-    if (shm == nullptr) {
-        return;
-    }
     pool = wl_shm_create_pool(shm, fd, pool_size);
     buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
 }

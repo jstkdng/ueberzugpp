@@ -70,6 +70,7 @@ Application::Application(std::string_view executable)
 
 Application::~Application()
 {
+    stop_flag_.store(true);
     if (socket_thread.joinable()) {
         socket_thread.join();
     }
@@ -241,8 +242,12 @@ void Application::command_loop()
         if (!in_event) {
             continue;
         }
-        const auto cmd = os::read_data_from_stdin();
-        execute(cmd);
+        try {
+            const auto cmd = os::read_data_from_stdin();
+            execute(cmd);
+        } catch (const std::system_error& err) {
+            break;
+        }
     }
 }
 

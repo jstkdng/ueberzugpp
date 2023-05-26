@@ -23,6 +23,7 @@
 #include <iostream>
 
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <unistd.h>
 #include <poll.h>
@@ -57,6 +58,9 @@ auto os::read_data_from_fd(int filde) -> std::string
             throw std::system_error(errno, std::generic_category());
         }
         if (status == 0) {
+            if (response.empty()) {
+                throw std::system_error(EIO, std::generic_category());
+            }
             break;
         }
         response.append(buffer.data(), status);
