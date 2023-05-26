@@ -128,16 +128,10 @@ display(wl_display_connect(nullptr))
     });
 
     const auto cur_window = socket.current_window();
-    const auto cur_workspace = socket.current_workspace();
-    const auto& win_rect = cur_window["window_rect"];
-    const auto& global_rect = cur_window["rect"];
-    const auto& wrks_rect = cur_workspace["rect"];
-    sway_x = static_cast<int>(win_rect["x"]) +
-        static_cast<int>(global_rect["x"]) -
-        static_cast<int>(wrks_rect["x"]);
-    sway_y = static_cast<int>(win_rect["y"]) +
-        static_cast<int>(global_rect["y"]) -
-        static_cast<int>(wrks_rect["y"]);
+
+    const auto& win_rect = cur_window["rect"];
+    sway_x = static_cast<int>(win_rect["x"]);
+    sway_y = static_cast<int>(win_rect["y"]);
 
     const int idlength = 10;
     appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
@@ -204,7 +198,7 @@ SwayCanvas::~SwayCanvas()
 void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     image = std::move(new_image);
-    x = sway_x + dimensions.xpixels();
+    x = sway_x + dimensions.xpixels() + dimensions.terminal.font_width;;
     y = sway_y + dimensions.ypixels();
     width = image->width();
     height = image->height();
