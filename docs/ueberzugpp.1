@@ -32,7 +32,7 @@ Do not listen on stdin for commands
 
 .TP
 .BR \-\-no\-cache
-Dsiable caching of resized images
+Disable caching of resized images
 
 .TP
 .BR \-\-no\-opencv
@@ -43,7 +43,7 @@ Do not use OpenCV, use Libvips instead
 Image output method, valid values for this include:
 .PP
 .RS
-.I x11
+.I x11 " (May not be available if disabled in compilation)"
 .br
 .I sixel
 .br
@@ -51,7 +51,9 @@ Image output method, valid values for this include:
 .br
 .I iterm2
 .br
-.I sway
+.I sway " (May not be available if disabled in compilation)"
+.br
+.I chafa
 .RE
 
 .TP
@@ -67,7 +69,7 @@ only present for backwards compatibility
 .SH STDIN
 
 .PP
-Ueberzugpp reads commands through stdin.
+Ueberzugpp reads commands through stdin. Or through the unix socket located at /tmp/ueberzug_${USER}.sock
 .PP
 Commands should be in JSON form, as described in the JSON IPC section
 
@@ -101,12 +103,23 @@ the path to the image to use
 an identifier for the image, so that it can be removed with the remove action
 
 .TP
+.B One of, width/height, or max_width/max_height
+
+.TP
 .B width " (integer)"
 width of the image
 
 .TP
+.B max_width " (integer)"
+maximum width of the image
+
+.TP
 .B height " (integer)"
 height of the image
+
+.TP
+.B max_height " (integer)"
+maximum height of the image
 
 .TP
 .B x " (integer)"
@@ -118,14 +131,6 @@ the row position in the terminal
 
 .PP
 Optional keys
-
-.TP
-.B max_width " (integer)"
-maximum width of the image
-
-.TP
-.B min_width " (integer)"
-minimum width of the image
 
 .TP
 .B scaler " (string)"
