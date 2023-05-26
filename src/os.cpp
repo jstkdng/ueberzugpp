@@ -81,7 +81,6 @@ auto os::read_data_from_stdin() -> std::string
 auto os::wait_for_data_on_fd(int filde, int waitms) -> bool
 {
     struct pollfd fds;
-    std::memset(&fds, 0, sizeof(struct pollfd));
     fds.fd = filde;
     fds.events = POLLIN;
 
