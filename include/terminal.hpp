@@ -60,7 +60,8 @@ private:
 
     void get_terminal_size_escape_code();
     void get_terminal_size_xtsm();
-    void get_fallback_terminal_sizes();
+    void get_fallback_x11_terminal_sizes();
+    void get_fallback_sway_terminal_sizes();
 
     void open_first_pty();
     void set_detected_output();

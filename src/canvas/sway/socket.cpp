@@ -44,7 +44,7 @@ struct __attribute__((packed)) ipc_header {
     uint32_t type;
 };
 
-auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view payload) -> nlohmann::json
+auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view payload) const -> nlohmann::json
 {
     struct ipc_header header;
     header.len = payload.size();
@@ -60,7 +60,7 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
     return njson::parse(buff);
 }
 
-auto SwaySocket::current_window() -> nlohmann::json
+auto SwaySocket::current_window() const -> nlohmann::json
 {
     auto tree = ipc_message(IPC_GET_TREE);
     std::stack<njson> nodes_st;
@@ -84,7 +84,7 @@ auto SwaySocket::current_window() -> nlohmann::json
     return nullptr;
 }
 
-auto SwaySocket::current_workspace() -> nlohmann::json
+auto SwaySocket::current_workspace() const -> nlohmann::json
 {
     auto workspaces = ipc_message(IPC_GET_WORKSPACES);
     for (const auto& workspace: workspaces) {
@@ -96,13 +96,13 @@ auto SwaySocket::current_workspace() -> nlohmann::json
     return nullptr;
 }
 
-auto SwaySocket::ipc_command(std::string_view appid, std::string_view command) -> nlohmann::json
+auto SwaySocket::ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json
 {
     const auto cmd = fmt::format(R"(for_window [app_id="{}"] {})", appid, command);
     return ipc_message(IPC_COMMAND, cmd);
 }
 
-auto SwaySocket::ipc_command(std::string_view command) -> nlohmann::json
+auto SwaySocket::ipc_command(std::string_view command) const -> nlohmann::json
 {
     return ipc_message(IPC_COMMAND, command);
 }

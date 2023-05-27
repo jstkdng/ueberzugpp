@@ -23,6 +23,9 @@
 #ifdef ENABLE_X11
 #   include "util/x11.hpp"
 #endif
+#ifdef ENABLE_SWAY
+#   include "canvas/sway/socket.hpp"
+#endif
 
 #include <cmath>
 #include <sstream>
@@ -68,7 +71,8 @@ auto Terminal::get_terminal_size() -> void
     ypixel = size.ws_ypixel;
     logger->debug("ioctl sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
 
-    get_fallback_terminal_sizes();
+    get_fallback_x11_terminal_sizes();
+    get_fallback_sway_terminal_sizes();
 
     check_x11_support();
     check_sway_support();
@@ -281,7 +285,7 @@ auto Terminal::reset_termios() -> void
     tcsetattr(0, TCSANOW, &old_term);
 }
 
-void Terminal::get_fallback_terminal_sizes()
+void Terminal::get_fallback_x11_terminal_sizes()
 {
 #ifdef ENABLE_X11
     if (!xutil->connected) {
@@ -292,6 +296,19 @@ void Terminal::get_fallback_terminal_sizes()
     fallback_xpixel = dims.first;
     fallback_ypixel = dims.second;
     logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", fallback_xpixel, fallback_ypixel);
+#endif
+}
+
+void Terminal::get_fallback_sway_terminal_sizes()
+{
+#ifdef ENABLE_SWAY
+    try {
+        const auto socket = SwaySocket();
+        const auto window = socket.current_window();
+        const auto& rect = window["rect"];
+        fallback_xpixel = rect["width"];
+        fallback_ypixel = rect["height"];
+    } catch (const std::runtime_error& err) {}
 #endif
 }
 

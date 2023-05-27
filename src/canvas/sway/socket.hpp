@@ -34,14 +34,14 @@ class SwaySocket
 public:
     SwaySocket();
     ~SwaySocket() = default;
-    auto current_window() -> nlohmann::json;
-    auto current_workspace() -> nlohmann::json;
-    auto ipc_command(std::string_view appid, std::string_view command) -> nlohmann::json;
-    auto ipc_command(std::string_view command) -> nlohmann::json;
+    [[nodiscard]] auto current_window() const -> nlohmann::json;
+    [[nodiscard]] auto current_workspace() const -> nlohmann::json;
+    [[nodiscard]] auto ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json;
+    [[nodiscard]] auto ipc_command(std::string_view command) const -> nlohmann::json;
 
 private:
     std::unique_ptr<UnixSocket> socket;
-    auto ipc_message(ipc_message_type type, std::string_view payload = "") -> nlohmann::json;
+    [[nodiscard]] auto ipc_message(ipc_message_type type, std::string_view payload = "") const -> nlohmann::json;
 };
 
 #endif

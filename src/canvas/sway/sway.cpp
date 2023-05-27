@@ -137,8 +137,8 @@ display(wl_display_connect(nullptr))
     appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
 
     // TODO: change appid
-    socket.ipc_command(fmt::format(R"(no_focus [app_id="{}"])", appid));
-    socket.ipc_command(appid, "floating enable");
+    std::ignore = socket.ipc_command(fmt::format(R"(no_focus [app_id="{}"])", appid));
+    std::ignore = socket.ipc_command(appid, "floating enable");
     logger->info("Canvas created");
 }
 
@@ -198,12 +198,12 @@ SwayCanvas::~SwayCanvas()
 void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     image = std::move(new_image);
-    x = sway_x + dimensions.xpixels() + dimensions.terminal.font_width;;
-    y = sway_y + dimensions.ypixels();
+    x = sway_x + dimensions.xpixels() + dimensions.padding_horizontal;
+    y = sway_y + dimensions.ypixels() + dimensions.padding_vertical;
     width = image->width();
     height = image->height();
 
-    socket.ipc_command(appid, fmt::format("move absolute position {} {}", x, y));
+    std::ignore = socket.ipc_command(appid, fmt::format("move absolute position {} {}", x, y));
 }
 
 void SwayCanvas::handle_events()
