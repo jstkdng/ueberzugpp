@@ -7,25 +7,30 @@ feel free to open an issue.
 
 Advantages over w3mimgdisplay and ueberzug:
 
-- support for wayland (sway only)
-- support for MacOS
+- support for wayland (sway only) and MacOS
 - no race conditions as a new window is created to display images
 - expose events will be processed, so images will be redrawn on switch workspaces
-- tmux support on X11
+- tmux support on X11 and Sway
 - terminals without the WINDOWID environment variable are supported
 - chars are used as position - and size unit
 - No memory leak (usage of smart pointers)
 - A lot of image formats supported (through opencv and libvips).
-- GIF and animated WEBP support on X11 and Sixel
+- GIF and animated WEBP support on X11, Sixel and Sway
 - Fast image downscaling (through opencv and opencl)
 - Cache resized images for faster viewing
 
 # Applications that use Überzug++
 
+- [ytfzf](https://github.com/pystardust/ytfzf)
+- [lobster](https://github.com/justchokingaround/lobster)
 - [Ranger](https://github.com/ranger/ranger)
 - [Termusic](https://github.com/tramhao/termusic/)
-- [ytfzf](https://github.com/pystardust/ytfzf)
 - ÜberzugPP is a drop in replacement for Ueberzug, so applications that worked with ueberzug should work out of the box with this project.
+
+# Integration scripts
+
+- [lf](https://github.com/jstkdng/ueberzugpp/blob/master/scripts/lf/lfub)
+- [fzf](https://github.com/jstkdng/ueberzugpp/blob/master/scripts/fzfub)
 
 # Download
 
@@ -137,6 +142,7 @@ Not required for building, can be disabled/enabled using flags.
 - turbo-base64
 - wayland (libwayland)
 - wayland-protocols
+- extra-cmake-modules
 
 ## Build instructions
 

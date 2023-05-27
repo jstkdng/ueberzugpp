@@ -178,7 +178,6 @@ endif()
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
-pkg_check_modules(UUID REQUIRED IMPORTED_TARGET uuid)
 pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
 
 if (APPLE)
@@ -224,7 +223,6 @@ list(APPEND UEBERZUG_LIBRARIES
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::CHAFA
-    PkgConfig::UUID
 )
 
 target_include_directories(ueberzug PRIVATE

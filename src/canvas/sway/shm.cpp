@@ -35,7 +35,8 @@ height(height),
 stride(width * 4),
 pool_size(height * stride * 2)
 {
-    shm_path = fmt::format("/{}", util::generate_uuid_v4());
+    const int path_size = 32;
+    shm_path = fmt::format("/{}", util::generate_random_string(path_size));
     create_shm_file();
     allocate_pool_buffers();
 }
