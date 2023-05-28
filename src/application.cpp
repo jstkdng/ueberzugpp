@@ -209,7 +209,7 @@ void Application::setup_logger()
         const auto kitty_logger = std::make_shared<spdlog::logger>("kitty", sink);
         const auto iterm2_logger = std::make_shared<spdlog::logger>("iterm2", sink);
         const auto chafa_logger = std::make_shared<spdlog::logger>("chafa", sink);
-        const auto sway_logger = std::make_shared<spdlog::logger>("sway", sink);
+        const auto wlroots_logger = std::make_shared<spdlog::logger>("wlroots", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
@@ -220,7 +220,7 @@ void Application::setup_logger()
         spdlog::initialize_logger(kitty_logger);
         spdlog::initialize_logger(iterm2_logger);
         spdlog::initialize_logger(chafa_logger);
-        spdlog::initialize_logger(sway_logger);
+        spdlog::initialize_logger(wlroots_logger);
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {

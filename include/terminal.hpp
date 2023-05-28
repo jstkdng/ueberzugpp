@@ -56,7 +56,7 @@ private:
     void check_kitty_support();
     void check_iterm2_support();
     void check_x11_support();
-    void check_sway_support();
+    void check_wlroots_support();
 
     void get_terminal_size_escape_code();
     void get_terminal_size_xtsm();

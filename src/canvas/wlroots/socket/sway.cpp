@@ -44,7 +44,7 @@ struct __attribute__((packed)) ipc_header {
     uint32_t type;
 };
 
-auto SwaySocket::get_window_info() const -> struct WlrootsWindow
+auto SwaySocket::get_window_info() -> struct WlrootsWindow
 {
     const auto window = current_window();
     const auto& rect = window["rect"];
@@ -56,17 +56,23 @@ auto SwaySocket::get_window_info() const -> struct WlrootsWindow
     };
 }
 
-void SwaySocket::disable_focus(const std::string_view appid) const
+void SwaySocket::initial_setup(const std::string_view appid)
+{
+    disable_focus(appid);
+    enable_floating(appid);
+}
+
+void SwaySocket::disable_focus(const std::string_view appid)
 {
     std::ignore = ipc_command(fmt::format(R"(no_focus [app_id="{}"])", appid));
 }
 
-void SwaySocket::enable_floating(const std::string_view appid) const
+void SwaySocket::enable_floating(const std::string_view appid)
 {
     std::ignore = ipc_command(appid, "floating enable");
 }
 
-void SwaySocket::move_window(std::string_view appid, int xcoord, int ycoord) const
+void SwaySocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
     std::ignore = ipc_command(appid, fmt::format("move absolute position {} {}", xcoord, ycoord));
 }

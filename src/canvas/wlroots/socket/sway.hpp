@@ -35,13 +35,15 @@ class SwaySocket : public WlrootsSocket
 public:
     SwaySocket();
     ~SwaySocket() override = default;
-    [[nodiscard]] auto get_window_info() const -> struct WlrootsWindow override;
-    void disable_focus(std::string_view appid) const override;
-    void enable_floating(std::string_view appid) const override;
-    void move_window(std::string_view appid, int xcoord, int ycoord) const override;
+    [[nodiscard]] auto get_window_info() -> struct WlrootsWindow override;
+    void initial_setup(std::string_view appid) override;
+    void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
 private:
     std::unique_ptr<UnixSocket> socket;
+
+    void disable_focus(std::string_view appid);
+    void enable_floating(std::string_view appid);
     [[nodiscard]] auto current_window() const -> nlohmann::json;
     [[nodiscard]] auto ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json;
     [[nodiscard]] auto ipc_command(std::string_view command) const -> nlohmann::json;

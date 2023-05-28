@@ -32,13 +32,13 @@ class WlrootsSocket
 {
 public:
     static auto get() -> std::unique_ptr<WlrootsSocket>;
+    static auto is_supported() -> bool;
 
     virtual ~WlrootsSocket() = default;
 
-    [[nodiscard]] virtual auto get_window_info() const -> struct WlrootsWindow = 0;
-    virtual void disable_focus(std::string_view appid) const = 0;
-    virtual void enable_floating(std::string_view appid) const = 0;
-    virtual void move_window(std::string_view appid, int xcoord, int ycoord) const = 0;
+    [[nodiscard]] virtual auto get_window_info() -> struct WlrootsWindow = 0;
+    virtual void initial_setup(std::string_view appid) = 0;
+    virtual void move_window(std::string_view appid, int xcoord, int ycoord) = 0;
 };
 
 #endif

@@ -19,6 +19,9 @@
 
 #include <fmt/format.h>
 #include <iostream>
+#include <nlohmann/json.hpp>
+
+using njson = nlohmann::json;
 
 HyprlandSocket::HyprlandSocket()
 {
@@ -26,27 +29,68 @@ HyprlandSocket::HyprlandSocket()
     if (!env.has_value()) {
         throw std::runtime_error("HYPRLAND NOT SUPPORTED");
     }
-    const auto path = fmt::format("/tmp/hypr/{}/.socket.sock", env.value());
-    socket = std::make_unique<UnixSocket>(path);
+    socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", env.value());
 }
 
-auto HyprlandSocket::get_window_info() const -> struct WlrootsWindow
+auto HyprlandSocket::get_window_info() -> struct WlrootsWindow
 {
-    std::cout << "bruh" << std::endl;
-    return {.width=0,.height=0,.x=0,.y=0};
+    socket = std::make_unique<UnixSocket>(socket_path);
+    const std::string_view payload {"j/activewindow"};
+    const int bufsize = 8192;
+    std::string result (bufsize, 0);
+    socket->write(payload.data(), payload.size());
+    socket->read(result.data(), result.size());
+    const auto json = njson::parse(result);
+    const auto& sizes = json["size"];
+    const auto& coords = json["at"];
+    return {
+        .width = sizes[0],
+        .height = sizes[1],
+        .x = coords[0],
+        .y = coords[1]
+    };
 }
 
-void HyprlandSocket::disable_focus(std::string_view appid) const
+void HyprlandSocket::initial_setup(const std::string_view appid)
 {
-    std::cout << appid << std::endl;
+    disable_focus(appid);
+    enable_floating(appid);
+    remove_borders(appid);
+    remove_rounding(appid);
 }
 
-void HyprlandSocket::enable_floating(std::string_view appid) const
+void HyprlandSocket::remove_rounding(const std::string_view appid)
 {
-    std::cout << appid << std::endl;
+    const auto payload = fmt::format("/keyword windowrulev2 rounding 0,title:{}", appid);
+    request(payload);
 }
 
-void HyprlandSocket::move_window(std::string_view appid, int xcoord, int ycoord) const
+void HyprlandSocket::disable_focus(const std::string_view appid)
 {
-    std::cout << appid << " " << xcoord << " " << ycoord << std::endl;
+    const auto payload = fmt::format("/keyword windowrulev2 nofocus,title:{}", appid);
+    request(payload);
+}
+
+void HyprlandSocket::enable_floating(const std::string_view appid)
+{
+    const auto payload = fmt::format("/keyword windowrulev2 float,title:{}", appid);
+    request(payload);
+}
+
+void HyprlandSocket::remove_borders(const std::string_view appid)
+{
+    const auto payload = fmt::format("/keyword windowrulev2 noborder,title:{}", appid);
+    request(payload);
+}
+
+void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
+{
+    const auto payload = fmt::format("/keyword windowrulev2 move {} {},title:{}", xcoord, ycoord, appid);
+    request(payload);
+}
+
+void HyprlandSocket::request(const std::string_view payload)
+{
+    socket = std::make_unique<UnixSocket>(socket_path);
+    socket->write(payload.data(), payload.length());
 }

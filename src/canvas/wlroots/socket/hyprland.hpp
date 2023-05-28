@@ -26,13 +26,19 @@ class HyprlandSocket : public WlrootsSocket
 public:
     HyprlandSocket();
     ~HyprlandSocket() override = default;
-    [[nodiscard]] auto get_window_info() const -> struct WlrootsWindow override;
-    void disable_focus(std::string_view appid) const override;
-    void enable_floating(std::string_view appid) const override;
-    void move_window(std::string_view appid, int xcoord, int ycoord) const override;
+    [[nodiscard]] auto get_window_info() -> struct WlrootsWindow override;
+    void initial_setup(std::string_view appid) override;
+    void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
 private:
+    void disable_focus(std::string_view appid);
+    void enable_floating(std::string_view appid);
+    void remove_borders(std::string_view appid);
+    void remove_rounding(std::string_view appid);
+    void request(std::string_view payload);
+
     std::unique_ptr<UnixSocket> socket;
+    std::string socket_path;
 };
 
 #endif

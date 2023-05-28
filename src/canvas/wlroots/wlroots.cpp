@@ -118,7 +118,7 @@ display(wl_display_connect(nullptr))
     if (display == nullptr) {
         throw std::runtime_error("Failed to connect to wayland display.");
     }
-    logger = spdlog::get("sway");
+    logger = spdlog::get("wlroots");
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
@@ -134,9 +134,7 @@ display(wl_display_connect(nullptr))
     const int idlength = 10;
     appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
 
-    // TODO: change appid
-    socket->disable_focus(appid);
-    socket->enable_floating(appid);
+    socket->initial_setup(appid);
     logger->info("Canvas created");
 }
 
@@ -200,7 +198,6 @@ void WlrootsCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> ne
     y = sway_y + dimensions.ypixels() + dimensions.padding_vertical;
     width = image->width();
     height = image->height();
-    socket = WlrootsSocket::get();
 
     socket->move_window(appid, x, y);
 }
@@ -240,7 +237,7 @@ void WlrootsCanvas::draw()
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this);
     xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
     xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
-    xdg_toplevel_set_title(xdg_toplevel, "ueberzugpp: image window");
+    xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
     wl_surface_commit(surface);
 
     if (image->is_animated()) {

@@ -31,3 +31,10 @@ auto WlrootsSocket::get() -> std::unique_ptr<WlrootsSocket>
     }
     return nullptr;
 }
+
+auto WlrootsSocket::is_supported() -> bool
+{
+    const auto sway_sock = os::getenv("SWAYSOCK");
+    const auto hypr_sig = os::getenv("HYPRLAND_INSTANCE_SIGNATURE");
+    return sway_sock.has_value() || hypr_sig.has_value();
+}

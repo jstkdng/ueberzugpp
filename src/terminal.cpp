@@ -75,7 +75,7 @@ auto Terminal::get_terminal_size() -> void
     get_fallback_wlroots_terminal_sizes();
 
     check_x11_support();
-    check_sway_support();
+    check_wlroots_support();
     check_iterm2_support();
     if (flags->use_escape_codes) {
         init_termios();
@@ -241,15 +241,15 @@ void Terminal::check_x11_support()
 #endif
 }
 
-void Terminal::check_sway_support()
+void Terminal::check_wlroots_support()
 {
 #ifdef ENABLE_WLROOTS
-    const auto sock = WlrootsSocket::get();
-    if (sock != nullptr) {
+    if (WlrootsSocket::is_supported()) {
         supports_wlroots = true;
+        logger->debug("Wlroots is supported");
     }
 #else
-    logger->debug("Sway is not supported");
+    logger->debug("Wlroots not supported");
 #endif
 }
 
