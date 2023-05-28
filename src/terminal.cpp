@@ -319,7 +319,9 @@ void Terminal::open_first_pty()
         }
     }
     for (const auto& spid: pids) {
-        const auto tree = util::get_process_tree(spid);
+        auto tree = util::get_process_tree(spid);
+        tree.pop_back();
+        std::reverse(tree.begin(), tree.end());
         for (const auto& tpid: tree) {
             const auto proc = Process(tpid);
             pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
