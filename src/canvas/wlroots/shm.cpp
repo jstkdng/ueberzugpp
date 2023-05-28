@@ -27,6 +27,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <cerrno>
+#include <iostream>
 
 SwayShm::SwayShm(int width, int height, struct wl_shm* shm):
 shm(shm),

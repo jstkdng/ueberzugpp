@@ -84,14 +84,12 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
     socket->read(reinterpret_cast<void*>(&header), ipc_header_size);
     std::string buff (header.len, 0);
     socket->read(reinterpret_cast<void*>(buff.data()), buff.size());
-    std::cout << buff << std::endl;
     return njson::parse(buff);
 }
 
 auto SwaySocket::current_window() const -> nlohmann::json
 {
     auto tree = ipc_message(IPC_GET_TREE);
-    std::cout << tree.dump(4) << std::endl;
     std::stack<njson> nodes_st;
 
     nodes_st.push(tree);

@@ -172,7 +172,7 @@ auto LibvipsImage::process_image() -> void
         if (image.has_alpha()) {
             image = image.flatten();
         }
-    } else if (flags->output == "x11" || flags->output == "chafa" || flags->output == "sway") {
+    } else if (flags->output == "x11" || flags->output == "chafa" || flags->output == "wlroots") {
         // alpha channel required
         if (!image.has_alpha()) {
             const int alpha_value = 255;

@@ -61,7 +61,7 @@ private:
     void get_terminal_size_escape_code();
     void get_terminal_size_xtsm();
     void get_fallback_x11_terminal_sizes();
-    void get_fallback_sway_terminal_sizes();
+    void get_fallback_wlroots_terminal_sizes();
 
     void open_first_pty();
     void set_detected_output();
@@ -77,7 +77,7 @@ private:
     bool supports_kitty = false;
     bool supports_x11 = false;
     bool supports_iterm2 = false;
-    bool supports_sway = false;
+    bool supports_wlroots = false;
 
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;

@@ -122,13 +122,12 @@ display(wl_display_connect(nullptr))
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
-
+    socket = WlrootsSocket::get();
     event_handler = std::thread([&] {
         handle_events();
     });
 
     const auto cur_window = socket->get_window_info();
-
     sway_x = cur_window.x;
     sway_y = cur_window.y;
 

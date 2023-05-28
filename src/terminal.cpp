@@ -72,7 +72,7 @@ auto Terminal::get_terminal_size() -> void
     logger->debug("ioctl sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
 
     get_fallback_x11_terminal_sizes();
-    get_fallback_sway_terminal_sizes();
+    get_fallback_wlroots_terminal_sizes();
 
     check_x11_support();
     check_sway_support();
@@ -131,8 +131,8 @@ void Terminal::set_detected_output()
     if (supports_x11) {
         detected_output = "x11";
     }
-    if (supports_sway) {
-        detected_output = "sway";
+    if (supports_wlroots) {
+        detected_output = "wlroots";
     }
     if (flags->output.empty()) {
         flags->output = detected_output;
@@ -243,13 +243,10 @@ void Terminal::check_x11_support()
 
 void Terminal::check_sway_support()
 {
-#ifdef ENABLE_SWAY
-    const auto sock = os::getenv("SWAYSOCK");
-    if (sock.has_value()) {
-        supports_sway = true;
-        logger->debug("Sway is supported");
-    } else {
-        logger->debug("Sway is not supported");
+#ifdef ENABLE_WLROOTS
+    const auto sock = WlrootsSocket::get();
+    if (sock != nullptr) {
+        supports_wlroots = true;
     }
 #else
     logger->debug("Sway is not supported");
@@ -299,7 +296,7 @@ void Terminal::get_fallback_x11_terminal_sizes()
 #endif
 }
 
-void Terminal::get_fallback_sway_terminal_sizes()
+void Terminal::get_fallback_wlroots_terminal_sizes()
 {
 #ifdef ENABLE_WLROOTS
     const auto sock = WlrootsSocket::get();

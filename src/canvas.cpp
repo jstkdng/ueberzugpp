@@ -50,7 +50,7 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
     logger->debug("X11 support not compiled in the binary");
 #endif
 #ifdef ENABLE_WLROOTS
-    if (flags->output == "sway") {
+    if (flags->output == "wlroots") {
         return std::make_unique<WlrootsCanvas>();
     }
 #endif

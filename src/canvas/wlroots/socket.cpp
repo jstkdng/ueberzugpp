@@ -26,5 +26,8 @@ auto WlrootsSocket::get() -> std::unique_ptr<WlrootsSocket>
     if (sway_sock.has_value()) {
         return std::make_unique<SwaySocket>();
     }
+    if (hypr_sig.has_value()) {
+        return std::make_unique<HyprlandSocket>();
+    }
     return nullptr;
 }

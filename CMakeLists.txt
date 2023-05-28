@@ -137,6 +137,7 @@ if(ENABLE_WLROOTS)
         "src/canvas/wlroots/shm.cpp"
         "src/canvas/wlroots/socket.cpp"
         "src/canvas/wlroots/socket/sway.cpp"
+        "src/canvas/wlroots/socket/hyprland.cpp"
     )
 
     list(APPEND UEBERZUG_LIBRARIES
