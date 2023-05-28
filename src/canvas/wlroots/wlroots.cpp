@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "sway.hpp"
+#include "wlroots.hpp"
 #include "os.hpp"
 #include "util.hpp"
 
@@ -24,27 +24,27 @@
 #include <cstring>
 
 constexpr struct wl_registry_listener registry_listener = {
-    .global = SwayCanvas::registry_handle_global,
-    .global_remove = SwayCanvas::registry_handle_global_remove
+    .global = WlrootsCanvas::registry_handle_global,
+    .global_remove = WlrootsCanvas::registry_handle_global_remove
 };
 
 constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {
-    .ping = SwayCanvas::xdg_wm_base_ping
+    .ping = WlrootsCanvas::xdg_wm_base_ping
 };
 
 constexpr struct xdg_surface_listener xdg_surface_listener = {
-    .configure = SwayCanvas::xdg_surface_configure,
+    .configure = WlrootsCanvas::xdg_surface_configure,
 };
 
 constexpr struct wl_callback_listener frame_listener = {
-    .done = SwayCanvas::wl_surface_frame_done
+    .done = WlrootsCanvas::wl_surface_frame_done
 };
 
-void SwayCanvas::registry_handle_global(void *data, wl_registry *registry,
+void WlrootsCanvas::registry_handle_global(void *data, wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version)
 {
     std::string_view interface_str { interface };
-    auto *canvas = reinterpret_cast<SwayCanvas*>(data);
+    auto *canvas = reinterpret_cast<WlrootsCanvas*>(data);
     if (interface_str == wl_compositor_interface.name) {
         canvas->compositor = reinterpret_cast<struct wl_compositor*>(
             wl_registry_bind(registry, name, &wl_compositor_interface, version)
@@ -61,21 +61,21 @@ void SwayCanvas::registry_handle_global(void *data, wl_registry *registry,
     }
 }
 
-void SwayCanvas::registry_handle_global_remove(
+void WlrootsCanvas::registry_handle_global_remove(
         [[maybe_unused]] void *data,
         [[maybe_unused]] wl_registry *registry,
         [[maybe_unused]] uint32_t name)
 {}
 
-void SwayCanvas::xdg_wm_base_ping([[maybe_unused]] void *data,
+void WlrootsCanvas::xdg_wm_base_ping([[maybe_unused]] void *data,
         struct xdg_wm_base *xdg_wm_base, uint32_t serial)
 {
     xdg_wm_base_pong(xdg_wm_base, serial);
 }
 
-void SwayCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
+void WlrootsCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
 {
-    auto *canvas = reinterpret_cast<SwayCanvas*>(data);
+    auto *canvas = reinterpret_cast<WlrootsCanvas*>(data);
     xdg_surface_ack_configure(xdg_surface, serial);
 
     std::unique_lock lock {canvas->draw_mutex, std::defer_lock};
@@ -91,9 +91,9 @@ void SwayCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_surfa
     wl_surface_commit(canvas->surface);
 }
 
-void SwayCanvas::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
+void WlrootsCanvas::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
 {
-    auto *canvas = reinterpret_cast<SwayCanvas*>(data);
+    auto *canvas = reinterpret_cast<WlrootsCanvas*>(data);
     wl_callback_destroy(callback);
     std::unique_lock lock {canvas->draw_mutex};
     if (!canvas->can_draw.load()) {
@@ -112,7 +112,7 @@ void SwayCanvas::wl_surface_frame_done(void *data, struct wl_callback *callback,
     wl_surface_commit(canvas->surface);
 }
 
-SwayCanvas::SwayCanvas():
+WlrootsCanvas::WlrootsCanvas():
 display(wl_display_connect(nullptr))
 {
     if (display == nullptr) {
@@ -127,22 +127,21 @@ display(wl_display_connect(nullptr))
         handle_events();
     });
 
-    const auto cur_window = socket.current_window();
+    const auto cur_window = socket->get_window_info();
 
-    const auto& win_rect = cur_window["rect"];
-    sway_x = static_cast<int>(win_rect["x"]);
-    sway_y = static_cast<int>(win_rect["y"]);
+    sway_x = cur_window.x;
+    sway_y = cur_window.y;
 
     const int idlength = 10;
     appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
 
     // TODO: change appid
-    std::ignore = socket.ipc_command(fmt::format(R"(no_focus [app_id="{}"])", appid));
-    std::ignore = socket.ipc_command(appid, "floating enable");
+    socket->disable_focus(appid);
+    socket->enable_floating(appid);
     logger->info("Canvas created");
 }
 
-void SwayCanvas::toggle()
+void WlrootsCanvas::toggle()
 {
     if (visible) {
         clear();
@@ -152,7 +151,7 @@ void SwayCanvas::toggle()
     visible = !visible;
 }
 
-void SwayCanvas::show()
+void WlrootsCanvas::show()
 {
     if (visible) {
         return;
@@ -161,7 +160,7 @@ void SwayCanvas::show()
     draw();
 }
 
-void SwayCanvas::hide()
+void WlrootsCanvas::hide()
 {
     if (!visible) {
         return;
@@ -170,7 +169,7 @@ void SwayCanvas::hide()
     clear();
 }
 
-SwayCanvas::~SwayCanvas()
+WlrootsCanvas::~WlrootsCanvas()
 {
     can_draw.store(false);
     std::unique_lock lock {draw_mutex};
@@ -195,18 +194,19 @@ SwayCanvas::~SwayCanvas()
     wl_display_disconnect(display);
 }
 
-void SwayCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+void WlrootsCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     image = std::move(new_image);
     x = sway_x + dimensions.xpixels() + dimensions.padding_horizontal;
     y = sway_y + dimensions.ypixels() + dimensions.padding_vertical;
     width = image->width();
     height = image->height();
+    socket = WlrootsSocket::get();
 
-    std::ignore = socket.ipc_command(appid, fmt::format("move absolute position {} {}", x, y));
+    socket->move_window(appid, x, y);
 }
 
-void SwayCanvas::handle_events()
+void WlrootsCanvas::handle_events()
 {
     const int waitms = 100;
     const auto wl_fd = wl_display_get_fd(display);
@@ -233,7 +233,7 @@ void SwayCanvas::handle_events()
     }
 }
 
-void SwayCanvas::draw()
+void WlrootsCanvas::draw()
 {
     shm = std::make_unique<SwayShm>(width, height, wl_shm);
     surface = wl_compositor_create_surface(compositor);
@@ -252,7 +252,7 @@ void SwayCanvas::draw()
     visible = true;
 }
 
-void SwayCanvas::clear()
+void WlrootsCanvas::clear()
 {
     if (surface == nullptr) {
         return;

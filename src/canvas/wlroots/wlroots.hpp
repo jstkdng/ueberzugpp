@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SWAY_CANVAS__
-#define __SWAY_CANVAS__
+#ifndef __WLROOTS_CANVAS__
+#define __WLROOTS_CANVAS__
 
 #include "canvas.hpp"
 #include "dimensions.hpp"
@@ -32,11 +32,11 @@
 #include <fmt/format.h>
 #include <wayland-client.h>
 
-class SwayCanvas : public Canvas
+class WlrootsCanvas : public Canvas
 {
 public:
-    explicit SwayCanvas();
-    ~SwayCanvas() override;
+    explicit WlrootsCanvas();
+    ~WlrootsCanvas() override;
 
     static void registry_handle_global(void *data, struct wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version);
@@ -77,7 +77,7 @@ private:
     std::atomic<bool> stop_flag {false};
     std::thread event_handler;
 
-    SwaySocket socket;
+    std::unique_ptr<WlrootsSocket> socket;
 
     void handle_events();
 

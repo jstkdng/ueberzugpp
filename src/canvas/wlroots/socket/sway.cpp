@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "socket.hpp"
+#include "sway.hpp"
 #include "os.hpp"
 
 #include <string>
@@ -33,7 +33,7 @@ SwaySocket::SwaySocket()
 {
     const auto sway_sock = os::getenv("SWAYSOCK");
     if (!sway_sock.has_value()) {
-        throw std::runtime_error("SWAYSOCK IS NOT DEFINED");
+        throw std::runtime_error("SWAY NOT SUPPORTED");
     }
     socket = std::make_unique<UnixSocket>(sway_sock.value());
 }
@@ -43,6 +43,33 @@ struct __attribute__((packed)) ipc_header {
     uint32_t len;
     uint32_t type;
 };
+
+auto SwaySocket::get_window_info() const -> struct WlrootsWindow
+{
+    const auto window = current_window();
+    const auto& rect = window["rect"];
+    return {
+        .width = rect["width"],
+        .height = rect["height"],
+        .x = rect["x"],
+        .y = rect["y"]
+    };
+}
+
+void SwaySocket::disable_focus(const std::string_view appid) const
+{
+    std::ignore = ipc_command(fmt::format(R"(no_focus [app_id="{}"])", appid));
+}
+
+void SwaySocket::enable_floating(const std::string_view appid) const
+{
+    std::ignore = ipc_command(appid, "floating enable");
+}
+
+void SwaySocket::move_window(std::string_view appid, int xcoord, int ycoord) const
+{
+    std::ignore = ipc_command(appid, fmt::format("move absolute position {} {}", xcoord, ycoord));
+}
 
 auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view payload) const -> nlohmann::json
 {
@@ -57,12 +84,14 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
     socket->read(reinterpret_cast<void*>(&header), ipc_header_size);
     std::string buff (header.len, 0);
     socket->read(reinterpret_cast<void*>(buff.data()), buff.size());
+    std::cout << buff << std::endl;
     return njson::parse(buff);
 }
 
 auto SwaySocket::current_window() const -> nlohmann::json
 {
     auto tree = ipc_message(IPC_GET_TREE);
+    std::cout << tree.dump(4) << std::endl;
     std::stack<njson> nodes_st;
 
     nodes_st.push(tree);
@@ -79,18 +108,6 @@ auto SwaySocket::current_window() const -> nlohmann::json
         }
         for (auto& node: top["floating_nodes"]) {
             nodes_st.push(node);
-        }
-    }
-    return nullptr;
-}
-
-auto SwaySocket::current_workspace() const -> nlohmann::json
-{
-    auto workspaces = ipc_message(IPC_GET_WORKSPACES);
-    for (const auto& workspace: workspaces) {
-        bool focused = workspace["focused"];
-        if (focused) {
-            return workspace;
         }
     }
     return nullptr;

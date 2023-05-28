@@ -32,7 +32,7 @@ project(ueberzugpp LANGUAGES CXX C VERSION 2.8.5)
 add_executable(ueberzug)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
-option(ENABLE_SWAY          "Enable Sway canvas" OFF)
+option(ENABLE_WLROOTS       "Enable wlroots canvas" OFF)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
 option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 
@@ -118,8 +118,8 @@ if(ENABLE_X11)
     )
 endif()
 
-if(ENABLE_SWAY)
-    target_compile_definitions(ueberzug PRIVATE ENABLE_SWAY)
+if(ENABLE_WLROOTS)
+    target_compile_definitions(ueberzug PRIVATE ENABLE_WLROOTS)
     find_package(ECM REQUIRED NO_MODULE)
     list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
@@ -133,9 +133,10 @@ if(ENABLE_SWAY)
         BASENAME "xdg-shell")
 
     list(APPEND UEBERZUG_SOURCES
-        "src/canvas/sway/sway.cpp"
-        "src/canvas/sway/shm.cpp"
-        "src/canvas/sway/socket.cpp"
+        "src/canvas/wlroots/wlroots.cpp"
+        "src/canvas/wlroots/shm.cpp"
+        "src/canvas/wlroots/socket.cpp"
+        "src/canvas/wlroots/socket/sway.cpp"
     )
 
     list(APPEND UEBERZUG_LIBRARIES

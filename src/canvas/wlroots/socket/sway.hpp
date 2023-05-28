@@ -18,6 +18,7 @@
 #define __SWAY_SOCKET__
 
 #include "util/socket.hpp"
+#include "../socket.hpp"
 
 #include <string_view>
 #include <memory>
@@ -29,18 +30,21 @@ enum ipc_message_type {
     IPC_GET_TREE = 4
 };
 
-class SwaySocket
+class SwaySocket : public WlrootsSocket
 {
 public:
     SwaySocket();
-    ~SwaySocket() = default;
-    [[nodiscard]] auto current_window() const -> nlohmann::json;
-    [[nodiscard]] auto current_workspace() const -> nlohmann::json;
-    [[nodiscard]] auto ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json;
-    [[nodiscard]] auto ipc_command(std::string_view command) const -> nlohmann::json;
+    ~SwaySocket() override = default;
+    [[nodiscard]] auto get_window_info() const -> struct WlrootsWindow override;
+    void disable_focus(std::string_view appid) const override;
+    void enable_floating(std::string_view appid) const override;
+    void move_window(std::string_view appid, int xcoord, int ycoord) const override;
 
 private:
     std::unique_ptr<UnixSocket> socket;
+    [[nodiscard]] auto current_window() const -> nlohmann::json;
+    [[nodiscard]] auto ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json;
+    [[nodiscard]] auto ipc_command(std::string_view command) const -> nlohmann::json;
     [[nodiscard]] auto ipc_message(ipc_message_type type, std::string_view payload = "") const -> nlohmann::json;
 };
 

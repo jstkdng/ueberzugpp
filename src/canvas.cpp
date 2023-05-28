@@ -22,8 +22,8 @@
 #ifdef ENABLE_X11
 #   include "canvas/x11/x11.hpp"
 #endif
-#ifdef ENABLE_SWAY
-#   include "canvas/sway/sway.hpp"
+#ifdef ENABLE_WLROOTS
+#   include "canvas/wlroots/wlroots.hpp"
 #endif
 #include "flags.hpp"
 #include "os.hpp"
@@ -49,9 +49,9 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
 #else
     logger->debug("X11 support not compiled in the binary");
 #endif
-#ifdef ENABLE_SWAY
+#ifdef ENABLE_WLROOTS
     if (flags->output == "sway") {
-        return std::make_unique<SwayCanvas>();
+        return std::make_unique<WlrootsCanvas>();
     }
 #endif
     if (flags->output == "kitty") {

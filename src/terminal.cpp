@@ -23,8 +23,8 @@
 #ifdef ENABLE_X11
 #   include "util/x11.hpp"
 #endif
-#ifdef ENABLE_SWAY
-#   include "canvas/sway/socket.hpp"
+#ifdef ENABLE_WLROOTS
+#   include "canvas/wlroots/socket.hpp"
 #endif
 
 #include <cmath>
@@ -301,14 +301,14 @@ void Terminal::get_fallback_x11_terminal_sizes()
 
 void Terminal::get_fallback_sway_terminal_sizes()
 {
-#ifdef ENABLE_SWAY
-    try {
-        const auto socket = SwaySocket();
-        const auto window = socket.current_window();
-        const auto& rect = window["rect"];
-        fallback_xpixel = rect["width"];
-        fallback_ypixel = rect["height"];
-    } catch (const std::runtime_error& err) {}
+#ifdef ENABLE_WLROOTS
+    const auto sock = WlrootsSocket::get();
+    if (sock == nullptr) {
+        return;
+    }
+    const auto window = sock->get_window_info();
+    fallback_xpixel = window.width;
+    fallback_ypixel = window.height;
 #endif
 }
 
