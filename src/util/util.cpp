@@ -83,9 +83,11 @@ auto util::get_socket_path(int pid) -> std::string
 
 void util::send_socket_message(const std::string_view msg, const std::string_view endpoint)
 {
-    UnixSocket socket;
-    socket.connect_to_endpoint(endpoint);
-    socket.write(msg.data(), msg.size());
+    try {
+        UnixSocket socket;
+        socket.connect_to_endpoint(endpoint);
+        socket.write(msg.data(), msg.size());
+    } catch (const std::system_error& err) {}
 }
 
 auto util::base64_encode(const unsigned char *input, uint64_t length) -> std::string
