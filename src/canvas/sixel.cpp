@@ -24,18 +24,15 @@
 
 namespace fs = std::filesystem;
 
-auto sixel_draw_callback(char *data, int size, void* priv) -> int
-{
-    auto *str = static_cast<std::string*>(priv);
-    str->append(data, size);
-    return size;
-}
-
 SixelCanvas::SixelCanvas()
 {
     logger = spdlog::get("sixel");
-    sixel_output_new(&output, sixel_draw_callback, &str, nullptr);
-    sixel_output_set_encode_policy(output, SIXEL_ENCODEPOLICY_FAST);
+    const auto draw_callback = [] (char *data, int size, void* priv) -> int {
+        auto *str = static_cast<std::string*>(priv);
+        str->append(data, size);
+        return size;
+    };
+    sixel_output_new(&output, draw_callback, &str, nullptr);
     logger->info("Canvas created");
 }
 
