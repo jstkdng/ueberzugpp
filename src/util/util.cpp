@@ -147,7 +147,7 @@ auto util::get_cache_file_save_location(const fs::path &path) -> std::string
     return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path.string()), path.extension().string());
 }
 
-void util::benchmark(std::function<void(void)>& func)
+void util::benchmark(std::function<void(void)> func)
 {
     using std::chrono::high_resolution_clock;
     using std::chrono::duration_cast;

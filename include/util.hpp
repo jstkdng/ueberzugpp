@@ -43,7 +43,7 @@ namespace util
     void move_cursor(int row, int col);
     void save_cursor_position();
     void restore_cursor_position();
-    void benchmark(std::function<void(void)>& func);
+    void benchmark(std::function<void(void)> func);
     void send_command(const Flags& flags);
     void clear_terminal_area(int xcoord, int ycoord, int width, int height);
     auto generate_random_string(std::size_t length) -> std::string;
