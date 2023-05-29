@@ -44,7 +44,6 @@ void Iterm2Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new
     y = dimensions.y + 1;
     max_width = dimensions.max_w;
     max_height = dimensions.max_h;
-    str = "";
 }
 
 void Iterm2Canvas::draw()
@@ -72,6 +71,7 @@ void Iterm2Canvas::draw()
     util::move_cursor(y, x);
     std::cout << str << std::flush;
     util::restore_cursor_position();
+    str.clear();
 }
 
 void Iterm2Canvas::clear()

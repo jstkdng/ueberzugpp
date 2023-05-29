@@ -83,10 +83,14 @@ void KittyCanvas::draw_frame()
             image->height(), chunks.front().get_result()));
 
     for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
-        str.append(fmt::format("\033_Gm=1,q=2;{}\033\\", chunk->get_result()));
+        str.append("\033_Gm=1,q=2;");
+        str.append(chunk->get_result());
+        str.append("\033\\");
     }
 
-    str.append(fmt::format("\033_Gm=0,q=2;{}\033\\", chunks.back().get_result()));
+    str.append("\033_Gm=0,q=2;");
+    str.append(chunks.back().get_result());
+    str.append("\033\\");
 
     util::save_cursor_position();
     util::move_cursor(y, x);
