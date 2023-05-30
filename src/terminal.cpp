@@ -276,9 +276,9 @@ void Terminal::get_fallback_wayland_terminal_sizes()
     const auto config = WaylandConfig::get();
     if (!config->is_dummy()) {
         supports_wayland = true;
-        logger->warn("Current wayland wm is supported.");
+        logger->debug("Wayland is supported.");
     } else {
-        logger->debug("Current wayland wm is not supported");
+        logger->debug("Wayland is not supported");
         return;
     }
     const auto window = config->get_window_info();
