@@ -34,7 +34,7 @@ Advantages over w3mimgdisplay and ueberzug:
 
 # Download
 
-Arch Linux: [AUR](https://aur.archlinux.org/packages/ueberzugpp)
+<a href="https://repology.org/project/ueberzugpp/versions"><img src="https://repology.org/badge/vertical-allrepos/ueberzugpp.svg" /></a>
 
 MacOS: [Homebrew](https://github.com/jstkdng/ueberzugpp/blob/master/homebrew/ueberzugpp.rb)
 
