@@ -14,27 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "socket.hpp"
-#include "os.hpp"
-#include "socket/sway.hpp"
-#include "socket/hyprland.hpp"
+#include "dummy.hpp"
 
-auto WlrootsSocket::get() -> std::unique_ptr<WlrootsSocket>
+auto DummyWaylandConfig::get_window_info() -> struct WaylandWindow
 {
-    const auto sway_sock = os::getenv("SWAYSOCK");
-    const auto hypr_sig = os::getenv("HYPRLAND_INSTANCE_SIGNATURE");
-    if (sway_sock.has_value()) {
-        return std::make_unique<SwaySocket>();
-    }
-    if (hypr_sig.has_value()) {
-        return std::make_unique<HyprlandSocket>();
-    }
-    return nullptr;
+    return {};
 }
 
-auto WlrootsSocket::is_supported() -> bool
-{
-    const auto sway_sock = os::getenv("SWAYSOCK");
-    const auto hypr_sig = os::getenv("HYPRLAND_INSTANCE_SIGNATURE");
-    return sway_sock.has_value() || hypr_sig.has_value();
-}
+void DummyWaylandConfig::initial_setup([[maybe_unused]] std::string_view appid)
+{}
+
+void DummyWaylandConfig::move_window([[maybe_unused]] std::string_view appid,
+        [[maybe_unused]] int xcoord, [[maybe_unused]] int ycoord)
+{}

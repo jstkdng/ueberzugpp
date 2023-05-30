@@ -32,7 +32,7 @@ HyprlandSocket::HyprlandSocket()
     socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", env.value());
 }
 
-auto HyprlandSocket::get_window_info() -> struct WlrootsWindow
+auto HyprlandSocket::get_window_info() -> struct WaylandWindow
 {
     socket = std::make_unique<UnixSocket>(socket_path);
     const std::string_view payload {"j/activewindow"};

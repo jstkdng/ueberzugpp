@@ -29,7 +29,7 @@
 #include <cerrno>
 #include <iostream>
 
-SwayShm::SwayShm(int width, int height, struct wl_shm* shm):
+WaylandShm::WaylandShm(int width, int height, struct wl_shm* shm):
 shm(shm),
 width(width),
 height(height),
@@ -42,7 +42,7 @@ pool_size(height * stride * 2)
     allocate_pool_buffers();
 }
 
-void SwayShm::create_shm_file()
+void WaylandShm::create_shm_file()
 {
     const mode_t shm_mode = 0600;
     fd = shm_open(shm_path.c_str(), O_RDWR | O_CREAT | O_EXCL, shm_mode);
@@ -58,13 +58,13 @@ void SwayShm::create_shm_file()
     );
 }
 
-void SwayShm::allocate_pool_buffers()
+void WaylandShm::allocate_pool_buffers()
 {
     pool = wl_shm_create_pool(shm, fd, pool_size);
     buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
 }
 
-auto SwayShm::get_data(uint32_t offset) -> uint32_t*
+auto WaylandShm::get_data(uint32_t offset) -> uint32_t*
 {
     if (offset > 1) {
         return nullptr;
@@ -72,7 +72,7 @@ auto SwayShm::get_data(uint32_t offset) -> uint32_t*
     return reinterpret_cast<uint32_t*>(&pool_data[offset]);
 }
 
-SwayShm::~SwayShm()
+WaylandShm::~WaylandShm()
 {
     shm_unlink(shm_path.c_str());
     close(fd);

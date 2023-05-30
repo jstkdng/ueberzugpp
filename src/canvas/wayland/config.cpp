@@ -14,31 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __WLROOTS_SOCKET__
-#define __WLROOTS_SOCKET__
+#include "config.hpp"
+#include "os.hpp"
+#include "config/sway.hpp"
+#include "config/hyprland.hpp"
+#include "config/dummy.hpp"
 
-#include <memory>
-#include <string_view>
-
-struct WlrootsWindow
+auto WaylandConfig::get() -> std::unique_ptr<WaylandConfig>
 {
-    int width;
-    int height;
-    int x;
-    int y;
-};
+    const auto sway_sock = os::getenv("SWAYSOCK");
+    const auto hypr_sig = os::getenv("HYPRLAND_INSTANCE_SIGNATURE");
+    if (sway_sock.has_value()) {
+        return std::make_unique<SwaySocket>();
+    }
+    if (hypr_sig.has_value()) {
+        return std::make_unique<HyprlandSocket>();
+    }
+    return std::make_unique<DummyWaylandConfig>();
+}
 
-class WlrootsSocket
-{
-public:
-    static auto get() -> std::unique_ptr<WlrootsSocket>;
-    static auto is_supported() -> bool;
-
-    virtual ~WlrootsSocket() = default;
-
-    [[nodiscard]] virtual auto get_window_info() -> struct WlrootsWindow = 0;
-    virtual void initial_setup(std::string_view appid) = 0;
-    virtual void move_window(std::string_view appid, int xcoord, int ycoord) = 0;
-};
-
-#endif

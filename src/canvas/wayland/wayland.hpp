@@ -14,14 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __WLROOTS_CANVAS__
-#define __WLROOTS_CANVAS__
+#ifndef __WAYLAND_CANVAS__
+#define __WAYLAND_CANVAS__
 
 #include "canvas.hpp"
 #include "dimensions.hpp"
 #include "terminal.hpp"
 #include "shm.hpp"
-#include "socket.hpp"
+#include "config.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 
 #include <memory>
@@ -32,11 +32,11 @@
 #include <fmt/format.h>
 #include <wayland-client.h>
 
-class WlrootsCanvas : public Canvas
+class WaylandCanvas : public Canvas
 {
 public:
-    explicit WlrootsCanvas();
-    ~WlrootsCanvas() override;
+    explicit WaylandCanvas();
+    ~WaylandCanvas() override;
 
     static void registry_handle_global(void *data, struct wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version);
@@ -61,7 +61,7 @@ public:
     struct xdg_wm_base* xdg_base = nullptr;
     struct xdg_surface* xdg_surface = nullptr;
     struct xdg_toplevel* xdg_toplevel = nullptr;
-    std::unique_ptr<SwayShm> shm;
+    std::unique_ptr<WaylandShm> shm;
     std::unique_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;
     std::mutex draw_mutex;
@@ -77,7 +77,7 @@ private:
     std::atomic<bool> stop_flag {false};
     std::thread event_handler;
 
-    std::unique_ptr<WlrootsSocket> socket;
+    std::unique_ptr<WaylandConfig> config;
 
     void handle_events();
 

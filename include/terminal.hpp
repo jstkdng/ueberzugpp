@@ -55,21 +55,19 @@ private:
     void check_sixel_support();
     void check_kitty_support();
     void check_iterm2_support();
-    void check_x11_support();
-    void check_wlroots_support();
 
     void get_terminal_size_escape_code();
     void get_terminal_size_xtsm();
     void get_fallback_x11_terminal_sizes();
-    void get_fallback_wlroots_terminal_sizes();
+    void get_fallback_wayland_terminal_sizes();
 
     void open_first_pty();
     void set_detected_output();
 
     int pty_fd;
     int pid;
-    int xpixel;
-    int ypixel;
+    int xpixel = 0;
+    int ypixel = 0;
     uint16_t fallback_xpixel = 0;
     uint16_t fallback_ypixel = 0;
 
@@ -77,13 +75,10 @@ private:
     bool supports_kitty = false;
     bool supports_x11 = false;
     bool supports_iterm2 = false;
-    bool supports_wlroots = false;
+    bool supports_wayland = false;
 
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;
-#ifdef ENABLE_X11
-    std::unique_ptr<X11Util> xutil;
-#endif
 
     struct termios old_term;
     struct termios new_term;

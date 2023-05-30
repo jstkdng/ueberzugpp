@@ -14,31 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __HYPRLAND_SOCKET__
-#define __HYPRLAND_SOCKET__
+#ifndef __DUMMY_WAYLAND_CONFIG__
+#define __DUMMY_WAYLAND_CONFIG__
 
-#include "util/socket.hpp"
-#include "../socket.hpp"
-#include <memory>
+#include "../config.hpp"
 
-class HyprlandSocket : public WlrootsSocket
+class DummyWaylandConfig : public WaylandConfig
 {
 public:
-    HyprlandSocket();
-    ~HyprlandSocket() override = default;
-    [[nodiscard]] auto get_window_info() -> struct WlrootsWindow override;
+    DummyWaylandConfig() = default;
+    ~DummyWaylandConfig() override = default;
+    [[nodiscard]] auto get_window_info() -> struct WaylandWindow override;
+    auto is_dummy() -> bool override { return true; }
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
-
-private:
-    void disable_focus(std::string_view appid);
-    void enable_floating(std::string_view appid);
-    void remove_borders(std::string_view appid);
-    void remove_rounding(std::string_view appid);
-    void request(std::string_view payload);
-
-    std::unique_ptr<UnixSocket> socket;
-    std::string socket_path;
 };
 
 #endif

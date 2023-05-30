@@ -44,7 +44,7 @@ struct __attribute__((packed)) ipc_header {
     uint32_t type;
 };
 
-auto SwaySocket::get_window_info() -> struct WlrootsWindow
+auto SwaySocket::get_window_info() -> struct WaylandWindow
 {
     const auto window = current_window();
     const auto& rect = window["rect"];

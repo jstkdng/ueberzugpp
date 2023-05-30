@@ -23,8 +23,8 @@
 #ifdef ENABLE_X11
 #   include "util/x11.hpp"
 #endif
-#ifdef ENABLE_WLROOTS
-#   include "canvas/wlroots/socket.hpp"
+#ifdef ENABLE_WAYLAND
+#   include "canvas/wayland/config.hpp"
 #endif
 
 #include <cmath>
@@ -45,9 +45,6 @@ pid(os::get_pid())
     logger = spdlog::get("terminal");
     term = os::getenv("TERM").value_or("xterm-256color");
     term_program = os::getenv("TERM_PROGRAM").value_or("");
-#ifdef ENABLE_X11
-    xutil = std::make_unique<X11Util>();
-#endif
     logger->info(R"(TERM="{}", TERM_PROGRAM="{}")", term, term_program);
     open_first_pty();
     get_terminal_size();
@@ -71,11 +68,6 @@ auto Terminal::get_terminal_size() -> void
     ypixel = size.ws_ypixel;
     logger->debug("ioctl sizes: COLS={} ROWS={} XPIXEL={} YPIXEL={}", cols, rows, xpixel, ypixel);
 
-    get_fallback_x11_terminal_sizes();
-    get_fallback_wlroots_terminal_sizes();
-
-    check_x11_support();
-    check_wlroots_support();
     check_iterm2_support();
     if (flags->use_escape_codes) {
         init_termios();
@@ -89,6 +81,9 @@ auto Terminal::get_terminal_size() -> void
         check_kitty_support();
         reset_termios();
     }
+
+    get_fallback_x11_terminal_sizes();
+    get_fallback_wayland_terminal_sizes();
 
     if (xpixel == 0 || ypixel == 0) {
         xpixel = fallback_xpixel;
@@ -131,8 +126,8 @@ void Terminal::set_detected_output()
     if (supports_x11) {
         detected_output = "x11";
     }
-    if (supports_wlroots) {
-        detected_output = "wlroots";
+    if (supports_wayland) {
+        detected_output = "wayland";
     }
     if (flags->output.empty()) {
         flags->output = detected_output;
@@ -227,32 +222,6 @@ void Terminal::check_iterm2_support()
     }
 }
 
-void Terminal::check_x11_support()
-{
-#ifdef ENABLE_X11
-    if (xutil->connected) {
-        supports_x11 = true;
-        logger->debug("X11 is supported");
-    } else {
-        logger->debug("X11 is not supported");
-    }
-#else
-    logger->debug("x11 is not supported");
-#endif
-}
-
-void Terminal::check_wlroots_support()
-{
-#ifdef ENABLE_WLROOTS
-    if (WlrootsSocket::is_supported()) {
-        supports_wlroots = true;
-        logger->debug("Wlroots is supported");
-    }
-#else
-    logger->debug("Wlroots not supported");
-#endif
-}
-
 auto Terminal::read_raw_str(const std::string_view esc) -> std::string
 {
     const auto waitms = 100;
@@ -285,25 +254,34 @@ auto Terminal::reset_termios() -> void
 void Terminal::get_fallback_x11_terminal_sizes()
 {
 #ifdef ENABLE_X11
-    if (!xutil->connected) {
+    auto xutil = X11Util();
+    if (xutil.connected) {
+        supports_x11 = true;
+        logger->debug("X11 is supported");
+    } else {
+        logger->debug("x11 is not supported");
         return;
     }
-    const auto window = xutil->get_parent_window(os::get_pid());
-    const auto dims = xutil->get_window_dimensions(window);
+    const auto window = xutil.get_parent_window(os::get_pid());
+    const auto dims = xutil.get_window_dimensions(window);
     fallback_xpixel = dims.first;
     fallback_ypixel = dims.second;
     logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", fallback_xpixel, fallback_ypixel);
 #endif
 }
 
-void Terminal::get_fallback_wlroots_terminal_sizes()
+void Terminal::get_fallback_wayland_terminal_sizes()
 {
-#ifdef ENABLE_WLROOTS
-    const auto sock = WlrootsSocket::get();
-    if (sock == nullptr) {
+#ifdef ENABLE_WAYLAND
+    const auto config = WaylandConfig::get();
+    if (!config->is_dummy()) {
+        supports_wayland = true;
+        logger->warn("Current wayland wm is supported.");
+    } else {
+        logger->debug("Current wayland wm is not supported");
         return;
     }
-    const auto window = sock->get_window_info();
+    const auto window = config->get_window_info();
     fallback_xpixel = window.width;
     fallback_ypixel = window.height;
 #endif

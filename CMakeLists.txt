@@ -32,7 +32,7 @@ project(ueberzugpp LANGUAGES CXX C VERSION 2.8.6)
 add_executable(ueberzug)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
-option(ENABLE_WLROOTS       "Enable wlroots canvas" OFF)
+option(ENABLE_WAYLAND       "Enable wayland canvas" OFF)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
 option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
 
@@ -118,8 +118,8 @@ if(ENABLE_X11)
     )
 endif()
 
-if(ENABLE_WLROOTS)
-    target_compile_definitions(ueberzug PRIVATE ENABLE_WLROOTS)
+if(ENABLE_WAYLAND)
+    target_compile_definitions(ueberzug PRIVATE ENABLE_WAYLAND)
     find_package(ECM REQUIRED NO_MODULE)
     list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
@@ -133,11 +133,12 @@ if(ENABLE_WLROOTS)
         BASENAME "xdg-shell")
 
     list(APPEND UEBERZUG_SOURCES
-        "src/canvas/wlroots/wlroots.cpp"
-        "src/canvas/wlroots/shm.cpp"
-        "src/canvas/wlroots/socket.cpp"
-        "src/canvas/wlroots/socket/sway.cpp"
-        "src/canvas/wlroots/socket/hyprland.cpp"
+        "src/canvas/wayland/wayland.cpp"
+        "src/canvas/wayland/shm.cpp"
+        "src/canvas/wayland/config.cpp"
+        "src/canvas/wayland/config/sway.cpp"
+        "src/canvas/wayland/config/hyprland.cpp"
+        "src/canvas/wayland/config/dummy.cpp"
     )
 
     list(APPEND UEBERZUG_LIBRARIES

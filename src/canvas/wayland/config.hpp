@@ -14,37 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SWAY_SHM__
-#define __SWAY_SHM__
+#ifndef __WAYLAND_CONFIG__
+#define __WAYLAND_CONFIG__
 
-#include <wayland-client.h>
-#include <string>
-#include <vector>
+#include <memory>
+#include <string_view>
 
-class SwayShm
+struct WaylandWindow
+{
+    int width;
+    int height;
+    int x;
+    int y;
+};
+
+class WaylandConfig
 {
 public:
-    SwayShm(int width, int height, struct wl_shm* shm);
-    ~SwayShm();
-    auto get_data(uint32_t offset = 0) -> uint32_t*;
+    static auto get() -> std::unique_ptr<WaylandConfig>;
 
-    struct wl_buffer* buffer = nullptr;
-private:
-    void create_shm_file();
-    void allocate_pool_buffers();
+    virtual ~WaylandConfig() = default;
 
-    struct wl_shm_pool* pool = nullptr;
-    struct wl_shm* shm = nullptr;
-
-    int fd = 0;
-    std::string shm_path;
-    uint8_t *pool_data;
-    std::vector<wl_buffer*> buffers;
-
-    int width = 0;
-    int height = 0;
-    int stride = 0;
-    int pool_size = 0;
+    [[nodiscard]] virtual auto get_window_info() -> struct WaylandWindow = 0;
+    virtual auto is_dummy() -> bool { return false; }
+    virtual void initial_setup(std::string_view appid) = 0;
+    virtual void move_window(std::string_view appid, int xcoord, int ycoord) = 0;
 };
 
 #endif

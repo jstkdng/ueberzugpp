@@ -18,7 +18,7 @@
 #define __SWAY_SOCKET__
 
 #include "util/socket.hpp"
-#include "../socket.hpp"
+#include "../config.hpp"
 
 #include <string_view>
 #include <memory>
@@ -30,12 +30,12 @@ enum ipc_message_type {
     IPC_GET_TREE = 4
 };
 
-class SwaySocket : public WlrootsSocket
+class SwaySocket : public WaylandConfig
 {
 public:
     SwaySocket();
     ~SwaySocket() override = default;
-    [[nodiscard]] auto get_window_info() -> struct WlrootsWindow override;
+    [[nodiscard]] auto get_window_info() -> struct WaylandWindow override;
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
