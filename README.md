@@ -158,7 +158,7 @@ ENABLE_X11 (ON by default)
 
 ENABLE_TURBOBASE64 (OFF by default)
 
-ENABLE_WLROOTS (OFF by default)
+ENABLE_WAYLAND (OFF by default)
 
 You may use any of them when building the project, for example:
 

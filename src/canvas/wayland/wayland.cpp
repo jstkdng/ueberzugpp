@@ -118,7 +118,7 @@ display(wl_display_connect(nullptr))
     if (display == nullptr) {
         throw std::runtime_error("Failed to connect to wayland display.");
     }
-    logger = spdlog::get("wlroots");
+    logger = spdlog::get("wayland");
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);

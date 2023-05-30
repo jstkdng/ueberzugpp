@@ -22,8 +22,8 @@
 #ifdef ENABLE_X11
 #   include "canvas/x11/x11.hpp"
 #endif
-#ifdef ENABLE_WLROOTS
-#   include "canvas/wlroots/wlroots.hpp"
+#ifdef ENABLE_WAYLAND
+#   include "canvas/wayland/wayland.hpp"
 #endif
 #include "flags.hpp"
 #include "os.hpp"
@@ -33,23 +33,14 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
     const auto flags = Flags::instance();
     const auto logger = spdlog::get("main");
 
-#ifdef ENABLE_WLROOTS
-    if (flags->output == "wlroots") {
-        return std::make_unique<WlrootsCanvas>();
+#ifdef ENABLE_WAYLAND
+    if (flags->output == "wayland") {
+        return std::make_unique<WaylandCanvas>();
     }
 #else
-    logger->debug("Wlroots support not compiled in the binary");
+    logger->debug("Wayland support not compiled in the binary");
 #endif
 #ifdef ENABLE_X11
-    auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
-    if (xdg_session == "wayland") {
-        if (flags->output == "x11") {
-            logger->warn("Forcing X11 output");
-        } else {
-            logger->info("Wayland detected, X11 output will not be used"
-                " unless it is forced.");
-        }
-    }
     if (flags->output == "x11") {
         return std::make_unique<X11Canvas>();
     }

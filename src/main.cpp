@@ -74,7 +74,7 @@ auto main(int argc, char *argv[]) -> int
     layer_command->add_flag("--no-cache", flags->no_cache, "Disable caching of resized images.");
     layer_command->add_flag("--no-opencv", flags->no_opencv, "Do not use OpenCV, use Libvips instead.");
     layer_command->add_option("-o,--output", flags->output, "Image output method")
-        ->check(CLI::IsMember({"x11", "wlroots", "sixel", "kitty", "iterm2", "chafa"}));
+        ->check(CLI::IsMember({"x11", "wayland", "sixel", "kitty", "iterm2", "chafa"}));
     layer_command->add_option("-p,--parser", nullptr, "**UNUSED**, only present for backwards compatibility.");
     layer_command->add_option("-l,--loader", nullptr, "**UNUSED**, only present for backwards compatibility.");
 
