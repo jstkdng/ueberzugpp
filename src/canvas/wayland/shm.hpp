@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SWAY_SHM__
-#define __SWAY_SHM__
+#ifndef __WAYLAND_SHM__
+#define __WAYLAND_SHM__
 
 #include <wayland-client.h>
 #include <string>

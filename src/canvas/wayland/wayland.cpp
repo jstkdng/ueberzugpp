@@ -128,8 +128,8 @@ display(wl_display_connect(nullptr))
     });
 
     const auto cur_window = config->get_window_info();
-    sway_x = cur_window.x;
-    sway_y = cur_window.y;
+    window_x = cur_window.x;
+    window_y = cur_window.y;
 
     const int idlength = 10;
     appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
@@ -194,8 +194,8 @@ WaylandCanvas::~WaylandCanvas()
 void WaylandCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     image = std::move(new_image);
-    x = sway_x + dimensions.xpixels() + dimensions.padding_horizontal;
-    y = sway_y + dimensions.ypixels() + dimensions.padding_vertical;
+    x = window_x + dimensions.xpixels() + dimensions.padding_horizontal;
+    y = window_y + dimensions.ypixels() + dimensions.padding_vertical;
     width = image->width();
     height = image->height();
 

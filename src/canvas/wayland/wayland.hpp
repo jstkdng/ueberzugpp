@@ -81,8 +81,8 @@ private:
 
     void handle_events();
 
-    int sway_x = 0;
-    int sway_y = 0;
+    int window_x = 0;
+    int window_y = 0;
     int x = 0;
     int y = 0;
     bool visible = false;
