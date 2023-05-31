@@ -1,0 +1,8 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: ueberzugpp
+Upstream-Contact: JustKidding <jk@vin.ovh>
+Source: https://github.com/jstkdng/ueberzugpp
+
+Files: *
+Copyright: JustKidding <jk@vin.ovh>
+License: GPL-3
