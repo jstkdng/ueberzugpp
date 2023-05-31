@@ -22,7 +22,8 @@ Build-Depends:
     libssl-dev,
     libxcb-image0-dev,
     wayland-protocols,
-    libwayland-dev
+    libwayland-dev,
+    extra-cmake-modules
 
 Package: ueberzugpp
 Architecture: any
