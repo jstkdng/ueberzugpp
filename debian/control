@@ -3,13 +3,31 @@ Maintainer: JustKidding <jk@vin.ovh>
 Section: misc
 Priority: optional
 Standards-Version: 4.5.1
-Build-Depends: debhelper (>= 13), debhelper-compat (= 13), cmake (>= 3.18), libmsgsl-dev, libchafa-dev, libvips-dev, nlohmann-json3-dev, libspdlog-dev, libfmt-dev,
-  libopencv-videoio-dev, libopencv-dev, libopencv-imgproc-dev, libopencv-imgcodecs-dev, libopencv-core-dev, libsixel-dev, libssl-dev
+Build-Depends:
+    debhelper (>= 13),
+    debhelper-compat (= 13),
+    cmake (>= 3.18),
+    libmsgsl-dev,
+    libchafa-dev,
+    libvips-dev,
+    nlohmann-json3-dev,
+    libspdlog-dev,
+    libfmt-dev,
+    libopencv-videoio-dev,
+    libopencv-dev,
+    libopencv-imgproc-dev,
+    libopencv-imgcodecs-dev,
+    libopencv-core-dev,
+    libsixel-dev,
+    libssl-dev,
+    libxcb-image0-dev,
+    wayland-protocols,
+    libwayland-dev
 
 Package: ueberzugpp
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description:  display images inside the terminal
-  Überzug++ is a command line utility written in C++ which
-  allows to draw images on terminals by using X11/wayland
-  child windows, sixels, kitty and iterm2..
+Description:Display images inside the terminal
+    Überzug++ is a command line utility written in C++ which
+    allows to draw images on terminals by using X11/wayland
+    child windows, sixels, kitty and iterm2..
