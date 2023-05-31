@@ -69,10 +69,14 @@ endif()
 
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
-    FetchContent_Declare(cli11
-        URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz
-    )
-    list(APPEND FC_LIBS cli11)
+    if (FETCHCONTENT_FULLY_DISCONNECTED)
+        add_subdirectory("${CMAKE_SOURCE_DIR}/third_party/CLI11")
+    else()
+        FetchContent_Declare(cli11
+            URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz
+        )
+        list(APPEND FC_LIBS cli11)
+    endif()
 endif()
 
 find_package(nlohmann_json QUIET)
