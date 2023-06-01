@@ -244,4 +244,4 @@ file(CREATE_LINK ueberzug ueberzugpp SYMBOLIC)
 
 install(TARGETS ueberzug RUNTIME)
 install(FILES "${PROJECT_BINARY_DIR}/ueberzugpp" TYPE BIN)
-install(FILES "docs/ueberzugpp.1" TYPE MAN)
+install(FILES "docs/ueberzugpp.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
