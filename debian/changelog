@@ -1,5 +1,5 @@
-ueberzugpp (2.8.6) UNRELEASED; urgency=medium
+ueberzugpp (2.8.6) unstable; urgency=medium
 
-  * Initial release. (Closes: #XXXXXX)
+  * Initial release.
 
  -- JustKidding <jk@vin.ovh>  Wed, 31 May 2023 07:35:31 -0400

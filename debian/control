@@ -28,7 +28,7 @@ Build-Depends:
 Package: ueberzugpp
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
-Description:Display images inside the terminal
-    Überzug++ is a command line utility written in C++ which
-    allows to draw images on terminals by using X11/wayland
-    child windows, sixels, kitty and iterm2..
+Description: Display images inside the terminal.
+ Überzug++ is a command line utility written in C++ which
+ allows to draw images on terminals by using X11/wayland
+ child windows, sixels, kitty and iterm2.
