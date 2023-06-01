@@ -307,16 +307,7 @@ void Application::print_version()
 
 void Application::daemonize(const std::string_view pid_file)
 {
-    const auto pid = os::fork_process();
-    if (pid < 0) {
-        std::exit(EXIT_FAILURE);
-    }
-    if (pid > 0) {
-        std::exit(EXIT_SUCCESS);
-    }
-    if (os::create_new_session() < 0) {
-        std::exit(EXIT_FAILURE);
-    }
+    os::daemonize();
     std::ofstream ofs (pid_file.data());
     ofs << os::get_pid();
 }

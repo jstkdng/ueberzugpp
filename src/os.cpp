@@ -116,12 +116,10 @@ auto os::get_ppid() -> int
     return getppid();
 }
 
-auto os::fork_process() -> int
+void os::daemonize()
 {
-    return fork();
-}
-
-auto os::create_new_session() -> int
-{
-    return setsid();
+    const auto res = daemon(1, 1);
+    if (res == -1) {
+        throw std::system_error(errno, std::generic_category());
+    }
 }

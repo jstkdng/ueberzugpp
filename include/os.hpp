@@ -34,8 +34,7 @@ namespace os
     auto get_ppid() -> int;
 
     void get_process_info(int pid);
-    auto fork_process() -> int;
-    auto create_new_session() -> int;
+    void daemonize();
 } // namespace os
 
 #endif
