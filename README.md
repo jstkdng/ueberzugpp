@@ -38,6 +38,8 @@ Advantages over w3mimgdisplay and ueberzug:
 
 MacOS: [Homebrew](https://github.com/jstkdng/ueberzugpp/blob/master/homebrew/ueberzugpp.rb)
 
+[Debian/*Ubuntu](https://software.opensuse.org/download.html?project=home%3Ajustkidding&package=ueberzugpp)
+
 # Usage
 
 1. Ueberzugpp provides two commands, `layer` and `tmux`. `layer` is used to send
