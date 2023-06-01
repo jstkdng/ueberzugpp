@@ -15,7 +15,6 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 3.18)
-include(FetchContent)
 
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
@@ -35,6 +34,9 @@ option(ENABLE_X11           "Enable X11 canvas." ON)
 option(ENABLE_WAYLAND       "Enable wayland canvas" OFF)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
 option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
+
+include(FetchContent)
+include(GNUInstallDirs)
 
 if(MSVC)
     target_compile_options(ueberzug PRIVATE
@@ -238,8 +240,8 @@ target_include_directories(ueberzug PRIVATE
 )
 target_sources(ueberzug PRIVATE ${UEBERZUG_SOURCES})
 target_link_libraries(ueberzug PRIVATE ${UEBERZUG_LIBRARIES})
+file(CREATE_LINK ueberzug ueberzugpp SYMBOLIC)
 
-install(TARGETS ueberzug
-    CONFIGURATIONS Release Debug None
-    RUNTIME DESTINATION bin)
-
+install(TARGETS ueberzug RUNTIME)
+install(FILES "${PROJECT_BINARY_DIR}/ueberzugpp" TYPE BIN)
+install(FILES "docs/ueberzugpp.1" TYPE MAN)
