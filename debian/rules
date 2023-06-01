@@ -1,9 +1,5 @@
 #!/usr/bin/make -f
 # See debhelper(7) (uncomment to enable)
-RT_DIR   := $(CURDIR)
-export CXXFLAGS                 := $(shell dpkg-buildflags --get CXXFLAGS)
-
-
 export DH_VERBOSE := 1
 %:
 	dh $@ --buildsystem=cmake
@@ -11,5 +7,4 @@ export DH_VERBOSE := 1
 override_dh_auto_configure:
 	dh_auto_configure -- \
 		-DENABLE_WAYLAND=ON \
-		-DFETCHCONTENT_FULLY_DISCONNECTED=ON \
-		-DFETCHCONTENT_BASE_DIR="$(CURDIR)/_deps"
+		-DFETCHCONTENT_FULLY_DISCONNECTED=ON
