@@ -241,7 +241,7 @@ target_include_directories(ueberzug PRIVATE
 )
 target_sources(ueberzug PRIVATE ${UEBERZUG_SOURCES})
 target_link_libraries(ueberzug PRIVATE ${UEBERZUG_LIBRARIES})
-file(CREATE_LINK ueberzug ueberzugpp SYMBOLIC)
+file(CREATE_LINK ueberzug "${PROJECT_BINARY_DIR}/ueberzugpp" SYMBOLIC)
 
 install(TARGETS ueberzug RUNTIME)
 install(FILES "${PROJECT_BINARY_DIR}/ueberzugpp" TYPE BIN)
