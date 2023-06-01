@@ -196,6 +196,7 @@ else()
 endif()
 
 configure_file("include/version.hpp.in" version.hpp)
+configure_file("docs/ueberzugpp.1.in" ueberzugpp.1)
 
 list(APPEND UEBERZUG_SOURCES
     "src/main.cpp"
@@ -244,5 +245,5 @@ file(CREATE_LINK ueberzug ueberzugpp SYMBOLIC)
 
 install(TARGETS ueberzug RUNTIME)
 install(FILES "${PROJECT_BINARY_DIR}/ueberzugpp" TYPE BIN)
-install(FILES "docs/ueberzugpp.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
-install(FILES "docs/ueberzugpp.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1" RENAME "ueberzug.1")
+install(FILES "${PROJECT_BINARY_DIR}/ueberzugpp.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1")
+install(FILES "${PROJECT_BINARY_DIR}/ueberzugpp.1" DESTINATION "${CMAKE_INSTALL_MANDIR}/man1" RENAME ueberzug.1)

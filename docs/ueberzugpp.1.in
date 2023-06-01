@@ -1,4 +1,4 @@
-.TH UEBERZUGPP 1 "2023 May" "Ueberzugpp 2.8.6"
+.TH UEBERZUGPP 1 "2023 May" "Ueberzugpp @ueberzugpp_VERSION@"
 
 .SH NAME
 ueberzugpp \- display images in a terminal
