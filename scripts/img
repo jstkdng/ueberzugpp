@@ -13,6 +13,7 @@ UB_PID=0
 UB_SOCKET=""
 
 cleanup() {
+    tput clear
     ueberzugpp cmd -s "$UB_SOCKET" -a exit
 }
 trap cleanup HUP INT QUIT TERM PWR EXIT
