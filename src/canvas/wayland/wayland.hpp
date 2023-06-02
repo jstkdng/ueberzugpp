@@ -81,10 +81,6 @@ private:
 
     void handle_events();
 
-    int window_x = 0;
-    int window_y = 0;
-    int x = 0;
-    int y = 0;
     bool visible = false;
 };
 

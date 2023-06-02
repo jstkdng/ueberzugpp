@@ -127,10 +127,6 @@ display(wl_display_connect(nullptr))
         handle_events();
     });
 
-    const auto cur_window = config->get_window_info();
-    window_x = cur_window.x;
-    window_y = cur_window.y;
-
     const int idlength = 10;
     appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
 
@@ -193,13 +189,14 @@ WaylandCanvas::~WaylandCanvas()
 
 void WaylandCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
+    const auto cur_window = config->get_window_info();
+    const int xcoord = cur_window.x + dimensions.xpixels() + dimensions.padding_horizontal;
+    const int ycoord = cur_window.y + dimensions.ypixels() + dimensions.padding_vertical;
     image = std::move(new_image);
-    x = window_x + dimensions.xpixels() + dimensions.padding_horizontal;
-    y = window_y + dimensions.ypixels() + dimensions.padding_vertical;
     width = image->width();
     height = image->height();
 
-    config->move_window(appid, x, y);
+    config->move_window(appid, xcoord, ycoord);
 }
 
 void WaylandCanvas::handle_events()

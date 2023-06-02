@@ -16,9 +16,13 @@
 
 #include "hyprland.hpp"
 #include "os.hpp"
+#include "util.hpp"
+#include "application.hpp"
+#include "tmux.hpp"
 
 #include <fmt/format.h>
 #include <iostream>
+#include <execution>
 #include <nlohmann/json.hpp>
 
 using njson = nlohmann::json;
@@ -36,21 +40,39 @@ HyprlandSocket::HyprlandSocket()
 
 auto HyprlandSocket::get_window_info() -> struct WaylandWindow
 {
+    using std::begin, std::end;
     socket = std::make_unique<UnixSocket>(socket_path);
-    const std::string_view payload {"j/activewindow"};
+    const std::string_view payload {"j/clients"};
     const int bufsize = 8192;
     std::string result (bufsize, 0);
     socket->write(payload.data(), payload.size());
     socket->read(result.data(), result.size());
-    const auto json = njson::parse(result);
-    const auto& sizes = json["size"];
-    const auto& coords = json["at"];
-    return {
-        .width = sizes[0],
-        .height = sizes[1],
-        .x = coords[0],
-        .y = coords[1]
-    };
+    const auto clients = njson::parse(result);
+
+    std::vector<int> pids {Application::parent_pid_};
+    if (tmux::is_used()) {
+        const auto tmux_clients = tmux::get_client_pids();
+        if (tmux_clients.has_value()) {
+            pids = tmux_clients.value();
+        }
+    }
+
+    struct WaylandWindow window;
+    std::for_each(std::execution::par_unseq, begin(pids), end(pids), [&] (int pid) {
+        const auto tree = util::get_process_tree(pid);
+        const auto client = std::find_if(std::execution::par_unseq, begin(clients), end(clients), [&] (const njson& json) {
+            return std::find(std::execution::par_unseq, begin(tree), end(tree), json["pid"]) != end(tree);
+        });
+        if (client != end(clients)) {
+            const auto& sizes = client->at("size");
+            const auto& coords = client->at("at");
+            window.width = sizes[0];
+            window.height = sizes[1];
+            window.x = coords[0];
+            window.y = coords[1];
+        }
+    });
+    return window;
 }
 
 void HyprlandSocket::initial_setup(const std::string_view appid)
