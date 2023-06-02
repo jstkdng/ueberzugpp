@@ -29,7 +29,9 @@ HyprlandSocket::HyprlandSocket()
     if (!env.has_value()) {
         throw std::runtime_error("HYPRLAND NOT SUPPORTED");
     }
+    logger = spdlog::get("wayland");
     socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", env.value());
+    logger->info("Using hyprland socket {}", socket_path);
 }
 
 auto HyprlandSocket::get_window_info() -> struct WaylandWindow
@@ -92,5 +94,6 @@ void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int y
 void HyprlandSocket::request(const std::string_view payload)
 {
     socket = std::make_unique<UnixSocket>(socket_path);
+    logger->debug("Running socket command {}", payload);
     socket->write(payload.data(), payload.length());
 }

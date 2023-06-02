@@ -35,7 +35,10 @@ SwaySocket::SwaySocket()
     if (!sway_sock.has_value()) {
         throw std::runtime_error("SWAY NOT SUPPORTED");
     }
-    socket = std::make_unique<UnixSocket>(sway_sock.value());
+    socket_path = sway_sock.value();
+    logger = spdlog::get("wayland");
+    socket = std::make_unique<UnixSocket>(socket_path);
+    logger->info("Using sway socket {}", socket_path);
 }
 
 struct __attribute__((packed)) ipc_header {
@@ -84,6 +87,9 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
     header.type = type;
     ipc_magic.copy(header.magic.data(), ipc_magic.size());
 
+    if (!payload.empty()) {
+        logger->debug("Running socket command {}", payload);
+    }
     socket->write(reinterpret_cast<const void*>(&header), ipc_header_size);
     socket->write(reinterpret_cast<const void*>(payload.data()), payload.size());
 
@@ -95,6 +101,7 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
 
 auto SwaySocket::current_window() const -> nlohmann::json
 {
+    logger->debug("Obtaining sway tree");
     auto tree = ipc_message(IPC_GET_TREE);
     std::stack<njson> nodes_st;
 

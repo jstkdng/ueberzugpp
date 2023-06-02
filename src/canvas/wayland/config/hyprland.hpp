@@ -20,6 +20,7 @@
 #include "util/socket.hpp"
 #include "../config.hpp"
 #include <memory>
+#include <spdlog/spdlog.h>
 
 class HyprlandSocket : public WaylandConfig
 {
@@ -38,6 +39,7 @@ private:
     void request(std::string_view payload);
 
     std::unique_ptr<UnixSocket> socket;
+    std::shared_ptr<spdlog::logger> logger;
     std::string socket_path;
 };
 

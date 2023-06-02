@@ -23,6 +23,7 @@
 #include <string_view>
 #include <memory>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 
 enum ipc_message_type {
     IPC_COMMAND = 0,
@@ -41,6 +42,8 @@ public:
 
 private:
     std::unique_ptr<UnixSocket> socket;
+    std::shared_ptr<spdlog::logger> logger;
+    std::string socket_path;
 
     void disable_focus(std::string_view appid);
     void enable_floating(std::string_view appid);
