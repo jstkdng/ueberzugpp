@@ -20,6 +20,9 @@
 #include <memory>
 #include <openssl/evp.h>
 #include <gmodule.h>
+#ifdef ENABLE_X11
+#   include <xcb/xproto.h>
+#endif
 
 struct free_deleter{
     template <typename T>
@@ -46,6 +49,14 @@ struct gchar_deleter {
         g_strfreev(str);
     }
 };
+
+#ifdef ENABLE_X11
+struct x11_connection_deleter {
+    void operator()(xcb_connection_t* connection) const {
+        xcb_disconnect(connection);
+    }
+};
+#endif
 
 template <typename T>
 using unique_C_ptr = std::unique_ptr<T, free_deleter>;

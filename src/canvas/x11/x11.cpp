@@ -24,15 +24,17 @@
 #include <xcb/xproto.h>
 #include <ranges>
 
-
-X11Canvas::X11Canvas():
-connection(xcb_connect(nullptr, nullptr)),
-xutil(connection)
+X11Canvas::X11Canvas()
 {
-    if (xcb_connection_has_error(connection) != 0) {
+    connection = std::shared_ptr<xcb_connection_t>(
+        xcb_connect(nullptr, nullptr),
+        x11_connection_deleter{}
+    );
+    if (xcb_connection_has_error(connection.get()) != 0) {
         throw std::runtime_error("CANNOT CONNECT TO X11");
     }
-    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+    xutil = std::make_unique<X11Util>(connection);
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection.get())).data;
     logger = spdlog::get("X11");
     logger->info("Canvas created");
 }
@@ -45,7 +47,6 @@ X11Canvas::~X11Canvas()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
-    xcb_disconnect(connection);
 }
 
 void X11Canvas::draw()
@@ -93,7 +94,7 @@ void X11Canvas::handle_events()
     const auto event_mask = 0x80;
     while (true) {
         const auto event = unique_C_ptr<xcb_generic_event_t> {
-            xcb_wait_for_event(this->connection)
+            xcb_wait_for_event(connection.get())
         };
         switch (event->response_type & ~event_mask) {
             case XCB_EXPOSE: {
@@ -140,7 +141,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
             client_pids = tmp_pids.value();
         }
     } else if (wid.has_value()) {
-        auto window_id = xcb_generate_id(connection);
+        auto window_id = xcb_generate_id(connection.get());
         windows.insert({window_id, std::make_unique<Window>
                     (connection, screen, window_id, std::stoi(wid.value()), dimensions, *image)});
         logger->debug("Found WINDOWID={}", wid.value());
@@ -148,7 +149,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
     }
 
     logger->debug("Need to manually find parent window");
-    auto pid_window_map = xutil.get_pid_window_map();
+    auto pid_window_map = xutil->get_pid_window_map();
     for (const auto& pid: client_pids) {
         // calculate a map with parent's pid and window id
         auto ppids = util::get_process_tree(pid);
@@ -157,7 +158,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
             if (search == pid_window_map.end()) {
                 continue;
             }
-            auto window_id = xcb_generate_id(connection);
+            auto window_id = xcb_generate_id(connection.get());
             windows.insert({window_id, std::make_unique<Window>
                     (connection, screen, window_id, search->second, dimensions, *image)});
         }

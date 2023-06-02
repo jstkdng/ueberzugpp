@@ -20,13 +20,14 @@
 #include <xcb/xproto.h>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 
 class X11Util
 {
 public:
     X11Util();
-    explicit X11Util(xcb_connection_t* connection);
-    ~X11Util();
+    explicit X11Util(std::shared_ptr<xcb_connection_t> connection);
+    ~X11Util() = default;
 
     [[nodiscard]] auto get_server_window_ids() const -> std::vector<xcb_window_t>;
     [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>;
@@ -38,9 +39,8 @@ public:
 
     bool connected = false;
 private:
-    xcb_connection_t* connection = nullptr;
+    std::shared_ptr<xcb_connection_t> connection;
     xcb_screen_t* screen = nullptr;
-    bool owns_connection = true;
 };
 
 #endif
