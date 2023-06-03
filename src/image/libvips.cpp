@@ -167,12 +167,11 @@ auto LibvipsImage::process_image() -> void
 {
     resize_image();
 
-    if (flags->output == "sixel") {
-        // sixel expects RGB888
-        if (image.has_alpha()) {
-            image = image.flatten();
-        }
-    } else if (flags->output == "x11" || flags->output == "chafa" || flags->output == "wayland") {
+    const std::unordered_set<std::string_view> bgra_trifecta = {
+        "x11", "chafa", "wayland"
+    };
+
+    if (bgra_trifecta.contains(flags->output)) {
         // alpha channel required
         if (!image.has_alpha()) {
             const int alpha_value = 255;
@@ -184,6 +183,11 @@ auto LibvipsImage::process_image() -> void
         bands[0] = bands[2];
         bands[2] = tmp;
         image = VImage::bandjoin(bands);
+    } else if (flags->output == "sixel") {
+        // sixel expects RGB888
+        if (image.has_alpha()) {
+            image = image.flatten();
+        }
     }
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
     _data.reset(static_cast<unsigned char*>(image.write_to_memory(&_size)));

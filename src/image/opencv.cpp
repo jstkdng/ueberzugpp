@@ -17,7 +17,8 @@
 #include "opencv.hpp"
 #include "util.hpp"
 
-#include <array>
+#include <unordered_set>
+#include <string_view>
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -113,7 +114,19 @@ void OpencvImage::process_image()
 {
     resize_image();
 
-    if (flags->output == "kitty") {
+    const std::unordered_set<std::string_view> bgra_trifecta = {
+        "x11", "chafa", "wayland"
+    };
+
+    if (image.channels() == 1) {
+        cv::cvtColor(image, image, cv::COLOR_GRAY2BGRA);
+    }
+
+    if (bgra_trifecta.contains(flags->output)) {
+        if (image.channels() == 3) {
+            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
+        }
+    } else if (flags->output == "kitty") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
         } else {
@@ -124,10 +137,6 @@ void OpencvImage::process_image()
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
         } else {
             cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
-        }
-    } else if (flags->output == "x11" || flags->output == "chafa" || flags->output == "wayland") {
-        if (image.channels() == 3) {
-            cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
     }
     _size = image.total() * image.elemSize();
