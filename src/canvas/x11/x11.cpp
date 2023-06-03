@@ -100,6 +100,7 @@ void X11Canvas::handle_events()
             case XCB_EXPOSE: {
                 const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
                 if (expose->x == MAGIC_EXIT_NUM1 && expose->y == MAGIC_EXIT_NUM2) {
+                    std::scoped_lock lock {windows_mutex};
                     windows.erase(expose->window);
                     if (windows.empty()) {
                         return;
@@ -171,8 +172,11 @@ void X11Canvas::clear()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
-    for (const auto& [key, value]: windows) {
-        value->terminate_event_handler();
+    {
+        std::scoped_lock lock {windows_mutex};
+        std::ranges::for_each(windows, [&] (std::pair<const xcb_window_t, std::unique_ptr<Window>>& entry) {
+            entry.second->terminate_event_handler();
+        });
     }
     if (event_handler.joinable()) {
         event_handler.join();

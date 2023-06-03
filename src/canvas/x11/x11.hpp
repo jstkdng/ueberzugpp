@@ -27,6 +27,7 @@
 #include <unordered_map>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 #include <xcb/xproto.h>
 #include <spdlog/spdlog.h>
@@ -50,6 +51,7 @@ private:
     std::unique_ptr<X11Util> xutil;
 
     std::unordered_map<xcb_window_t, std::unique_ptr<Window>> windows;
+    std::mutex windows_mutex;
     std::unique_ptr<Image> image;
 
     std::thread draw_thread;
