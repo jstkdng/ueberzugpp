@@ -55,11 +55,9 @@ auto HyprlandSocket::get_active_window() -> nlohmann::json
     const auto clients = request_result("j/clients");
 
     std::vector<int> pids {Application::parent_pid_};
-    if (tmux::is_used()) {
-        const auto tmux_clients = tmux::get_client_pids();
-        if (tmux_clients.has_value()) {
-            pids = tmux_clients.value();
-        }
+    const auto tmux_clients = tmux::get_client_pids();
+    if (tmux_clients.has_value()) {
+        pids = tmux_clients.value();
     }
 
     for (const auto pid: pids) {
@@ -95,8 +93,8 @@ auto HyprlandSocket::get_window_info() -> struct WaylandWindow
     return {
         .width = sizes[0],
         .height = sizes[1],
-        .x = static_cast<int>(coords[0]) + static_cast<int>(monitor.at("x")),
-        .y = static_cast<int>(coords[1]) + static_cast<int>(monitor.at("y")),
+        .x = static_cast<int>(coords[0]) - static_cast<int>(monitor.at("x")),
+        .y = static_cast<int>(coords[1]) - static_cast<int>(monitor.at("y")),
     };
 }
 
