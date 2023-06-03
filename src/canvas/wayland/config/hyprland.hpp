@@ -21,6 +21,7 @@
 #include "../config.hpp"
 #include <memory>
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
 
 class HyprlandSocket : public WaylandConfig
 {
@@ -37,6 +38,9 @@ private:
     void remove_borders(std::string_view appid);
     void remove_rounding(std::string_view appid);
     void request(std::string_view payload);
+    auto request_result(std::string_view payload) -> nlohmann::json;
+    auto get_active_window() -> nlohmann::json;
+    auto get_active_monitor() -> nlohmann::json;
 
     std::unique_ptr<UnixSocket> socket;
     std::shared_ptr<spdlog::logger> logger;

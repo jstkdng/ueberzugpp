@@ -190,13 +190,13 @@ WaylandCanvas::~WaylandCanvas()
 void WaylandCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     const auto cur_window = config->get_window_info();
-    const int xcoord = cur_window.x + dimensions.xpixels() + dimensions.padding_horizontal;
-    const int ycoord = cur_window.y + dimensions.ypixels() + dimensions.padding_vertical;
+    x = cur_window.x + dimensions.xpixels() + dimensions.padding_horizontal;
+    y = cur_window.y + dimensions.ypixels() + dimensions.padding_vertical;
     image = std::move(new_image);
     width = image->width();
     height = image->height();
 
-    config->move_window(appid, xcoord, ycoord);
+    config->move_window(appid, x, y);
 }
 
 void WaylandCanvas::handle_events()

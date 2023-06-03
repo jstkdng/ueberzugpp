@@ -82,6 +82,8 @@ private:
     void handle_events();
 
     bool visible = false;
+    int x;
+    int y;
 };
 
 #endif

@@ -22,10 +22,12 @@
 
 #include <fmt/format.h>
 #include <iostream>
-#include <execution>
 #include <nlohmann/json.hpp>
+#include <algorithm>
 
 using njson = nlohmann::json;
+using std::begin;
+using std::end;
 
 HyprlandSocket::HyprlandSocket()
 {
@@ -38,16 +40,19 @@ HyprlandSocket::HyprlandSocket()
     logger->info("Using hyprland socket {}", socket_path);
 }
 
-auto HyprlandSocket::get_window_info() -> struct WaylandWindow
+auto HyprlandSocket::request_result(std::string_view payload) -> nlohmann::json
 {
-    using std::begin, std::end;
     socket = std::make_unique<UnixSocket>(socket_path);
-    const std::string_view payload {"j/clients"};
     const int bufsize = 8192;
     std::string result (bufsize, 0);
     socket->write(payload.data(), payload.size());
     socket->read(result.data(), result.size());
-    const auto clients = njson::parse(result);
+    return njson::parse(result);
+}
+
+auto HyprlandSocket::get_active_window() -> nlohmann::json
+{
+    const auto clients = request_result("j/clients");
 
     std::vector<int> pids {Application::parent_pid_};
     if (tmux::is_used()) {
@@ -57,22 +62,42 @@ auto HyprlandSocket::get_window_info() -> struct WaylandWindow
         }
     }
 
-    struct WaylandWindow window;
-    std::for_each(std::execution::par_unseq, begin(pids), end(pids), [&] (int pid) {
-        const auto tree = util::get_process_tree(pid);
-        const auto client = std::find_if(std::execution::par_unseq, begin(clients), end(clients), [&] (const njson& json) {
-            return std::find(std::execution::par_unseq, begin(tree), end(tree), json["pid"]) != end(tree);
-        });
-        if (client != end(clients)) {
-            const auto& sizes = client->at("size");
-            const auto& coords = client->at("at");
-            window.width = sizes[0];
-            window.height = sizes[1];
-            window.x = coords[0];
-            window.y = coords[1];
+    for (const auto pid: pids) {
+        auto tree = util::get_process_tree(pid);
+        for (const auto tpid: tree) {
+            const auto client = std::find_if(begin(clients), end(clients), [tpid] (const njson& json) {
+                return json["pid"] == tpid;
+            });
+            if (client != end(clients)) {
+                return client.value();
+            }
         }
+    }
+    return {};
+}
+
+auto HyprlandSocket::get_active_monitor() -> nlohmann::json
+{
+    const auto monitors = request_result("j/monitors");
+    const auto focused_monitor = std::find_if(begin(monitors), end(monitors), [] (const njson& json) {
+        return json["focused"] == true;
     });
-    return window;
+    return focused_monitor.value();
+}
+
+auto HyprlandSocket::get_window_info() -> struct WaylandWindow
+{
+    const auto terminal = get_active_window();
+    const auto monitor = get_active_monitor();
+    const auto& sizes = terminal.at("size");
+    const auto& coords = terminal.at("at");
+
+    return {
+        .width = sizes[0],
+        .height = sizes[1],
+        .x = static_cast<int>(coords[0]) + static_cast<int>(monitor.at("x")),
+        .y = static_cast<int>(coords[1]) + static_cast<int>(monitor.at("y")),
+    };
 }
 
 void HyprlandSocket::initial_setup(const std::string_view appid)
