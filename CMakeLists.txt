@@ -52,9 +52,6 @@ else()
     )
 endif()
 
-target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM1=69)
-target_compile_definitions(ueberzug PRIVATE MAGIC_EXIT_NUM2=420)
-
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
