@@ -122,9 +122,7 @@ void X11Canvas::handle_events()
                     break;
                 }
             }
-            event = unique_C_ptr<xcb_generic_event_t> {
-                xcb_poll_for_event(connection.get())
-            };
+            event.reset(xcb_poll_for_event(connection.get()));
         }
     }
 }
