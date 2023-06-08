@@ -106,23 +106,25 @@ void X11Canvas::handle_events()
         if (!x11_event) {
             continue;
         }
-        const auto event = unique_C_ptr<xcb_generic_event_t> {
+        auto event = unique_C_ptr<xcb_generic_event_t> {
             xcb_poll_for_event(connection.get())
         };
-        if (event == nullptr) {
-            continue;
-        }
-        switch (event->response_type & ~event_mask) {
-            case XCB_EXPOSE: {
-                const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
-                try {
-                    windows.at(expose->window)->draw();
-                } catch (const std::out_of_range& oor) {}
-                break;
+        while (event != nullptr) {
+            switch (event->response_type & ~event_mask) {
+                case XCB_EXPOSE: {
+                    const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
+                    try {
+                        windows.at(expose->window)->draw();
+                    } catch (const std::out_of_range& oor) {}
+                    break;
+                }
+                default: {
+                    break;
+                }
             }
-            default: {
-                break;
-            }
+            event = unique_C_ptr<xcb_generic_event_t> {
+                xcb_poll_for_event(connection.get())
+            };
         }
     }
 }
@@ -141,11 +143,9 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
 
     const auto wid = os::getenv("WINDOWID");
 
-    if (tmux::is_used()) {
-        auto tmp_pids = tmux::get_client_pids();
-        if (tmp_pids.has_value()) {
-            client_pids = tmp_pids.value();
-        }
+    auto tmux_pids = tmux::get_client_pids();
+    if (tmux_pids.has_value()) {
+        client_pids = tmux_pids.value();
     } else if (wid.has_value()) {
         auto window_id = xcb_generate_id(connection.get());
         windows.insert({window_id, std::make_unique<Window>
