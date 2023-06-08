@@ -36,7 +36,6 @@ public:
 
     void draw();
     void generate_frame();
-    void terminate_event_handler();
     void toggle();
     void show();
     void hide();
@@ -56,7 +55,7 @@ private:
     Image& image;
     bool visible = false;
 
-    void send_expose_event(int xcoord = 0, int ycoord = 0);
+    void send_expose_event();
 };
 
 #endif

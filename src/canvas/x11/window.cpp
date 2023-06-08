@@ -120,20 +120,15 @@ Window::~Window()
     xcb_flush(connection.get());
 }
 
-auto Window::terminate_event_handler() -> void
+auto Window::send_expose_event() -> void
 {
-    send_expose_event(MAGIC_EXIT_NUM1, MAGIC_EXIT_NUM2);
-}
-
-auto Window::send_expose_event(int xcoord, int ycoord) -> void
-{
-    const auto event = std::make_unique<xcb_expose_event_t>();
-    event->response_type = XCB_EXPOSE;
-    event->window = window;
-    event->x = xcoord;
-    event->y = ycoord;
+    xcb_expose_event_t event;
+    event.response_type = XCB_EXPOSE;
+    event.window = window;
+    event.x = 0;
+    event.y = 0;
     xcb_send_event(connection.get(), 0, window,
-            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(event.get()));
+            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(&event));
     xcb_flush(connection.get());
 }
 

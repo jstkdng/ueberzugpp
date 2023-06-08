@@ -36,6 +36,11 @@ X11Canvas::X11Canvas()
     xutil = std::make_unique<X11Util>(connection);
     screen = xcb_setup_roots_iterator(xcb_get_setup(connection.get())).data;
     logger = spdlog::get("X11");
+    event_handler = std::thread([&] {
+        logger->debug("Started event handler");
+        handle_events();
+    });
+
     logger->info("Canvas created");
 }
 
@@ -92,22 +97,27 @@ void X11Canvas::hide()
 void X11Canvas::handle_events()
 {
     const auto event_mask = 0x80;
+    const auto connfd = xcb_get_file_descriptor(connection.get());
     while (true) {
+        const auto x11_event = os::wait_for_data_on_fd(connfd, 100);
+        if (Application::stop_flag_.load()) {
+            break;
+        }
+        if (!x11_event) {
+            continue;
+        }
         const auto event = unique_C_ptr<xcb_generic_event_t> {
-            xcb_wait_for_event(connection.get())
+            xcb_poll_for_event(connection.get())
         };
+        if (event == nullptr) {
+            continue;
+        }
         switch (event->response_type & ~event_mask) {
             case XCB_EXPOSE: {
                 const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
-                if (expose->x == MAGIC_EXIT_NUM1 && expose->y == MAGIC_EXIT_NUM2) {
-                    std::scoped_lock lock {windows_mutex};
-                    windows.erase(expose->window);
-                    if (windows.empty()) {
-                        return;
-                    }
-                    continue;
-                }
-                windows.at(expose->window)->draw();
+                try {
+                    windows.at(expose->window)->draw();
+                } catch (const std::out_of_range& oor) {}
                 break;
             }
             default: {
@@ -130,11 +140,6 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
     image = std::move(new_image);
 
     const auto wid = os::getenv("WINDOWID");
-
-    event_handler = std::thread([&] {
-        logger->debug("Started event handler");
-        handle_events();
-    });
 
     if (tmux::is_used()) {
         auto tmp_pids = tmux::get_client_pids();
@@ -172,15 +177,7 @@ void X11Canvas::clear()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
-    {
-        std::scoped_lock lock {windows_mutex};
-        std::ranges::for_each(windows, [&] (std::pair<const xcb_window_t, std::unique_ptr<Window>>& entry) {
-            entry.second->terminate_event_handler();
-        });
-    }
-    if (event_handler.joinable()) {
-        event_handler.join();
-    }
+    windows.clear();
     image.reset();
     can_draw.store(true);
 }
