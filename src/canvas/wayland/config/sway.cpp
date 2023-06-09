@@ -16,13 +16,18 @@
 
 #include "sway.hpp"
 #include "os.hpp"
+#include "application.hpp"
+#include "tmux.hpp"
+#include "util.hpp"
 
 #include <string>
 #include <iostream>
 #include <array>
-#include <fmt/format.h>
 #include <stack>
 #include <thread>
+#include <algorithm>
+
+#include <fmt/format.h>
 
 using njson = nlohmann::json;
 
@@ -49,14 +54,51 @@ struct __attribute__((packed)) ipc_header {
 
 auto SwaySocket::get_window_info() -> struct WaylandWindow
 {
-    const auto window = current_window();
+    const auto nodes = get_nodes();
+    const auto window = get_active_window(nodes);
+    const auto monitor = get_active_monitor(nodes);
+    const auto& mon_rect = monitor["rect"];
     const auto& rect = window["rect"];
     return {
         .width = rect["width"],
         .height = rect["height"],
-        .x = rect["x"],
-        .y = rect["y"]
+        .x = static_cast<int>(rect["x"]) - static_cast<int>(mon_rect["x"]),
+        .y = static_cast<int>(rect["y"]) - static_cast<int>(mon_rect["y"])
     };
+}
+
+auto SwaySocket::get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json
+{
+    std::vector<int> pids {Application::parent_pid_};
+    const auto tmux_clients = tmux::get_client_pids();
+    if (tmux_clients.has_value()) {
+        pids = tmux_clients.value();
+    }
+
+    for (const auto pid: pids) {
+        const auto tree = util::get_process_tree(pid);
+        const auto found = std::find_if(nodes.begin(), nodes.end(), [&tree] (const njson& json) -> bool {
+            try {
+                return std::find(tree.begin(), tree.end(), json.at("pid")) != tree.end();
+            } catch (const njson::out_of_range& err) {
+                return false;
+            }
+        });
+        if (found != nodes.end()) {
+            return *found;
+        }
+    }
+    return nullptr;
+}
+
+auto SwaySocket::get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json
+{
+    for (const auto& node: nodes) {
+        if (node.at("type") == "output" && node.at("active") == true) {
+            return node;
+        }
+    }
+    return nullptr;
 }
 
 void SwaySocket::initial_setup(const std::string_view appid)
@@ -99,21 +141,19 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
     return njson::parse(buff);
 }
 
-auto SwaySocket::current_window() const -> nlohmann::json
+auto SwaySocket::get_nodes() const -> std::vector<nlohmann::json>
 {
     logger->debug("Obtaining sway tree");
     auto tree = ipc_message(IPC_GET_TREE);
     std::stack<njson> nodes_st;
+    std::vector<njson> nodes_vec;
 
     nodes_st.push(tree);
 
     while (!nodes_st.empty()) {
         auto top = nodes_st.top();
         nodes_st.pop();
-        bool focused = top["focused"];
-        if (focused) {
-            return top;
-        }
+        nodes_vec.push_back(top);
         for (auto& node: top["nodes"]) {
             nodes_st.push(node);
         }
@@ -121,7 +161,7 @@ auto SwaySocket::current_window() const -> nlohmann::json
             nodes_st.push(node);
         }
     }
-    return nullptr;
+    return nodes_vec;
 }
 
 auto SwaySocket::ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json
