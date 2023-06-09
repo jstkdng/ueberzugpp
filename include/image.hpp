@@ -42,7 +42,6 @@ public:
     [[nodiscard]] virtual auto frame_delay() const -> int { return -1; }
     [[nodiscard]] virtual auto is_animated() const -> bool { return false; }
     [[nodiscard]] virtual auto filename() const -> std::string = 0;
-    virtual auto resize_image() -> void = 0;
     virtual auto next_frame() -> void {}
 
 protected:

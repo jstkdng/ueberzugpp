@@ -41,7 +41,6 @@ public:
     [[nodiscard]] auto channels() const -> int override;
 
     [[nodiscard]] auto filename() const -> std::string override;
-    auto resize_image() -> void override;
 private:
     cv::Mat image;
     cv::UMat uimage;
@@ -59,6 +58,8 @@ private:
     std::shared_ptr<Flags> flags;
 
     void process_image();
+    void resize_image();
+    void resize_image_helper(cv::InputOutputArray& mat, int new_width, int new_height);
 };
 
 #endif

@@ -45,55 +45,37 @@ auto Image::load(const Dimensions& dimensions, const std::string& filename)
         image_path = check_cache(dimensions, filename);
         in_cache = image_path != filename;
     }
-    bool is_anim = false;
-#ifdef ENABLE_OPENCV
-    bool load_opencv = false;
-#endif
-    bool load_libvips = flags->no_opencv;
-    fs::path file = image_path;
-    std::unordered_set<std::string> animated_formats {
-        ".gif", ".webp"
-    };
 
-    if (animated_formats.contains(file.extension())) {
-        is_anim = true;
-        load_libvips = true;
-    }
 #ifdef ENABLE_OPENCV
-    if (cv::haveImageReader(image_path)) {
-        load_opencv = true;
-    } else if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
-        load_libvips = true;
-    }
-#else
-    if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
-        load_libvips = true;
-    }
-#endif
-
-    if (load_libvips) {
-        return std::make_unique<LibvipsImage>(dimensions, image_path, is_anim, in_cache);
-    }
-#ifdef ENABLE_OPENCV
-    if (load_opencv) {
+    if (cv::haveImageReader(image_path) && !flags->no_opencv) {
         return std::make_unique<OpencvImage>(dimensions, image_path, in_cache);
     }
 #endif
+    if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
+        try {
+            return std::make_unique<LibvipsImage>(dimensions, image_path, in_cache);
+        } catch (const vips::VError& err) {}
+    }
     return nullptr;
 }
 
 auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
 {
-    fs::path cache_path = util::get_cache_file_save_location(orig_path);
+    const fs::path cache_path = util::get_cache_file_save_location(orig_path);
     if (!fs::exists(cache_path)) {
         return orig_path;
     }
 
-    auto cache_img = vips::VImage::new_from_file(cache_path.c_str());
-    uint32_t img_width = cache_img.width();
-    uint32_t img_height = cache_img.height();
-    uint32_t dim_width = dimensions.max_wpixels(); 
-    uint32_t dim_height = dimensions.max_hpixels();
+    vips::VImage cache_img;
+    try {
+        cache_img = vips::VImage::new_from_file(cache_path.c_str());
+    } catch (const vips::VError& err) {
+        return orig_path;
+    }
+    const uint32_t img_width = cache_img.width();
+    const uint32_t img_height = cache_img.height();
+    const uint32_t dim_width = dimensions.max_wpixels(); 
+    const uint32_t dim_height = dimensions.max_hpixels();
     const int delta = 10;
 
     if ((dim_width >= img_width && dim_height >= img_height) &&

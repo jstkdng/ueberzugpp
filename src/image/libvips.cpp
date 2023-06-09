@@ -28,37 +28,29 @@ using vips::VImage;
 using vips::VError;
 
 LibvipsImage::LibvipsImage(const Dimensions& dimensions,
-            const std::string &filename, bool is_anim, bool in_cache):
+            const std::string &filename, bool in_cache):
 path(filename),
 dimensions(dimensions),
 max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
-is_anim(is_anim),
 in_cache(in_cache)
 {
+    image = VImage::new_from_file(path.c_str()).colourspace(VIPS_INTERPRETATION_sRGB);
     flags = Flags::instance();
     logger = spdlog::get("vips");
     logger->info("Loading image {}", filename);
-    if (is_anim) {
+
+    try {
+        npages = image.get_int("n-pages");
+        is_anim = true;
+        logger->info("Image is animated");
         auto *opts = VImage::option()->set("n", -1);
         backup = VImage::new_from_file(filename.c_str(), opts)
             .colourspace(VIPS_INTERPRETATION_sRGB);
-        try {
-            npages = backup.get_int("n-pages");
-        } catch (const VError& err) {
-            this->is_anim = false;
-            npages = -1;
-        }
-        if (npages == -1) {
-            image = backup;
-        } else {
-            orig_height = backup.height() / npages;
-            image = backup.crop(0, 0, backup.width(), orig_height);
-        }
-    } else {
-        image = VImage::new_from_file(path.c_str())
-            .colourspace(VIPS_INTERPRETATION_sRGB);
-    }
+        orig_height = backup.height() / npages;
+        image = backup.crop(0, 0, backup.width(), orig_height);
+    } catch (const VError& err) {}
+
     process_image();
 }
 
@@ -116,11 +108,11 @@ auto LibvipsImage::frame_delay() const -> int
         return -1;
     }
     try {
-        auto delays = backup.get_array_int("delay");
+        const auto delays = backup.get_array_int("delay");
         const int ms_per_sec = 1000;
         if (delays.at(0) == 0) {
 #ifdef ENABLE_OPENCV
-            cv::VideoCapture video (path);
+            const cv::VideoCapture video (path);
             if (video.isOpened()) {
                 return gsl::narrow_cast<int>((1.0 / video.get(cv::CAP_PROP_FPS)) * ms_per_sec);
             }
@@ -138,7 +130,7 @@ auto LibvipsImage::resize_image() -> void
     if (in_cache) {
         return;
     }
-    auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
+    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
     if (new_width == 0 && new_height == 0) {
         return;
     }
@@ -156,11 +148,11 @@ auto LibvipsImage::resize_image() -> void
         return;
     }
 
-    auto save_location = util::get_cache_file_save_location(path);
+    const auto save_location = util::get_cache_file_save_location(path);
     try {
         image.write_to_file(save_location.c_str());
+        logger->debug("Saved resized image");
     } catch (const VError& err) {}
-    logger->debug("Saved resized image");
 }
 
 auto LibvipsImage::process_image() -> void

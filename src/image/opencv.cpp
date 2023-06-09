@@ -19,6 +19,7 @@
 
 #include <unordered_set>
 #include <string_view>
+#include <execution>
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -80,34 +81,39 @@ auto OpencvImage::resize_image() -> void
     if (in_cache) {
         return;
     }
-    auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
+    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
     if (new_width <= 0 && new_height <= 0) {
         return;
     }
 
-    auto opencl_ctx = cv::ocl::Context::getDefault();
+    const auto opencl_ctx = cv::ocl::Context::getDefault();
     opencl_available = opencl_ctx.ptr() != nullptr;
 
     if (opencl_available) {
-        logger->debug("Resizing image with opencl");
-        uimage = image.getUMat(cv::ACCESS_RW);
-        cv::resize(uimage, uimage, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
-        image = uimage.getMat(cv::ACCESS_RW);
+        logger->debug("OpenCL is available");
+        image.copyTo(uimage);
+        resize_image_helper(uimage, new_width, new_height);
+        uimage.copyTo(image);
     } else {
-        logger->debug("Resizing image");
-        cv::resize(image, image, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
+        resize_image_helper(image, new_width, new_height);
     }
+}
+
+void OpencvImage::resize_image_helper(cv::InputOutputArray& mat, int new_width, int new_height)
+{
+    logger->debug("Resizing image");
+    cv::resize(mat, mat, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
 
     if (flags->no_cache) {
         logger->debug("Caching is disabled");
         return;
     }
 
-    auto save_location = util::get_cache_file_save_location(path);
+    const auto save_location = util::get_cache_file_save_location(path);
     try {
-        cv::imwrite(save_location, image);
+        cv::imwrite(save_location, mat);
+        logger->debug("Saved resized image");
     } catch (const cv::Exception& ex) {}
-    logger->debug("Saved resized image");
 }
 
 void OpencvImage::process_image()
@@ -126,6 +132,12 @@ void OpencvImage::process_image()
         if (image.channels() == 3) {
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
+        std::for_each(std::execution::par_unseq, image.begin<cv::Vec4b>(), image.end<cv::Vec4b>(), [] (cv::Vec4b& pix) {
+            const unsigned char max_transparency = 150;
+            if (pix[3] <= max_transparency) {
+                pix = cv::Vec4b(0, 0, 0, 0);
+            }
+        });
     } else if (flags->output == "kitty") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
