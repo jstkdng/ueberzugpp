@@ -11,7 +11,7 @@ jobs:
     container: archlinux:base-devel
     steps:
       - name: Install packages
-        run: pacman -Syu git
+        run: pacman -Syu --noconfirm git
       - uses: actions/checkout@v3
         with:
           submodules: true
