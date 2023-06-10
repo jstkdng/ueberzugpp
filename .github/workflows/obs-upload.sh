@@ -5,6 +5,7 @@ DATETIME=$(date -R)
 VERSION=$(grep "project(" CMakeLists.txt | grep -oP '\(\K[^\)]+' | cut -f 6 -d ' ')
 TARFILE="ueberzugpp_${VERSION}.tar.xz"
 DSCFILE="ueberzugpp_${VERSION}.dsc"
+declare -a FILES=("$TARFILE" "$DSCFILE")
 
 sed -e "s;@@VERSION@@;${VERSION};g" -e "s;@@DATETIME@@;${DATETIME};g" < debian/changelog.in > debian/changelog
 
@@ -31,3 +32,14 @@ Files:
 EOF
 
 cat "$DSCFILE"
+
+AUTH="authorization: Basic $OBS_AUTH"
+BASE_URL="https://api.opensuse.org/source/$OBS_PROJECT/ueberzugpp"
+for FILE in "${FILES[@]}"
+do
+    URL="$BASE_URL/$FILE?rev=upload"
+    curl -XPUT -H 'Content-Type: application/octet-stream' -H "$AUTH" --data-binary "@$FILE" "$URL"
+done
+
+curl -XPOST -H "$AUTH" "$BASE_URL" -F "cmd=commit"
+
