@@ -1,0 +1,15 @@
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  obs-upload:
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - name: Run OBS Upload Script
+        run: .github/workflows/obs-upload.sh
