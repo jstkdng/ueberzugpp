@@ -33,13 +33,12 @@ EOF
 
 cat "$DSCFILE"
 
-AUTH="authorization: Basic $OBS_AUTH"
 BASE_URL="https://api.opensuse.org/source/$OBS_PROJECT/ueberzugpp"
 for FILE in "${FILES[@]}"
 do
     URL="$BASE_URL/$FILE?rev=upload"
-    curl -XPUT -H 'Content-Type: application/octet-stream' -H "$AUTH" --data-binary "@$FILE" "$URL"
+    curl -XPUT -H 'Content-Type: application/octet-stream' -u "$OBS_AUTH" --data-binary "@$FILE" "$URL"
 done
 
-curl -XPOST -H "$AUTH" "$BASE_URL" -F "cmd=commit"
+curl -XPOST -u "$OBS_AUTH" "$BASE_URL" -F "cmd=commit"
 
