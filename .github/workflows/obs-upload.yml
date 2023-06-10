@@ -1,3 +1,5 @@
+name: 'Build OBS packages'
+
 on:
   workflow_dispatch:
   release:
