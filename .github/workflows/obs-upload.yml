@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     container: archlinux:base-devel
     steps:
+      - name: Install packages
+        run: pacman -Syu git
       - uses: actions/checkout@v3
         with:
           submodules: true
