@@ -3,8 +3,8 @@ set -e
 
 DATETIME=$(date -R)
 VERSION=$(grep "project(" CMakeLists.txt | grep -oP '\(\K[^\)]+' | cut -f 6 -d ' ')
-TARFILE="ueberzugpp_${VERSION}.tar.xz"
-DSCFILE="ueberzugpp_${VERSION}.dsc"
+TARFILE="ueberzugpp.tar.xz"
+DSCFILE="ueberzugpp.dsc"
 declare -a FILES=("$TARFILE" "$DSCFILE")
 
 sed -e "s;@@VERSION@@;${VERSION};g" -e "s;@@DATETIME@@;${DATETIME};g" < debian/changelog.in > debian/changelog
