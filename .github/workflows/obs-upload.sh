@@ -3,7 +3,7 @@ set -e
 
 DATETIME=$(date -R)
 VERSION=$(grep "project(" CMakeLists.txt | grep -oP '\(\K[^\)]+' | cut -f 6 -d ' ')
-TARFILE="ueberzugpp.tar.xz"
+TARFILE="ueberzugpp_$VERSION.tar.xz"
 DSCFILE="ueberzugpp.dsc"
 declare -a FILES=("$TARFILE" "$DSCFILE")
 
