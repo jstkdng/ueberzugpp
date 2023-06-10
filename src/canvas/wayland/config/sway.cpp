@@ -21,10 +21,8 @@
 #include "util.hpp"
 
 #include <string>
-#include <iostream>
 #include <array>
 #include <stack>
-#include <thread>
 #include <algorithm>
 
 #include <fmt/format.h>
@@ -93,8 +91,9 @@ auto SwaySocket::get_active_window(const std::vector<nlohmann::json>& nodes) -> 
 
 auto SwaySocket::get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json
 {
+    const int focus_id = nodes.at(0).at("focus").at(0);
     for (const auto& node: nodes) {
-        if (node.at("type") == "output" && node.at("active") == true) {
+        if (node.at("id") == focus_id) {
             return node;
         }
     }
