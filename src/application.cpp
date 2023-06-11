@@ -265,12 +265,14 @@ void Application::socket_loop()
         if (conn == -1) {
             continue;
         }
-        const auto data = UnixSocket::read_data_from_connection(conn);
-        if (data == "EXIT") {
-            stop_flag_.store(true);
-            break;
+        const auto data = socket.read_data_from_connection(conn);
+        for (const auto& cmd: data) {
+            if (cmd == "EXIT") {
+                stop_flag_.store(true);
+                return;
+            }
+            execute(cmd);
         }
-        execute(data);
     }
 }
 
