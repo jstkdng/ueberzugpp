@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# This is a simple script that allows you to use ueberzugpp to
+# preview images in the terminal by providing the x and y
+# coordinates of the image, the width and height of the image,
+# and the path to the image file, with $1, $2, $3, $4 and $5
+# as arguments, respectively.
+# Example usage:
+# ./img-fifo 0 0 30 30 image.jpg
+# Use Ctrl+C to exit.
+
+FIFO="/tmp/preview_fifo"
+[ -p "$FIFO" ] || mkfifo "$FIFO"
+
+start_ueberzugpp() {
+    ueberzugpp layer --silent <"$FIFO" &
+    exec 3>"${FIFO}"
+}
+
+cleanup() {
+    rm -f "$FIFO"
+}
+trap cleanup HUP INT QUIT TERM PWR EXIT
+
+preview_image() {
+    echo '{"path": "'"$5"'", "action": "add", "identifier": "img-fifo", "x": "'"$1"'", "y": "'"$2"'", "width": "'"$3"'", "height": "'"$4"'"}' >"$FIFO"
+}
+
+start_ueberzugpp
+preview_image "$1" "$2" "$3" "$4" "$5"
+wait
