@@ -26,8 +26,8 @@ class X11Util
 {
 public:
     X11Util();
-    explicit X11Util(std::shared_ptr<xcb_connection_t> connection);
-    ~X11Util() = default;
+    explicit X11Util(xcb_connection_t* connection);
+    ~X11Util();
 
     [[nodiscard]] auto get_server_window_ids() const -> std::vector<xcb_window_t>;
     [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>;
@@ -39,8 +39,9 @@ public:
 
     bool connected = false;
 private:
-    std::shared_ptr<xcb_connection_t> connection;
+    xcb_connection_t* connection;
     xcb_screen_t* screen = nullptr;
+    bool owns_connection = true;
 };
 
 #endif

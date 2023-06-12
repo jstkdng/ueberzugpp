@@ -29,7 +29,7 @@ class Dimensions;
 class Window
 {
 public:
-    Window(std::shared_ptr<xcb_connection_t> connection, xcb_screen_t *screen,
+    Window(xcb_connection_t* connection, xcb_screen_t *screen,
             xcb_window_t window, xcb_window_t parent,
             const Dimensions& dimensions, Image& image);
     ~Window();
@@ -41,7 +41,7 @@ public:
     void hide();
 
 private:
-    std::shared_ptr<xcb_connection_t> connection;
+    xcb_connection_t *connection;
     xcb_screen_t *screen;
 
     xcb_window_t window;

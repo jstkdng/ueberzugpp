@@ -24,17 +24,14 @@
 #include <xcb/xproto.h>
 #include <ranges>
 
-X11Canvas::X11Canvas()
+X11Canvas::X11Canvas():
+connection(xcb_connect(nullptr, nullptr))
 {
-    connection = std::shared_ptr<xcb_connection_t>(
-        xcb_connect(nullptr, nullptr),
-        x11_connection_deleter{}
-    );
-    if (xcb_connection_has_error(connection.get()) != 0) {
+    if (xcb_connection_has_error(connection) != 0) {
         throw std::runtime_error("CANNOT CONNECT TO X11");
     }
     xutil = std::make_unique<X11Util>(connection);
-    screen = xcb_setup_roots_iterator(xcb_get_setup(connection.get())).data;
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
     logger = spdlog::get("X11");
     event_handler = std::thread([&] {
         logger->debug("Started event handler");
@@ -52,6 +49,7 @@ X11Canvas::~X11Canvas()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
+    xcb_disconnect(connection);
 }
 
 void X11Canvas::draw()
@@ -97,7 +95,7 @@ void X11Canvas::hide()
 void X11Canvas::handle_events()
 {
     const auto event_mask = 0x80;
-    const auto connfd = xcb_get_file_descriptor(connection.get());
+    const auto connfd = xcb_get_file_descriptor(connection);
     while (true) {
         const auto x11_event = os::wait_for_data_on_fd(connfd, 100);
         if (Application::stop_flag_.load()) {
@@ -107,7 +105,7 @@ void X11Canvas::handle_events()
             continue;
         }
         auto event = unique_C_ptr<xcb_generic_event_t> {
-            xcb_poll_for_event(connection.get())
+            xcb_poll_for_event(connection)
         };
         while (event != nullptr) {
             switch (event->response_type & ~event_mask) {
@@ -122,7 +120,7 @@ void X11Canvas::handle_events()
                     break;
                 }
             }
-            event.reset(xcb_poll_for_event(connection.get()));
+            event.reset(xcb_poll_for_event(connection));
         }
     }
 }
@@ -145,7 +143,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
     if (tmux_pids.has_value()) {
         client_pids = tmux_pids.value();
     } else if (wid.has_value()) {
-        auto window_id = xcb_generate_id(connection.get());
+        auto window_id = xcb_generate_id(connection);
         windows.insert({window_id, std::make_unique<Window>
                     (connection, screen, window_id, std::stoi(wid.value()), dimensions, *image)});
         logger->debug("Found WINDOWID={}", wid.value());
@@ -162,7 +160,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
             if (search == pid_window_map.end()) {
                 continue;
             }
-            auto window_id = xcb_generate_id(connection.get());
+            auto window_id = xcb_generate_id(connection);
             windows.insert({window_id, std::make_unique<Window>
                     (connection, screen, window_id, search->second, dimensions, *image)});
         }
