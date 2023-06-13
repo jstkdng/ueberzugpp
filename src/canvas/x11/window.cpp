@@ -20,14 +20,14 @@
 #include <xcb/xcb.h>
 #include <gsl/gsl>
 
-Window::Window(std::shared_ptr<xcb_connection_t> connection, xcb_screen_t* screen,
+Window::Window(xcb_connection_t* connection, xcb_screen_t* screen,
             xcb_window_t window, xcb_window_t parent,
             const Dimensions& dimensions, Image& image):
 connection(connection),
 screen(screen),
 window(window),
 parent(parent),
-gc(xcb_generate_id(connection.get())),
+gc(xcb_generate_id(connection)),
 image(image)
 {
     logger = spdlog::get("X11");
@@ -41,7 +41,7 @@ image(image)
     const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
     logger->debug("Parent window: {}", parent);
-    xcb_create_window_aux(connection.get(),
+    xcb_create_window_aux(connection,
             screen->root_depth,
             window,
             this->parent,
@@ -53,19 +53,19 @@ image(image)
             value_mask,
             &value_list);
     logger->debug("Created child window {} at ({},{})", window, xcoord, ycoord);
-    xcb_create_gc(connection.get(), gc, window, 0, nullptr);
+    xcb_create_gc(connection, gc, window, 0, nullptr);
     show();
 }
 
 void Window::toggle()
 {
     if (visible) {
-        xcb_unmap_window(connection.get(), window);
+        xcb_unmap_window(connection, window);
     } else {
-        xcb_map_window(connection.get(), window);
+        xcb_map_window(connection, window);
     }
     visible = !visible;
-    xcb_flush(connection.get());
+    xcb_flush(connection);
 }
 
 void Window::show()
@@ -74,8 +74,8 @@ void Window::show()
         return;
     }
     visible = true;
-    xcb_map_window(connection.get(), window);
-    xcb_flush(connection.get());
+    xcb_map_window(connection, window);
+    xcb_flush(connection);
 }
 
 void Window::hide()
@@ -84,8 +84,8 @@ void Window::hide()
         return;
     }
     visible = false;
-    xcb_unmap_window(connection.get(), window);
-    xcb_flush(connection.get());
+    xcb_unmap_window(connection, window);
+    xcb_flush(connection);
 }
 
 auto Window::draw() -> void
@@ -93,15 +93,14 @@ auto Window::draw() -> void
     if (xcb_image.get() == nullptr) {
         return;
     }
-    xcb_image_put(connection.get(), window, gc, xcb_image.get(), 0, 0, 0);
-    xcb_flush(connection.get());
+    xcb_image_put(connection, window, gc, xcb_image.get(), 0, 0, 0);
 }
 
 void Window::generate_frame()
 {
     xcb_image_buffer = std::vector<unsigned char>(image.size(), 0);
     xcb_image = unique_C_ptr<xcb_image_t> {
-        xcb_image_create_native(connection.get(),
+        xcb_image_create_native(connection,
             image.width(),
             image.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
@@ -115,9 +114,9 @@ void Window::generate_frame()
 
 Window::~Window()
 {
-    xcb_destroy_window(connection.get(), window);
-    xcb_free_gc(connection.get(), gc);
-    xcb_flush(connection.get());
+    xcb_destroy_window(connection, window);
+    xcb_free_gc(connection, gc);
+    xcb_flush(connection);
 }
 
 auto Window::send_expose_event() -> void
@@ -127,8 +126,8 @@ auto Window::send_expose_event() -> void
     event.window = window;
     event.x = 0;
     event.y = 0;
-    xcb_send_event(connection.get(), 0, window,
+    xcb_send_event(connection, 0, window,
             XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(&event));
-    xcb_flush(connection.get());
+    xcb_flush(connection);
 }
 

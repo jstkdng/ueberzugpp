@@ -45,7 +45,7 @@ public:
     void show() override;
 
 private:
-    std::shared_ptr<xcb_connection_t> connection;
+    xcb_connection_t *connection;
     xcb_screen_t *screen;
     std::unique_ptr<X11Util> xutil;
 

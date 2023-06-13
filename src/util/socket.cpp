@@ -29,6 +29,7 @@
 #include <sys/un.h>
 
 #include "os.hpp"
+#include "util.hpp"
 
 namespace fs = std::filesystem;
 
@@ -47,6 +48,8 @@ fd(socket(AF_UNIX, SOCK_STREAM, 0))
     if (fd == -1) {
         throw std::system_error(errno, std::generic_category());
     }
+    const int bufsize = 8192;
+    buffer.reserve(bufsize);
 }
 
 void UnixSocket::connect_to_endpoint(const std::string_view endpoint)
@@ -94,11 +97,23 @@ auto UnixSocket::wait_for_connections(int waitms) const -> int
     return -1;
 }
 
-auto UnixSocket::read_data_from_connection(int filde) -> std::string
+auto UnixSocket::read_data_from_connection(int filde) -> std::vector<std::string>
 {
-    auto response = os::read_data_from_fd(filde);
+    // a single connection could send multiples commands at once
+    // each command should end with a '\n' character
+    const int read_buffer_size = 4096;
+    std::array<char, read_buffer_size> read_buffer;
+    while (true) {
+        const auto status = recv(filde, read_buffer.data(), read_buffer_size, 0);
+        if (status <= 0) {
+            break;
+        }
+        buffer.append(read_buffer.data(), status);
+    }
+    auto cmds = util::str_split(buffer, "\n");
+    buffer.clear();
     close(filde);
-    return response;
+    return cmds;
 }
 
 void UnixSocket::write(const void* data, std::size_t len) const

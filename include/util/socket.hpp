@@ -19,6 +19,8 @@
 
 #include <string_view>
 #include <cstdint>
+#include <string>
+#include <vector>
 
 class UnixSocket
 {
@@ -30,12 +32,13 @@ public:
     void connect_to_endpoint(std::string_view endpoint);
     void bind_to_endpoint(std::string_view endpoint) const;
     [[nodiscard]] auto wait_for_connections(int waitms) const -> int;
-    [[nodiscard]] static auto read_data_from_connection(int filde) -> std::string;
+    [[nodiscard]] auto read_data_from_connection(int filde) -> std::vector<std::string>;
     void write(const void* data, std::size_t len) const;
     void read(void* data, std::size_t len) const;
 private:
     int fd;
     bool connected = true;
+    std::string buffer;
 };
 
 #endif
