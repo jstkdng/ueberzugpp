@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# This is a simple script that allows you to have image preview
+# in fzf, using ueberzugpp with fifo. For this script to work
+# you must add it to path, because it requires to call itself
+# during the preview process in fzf (line 42 -> $0).
+# Example usage:
+# ls | fzf-fifo
+# find $HOME/pix/ -type f -iname "*.jpg" | fzf-fifo
+
+FIFO="/tmp/fzf_preview_fifo"
+[ -p "$FIFO" ] || mkfifo "$FIFO"
+x=10
+y=5
+width=100
+height=20
+
+start_ueberzugpp() {
+    ueberzugpp layer --silent <"$FIFO" &
+    exec 3>"${FIFO}"
+}
+
+cleanup() {
+    exec 3>&-
+}
+trap cleanup HUP INT QUIT TERM PWR EXIT
+
+preview_image() {
+    echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": "'"$x"'", "y": "'"$y"'", "width": "'"$width"'", "height": "'"$height"'"}' >"$FIFO"
+}
+
+case "$1" in
+    -W)
+        shift
+        preview_image "$@"
+        exit
+        ;;
+esac
+
+main() {
+    start_ueberzugpp
+    selected_image=$(fzf --preview "$0 -W {}" --preview-window=up:60%:wrap)
+    [ -n "$selected_image" ] && echo "Selected image: $selected_image"
+    rm "$FIFO"
+}
+main
