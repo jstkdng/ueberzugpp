@@ -12,8 +12,8 @@ FIFO="/tmp/fzf_preview_fifo"
 [ -p "$FIFO" ] || mkfifo "$FIFO"
 x=10
 y=5
-width=100
-height=20
+width=$(($(tput lines) / 2))
+height=$(($(tput lines) / 2))
 
 start_ueberzugpp() {
     ueberzugpp layer --silent <"$FIFO" &
