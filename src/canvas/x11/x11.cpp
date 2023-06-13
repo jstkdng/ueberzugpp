@@ -22,7 +22,6 @@
 #include "application.hpp"
 
 #include <xcb/xproto.h>
-#include <ranges>
 
 X11Canvas::X11Canvas():
 connection(xcb_connect(nullptr, nullptr))

@@ -32,10 +32,10 @@ max_width(dimensions.max_wpixels()),
 max_height(dimensions.max_hpixels()),
 in_cache(in_cache)
 {
-    logger = spdlog::get("opencv");
-    flags = Flags::instance();
-    logger->info("Loading image {}", filename);
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    logger = spdlog::get("opencv");
+    logger->info("Loading image {}", filename);
+    flags = Flags::instance();
 
     process_image();
 }

@@ -48,7 +48,9 @@ auto Image::load(const Dimensions& dimensions, const std::string& filename)
 
 #ifdef ENABLE_OPENCV
     if (cv::haveImageReader(image_path) && !flags->no_opencv) {
-        return std::make_unique<OpencvImage>(dimensions, image_path, in_cache);
+        try {
+            return std::make_unique<OpencvImage>(dimensions, image_path, in_cache);
+        } catch (const cv::Exception& ex) {}
     }
 #endif
     if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
