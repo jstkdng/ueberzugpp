@@ -40,7 +40,6 @@ image(image)
 
     const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
-    logger->debug("Parent window: {}", parent);
     xcb_create_window_aux(connection,
             screen->root_depth,
             window,
@@ -52,7 +51,7 @@ image(image)
             screen->root_visual,
             value_mask,
             &value_list);
-    logger->debug("Created child window {} at ({},{})", window, xcoord, ycoord);
+    logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
     xcb_create_gc(connection, gc, window, 0, nullptr);
     show();
 }

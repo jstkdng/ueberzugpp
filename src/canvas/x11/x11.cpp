@@ -126,6 +126,7 @@ void X11Canvas::handle_events()
                 }
                 case XCB_EXPOSE: {
                     const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
+                    logger->debug("Received expose event for window {}", expose->window);
                     try {
                         windows.at(expose->window)->draw();
                     } catch (const std::out_of_range& oor) {}
@@ -158,10 +159,10 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
     if (tmux_pids.has_value()) {
         client_pids = tmux_pids.value();
     } else if (wid.has_value()) {
+        logger->debug("Found WINDOWID={}", wid.value());
         auto window_id = xcb_generate_id(connection);
         windows.insert({window_id, std::make_unique<Window>
                     (connection, screen, window_id, std::stoi(wid.value()), dimensions, *image)});
-        logger->debug("Found WINDOWID={}", wid.value());
         return;
     }
 
