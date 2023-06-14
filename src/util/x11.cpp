@@ -58,14 +58,14 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
     cookies_st.push(xcb_query_tree_unchecked(connection, screen->root));
 
     while (!cookies_st.empty()) {
-        auto cookie = cookies_st.top();
+        const auto cookie = cookies_st.top();
         cookies_st.pop();
 
-        auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
+        const auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
             xcb_query_tree_reply(connection, cookie, nullptr)
         };
         if (reply.get() == nullptr) {
-            throw std::runtime_error("UNABLE TO QUERY WINDOW TREE");
+            continue;
         }
 
         const auto num_children = xcb_query_tree_children_length(reply.get());

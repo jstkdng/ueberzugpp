@@ -22,6 +22,7 @@
 #include "application.hpp"
 
 #include <xcb/xproto.h>
+#include <xcb/xcb_errors.h>
 
 X11Canvas::X11Canvas():
 connection(xcb_connect(nullptr, nullptr))
@@ -107,6 +108,21 @@ void X11Canvas::handle_events()
             xcb_poll_for_event(connection)
         };
         while (event != nullptr) {
+            if (event->response_type == 0) {
+                const auto *err = reinterpret_cast<xcb_generic_error_t*>(event.get());
+                xcb_errors_context_t *err_ctx = nullptr;
+                xcb_errors_context_new(connection, &err_ctx);
+                const char *extension = nullptr;
+                const char *major = xcb_errors_get_name_for_major_code(err_ctx, err->major_code);
+                const char *minor = xcb_errors_get_name_for_minor_code(err_ctx, err->major_code, err->minor_code);
+                const char *error = xcb_errors_get_name_for_error(err_ctx, err->error_code, &extension);
+                logger->warn("XCB Error: {}:{}, {}:{}, resource {} sequence {}",
+                       error, extension != nullptr ? extension : "no_extension",
+                       major, minor != nullptr ? minor : "no_minor",
+                       err->resource_id,
+                       err->sequence);
+                xcb_errors_context_free(err_ctx);
+            }
             switch (event->response_type & ~event_mask) {
                 case XCB_EXPOSE: {
                     const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
