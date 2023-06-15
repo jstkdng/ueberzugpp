@@ -19,7 +19,6 @@
 
 #include <unordered_set>
 #include <string_view>
-#include <execution>
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
@@ -132,12 +131,6 @@ void OpencvImage::process_image()
         if (image.channels() == 3) {
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
-        std::for_each(std::execution::par_unseq, image.begin<cv::Vec4b>(), image.end<cv::Vec4b>(), [] (cv::Vec4b& pix) {
-            const unsigned char max_transparency = 150;
-            if (pix[3] <= max_transparency) {
-                pix = cv::Vec4b(0, 0, 0, 0);
-            }
-        });
     } else if (flags->output == "kitty") {
         if (image.channels() == 4) {
             cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
