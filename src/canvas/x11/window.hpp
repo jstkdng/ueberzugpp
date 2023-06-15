@@ -20,19 +20,20 @@
 #include "image.hpp"
 #include "util/ptr.hpp"
 
+#include <X11/Xutil.h>
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
 #include <spdlog/spdlog.h>
 
 class Dimensions;
 
-class Window
+class X11Window
 {
 public:
-    Window(xcb_connection_t* connection, xcb_screen_t *screen,
-            xcb_window_t window, xcb_window_t parent,
+    X11Window(xcb_connection_t* connection, xcb_screen_t *screen,
+            xcb_window_t window, xcb_window_t parent, const XVisualInfo& vinfo,
             const Dimensions& dimensions, Image& image);
-    ~Window();
+    ~X11Window();
 
     void draw();
     void generate_frame();
@@ -43,6 +44,7 @@ public:
 private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
+    const XVisualInfo& vinfo;
 
     xcb_window_t window;
     xcb_window_t parent;

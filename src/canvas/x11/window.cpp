@@ -20,11 +20,12 @@
 #include <xcb/xcb.h>
 #include <gsl/gsl>
 
-Window::Window(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t window, xcb_window_t parent,
+X11Window::X11Window(xcb_connection_t* connection, xcb_screen_t* screen,
+            xcb_window_t window, xcb_window_t parent, const XVisualInfo& vinfo,
             const Dimensions& dimensions, Image& image):
 connection(connection),
 screen(screen),
+vinfo(vinfo),
 window(window),
 parent(parent),
 gc(xcb_generate_id(connection)),
@@ -56,7 +57,7 @@ image(image)
     show();
 }
 
-void Window::toggle()
+void X11Window::toggle()
 {
     if (visible) {
         xcb_unmap_window(connection, window);
@@ -67,7 +68,7 @@ void Window::toggle()
     xcb_flush(connection);
 }
 
-void Window::show()
+void X11Window::show()
 {
     if (visible) {
         return;
@@ -77,7 +78,7 @@ void Window::show()
     xcb_flush(connection);
 }
 
-void Window::hide()
+void X11Window::hide()
 {
     if (!visible) {
         return;
@@ -87,15 +88,15 @@ void Window::hide()
     xcb_flush(connection);
 }
 
-auto Window::draw() -> void
+auto X11Window::draw() -> void
 {
-    if (xcb_image.get() == nullptr) {
+    if (!xcb_image) {
         return;
     }
     xcb_image_put(connection, window, gc, xcb_image.get(), 0, 0, 0);
 }
 
-void Window::generate_frame()
+void X11Window::generate_frame()
 {
     xcb_image_buffer = std::vector<unsigned char>(image.size(), 0);
     xcb_image = unique_C_ptr<xcb_image_t> {
@@ -111,14 +112,14 @@ void Window::generate_frame()
     send_expose_event();
 }
 
-Window::~Window()
+X11Window::~X11Window()
 {
     xcb_destroy_window(connection, window);
     xcb_free_gc(connection, gc);
     xcb_flush(connection);
 }
 
-auto Window::send_expose_event() -> void
+auto X11Window::send_expose_event() -> void
 {
     xcb_expose_event_t event;
     event.response_type = XCB_EXPOSE;

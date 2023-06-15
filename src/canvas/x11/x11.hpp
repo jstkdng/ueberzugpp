@@ -28,6 +28,9 @@
 #include <thread>
 #include <atomic>
 
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xlib-xcb.h>
 #include <xcb/xproto.h>
 #include <spdlog/spdlog.h>
 
@@ -45,11 +48,15 @@ public:
     void show() override;
 
 private:
+    Display *display;
+    int default_screen;
+    XVisualInfo vinfo;
+
     xcb_connection_t *connection;
     xcb_screen_t *screen;
     std::unique_ptr<X11Util> xutil;
 
-    std::unordered_map<xcb_window_t, std::unique_ptr<Window>> windows;
+    std::unordered_map<xcb_window_t, std::unique_ptr<X11Window>> windows;
     std::unique_ptr<Image> image;
 
     std::thread draw_thread;
