@@ -36,8 +36,8 @@ connection(xcb_connect(nullptr, nullptr))
     event_handler = std::thread([&] {
         logger->debug("Started event handler");
         handle_events();
+        logger->debug("Stopped event handler");
     });
-
     logger->info("Canvas created");
 }
 
@@ -108,7 +108,8 @@ void X11Canvas::handle_events()
             xcb_poll_for_event(connection)
         };
         while (event != nullptr) {
-            switch (event->response_type & ~event_mask) {
+            int x11_event= event->response_type & ~event_mask;
+            switch (x11_event) {
                 case 0: {
                     const auto *err = reinterpret_cast<xcb_generic_error_t*>(event.get());
                     xcb_errors_context_t *err_ctx = nullptr;
@@ -122,7 +123,7 @@ void X11Canvas::handle_events()
                            major, minor != nullptr ? minor : "no_minor",
                            err->resource_id, err->sequence);
                     xcb_errors_context_free(err_ctx);
-                    [[fallthrough]];
+                    break;
                 }
                 case XCB_EXPOSE: {
                     const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
@@ -133,6 +134,7 @@ void X11Canvas::handle_events()
                     break;
                 }
                 default: {
+                    logger->debug("Received unknown event {}", x11_event);
                     break;
                 }
             }
