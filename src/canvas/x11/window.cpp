@@ -88,7 +88,7 @@ void X11Window::hide()
     xcb_flush(connection);
 }
 
-auto X11Window::draw() -> void
+void X11Window::draw()
 {
     if (!xcb_image) {
         return;
@@ -119,7 +119,7 @@ X11Window::~X11Window()
     xcb_flush(connection);
 }
 
-auto X11Window::send_expose_event() -> void
+void X11Window::send_expose_event()
 {
     xcb_expose_event_t event;
     event.response_type = XCB_EXPOSE;

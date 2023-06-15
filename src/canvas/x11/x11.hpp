@@ -34,6 +34,10 @@
 #include <xcb/xproto.h>
 #include <spdlog/spdlog.h>
 
+#ifdef ENABLE_OPENGL
+#   include <EGL/egl.h>
+#endif
+
 class X11Canvas : public Canvas
 {
 public:
@@ -65,6 +69,9 @@ private:
 
     std::shared_ptr<spdlog::logger> logger;
 
+#ifdef ENABLE_OPENGL
+    EGLDisplay egl_display;
+#endif
     void handle_events();
 };
 

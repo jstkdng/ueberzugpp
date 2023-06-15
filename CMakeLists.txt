@@ -34,7 +34,7 @@ option(ENABLE_X11           "Enable X11 canvas." ON)
 option(ENABLE_WAYLAND       "Enable wayland canvas" OFF)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
 option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
-option(ENABLE_EGL           "Enable window rendering with EGL" OFF)
+option(ENABLE_OPENGL        "Enable window rendering with OpenGL." OFF)
 
 include(FetchContent)
 include(GNUInstallDirs)
@@ -107,7 +107,8 @@ if(FC_LIBS)
     FetchContent_MakeAvailable(${FC_LIBS})
 endif()
 
-if(ENABLE_EGL AND UNIX AND NOT APPLE)
+if(ENABLE_OPENGL)
+    target_compile_definitions(ueberzug PRIVATE ENABLE_OPENGL)
     find_package(OpenGL REQUIRED)
     list(APPEND UEBERZUG_LIBRARIES
         OpenGL::OpenGL

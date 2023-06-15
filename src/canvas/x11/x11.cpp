@@ -21,8 +21,10 @@
 #include "util/ptr.hpp"
 #include "application.hpp"
 
+#include <iostream>
 #include <xcb/xproto.h>
 #include <xcb/xcb_errors.h>
+
 
 X11Canvas::X11Canvas():
 display(XOpenDisplay(nullptr))
@@ -47,6 +49,11 @@ display(XOpenDisplay(nullptr))
         throw std::runtime_error("Can't find visual");
     }
 
+#ifdef ENABLE_OPENGL
+    egl_display = eglGetDisplay(reinterpret_cast<NativeDisplayType>(connection));
+    eglInitialize(display, nullptr, nullptr);
+#endif
+
     xutil = std::make_unique<X11Util>(connection);
     logger = spdlog::get("X11");
     event_handler = std::thread([&] {
@@ -66,6 +73,9 @@ X11Canvas::~X11Canvas()
         draw_thread.join();
     }
     XCloseDisplay(display);
+#ifdef ENABLE_OPENGL
+    eglTerminate(display);
+#endif
 }
 
 void X11Canvas::draw()
