@@ -38,6 +38,9 @@ HyprlandSocket::HyprlandSocket()
     logger = spdlog::get("wayland");
     socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", env.value());
     logger->info("Using hyprland socket {}", socket_path);
+
+    const auto active = request_result("j/activewindow");
+    address = active.at("address");
 }
 
 auto HyprlandSocket::request_result(std::string_view payload) -> nlohmann::json
@@ -53,25 +56,13 @@ auto HyprlandSocket::request_result(std::string_view payload) -> nlohmann::json
 auto HyprlandSocket::get_active_window() -> nlohmann::json
 {
     const auto clients = request_result("j/clients");
-
-    std::vector<int> pids {Application::parent_pid_};
-    const auto tmux_clients = tmux::get_client_pids();
-    if (tmux_clients.has_value()) {
-        pids = tmux_clients.value();
+    const auto client = std::find_if(begin(clients), end(clients), [&] (const njson& json) {
+        return json.at("address") == address;
+    });
+    if (client == end(clients)) {
+        throw std::runtime_error("Active window not found");
     }
-
-    for (const auto pid: pids) {
-        auto tree = util::get_process_tree(pid);
-        for (const auto tpid: tree) {
-            const auto client = std::find_if(begin(clients), end(clients), [tpid] (const njson& json) {
-                return json["pid"] == tpid;
-            });
-            if (client != end(clients)) {
-                return client.value();
-            }
-        }
-    }
-    return {};
+    return *client;
 }
 
 auto HyprlandSocket::get_active_monitor() -> nlohmann::json

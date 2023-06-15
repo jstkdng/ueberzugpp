@@ -45,6 +45,7 @@ private:
     std::unique_ptr<UnixSocket> socket;
     std::shared_ptr<spdlog::logger> logger;
     std::string socket_path;
+    std::string address;
 };
 
 #endif
