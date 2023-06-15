@@ -110,7 +110,7 @@ if(ENABLE_X11)
     target_compile_definitions(ueberzug PRIVATE ENABLE_X11)
     find_package(X11 REQUIRED)
     pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
-    pkg_check_modules(XCBXRES REQUIRED IMPORTED_TARGET xcb-res)
+    pkg_check_modules(XCBRES REQUIRED IMPORTED_TARGET xcb-res)
     pkg_check_modules(XCBERRORS REQUIRED IMPORTED_TARGET xcb-errors)
     list(APPEND UEBERZUG_SOURCES
         "src/util/x11.cpp"
@@ -121,7 +121,7 @@ if(ENABLE_X11)
         X11::xcb
         PkgConfig::XCBERRORS
         PkgConfig::XCBIMAGE
-        PkgConfig::XCBXRES
+        PkgConfig::XCBRES
     )
 endif()
 
