@@ -80,10 +80,11 @@ private:
     std::unique_ptr<WaylandConfig> config;
 
     void handle_events();
+    void move_window();
 
     bool visible = false;
-    int x;
-    int y;
+    int wayland_x;
+    int wayland_y;
 };
 
 #endif

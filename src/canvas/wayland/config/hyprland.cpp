@@ -55,6 +55,11 @@ auto HyprlandSocket::request_result(std::string_view payload) -> nlohmann::json
 
 auto HyprlandSocket::get_active_window() -> nlohmann::json
 {
+    // recalculate address in case it changed
+    if (tmux::is_used()) {
+        const auto active = request_result("j/activewindow");
+        address = active.at("address");
+    }
     const auto clients = request_result("j/clients");
     const auto client = std::find_if(begin(clients), end(clients), [&] (const njson& json) {
         return json.at("address") == address;

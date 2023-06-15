@@ -189,14 +189,19 @@ WaylandCanvas::~WaylandCanvas()
 
 void WaylandCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
-    const auto cur_window = config->get_window_info();
-    x = cur_window.x + dimensions.xpixels() + dimensions.padding_horizontal;
-    y = cur_window.y + dimensions.ypixels() + dimensions.padding_vertical;
+    wayland_x = dimensions.xpixels() + dimensions.padding_horizontal;
+    wayland_y = dimensions.ypixels() + dimensions.padding_vertical;
     image = std::move(new_image);
     width = image->width();
     height = image->height();
+}
 
-    config->move_window(appid, x, y);
+void WaylandCanvas::move_window()
+{
+    const auto cur_window = config->get_window_info();
+    const int xcoord = cur_window.x + wayland_x;
+    const int ycoord = cur_window.y + wayland_y;
+    config->move_window(appid, xcoord, ycoord);
 }
 
 void WaylandCanvas::handle_events()
@@ -236,6 +241,7 @@ void WaylandCanvas::draw()
     xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
     xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
     wl_surface_commit(surface);
+    move_window();
 
     if (image->is_animated()) {
         callback =  wl_surface_frame(surface);
