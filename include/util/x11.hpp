@@ -30,12 +30,11 @@ public:
     ~X11Util();
 
     [[nodiscard]] auto get_server_window_ids() const -> std::vector<xcb_window_t>;
-    [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>;
+    [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_window_t>;
     [[nodiscard]] auto get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>;
     [[nodiscard]] auto get_parent_window(int pid) const -> xcb_window_t;
 
     [[nodiscard]] auto window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type = XCB_ATOM_ANY) const -> bool;
-    [[nodiscard]] auto get_window_pid(xcb_window_t window) const -> int;
 
     bool connected = false;
 private:

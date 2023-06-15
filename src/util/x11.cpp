@@ -23,6 +23,8 @@
 #include <string>
 #include <stack>
 #include <xcb/xcb.h>
+#include <xcb/res.h>
+#include <iostream>
 
 X11Util::X11Util():
 connection(xcb_connect(nullptr, nullptr))
@@ -64,7 +66,7 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
         const auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
             xcb_query_tree_reply(connection, cookie, nullptr)
         };
-        if (reply.get() == nullptr) {
+        if (!reply) {
             continue;
         }
 
@@ -83,37 +85,42 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
     return windows;
 }
 
-auto X11Util::get_window_pid(xcb_window_t window) const -> int
+auto X11Util::get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_window_t>
 {
-    const std::string atom_str = "_NET_WM_PID";
+    const auto windows = get_server_window_ids();
+    std::unordered_map<uint32_t, xcb_window_t> res;
+    std::vector<xcb_res_query_client_ids_cookie_t> cookies;
+    res.reserve(windows.size());
+    cookies.reserve(windows.size());
 
-    const auto atom_cookie = xcb_intern_atom_unchecked
-        (connection, 0, atom_str.size(), atom_str.c_str());
-    const auto atom_reply = unique_C_ptr<xcb_intern_atom_reply_t> {
-        xcb_intern_atom_reply(connection, atom_cookie, nullptr)
-    };
+    struct xcb_res_client_id_spec_t spec;
+    spec.mask = XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID;
 
-    const auto property_cookie = xcb_get_property_unchecked(
-            connection, 0, window, atom_reply->atom, XCB_ATOM_ANY, 0, 1);
-    const auto property_reply = unique_C_ptr<xcb_get_property_reply_t> {
-        xcb_get_property_reply(connection, property_cookie, nullptr),
-    };
-    const auto property_length = xcb_get_property_value_length(property_reply.get());
-    if (property_length != sizeof(int)) {
-        return -1;
+    // bulk request pids
+    for (const auto window: windows) {
+        spec.client = window;
+        cookies.push_back(xcb_res_query_client_ids_unchecked(connection, 1, &spec));
     }
-    const auto *property_value = reinterpret_cast<int*>(
-        xcb_get_property_value(property_reply.get())
-    );
-    return *property_value;
-}
 
-auto X11Util::get_pid_window_map() const -> std::unordered_map<int, xcb_window_t>
-{
-    std::unordered_map<int, xcb_window_t> res;
-    for (const auto window: get_server_window_ids()) {
-        const auto pid = get_window_pid(window);
-        res.insert_or_assign(pid, window);
+    // process replies
+    auto win_iter = windows.cbegin();
+    for (const auto cookie: cookies) {
+        const auto reply = unique_C_ptr<xcb_res_query_client_ids_reply_t> {
+            xcb_res_query_client_ids_reply(connection, cookie, nullptr)
+        };
+        if (!reply) {
+            continue;
+        }
+        uint32_t pid = 0;
+        for (auto iter = xcb_res_query_client_ids_ids_iterator(reply.get()); iter.rem > 0; xcb_res_client_id_value_next(&iter)) {
+            spec = iter.data->spec;
+            if ((spec.mask & XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID) != 0) {
+                pid = *xcb_res_client_id_value_value(iter.data);
+                break;
+            }
+        }
+        res.insert_or_assign(pid, *win_iter);
+        std::advance(win_iter, 1);
     }
     return res;
 }
@@ -124,7 +131,7 @@ auto X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_
     const auto reply = unique_C_ptr<xcb_get_property_reply_t> {
         xcb_get_property_reply(connection, cookie, nullptr)
     };
-    if (reply.get() == nullptr) {
+    if (!reply) {
         return false;
     }
     return xcb_get_property_value_length(reply.get()) != 0;
@@ -136,7 +143,7 @@ auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<int,
     const auto reply = unique_C_ptr<xcb_get_geometry_reply_t> {
         xcb_get_geometry_reply(connection, cookie, nullptr)
     };
-    if (reply.get() == nullptr) {
+    if (!reply) {
         return std::make_pair(0, 0);
     }
     return std::make_pair(reply->width, reply->height);
