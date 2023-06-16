@@ -262,7 +262,12 @@ void Terminal::get_fallback_x11_terminal_sizes()
         logger->debug("x11 is not supported");
         return;
     }
-    const auto window = xutil.get_parent_window(os::get_pid());
+    int cur_pid = pid;
+    const auto tmux_clients = tmux::get_client_pids();
+    if (tmux_clients.has_value()) {
+        cur_pid = tmux_clients.value().at(0);
+    }
+    const auto window = xutil.get_parent_window(cur_pid);
     const auto dims = xutil.get_window_dimensions(window);
     fallback_xpixel = dims.first;
     fallback_ypixel = dims.second;
@@ -290,17 +295,16 @@ void Terminal::get_fallback_wayland_terminal_sizes()
 void Terminal::open_first_pty()
 {
     std::vector<int> pids {pid};
-    if (tmux::is_used()) {
-        const auto clients = tmux::get_client_pids();
-        if (clients.has_value()) {
-            pids = clients.value();
-        }
+    const auto tmux_clients = tmux::get_client_pids();
+    if (tmux_clients.has_value()) {
+        pids = tmux_clients.value();
     }
-    for (const auto& spid: pids) {
+
+    for (const auto spid: pids) {
         auto tree = util::get_process_tree(spid);
         tree.pop_back();
         std::reverse(tree.begin(), tree.end());
-        for (const auto& tpid: tree) {
+        for (const auto tpid: tree) {
             const auto proc = Process(tpid);
             pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
             if (pty_fd != -1) {
