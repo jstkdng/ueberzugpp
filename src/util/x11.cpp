@@ -20,11 +20,13 @@
 #include "util/ptr.hpp"
 #include "flags.hpp"
 
-#include <string>
-#include <stack>
 #include <xcb/xcb.h>
 #include <xcb/res.h>
-#include <iostream>
+
+#include <algorithm>
+#include <utility>
+#include <string>
+#include <stack>
 
 X11Util::X11Util():
 connection(xcb_connect(nullptr, nullptr))
@@ -54,8 +56,10 @@ X11Util::~X11Util()
 
 auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
 {
+    const int num_clients = 256;
     std::vector<xcb_window_t> windows;
     std::stack<xcb_query_tree_cookie_t> cookies_st;
+    windows.reserve(num_clients);
 
     cookies_st.push(xcb_query_tree_unchecked(connection, screen->root));
 
@@ -76,12 +80,14 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
         }
         const auto *children = xcb_query_tree_children(reply.get());
         for (int i = 0; i < num_children; ++i) {
-            auto child = children[i];
-            windows.push_back(child);
+            const auto child = children[i];
+            const bool is_complete_window = window_has_properties(child, {XCB_ATOM_WM_CLASS, XCB_ATOM_WM_NAME});
+            if (is_complete_window) {
+                windows.push_back(child);
+            }
             cookies_st.push(xcb_query_tree_unchecked(connection, child));
         }
     }
-
     return windows;
 }
 
@@ -125,16 +131,19 @@ auto X11Util::get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_win
     return res;
 }
 
-auto X11Util::window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type) const -> bool
+auto X11Util::window_has_properties(xcb_window_t window, std::initializer_list<xcb_atom_t> properties) const -> bool
 {
-    const auto cookie = xcb_get_property_unchecked(connection, 0, window, property, type, 0, 4);
-    const auto reply = unique_C_ptr<xcb_get_property_reply_t> {
-        xcb_get_property_reply(connection, cookie, nullptr)
-    };
-    if (!reply) {
-        return false;
+    std::vector<xcb_get_property_cookie_t> cookies;
+    cookies.reserve(properties.size());
+    for (const auto prop: properties) {
+        cookies.push_back(xcb_get_property_unchecked(connection, 0, window, prop, XCB_ATOM_ANY, 0, 4));
     }
-    return xcb_get_property_value_length(reply.get()) != 0;
+    return std::ranges::all_of(std::as_const(cookies), [&] (xcb_get_property_cookie_t cookie) -> bool {
+        const auto reply = unique_C_ptr<xcb_get_property_reply_t> {
+            xcb_get_property_reply(connection, cookie, nullptr)
+        };
+        return reply && xcb_get_property_value_length(reply.get()) != 0;
+    });
 }
 
 auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>

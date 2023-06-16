@@ -21,6 +21,7 @@
 #include <vector>
 #include <unordered_map>
 #include <memory>
+#include <initializer_list>
 
 class X11Util
 {
@@ -33,8 +34,7 @@ public:
     [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_window_t>;
     [[nodiscard]] auto get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>;
     [[nodiscard]] auto get_parent_window(int pid) const -> xcb_window_t;
-
-    [[nodiscard]] auto window_has_property(xcb_window_t window, xcb_atom_t property, xcb_atom_t type = XCB_ATOM_ANY) const -> bool;
+    [[nodiscard]] auto window_has_properties(xcb_window_t window, std::initializer_list<xcb_atom_t> properties) const -> bool;
 
     bool connected = false;
 private:
