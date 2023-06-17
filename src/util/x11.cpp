@@ -31,8 +31,8 @@
 X11Util::X11Util():
 connection(xcb_connect(nullptr, nullptr))
 {
-    auto flags = Flags::instance();
-    auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
+    const auto flags = Flags::instance();
+    const auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
     if (xcb_connection_has_error(connection) == 0) {
         screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
         if (xdg_session != "wayland" || flags->output == "x11") {
@@ -161,17 +161,18 @@ auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<int,
 auto X11Util::get_parent_window(int pid) const -> xcb_window_t
 {
     const auto wid = os::getenv("WINDOWID");
-    if (pid == os::get_pid() && wid.has_value()) {
+    if (wid.has_value()) {
         return std::stoi(wid.value());
     }
 
     const auto pid_window_map = get_pid_window_map();
-    const auto ppids = util::get_process_tree(pid);
-    for (const auto& ppid: ppids) {
-        auto search = pid_window_map.find(ppid);
-        if (search != pid_window_map.end()) {
-            return search->second;
+    const auto tree = util::get_process_tree(pid);
+    for (const auto spid: tree) {
+        const auto win = pid_window_map.find(spid);
+        if (win != pid_window_map.end()) {
+            return win->second;
         }
     }
-    return -1;
+
+    return 0;
 }

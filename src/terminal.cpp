@@ -39,7 +39,8 @@
 #include <gsl/gsl>
 
 Terminal::Terminal():
-pid(os::get_pid())
+pid(os::get_pid()),
+terminal_pid(pid)
 {
     flags = Flags::instance();
     logger = spdlog::get("terminal");
@@ -254,7 +255,7 @@ auto Terminal::reset_termios() -> void
 void Terminal::get_fallback_x11_terminal_sizes()
 {
 #ifdef ENABLE_X11
-    auto xutil = X11Util();
+    const auto xutil = X11Util();
     if (xutil.connected) {
         supports_x11 = true;
         logger->debug("X11 is supported");
@@ -262,13 +263,8 @@ void Terminal::get_fallback_x11_terminal_sizes()
         logger->debug("x11 is not supported");
         return;
     }
-    int cur_pid = pid;
-    const auto tmux_clients = tmux::get_client_pids();
-    if (tmux_clients.has_value()) {
-        cur_pid = tmux_clients.value().at(0);
-    }
-    const auto window = xutil.get_parent_window(cur_pid);
-    const auto dims = xutil.get_window_dimensions(window);
+    x11_wid = xutil.get_parent_window(terminal_pid);
+    const auto dims = xutil.get_window_dimensions(x11_wid);
     fallback_xpixel = dims.first;
     fallback_ypixel = dims.second;
     logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", fallback_xpixel, fallback_ypixel);
@@ -294,24 +290,21 @@ void Terminal::get_fallback_wayland_terminal_sizes()
 
 void Terminal::open_first_pty()
 {
-    std::vector<int> pids {pid};
-    const auto tmux_clients = tmux::get_client_pids();
-    if (tmux_clients.has_value()) {
-        pids = tmux_clients.value();
-    }
+    const auto pids = tmux::get_client_pids().value_or(std::vector<int>{pid});
 
     for (const auto spid: pids) {
-        auto tree = util::get_process_tree(spid);
+        auto tree = util::get_process_tree_v2(spid);
         tree.pop_back();
         std::reverse(tree.begin(), tree.end());
-        for (const auto tpid: tree) {
-            const auto proc = Process(tpid);
+        for (const auto &proc: tree) {
             pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
             if (pty_fd != -1) {
-                logger->debug("Opened {}" , proc.pty_path.c_str());
+                terminal_pid = proc.pid;
+                logger->debug("PTY = {}" , proc.pty_path.c_str());
                 return;
             }
         }
     }
+
     pty_fd = STDOUT_FILENO;
 }

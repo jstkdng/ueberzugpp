@@ -39,6 +39,9 @@ public:
     uint16_t padding_vertical;
     uint16_t rows;
     uint16_t cols;
+    int pid;
+    int terminal_pid;
+    unsigned int x11_wid;
     std::string term;
     std::string term_program;
     std::string detected_output;
@@ -65,7 +68,6 @@ private:
     void set_detected_output();
 
     int pty_fd;
-    int pid;
     int xpixel = 0;
     int ypixel = 0;
     uint16_t fallback_xpixel = 0;

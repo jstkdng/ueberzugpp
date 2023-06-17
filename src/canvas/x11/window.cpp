@@ -19,6 +19,10 @@
 
 #include <xcb/xcb.h>
 #include <gsl/gsl>
+#include <string_view>
+#include <climits>
+
+constexpr std::string_view win_name = "ueberzugpp";
 
 X11Window::X11Window(xcb_connection_t* connection, xcb_screen_t* screen,
             xcb_window_t window, xcb_window_t parent, const XVisualInfo& vinfo,
@@ -52,6 +56,9 @@ image(image)
             screen->root_visual,
             value_mask,
             &value_list);
+
+    xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
+            window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, CHAR_BIT, win_name.size(), win_name.data());
     logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
     xcb_create_gc(connection, gc, window, 0, nullptr);
     show();

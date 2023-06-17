@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 #include <thread>
 #include <atomic>
 
@@ -73,6 +74,7 @@ private:
     EGLDisplay egl_display;
 #endif
     void handle_events();
+    void get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows);
 };
 
 #endif

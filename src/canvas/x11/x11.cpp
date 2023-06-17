@@ -172,41 +172,33 @@ void X11Canvas::handle_events()
 void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
 {
     logger->debug("Initializing canvas");
-    std::vector<int> client_pids;
-    if (Application::parent_pid_ != os::get_ppid()) {
-        logger->debug("Running in daemon mode");
-        client_pids.push_back(Application::parent_pid_);
-    } else {
-        client_pids.push_back(os::get_pid());
-    }
     image = std::move(new_image);
 
-    const auto wid = os::getenv("WINDOWID");
+    std::unordered_set<xcb_window_t> parent_ids {dimensions.terminal.x11_wid};
+    get_tmux_window_ids(parent_ids);
 
-    auto tmux_pids = tmux::get_client_pids();
-    if (tmux_pids.has_value()) {
-        client_pids = tmux_pids.value();
-    } else if (wid.has_value()) {
-        logger->debug("Found WINDOWID={}", wid.value());
-        auto window_id = xcb_generate_id(connection);
+    std::ranges::for_each(std::as_const(parent_ids), [&] (xcb_window_t parent) {
+        const auto window_id = xcb_generate_id(connection);
         windows.insert({window_id, std::make_unique<X11Window>
-                    (connection, screen, window_id, std::stoi(wid.value()), vinfo, dimensions, *image)});
+                (connection, screen, window_id, parent, vinfo, dimensions, *image)});
+    });
+}
+
+void X11Canvas::get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows)
+{
+    const auto pids = tmux::get_client_pids();
+    if (!pids.has_value()) {
         return;
     }
-
-    logger->debug("Need to manually find parent window");
-    auto pid_window_map = xutil->get_pid_window_map();
-    for (const auto& pid: client_pids) {
-        // calculate a map with parent's pid and window id
-        auto ppids = util::get_process_tree(pid);
-        for (const auto& ppid: ppids) {
-            auto search = pid_window_map.find(ppid);
-            if (search == pid_window_map.end()) {
+    const auto pid_window_map = xutil->get_pid_window_map();
+    for (const auto pid: pids.value()) {
+        const auto ppids = util::get_process_tree(pid);
+        for (const auto ppid: ppids) {
+            const auto win = pid_window_map.find(ppid);
+            if (win == pid_window_map.end()) {
                 continue;
             }
-            auto window_id = xcb_generate_id(connection);
-            windows.insert({window_id, std::make_unique<X11Window>
-                    (connection, screen, window_id, search->second, vinfo, dimensions, *image)});
+            windows.insert(win->second);
         }
     }
 }

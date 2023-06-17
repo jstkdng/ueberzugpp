@@ -64,6 +64,17 @@ auto util::get_process_tree(int pid) -> std::vector<int>
     return res;
 }
 
+auto util::get_process_tree_v2(int pid) -> std::vector<Process>
+{
+    std::vector<Process> tree;
+    Process runner(pid);
+    while (runner.pid > 1) {
+        tree.push_back(runner);
+        runner = Process(runner.ppid);
+    }
+    return tree;
+}
+
 auto util::get_cache_path() -> std::string
 {
     const auto home = os::getenv("HOME").value_or(fs::temp_directory_path());

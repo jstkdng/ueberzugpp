@@ -27,11 +27,13 @@
 #include "os.hpp"
 
 class Flags;
+class Process;
 
 namespace util
 {
     auto str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>;
     auto get_process_tree(int pid) -> std::vector<int>;
+    auto get_process_tree_v2(int pid) -> std::vector<Process>;
     auto get_b2_hash_ssl(std::string_view str) -> std::string;
     auto get_cache_path() -> std::string;
     auto get_cache_file_save_location(const std::filesystem::path &path) -> std::string;
