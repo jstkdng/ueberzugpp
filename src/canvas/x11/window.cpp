@@ -26,7 +26,7 @@ constexpr std::string_view win_name = "ueberzugpp";
 
 X11Window::X11Window(xcb_connection_t* connection, xcb_screen_t* screen,
             xcb_window_t window, xcb_window_t parent, const XVisualInfo& vinfo,
-            const Dimensions& dimensions, Image& image):
+            const Dimensions& dimensions, const Image& image):
 connection(connection),
 screen(screen),
 vinfo(vinfo),
@@ -64,17 +64,6 @@ image(image)
     show();
 }
 
-void X11Window::toggle()
-{
-    if (visible) {
-        xcb_unmap_window(connection, window);
-    } else {
-        xcb_map_window(connection, window);
-    }
-    visible = !visible;
-    xcb_flush(connection);
-}
-
 void X11Window::show()
 {
     if (visible) {
@@ -105,17 +94,15 @@ void X11Window::draw()
 
 void X11Window::generate_frame()
 {
-    xcb_image_buffer = std::vector<unsigned char>(image.size(), 0);
-    xcb_image = unique_C_ptr<xcb_image_t> {
+    xcb_image.reset(
         xcb_image_create_native(connection,
             image.width(),
             image.height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
-            xcb_image_buffer.data(),
-            image.size(),
-            const_cast<unsigned char*>(image.data()))
-    };
+            nullptr, 0, nullptr)
+    );
+    xcb_image->data = const_cast<unsigned char*>(image.data());
     send_expose_event();
 }
 
@@ -131,8 +118,6 @@ void X11Window::send_expose_event()
     xcb_expose_event_t event;
     event.response_type = XCB_EXPOSE;
     event.window = window;
-    event.x = 0;
-    event.y = 0;
     xcb_send_event(connection, 0, window,
             XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(&event));
     xcb_flush(connection);

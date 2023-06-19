@@ -121,7 +121,7 @@ void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigne
 auto util::get_b2_hash_ssl(const std::string_view str) -> std::string
 {
     std::stringstream sstream;
-    const auto mdctx = std::unique_ptr<EVP_MD_CTX, evp_md_ctx_deleter> {
+    const auto mdctx = c_unique_ptr<EVP_MD_CTX, EVP_MD_CTX_free> {
         EVP_MD_CTX_new()
     };
     const auto *evp = EVP_blake2b512();

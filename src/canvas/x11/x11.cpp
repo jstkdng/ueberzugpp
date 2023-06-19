@@ -97,13 +97,6 @@ void X11Canvas::draw()
     });
 }
 
-void X11Canvas::toggle()
-{
-    for (const auto& [wid, window]: windows) {
-        window->toggle();
-    }
-}
-
 void X11Canvas::show()
 {
     for (const auto& [wid, window]: windows) {

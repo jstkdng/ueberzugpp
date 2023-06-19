@@ -22,9 +22,15 @@
 #include <iostream>
 #include <algorithm>
 
+struct gstring_deleter {
+    void operator()(GString* str) const {
+        g_string_free(str, true);
+    }
+};
+
 ChafaCanvas::ChafaCanvas()
 {
-    const auto envp = std::unique_ptr<gchar*, gchar_deleter> {
+    const auto envp = c_unique_ptr<gchar*, g_strfreev> {
         g_get_environ()
     };
     term_info = chafa_term_db_detect(chafa_term_db_get_default(), envp.get());

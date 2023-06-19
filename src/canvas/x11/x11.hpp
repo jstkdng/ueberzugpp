@@ -48,7 +48,6 @@ public:
     void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
     void draw() override;
     void clear() override;
-    void toggle() override;
     void hide() override;
     void show() override;
 

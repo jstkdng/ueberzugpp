@@ -32,12 +32,11 @@ class X11Window
 public:
     X11Window(xcb_connection_t* connection, xcb_screen_t *screen,
             xcb_window_t window, xcb_window_t parent, const XVisualInfo& vinfo,
-            const Dimensions& dimensions, Image& image);
+            const Dimensions& dimensions, const Image& image);
     ~X11Window();
 
     void draw();
     void generate_frame();
-    void toggle();
     void show();
     void hide();
 
@@ -50,11 +49,10 @@ private:
     xcb_window_t parent;
     xcb_gcontext_t gc;
 
-    unique_C_ptr<xcb_image_t> xcb_image;
-    std::vector<unsigned char> xcb_image_buffer;
+    c_unique_ptr<xcb_image_t, xcb_image_destroy> xcb_image;
     std::shared_ptr<spdlog::logger> logger;
 
-    Image& image;
+    const Image& image;
     bool visible = false;
 
     void send_expose_event();
