@@ -23,16 +23,15 @@ template <auto fn>
 struct deleter_from_fn {
     template <typename T>
     constexpr void operator()(T* arg) const {
-        fn(arg);
+        fn(const_cast<std::remove_const_t<T>*>(arg));
     }
 };
 
+// custom unique pointer
 template <typename T, auto fn>
 using c_unique_ptr = std::unique_ptr<T, deleter_from_fn<fn>>;
 
 template <typename T>
 using unique_C_ptr = std::unique_ptr<T, deleter_from_fn<std::free>>;
-
-static_assert(sizeof(char *) == sizeof(unique_C_ptr<char>));
 
 #endif

@@ -32,7 +32,6 @@ class LibvipsImage : public Image
 public:
     LibvipsImage(const Dimensions& dimensions, const std::string &filename, bool in_cache);
 
-
     [[nodiscard]] auto width() const -> int override;
     [[nodiscard]] auto height() const -> int override;
     [[nodiscard]] auto size() const -> size_t override;
