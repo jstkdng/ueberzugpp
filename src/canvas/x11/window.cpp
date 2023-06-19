@@ -20,7 +20,6 @@
 #include <xcb/xcb.h>
 #include <gsl/gsl>
 #include <string_view>
-#include <climits>
 
 constexpr std::string_view win_name = "ueberzugpp";
 
@@ -57,8 +56,9 @@ image(image)
             value_mask,
             &value_list);
 
+    const int bits_in_char = 8;
     xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
-            window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, CHAR_BIT, win_name.size(), win_name.data());
+            window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, bits_in_char, win_name.size(), win_name.data());
     xcb_create_gc(connection, gc, window, 0, nullptr);
     logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
     show();
@@ -115,11 +115,13 @@ X11Window::~X11Window()
 
 void X11Window::send_expose_event()
 {
-    xcb_expose_event_t event;
-    event.response_type = XCB_EXPOSE;
-    event.window = window;
+    const int event_size = 32;
+    std::array<char, event_size> buffer;
+    auto *event = reinterpret_cast<xcb_expose_event_t*>(buffer.data());
+    event->response_type = XCB_EXPOSE;
+    event->window = window;
     xcb_send_event(connection, 0, window,
-            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(&event));
+            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(event));
     xcb_flush(connection);
 }
 
