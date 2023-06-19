@@ -21,10 +21,10 @@
 #include "util/ptr.hpp"
 #include "application.hpp"
 
-#include <iostream>
 #include <xcb/xproto.h>
-#include <xcb/xcb_errors.h>
-
+#include <poll.h>
+#include <iostream>
+#include <limits>
 
 X11Canvas::X11Canvas():
 display(XOpenDisplay(nullptr))
@@ -37,6 +37,7 @@ display(XOpenDisplay(nullptr))
     if (connection == nullptr) {
         throw std::runtime_error("Can't get xcb connection from display");
     }
+    xcb_errors_context_new(connection, &err_ctx);
     XSetEventQueueOwner(display, XCBOwnsEventQueue);
     xcb_screen_iterator_t screen_iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
     for(int screen_num = default_screen; screen_iter.rem > 0 && screen_num > 0; --screen_num) {
@@ -72,6 +73,7 @@ X11Canvas::~X11Canvas()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
+    xcb_errors_context_free(err_ctx);
     XCloseDisplay(display);
 #ifdef ENABLE_OPENGL
     eglTerminate(display);
@@ -115,41 +117,39 @@ void X11Canvas::handle_events()
 {
     const auto event_mask = 0x80;
     const auto connfd = xcb_get_file_descriptor(connection);
+
+    struct pollfd fds;
+    fds.fd = connfd;
+    fds.events = POLLIN;
+    const int waitms = 100;
+
     while (true) {
-        const auto x11_event = os::wait_for_data_on_fd(connfd, 100);
+        const int res = poll(&fds, 1, waitms);
         if (Application::stop_flag_.load()) {
             break;
         }
-        if (!x11_event) {
+        if (res <= 0) {
             continue;
         }
         auto event = unique_C_ptr<xcb_generic_event_t> {
             xcb_poll_for_event(connection)
         };
-        while (event != nullptr) {
-            int x11_event= event->response_type & ~event_mask;
+        while (event) {
+            int x11_event = event->response_type & ~event_mask;
             switch (x11_event) {
                 case 0: {
                     const auto *err = reinterpret_cast<xcb_generic_error_t*>(event.get());
-                    xcb_errors_context_t *err_ctx = nullptr;
-                    xcb_errors_context_new(connection, &err_ctx);
-                    const char *extension = nullptr;
-                    const char *major = xcb_errors_get_name_for_major_code(err_ctx, err->major_code);
-                    const char *minor = xcb_errors_get_name_for_minor_code(err_ctx, err->major_code, err->minor_code);
-                    const char *error = xcb_errors_get_name_for_error(err_ctx, err->error_code, &extension);
-                    logger->error("XCB: {}:{}, {}:{}, resource {} sequence {}",
-                           error, extension != nullptr ? extension : "no_extension",
-                           major, minor != nullptr ? minor : "no_minor",
-                           err->resource_id, err->sequence);
-                    xcb_errors_context_free(err_ctx);
+                    print_xcb_error(err);
                     break;
                 }
                 case XCB_EXPOSE: {
                     const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
-                    logger->debug("Received expose event for window {}", expose->window);
                     try {
                         windows.at(expose->window)->draw();
-                    } catch (const std::out_of_range& oor) {}
+                        logger->debug("Received expose event for window {}", expose->window);
+                    } catch (const std::out_of_range& oor) {
+                        logger->debug("Discarding expose event for window {}", expose->window);
+                    }
                     break;
                 }
                 default: {
@@ -158,6 +158,13 @@ void X11Canvas::handle_events()
                 }
             }
             event.reset(xcb_poll_for_event(connection));
+        }
+
+        if (static_cast<bool>(fds.revents & POLLHUP) || static_cast<bool>(fds.revents & POLLERR)) {
+            logger->error("Polling for events failed");
+            can_draw.store(false);
+            Application::stop_flag_.store(true);
+            break;
         }
     }
 }
@@ -194,6 +201,18 @@ void X11Canvas::get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows)
             windows.insert(win->second);
         }
     }
+}
+
+void X11Canvas::print_xcb_error(const xcb_generic_error_t* err)
+{
+    const char *extension = nullptr;
+    const char *major = xcb_errors_get_name_for_major_code(err_ctx, err->major_code);
+    const char *minor = xcb_errors_get_name_for_minor_code(err_ctx, err->major_code, err->minor_code);
+    const char *error = xcb_errors_get_name_for_error(err_ctx, err->error_code, &extension);
+    logger->error("XCB: {}:{}, {}:{}, resource {} sequence {}",
+           error, extension != nullptr ? extension : "no_extension",
+           major, minor != nullptr ? minor : "no_minor",
+           err->resource_id, err->sequence);
 }
 
 void X11Canvas::clear()

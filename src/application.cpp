@@ -85,6 +85,9 @@ Application::~Application()
 
 void Application::execute(const std::string_view cmd)
 {
+    if (!canvas) {
+        return;
+    }
     json json;
     try {
         json = json::parse(cmd);

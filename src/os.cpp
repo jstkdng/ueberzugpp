@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "os.hpp"
+#include "util/ptr.hpp"
 
 #include <cstdlib>
 #include <array>
@@ -33,7 +34,7 @@ auto os::exec(const std::string_view cmd) -> std::string
     const int bufsize = 128;
     std::array<char, bufsize> buffer;
     std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.data(), "r"), pclose);
+    c_unique_ptr<FILE, pclose> pipe {popen(cmd.data(), "r")};
     if (!pipe) {
         throw std::system_error(errno, std::generic_category());
     }

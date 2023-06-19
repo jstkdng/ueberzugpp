@@ -59,8 +59,8 @@ image(image)
 
     xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
             window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, CHAR_BIT, win_name.size(), win_name.data());
-    logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
     xcb_create_gc(connection, gc, window, 0, nullptr);
+    logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
     show();
 }
 

@@ -29,11 +29,12 @@
 #include <thread>
 #include <atomic>
 
+#include <spdlog/spdlog.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xlib-xcb.h>
 #include <xcb/xproto.h>
-#include <spdlog/spdlog.h>
+#include <xcb/xcb_errors.h>
 
 #ifdef ENABLE_OPENGL
 #   include <EGL/egl.h>
@@ -57,6 +58,7 @@ private:
     XVisualInfo vinfo;
 
     xcb_connection_t *connection;
+    xcb_errors_context_t *err_ctx;
     xcb_screen_t *screen;
     std::unique_ptr<X11Util> xutil;
 
@@ -74,6 +76,7 @@ private:
 #endif
     void handle_events();
     void get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows);
+    void print_xcb_error(const xcb_generic_error_t* err);
 };
 
 #endif
