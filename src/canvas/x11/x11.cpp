@@ -115,13 +115,11 @@ void X11Canvas::hide()
 
 void X11Canvas::handle_events()
 {
-    const auto event_mask = 0x80;
-    const auto connfd = xcb_get_file_descriptor(connection);
-
-    struct pollfd fds;
-    fds.fd = connfd;
-    fds.events = POLLIN;
+    const int event_mask = 0x80;
     const int waitms = 100;
+    struct pollfd fds;
+    fds.fd = xcb_get_file_descriptor(connection);
+    fds.events = POLLIN;
 
     while (true) {
         const int res = poll(&fds, 1, waitms);
@@ -135,8 +133,8 @@ void X11Canvas::handle_events()
             xcb_poll_for_event(connection)
         };
         while (event) {
-            int x11_event = event->response_type & ~event_mask;
-            switch (x11_event) {
+            const int real_event = event->response_type & ~event_mask;
+            switch (real_event) {
                 case 0: {
                     const auto *err = reinterpret_cast<xcb_generic_error_t*>(event.get());
                     print_xcb_error(err);
@@ -153,7 +151,7 @@ void X11Canvas::handle_events()
                     break;
                 }
                 default: {
-                    logger->debug("Received unknown event {}", x11_event);
+                    logger->debug("Received unknown event {}", real_event);
                     break;
                 }
             }
