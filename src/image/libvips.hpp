@@ -47,7 +47,7 @@ private:
     vips::VImage image;
     vips::VImage backup;
 
-    unique_C_ptr<unsigned char> _data;
+    c_unique_ptr<unsigned char, g_free> _data;
     std::filesystem::path path;
     const Dimensions& dimensions;
 

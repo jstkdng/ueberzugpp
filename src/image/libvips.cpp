@@ -41,7 +41,9 @@ in_cache(in_cache)
     logger->info("Loading image {}", filename);
 
     try {
+        // animated images should have both n-pages and delay
         npages = image.get_int("n-pages");
+        std::ignore = image.get_array_int("delay");
         is_anim = true;
         logger->info("Image is animated");
         auto *opts = VImage::option()->set("n", -1);
