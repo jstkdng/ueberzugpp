@@ -3,8 +3,8 @@ require "pty"
 class Ueberzugpp < Formula
   desc "Drop in replacement for ueberzug written in C++"
   homepage "https://github.com/jstkdng/ueberzugpp"
-  url "https://github.com/jstkdng/ueberzugpp/archive/refs/tags/v2.8.6.tar.gz"
-  sha256 "b35dd8e1491ac6c6f1fb2e7ad887b8a96542eb4bb2d749b2e3d93e0512c4564f"
+  url "https://github.com/jstkdng/ueberzugpp/archive/refs/tags/v2.8.7.tar.gz"
+  sha256 "650fa80f632f4ad61313cec10d392ea092b8b2b74dd5ba5c5339aa01f6b8543a"
   license "GPL-3.0-or-later"
 
   depends_on "cli11" => :build
@@ -24,10 +24,10 @@ class Ueberzugpp < Formula
     system "cmake", "-S", ".", "-B", "build",
                     "-DENABLE_X11=OFF",
                     "-DENABLE_OPENCV=OFF",
+                    "-DENABLE_WAYLAND=OFF"
                     *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
-    bin.install_symlink "ueberzug" => "ueberzugpp"
   end
 
   test do

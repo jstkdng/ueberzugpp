@@ -117,18 +117,17 @@ void X11Canvas::handle_events()
 {
     const int event_mask = 0x80;
     const int waitms = 100;
-    struct pollfd fds;
-    fds.fd = xcb_get_file_descriptor(connection);
-    fds.events = POLLIN;
+    const int connfd = xcb_get_file_descriptor(connection);
 
     while (true) {
-        const int res = poll(&fds, 1, waitms);
+        const bool status = os::wait_for_data_on_fd(connfd, waitms);
         if (Application::stop_flag_.load()) {
             break;
         }
-        if (res <= 0) {
+        if (!status) {
             continue;
         }
+        std::scoped_lock lock {windows_mutex};
         auto event = unique_C_ptr<xcb_generic_event_t> {
             xcb_poll_for_event(connection)
         };
@@ -156,13 +155,6 @@ void X11Canvas::handle_events()
                 }
             }
             event.reset(xcb_poll_for_event(connection));
-        }
-
-        if (static_cast<bool>(fds.revents & POLLHUP) || static_cast<bool>(fds.revents & POLLERR)) {
-            logger->error("Polling for events failed");
-            can_draw.store(false);
-            Application::stop_flag_.store(true);
-            break;
         }
     }
 }
@@ -219,7 +211,10 @@ void X11Canvas::clear()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
-    windows.clear();
+    {
+        std::scoped_lock lock {windows_mutex};
+        windows.clear();
+    }
     image.reset();
     can_draw.store(true);
 }

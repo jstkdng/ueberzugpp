@@ -28,6 +28,7 @@
 #include <unordered_set>
 #include <thread>
 #include <atomic>
+#include <mutex>
 
 #include <spdlog/spdlog.h>
 #include <X11/Xlib.h>
@@ -68,6 +69,7 @@ private:
     std::thread draw_thread;
     std::thread event_handler;
     std::atomic<bool> can_draw {true};
+    std::mutex windows_mutex;
 
     std::shared_ptr<spdlog::logger> logger;
 
