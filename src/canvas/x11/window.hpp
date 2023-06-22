@@ -20,7 +20,6 @@
 #include "image.hpp"
 #include "util/ptr.hpp"
 
-#include <X11/Xutil.h>
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
 #include <spdlog/spdlog.h>
@@ -31,7 +30,7 @@ class X11Window
 {
 public:
     X11Window(xcb_connection_t* connection, xcb_screen_t *screen,
-            xcb_window_t window, xcb_window_t parent, const XVisualInfo& vinfo,
+            xcb_window_t window, xcb_window_t parent,
             const Dimensions& dimensions, const Image& image);
     ~X11Window();
 
@@ -43,7 +42,6 @@ public:
 private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
-    const XVisualInfo& vinfo;
 
     xcb_window_t window;
     xcb_window_t parent;

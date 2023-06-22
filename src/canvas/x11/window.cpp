@@ -24,11 +24,10 @@
 constexpr std::string_view win_name = "ueberzugpp";
 
 X11Window::X11Window(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t window, xcb_window_t parent, const XVisualInfo& vinfo,
+            xcb_window_t window, xcb_window_t parent,
             const Dimensions& dimensions, const Image& image):
 connection(connection),
 screen(screen),
-vinfo(vinfo),
 window(window),
 parent(parent),
 gc(xcb_generate_id(connection)),

@@ -30,12 +30,10 @@
 #include <atomic>
 #include <mutex>
 
-#include <spdlog/spdlog.h>
 #include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xlib-xcb.h>
 #include <xcb/xproto.h>
 #include <xcb/xcb_errors.h>
+#include <spdlog/spdlog.h>
 
 #ifdef ENABLE_OPENGL
 #   include <EGL/egl.h>
@@ -56,7 +54,6 @@ public:
 private:
     Display *display;
     int default_screen;
-    XVisualInfo vinfo;
 
     xcb_connection_t *connection;
     xcb_errors_context_t *err_ctx;

@@ -21,7 +21,7 @@
 #include "util/ptr.hpp"
 #include "application.hpp"
 
-#include <xcb/xproto.h>
+#include <X11/Xlib-xcb.h>
 
 X11Canvas::X11Canvas():
 display(XOpenDisplay(nullptr))
@@ -34,22 +34,17 @@ display(XOpenDisplay(nullptr))
     if (connection == nullptr) {
         throw std::runtime_error("Can't get xcb connection from display");
     }
-    xcb_errors_context_new(connection, &err_ctx);
     XSetEventQueueOwner(display, XCBOwnsEventQueue);
+    xcb_errors_context_new(connection, &err_ctx);
     xcb_screen_iterator_t screen_iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
     for(int screen_num = default_screen; screen_iter.rem > 0 && screen_num > 0; --screen_num) {
         xcb_screen_next(&screen_iter);
     }
     screen = screen_iter.data;
-    const int depth = 32;
-    int visual_res = XMatchVisualInfo(display, default_screen, depth, TrueColor, &vinfo);
-    if (visual_res == 0) {
-        throw std::runtime_error("Can't find visual");
-    }
 
 #ifdef ENABLE_OPENGL
-    egl_display = eglGetDisplay(reinterpret_cast<NativeDisplayType>(connection));
-    eglInitialize(display, nullptr, nullptr);
+    egl_display = eglGetDisplay(reinterpret_cast<NativeDisplayType>(display));
+    eglInitialize(egl_display, nullptr, nullptr);
 #endif
 
     xutil = std::make_unique<X11Util>(connection);
@@ -70,11 +65,11 @@ X11Canvas::~X11Canvas()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
+#ifdef ENABLE_OPENGL
+    eglTerminate(egl_display);
+#endif
     xcb_errors_context_free(err_ctx);
     XCloseDisplay(display);
-#ifdef ENABLE_OPENGL
-    eglTerminate(display);
-#endif
 }
 
 void X11Canvas::draw()
@@ -167,7 +162,7 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
     std::ranges::for_each(std::as_const(parent_ids), [&] (xcb_window_t parent) {
         const auto window_id = xcb_generate_id(connection);
         windows.insert({window_id, std::make_unique<X11Window>
-                (connection, screen, window_id, parent, vinfo, dimensions, *image)});
+                (connection, screen, window_id, parent, dimensions, *image)});
     });
 }
 
