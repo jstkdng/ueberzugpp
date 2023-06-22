@@ -22,9 +22,6 @@
 #include "application.hpp"
 
 #include <xcb/xproto.h>
-#include <poll.h>
-#include <iostream>
-#include <limits>
 
 X11Canvas::X11Canvas():
 display(XOpenDisplay(nullptr))
