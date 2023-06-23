@@ -30,13 +30,13 @@
 #include <atomic>
 #include <mutex>
 
-#include <X11/Xlib.h>
 #include <xcb/xproto.h>
 #include <xcb/xcb_errors.h>
 #include <spdlog/spdlog.h>
 
 #ifdef ENABLE_OPENGL
 #   include <EGL/egl.h>
+#   include <EGL/eglext.h>
 #endif
 
 class X11Canvas : public Canvas
@@ -52,9 +52,6 @@ public:
     void show() override;
 
 private:
-    Display *display;
-    int default_screen;
-
     xcb_connection_t *connection;
     xcb_errors_context_t *err_ctx;
     xcb_screen_t *screen;

@@ -128,7 +128,7 @@ if(ENABLE_X11)
         "src/canvas/x11/window.cpp"
     )
     list(APPEND UEBERZUG_LIBRARIES
-        X11::X11_xcb
+        X11::xcb
         PkgConfig::XCBERRORS
         PkgConfig::XCBIMAGE
         PkgConfig::XCBRES

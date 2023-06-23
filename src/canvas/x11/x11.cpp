@@ -21,29 +21,17 @@
 #include "util/ptr.hpp"
 #include "application.hpp"
 
-#include <X11/Xlib-xcb.h>
-
 X11Canvas::X11Canvas():
-display(XOpenDisplay(nullptr))
+connection(xcb_connect(nullptr, nullptr))
 {
-    if (display == nullptr) {
-        throw std::runtime_error("Can't open X11 display");
+    if (xcb_connection_has_error(connection) > 0) {
+        throw std::runtime_error("Can't connect to X11 server");
     }
-    default_screen = XDefaultScreen(display);
-    connection = XGetXCBConnection(display);
-    if (connection == nullptr) {
-        throw std::runtime_error("Can't get xcb connection from display");
-    }
-    XSetEventQueueOwner(display, XCBOwnsEventQueue);
     xcb_errors_context_new(connection, &err_ctx);
-    xcb_screen_iterator_t screen_iter = xcb_setup_roots_iterator(xcb_get_setup(connection));
-    for(int screen_num = default_screen; screen_iter.rem > 0 && screen_num > 0; --screen_num) {
-        xcb_screen_next(&screen_iter);
-    }
-    screen = screen_iter.data;
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
 
 #ifdef ENABLE_OPENGL
-    egl_display = eglGetDisplay(reinterpret_cast<NativeDisplayType>(display));
+    egl_display = eglGetPlatformDisplay(EGL_PLATFORM_XCB_EXT, connection, nullptr);
     eglInitialize(egl_display, nullptr, nullptr);
 #endif
 
@@ -69,7 +57,7 @@ X11Canvas::~X11Canvas()
     eglTerminate(egl_display);
 #endif
     xcb_errors_context_free(err_ctx);
-    XCloseDisplay(display);
+    xcb_disconnect(connection);
 }
 
 void X11Canvas::draw()
