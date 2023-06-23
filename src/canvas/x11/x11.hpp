@@ -30,8 +30,12 @@
 #include <atomic>
 #include <mutex>
 
-#include <xcb/xcb_errors.h>
+#include <xcb/xcb.h>
 #include <spdlog/spdlog.h>
+
+#ifdef ENABLE_XCB_ERRORS
+#   include <xcb/xcb_errors.h>
+#endif
 
 #ifdef ENABLE_OPENGL
 #   include <EGL/egl.h>
@@ -51,8 +55,12 @@ public:
 
 private:
     xcb_connection_t *connection;
-    xcb_errors_context_t *err_ctx;
     xcb_screen_t *screen;
+
+#ifdef ENABLE_XCB_ERRORS
+    xcb_errors_context_t *err_ctx;
+#endif
+
     std::unique_ptr<X11Util> xutil;
 
     std::unordered_map<xcb_window_t, std::unique_ptr<X11Window>> windows;
@@ -68,6 +76,7 @@ private:
 #ifdef ENABLE_OPENGL
     EGLDisplay egl_display;
 #endif
+
     void handle_events();
     void get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows);
     void print_xcb_error(const xcb_generic_error_t* err);

@@ -31,8 +31,11 @@ connection(xcb_connect(nullptr, nullptr))
     if (xcb_connection_has_error(connection) > 0) {
         throw std::runtime_error("Can't connect to X11 server");
     }
-    xcb_errors_context_new(connection, &err_ctx);
     screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
+
+#ifdef ENABLE_XCB_ERRORS
+    xcb_errors_context_new(connection, &err_ctx);
+#endif
 
 #ifdef ENABLE_OPENGL
     egl_display = eglGetPlatformDisplay(EGL_PLATFORM_XCB_EXT, connection, nullptr);
@@ -57,10 +60,15 @@ X11Canvas::~X11Canvas()
     if (draw_thread.joinable()) {
         draw_thread.join();
     }
+
 #ifdef ENABLE_OPENGL
     eglTerminate(egl_display);
 #endif
+
+#ifdef ENABLE_XCB_ERRORS
     xcb_errors_context_free(err_ctx);
+#endif
+
     xcb_disconnect(connection);
 }
 
@@ -179,6 +187,7 @@ void X11Canvas::get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows)
 
 void X11Canvas::print_xcb_error(const xcb_generic_error_t* err)
 {
+#ifdef ENABLE_XCB_ERRORS
     const char *extension = nullptr;
     const char *major = xcb_errors_get_name_for_major_code(err_ctx, err->major_code);
     const char *minor = xcb_errors_get_name_for_minor_code(err_ctx, err->major_code, err->minor_code);
@@ -187,6 +196,9 @@ void X11Canvas::print_xcb_error(const xcb_generic_error_t* err)
            error, extension != nullptr ? extension : "no_extension",
            major, minor != nullptr ? minor : "no_minor",
            err->resource_id, err->sequence);
+#else
+    logger->error("XCB: resource {} sequence {}", err->resource_id, err->sequence);
+#endif
 }
 
 void X11Canvas::clear()
