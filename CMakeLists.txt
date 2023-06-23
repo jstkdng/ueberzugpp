@@ -27,31 +27,18 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
-project(ueberzugpp LANGUAGES CXX C VERSION 2.8.7)
+project(ueberzugpp LANGUAGES CXX C VERSION 2.8.8)
 add_executable(ueberzug)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
+option(ENABLE_XCB_ERRORS    "Enable useful logging of XCB errors." OFF)
 option(ENABLE_WAYLAND       "Enable wayland canvas" OFF)
 option(ENABLE_OPENCV        "Enable OpenCV image processing." ON)
 option(ENABLE_TURBOBASE64   "Enable Turbo-Base64 for base64 encoding." OFF)
-option(ENABLE_OPENGL        "Enable window rendering with OpenGL." OFF)
+option(ENABLE_OPENGL        "Enable canvas rendering with OpenGL." OFF)
 
 include(FetchContent)
 include(GNUInstallDirs)
-
-if(MSVC)
-    target_compile_options(ueberzug PRIVATE
-        $<$<CONFIG:Debug>:
-            /W4 /WX
-        >
-    )
-else()
-    target_compile_options(ueberzug PRIVATE
-        $<$<CONFIG:Debug>:
-            -Wall -Wextra -Wpedantic -Werror
-        >
-    )
-endif()
 
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
@@ -118,21 +105,25 @@ endif()
 
 if(ENABLE_X11)
     target_compile_definitions(ueberzug PRIVATE ENABLE_X11)
-    find_package(X11 REQUIRED)
+    pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
     pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
     pkg_check_modules(XCBRES REQUIRED IMPORTED_TARGET xcb-res)
-    pkg_check_modules(XCBERRORS REQUIRED IMPORTED_TARGET xcb-errors)
     list(APPEND UEBERZUG_SOURCES
         "src/util/x11.cpp"
         "src/canvas/x11/x11.cpp"
         "src/canvas/x11/window.cpp"
     )
     list(APPEND UEBERZUG_LIBRARIES
-        X11::xcb
-        PkgConfig::XCBERRORS
+        PkgConfig::XCB
         PkgConfig::XCBIMAGE
         PkgConfig::XCBRES
     )
+
+    if(ENABLE_XCB_ERRORS)
+        target_compile_definitions(ueberzug PRIVATE ENABLE_XCB_ERRORS)
+        pkg_check_modules(XCBERRORS REQUIRED IMPORTED_TARGET xcb-errors)
+        list(APPEND UEBERZUG_LIBRARIES PkgConfig::XCBERRORS)
+    endif()
 endif()
 
 if(ENABLE_WAYLAND)
@@ -195,6 +186,12 @@ if(ENABLE_TURBOBASE64)
         list(APPEND UEBERZUG_LIBRARIES turbo::base64)
     endif()
 endif()
+
+target_compile_options(ueberzug PRIVATE
+    $<$<CONFIG:Debug>:
+        -Wall -Wextra -Wpedantic -Werror
+    >
+)
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)

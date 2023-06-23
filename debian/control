@@ -22,6 +22,7 @@ Build-Depends:
  libsixel-dev,
  libssl-dev,
  libxcb-image0-dev,
+ libxcb-res0-dev,
  wayland-protocols,
  libwayland-dev,
  extra-cmake-modules
