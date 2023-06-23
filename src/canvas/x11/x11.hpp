@@ -30,13 +30,11 @@
 #include <atomic>
 #include <mutex>
 
-#include <xcb/xproto.h>
 #include <xcb/xcb_errors.h>
 #include <spdlog/spdlog.h>
 
 #ifdef ENABLE_OPENGL
 #   include <EGL/egl.h>
-#   include <EGL/eglext.h>
 #endif
 
 class X11Canvas : public Canvas

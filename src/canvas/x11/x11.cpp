@@ -21,6 +21,10 @@
 #include "util/ptr.hpp"
 #include "application.hpp"
 
+#ifdef ENABLE_OPENGL
+#   include <EGL/eglext.h>
+#endif
+
 X11Canvas::X11Canvas():
 connection(xcb_connect(nullptr, nullptr))
 {
@@ -149,8 +153,8 @@ void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_im
 
     std::ranges::for_each(std::as_const(parent_ids), [&] (xcb_window_t parent) {
         const auto window_id = xcb_generate_id(connection);
-        windows.insert({window_id, std::make_unique<X11Window>
-                (connection, screen, window_id, parent, dimensions, *image)});
+        auto window = std::make_unique<X11Window>(connection, screen, window_id, parent, dimensions, *image);
+        windows.insert({window_id, std::move(window)});
     });
 }
 

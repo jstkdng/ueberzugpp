@@ -17,11 +17,12 @@
 #ifndef __X11_UTIL__
 #define __X11_UTIL__
 
-#include <xcb/xproto.h>
 #include <vector>
 #include <unordered_map>
 #include <memory>
 #include <initializer_list>
+
+#include <xcb/xcb.h>
 
 class X11Util
 {
