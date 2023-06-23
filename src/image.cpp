@@ -22,6 +22,7 @@
 #include "os.hpp"
 #include "util.hpp"
 #include "flags.hpp"
+#include "dimensions.hpp"
 
 #ifdef ENABLE_OPENCV
 #   include <opencv2/imgcodecs.hpp>
@@ -31,10 +32,11 @@
 #include <gsl/gsl>
 
 namespace fs = std::filesystem;
+using njson = nlohmann::json;
 
-auto Image::load(const Dimensions& dimensions, const std::string& filename)
-    -> std::unique_ptr<Image>
+auto Image::load(const njson& command) -> std::unique_ptr<Image>
 {
+    const std::string& filename = command.at("path");
     if (!fs::exists(filename)) {
         return nullptr;
     }
@@ -88,7 +90,7 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
 }
 
 auto Image::get_new_sizes(double max_width, double max_height, const std::string& scaler) const
-    -> std::pair<const int, const int>
+    -> std::pair<int, int>
 {
     int img_width = width();
     int img_height = height();
@@ -127,4 +129,42 @@ auto Image::get_new_sizes(double max_width, double max_height, const std::string
     new_height = gsl::narrow_cast<int>(img_height * new_scale);
 
     return std::make_pair(new_width, new_height);
+}
+
+auto Image::get_dimensions(const njson& json) -> std::unique_ptr<Dimensions>
+{
+    using std::string;
+    int xcoord = 0;
+    int ycoord = 0;
+    int max_width = 0;
+    int max_height = 0;
+    string width_key = "max_width";
+    string height_key = "max_height";
+    string scaler = "contain";
+    if (json.contains("scaler")) {
+        scaler = json["scaler"];
+    }
+    if (json.contains("width")) {
+        width_key = "width";
+        height_key = "height";
+    }
+    if (json[width_key].is_string()) {
+        string width = json[width_key];
+        string height = json[height_key];
+        max_width = std::stoi(width);
+        max_height = std::stoi(height);
+    } else {
+        max_width = json[width_key];
+        max_height = json[height_key];
+    }
+    if (json["x"].is_string()) {
+        string xcoords = json["x"];
+        string ycoords = json["y"];
+        xcoord = std::stoi(xcoords);
+        ycoord = std::stoi(ycoords);
+    } else {
+        xcoord = json["x"];
+        ycoord = json["y"];
+    }
+    return std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width, max_height, scaler);
 }

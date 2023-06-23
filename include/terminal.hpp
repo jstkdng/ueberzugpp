@@ -19,6 +19,7 @@
 
 #include "flags.hpp"
 
+#include <memory>
 #include <string>
 #include <string_view>
 

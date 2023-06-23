@@ -17,11 +17,10 @@
 #ifndef __APPLICATION__
 #define __APPLICATION__
 
-#include "image.hpp"
 #include "canvas.hpp"
 #include "terminal.hpp"
 #include "flags.hpp"
-#include "dimensions.hpp"
+#include "util/ptr.hpp"
 
 #include <string>
 #include <memory>
@@ -31,7 +30,8 @@
 #include <atomic>
 
 #include <spdlog/spdlog.h>
-#include <nlohmann/json.hpp>
+
+void fileclose(std::FILE* file);
 
 class Application
 {
@@ -53,19 +53,17 @@ public:
 
 private:
     std::unique_ptr<Terminal> terminal;
-    std::unique_ptr<Dimensions> dimensions;
     std::unique_ptr<Canvas> canvas;
 
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;
 
-    std::FILE* f_stderr = nullptr;
+    c_unique_ptr<std::FILE, fileclose> f_stderr;
     std::thread socket_thread;
 
     void setup_logger();
     void set_silent();
     void socket_loop();
-    void set_dimensions_from_json(const nlohmann::json& json);
 };
 
 #endif
