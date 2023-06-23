@@ -16,6 +16,8 @@
 
 #include "opencv.hpp"
 #include "util.hpp"
+#include "dimensions.hpp"
+#include "flags.hpp"
 
 #include <unordered_set>
 #include <string_view>
@@ -24,11 +26,11 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/ocl.hpp>
 
-OpencvImage::OpencvImage(const Dimensions& dimensions, const std::string& filename, bool in_cache):
+OpencvImage::OpencvImage(std::unique_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache):
 path(filename),
-dimensions(dimensions),
-max_width(dimensions.max_wpixels()),
-max_height(dimensions.max_hpixels()),
+dims(std::move(new_dims)),
+max_width(dims->max_wpixels()),
+max_height(dims->max_hpixels()),
 in_cache(in_cache)
 {
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
@@ -47,6 +49,11 @@ OpencvImage::~OpencvImage()
 auto OpencvImage::filename() const -> std::string
 {
     return path.string();
+}
+
+auto OpencvImage::dimensions() const -> const Dimensions&
+{
+    return *dims;
 }
 
 auto OpencvImage::width() const-> int
@@ -80,7 +87,7 @@ auto OpencvImage::resize_image() -> void
     if (in_cache) {
         return;
     }
-    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
+    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler);
     if (new_width <= 0 && new_height <= 0) {
         return;
     }

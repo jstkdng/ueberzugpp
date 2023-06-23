@@ -34,30 +34,31 @@
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
 
-auto Image::load(const njson& command) -> std::unique_ptr<Image>
+auto Image::load(const njson& command, const Terminal& terminal) -> std::unique_ptr<Image>
 {
     const std::string& filename = command.at("path");
     if (!fs::exists(filename)) {
         return nullptr;
     }
     const auto flags = Flags::instance();
+    auto dimensions = get_dimensions(command, terminal);
     std::string image_path = filename;
     bool in_cache = false;
     if (!flags->no_cache) {
-        image_path = check_cache(dimensions, filename);
+        image_path = check_cache(*dimensions, filename);
         in_cache = image_path != filename;
     }
 
 #ifdef ENABLE_OPENCV
     if (cv::haveImageReader(image_path) && !flags->no_opencv) {
         try {
-            return std::make_unique<OpencvImage>(dimensions, image_path, in_cache);
+            return std::make_unique<OpencvImage>(std::move(dimensions), image_path, in_cache);
         } catch (const cv::Exception& ex) {}
     }
 #endif
     if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
         try {
-            return std::make_unique<LibvipsImage>(dimensions, image_path, in_cache);
+            return std::make_unique<LibvipsImage>(std::move(dimensions), image_path, in_cache);
         } catch (const vips::VError& err) {}
     }
     return nullptr;
@@ -131,7 +132,7 @@ auto Image::get_new_sizes(double max_width, double max_height, const std::string
     return std::make_pair(new_width, new_height);
 }
 
-auto Image::get_dimensions(const njson& json) -> std::unique_ptr<Dimensions>
+auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::unique_ptr<Dimensions>
 {
     using std::string;
     int xcoord = 0;
@@ -166,5 +167,5 @@ auto Image::get_dimensions(const njson& json) -> std::unique_ptr<Dimensions>
         xcoord = json["x"];
         ycoord = json["y"];
     }
-    return std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width, max_height, scaler);
+    return std::make_unique<Dimensions>(terminal, xcoord, ycoord, max_width, max_height, scaler);
 }

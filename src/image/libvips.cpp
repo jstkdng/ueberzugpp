@@ -16,6 +16,8 @@
 
 #include "libvips.hpp"
 #include "util.hpp"
+#include "dimensions.hpp"
+#include "flags.hpp"
 
 #include <unordered_set>
 #include <algorithm>
@@ -27,12 +29,12 @@
 using vips::VImage;
 using vips::VError;
 
-LibvipsImage::LibvipsImage(const Dimensions& dimensions,
+LibvipsImage::LibvipsImage(std::unique_ptr<Dimensions> new_dims,
             const std::string &filename, bool in_cache):
 path(filename),
-dimensions(dimensions),
-max_width(dimensions.max_wpixels()),
-max_height(dimensions.max_hpixels()),
+dims(std::move(new_dims)),
+max_width(dims->max_wpixels()),
+max_height(dims->max_hpixels()),
 in_cache(in_cache)
 {
     image = VImage::new_from_file(path.c_str()).colourspace(VIPS_INTERPRETATION_sRGB);
@@ -54,6 +56,11 @@ in_cache(in_cache)
     } catch (const VError& err) {}
 
     process_image();
+}
+
+auto LibvipsImage::dimensions() const -> const Dimensions&
+{
+    return *dims;
 }
 
 auto LibvipsImage::filename() const -> std::string
@@ -132,7 +139,7 @@ auto LibvipsImage::resize_image() -> void
     if (in_cache) {
         return;
     }
-    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dimensions.scaler);
+    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler);
     if (new_width == 0 && new_height == 0) {
         return;
     }

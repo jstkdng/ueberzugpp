@@ -17,10 +17,10 @@
 #ifndef __CANVAS__
 #define __CANVAS__
 
-#include "image.hpp"
-#include "dimensions.hpp"
-
 #include <memory>
+
+class Image;
+class Dimensions;
 
 class Canvas
 {
@@ -28,9 +28,8 @@ public:
     static auto create() -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
-    virtual void init(const Dimensions& dimensions, std::unique_ptr<Image> image) = 0;
-    virtual void draw() = 0;
-    virtual void clear() = 0;
+    virtual void add_image(const std::string& identifier, std::unique_ptr<Image> image) = 0;
+    virtual void remove_image(const std::string& identifier) = 0;
 
     virtual void show() {}
     virtual void hide() {}

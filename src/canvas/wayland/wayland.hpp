@@ -19,7 +19,6 @@
 
 #include "canvas.hpp"
 #include "dimensions.hpp"
-#include "terminal.hpp"
 #include "shm.hpp"
 #include "config.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
@@ -31,6 +30,7 @@
 
 #include <fmt/format.h>
 #include <wayland-client.h>
+#include <spdlog/spdlog.h>
 
 class WaylandCanvas : public Canvas
 {

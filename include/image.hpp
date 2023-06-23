@@ -23,18 +23,19 @@
 #include <nlohmann/json.hpp>
 
 class Dimensions;
+class Terminal;
 
 class Image
 {
 public:
-    static auto load(const nlohmann::json& command) -> std::unique_ptr<Image>;
+    static auto load(const nlohmann::json& command, const Terminal& terminal) -> std::unique_ptr<Image>;
     static auto check_cache(const Dimensions& dimensions,
             const std::filesystem::path& orig_path) -> std::string;
-    static auto get_dimensions(const nlohmann::json& json) -> std::unique_ptr<Dimensions>;
+    static auto get_dimensions(const nlohmann::json& json, const Terminal& terminal) -> std::unique_ptr<Dimensions>;
 
     virtual ~Image() = default;
 
-    [[nodiscard]] virtual auto dimensions() const -> const Dimensions* = 0;
+    [[nodiscard]] virtual auto dimensions() const -> const Dimensions& = 0;
     [[nodiscard]] virtual auto width() const -> int = 0;
     [[nodiscard]] virtual auto height() const -> int = 0;
     [[nodiscard]] virtual auto size() const -> size_t = 0;

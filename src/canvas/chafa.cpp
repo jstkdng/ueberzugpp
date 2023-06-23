@@ -17,16 +17,17 @@
 #include "chafa.hpp"
 #include "util.hpp"
 #include "util/ptr.hpp"
+#include "dimensions.hpp"
+#include "image.hpp"
+#include "terminal.hpp"
 
 #include <cmath>
 #include <iostream>
 #include <algorithm>
 
-struct gstring_deleter {
-    void operator()(GString* str) const {
-        g_string_free(str, true);
-    }
-};
+void gstring_delete(GString* str) {
+    g_string_free(str, true);
+}
 
 ChafaCanvas::ChafaCanvas()
 {
@@ -78,7 +79,7 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
 
 void ChafaCanvas::draw()
 {
-    const auto result = std::unique_ptr<GString, gstring_deleter> {
+    const auto result = c_unique_ptr<GString, gstring_delete> {
 #if CHAFA_VERSION_CUR_STABLE >= 0x10e00
 #elif CHAFA_VERSION_CUR_STABLE >= 0x10c00
         chafa_canvas_print(canvas, term_info)

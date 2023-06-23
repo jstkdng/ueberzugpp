@@ -29,9 +29,8 @@ public:
     ChafaCanvas();
     ~ChafaCanvas() override;
 
-    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
-    void draw() override;
-    void clear() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> image) override;
+    void remove_image(const std::string& identifier) override;
 
 private:
     ChafaSymbolMap* symbol_map = nullptr;

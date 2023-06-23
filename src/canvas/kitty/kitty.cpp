@@ -17,6 +17,8 @@
 #include "kitty.hpp"
 #include "chunk.hpp"
 #include "util.hpp"
+#include "dimensions.hpp"
+#include "image.hpp"
 
 #include <fmt/format.h>
 #include <iostream>

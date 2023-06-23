@@ -20,6 +20,7 @@
 #include "util.hpp"
 #include "util/socket.hpp"
 #include "tmux.hpp"
+#include "image.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -75,7 +76,6 @@ Application::~Application()
         socket_thread.join();
     }
     logger->info("Exiting ueberzugpp");
-    canvas->clear();
     vips_shutdown();
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
@@ -100,17 +100,15 @@ void Application::execute(const std::string_view cmd)
             logger->error("Invalid path.");
             return;
         }
-        auto image = Image::load(json);
+        auto image = Image::load(json, *terminal);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
         }
-        canvas->clear();
-        canvas->init(*image->dimensions(), std::move(image));
-        canvas->draw();
+        canvas->add_image(json["identifier"], std::move(image));
     } else if (json["action"] == "remove") {
         logger->info("Removing image.");
-        canvas->clear();
+        canvas->remove_image(json["identifier"]);
     } else if (json["action"] == "tmux") {
         handle_tmux_hook(std::string{json["hook"]});
     } else {

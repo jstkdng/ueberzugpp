@@ -17,8 +17,10 @@
 #include "iterm2.hpp"
 #include "chunk.hpp"
 #include "util.hpp"
-#include "fstream"
+#include "dimensions.hpp"
+#include "image.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <filesystem>
 #include <ranges>

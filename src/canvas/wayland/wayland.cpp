@@ -17,6 +17,7 @@
 #include "wayland.hpp"
 #include "os.hpp"
 #include "util.hpp"
+#include "image.hpp"
 
 #include <iostream>
 #include <array>

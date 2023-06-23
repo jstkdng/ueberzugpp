@@ -18,8 +18,6 @@
 #define __OPENCV_IMAGE__
 
 #include "image.hpp"
-#include "terminal.hpp"
-#include "dimensions.hpp"
 
 #include <string>
 #include <opencv2/core.hpp>
@@ -28,12 +26,16 @@
 
 namespace fs = std::filesystem;
 
+class Dimensions;
+class Flags;
+
 class OpencvImage : public Image
 {
 public:
-    OpencvImage(const Dimensions& dimensions, const std::string& filename, bool in_cache);
+    OpencvImage(std::unique_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache);
     ~OpencvImage() override;
 
+    [[nodiscard]] auto dimensions() const -> const Dimensions& override;
     [[nodiscard]] auto width() const -> int override;
     [[nodiscard]] auto height() const -> int override;
     [[nodiscard]] auto size() const -> size_t override;
@@ -46,7 +48,7 @@ private:
     cv::UMat uimage;
 
     fs::path path;
-    const Dimensions& dimensions;
+    std::unique_ptr<Dimensions> dims;
 
     uint64_t _size;
     uint32_t max_width;

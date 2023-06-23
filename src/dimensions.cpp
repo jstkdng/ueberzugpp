@@ -16,6 +16,7 @@
 
 #include "dimensions.hpp"
 #include "tmux.hpp"
+#include "terminal.hpp"
 
 #include <utility>
 
