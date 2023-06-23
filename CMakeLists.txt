@@ -39,20 +39,6 @@ option(ENABLE_OPENGL        "Enable window rendering with OpenGL." OFF)
 include(FetchContent)
 include(GNUInstallDirs)
 
-if(MSVC)
-    target_compile_options(ueberzug PRIVATE
-        $<$<CONFIG:Debug>:
-            /W4 /WX
-        >
-    )
-else()
-    target_compile_options(ueberzug PRIVATE
-        $<$<CONFIG:Debug>:
-            -Wall -Wextra -Wpedantic -Werror
-        >
-    )
-endif()
-
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
@@ -118,7 +104,7 @@ endif()
 
 if(ENABLE_X11)
     target_compile_definitions(ueberzug PRIVATE ENABLE_X11)
-    find_package(X11 REQUIRED)
+    pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb)
     pkg_check_modules(XCBIMAGE REQUIRED IMPORTED_TARGET xcb-image)
     pkg_check_modules(XCBRES REQUIRED IMPORTED_TARGET xcb-res)
     pkg_check_modules(XCBERRORS REQUIRED IMPORTED_TARGET xcb-errors)
@@ -128,7 +114,7 @@ if(ENABLE_X11)
         "src/canvas/x11/window.cpp"
     )
     list(APPEND UEBERZUG_LIBRARIES
-        X11::xcb
+        PkgConfig::XCB
         PkgConfig::XCBERRORS
         PkgConfig::XCBIMAGE
         PkgConfig::XCBRES
@@ -195,6 +181,12 @@ if(ENABLE_TURBOBASE64)
         list(APPEND UEBERZUG_LIBRARIES turbo::base64)
     endif()
 endif()
+
+target_compile_options(ueberzug PRIVATE
+    $<$<CONFIG:Debug>:
+        -Wall -Wextra -Wpedantic -Werror
+    >
+)
 
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
