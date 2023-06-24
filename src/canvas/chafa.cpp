@@ -50,13 +50,16 @@ ChafaCanvas::~ChafaCanvas()
     chafa_term_info_unref(term_info);
 }
 
-void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+void ChafaCanvas::add_image([[maybe_unused]] const std::string& identifier, std::unique_ptr<Image> new_image)
 {
+    remove_image(identifier);
+
     image = std::move(new_image);
-    x = dimensions.x + 1;
-    y = dimensions.y + 1;
-    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dimensions.terminal.font_width);
-    vertical_cells = std::ceil(static_cast<double>(image->height()) / dimensions.terminal.font_height);
+    const auto dims = image->dimensions();
+    x = dims.x + 1;
+    y = dims.y + 1;
+    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dims.terminal.font_width);
+    vertical_cells = std::ceil(static_cast<double>(image->height()) / dims.terminal.font_height);
 
     symbol_map = chafa_symbol_map_new();
     config = chafa_canvas_config_new();
@@ -75,6 +78,8 @@ void ChafaCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
             image->width(),
             image->height(),
             image->width() * 4);
+
+    draw();
 }
 
 void ChafaCanvas::draw()
@@ -96,7 +101,7 @@ void ChafaCanvas::draw()
     util::restore_cursor_position();
 }
 
-void ChafaCanvas::clear()
+void ChafaCanvas::remove_image([[maybe_unused]] const std::string& identifier)
 {
     if (horizontal_cells == 0 && vertical_cells == 0) {
         return;

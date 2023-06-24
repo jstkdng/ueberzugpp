@@ -46,13 +46,16 @@ SixelCanvas::~SixelCanvas()
     sixel_output_destroy(output);
 }
 
-void SixelCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+void SixelCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
+    remove_image(identifier);
+
     image = std::move(new_image);
-    x = dimensions.x + 1;
-    y = dimensions.y + 1;
-    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dimensions.terminal.font_width);
-    vertical_cells = std::ceil(static_cast<double>(image->height()) / dimensions.terminal.font_height);
+    const auto dims = image->dimensions();
+    x = dims.x + 1;
+    y = dims.y + 1;
+    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dims.terminal.font_width);
+    vertical_cells = std::ceil(static_cast<double>(image->height()) / dims.terminal.font_height);
 
     const auto file_size = fs::file_size(image->filename());
     const auto reserve_ratio = 50;
@@ -68,6 +71,8 @@ void SixelCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_
             SIXEL_LARGE_LUM,
             SIXEL_REP_CENTER_BOX,
             SIXEL_QUALITY_HIGH);
+
+    draw();
 }
 
 void SixelCanvas::draw()
@@ -87,7 +92,7 @@ void SixelCanvas::draw()
     });
 }
 
-void SixelCanvas::clear()
+void SixelCanvas::remove_image([[maybe_unused]] const std::string& identifier)
 {
     if (horizontal_cells == 0 && vertical_cells == 0) {
         return;

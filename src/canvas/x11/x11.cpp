@@ -151,19 +151,24 @@ void X11Canvas::handle_events()
     }
 }
 
-void X11Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
+    remove_image(identifier);
+
     logger->debug("Initializing canvas");
     image = std::move(new_image);
 
-    std::unordered_set<xcb_window_t> parent_ids {dimensions.terminal.x11_wid};
+    const auto dims = image->dimensions();
+    std::unordered_set<xcb_window_t> parent_ids {dims.terminal.x11_wid};
     get_tmux_window_ids(parent_ids);
 
     std::ranges::for_each(std::as_const(parent_ids), [&] (xcb_window_t parent) {
         const auto window_id = xcb_generate_id(connection);
-        auto window = std::make_unique<X11Window>(connection, screen, window_id, parent, dimensions, *image);
+        auto window = std::make_unique<X11Window>(connection, screen, window_id, parent, dims, *image);
         windows.insert({window_id, std::move(window)});
     });
+
+    draw();
 }
 
 void X11Canvas::get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows)
@@ -201,7 +206,7 @@ void X11Canvas::print_xcb_error(const xcb_generic_error_t* err)
 #endif
 }
 
-void X11Canvas::clear()
+void X11Canvas::remove_image([[maybe_unused]] const std::string& identifier)
 {
     can_draw.store(false);
     if (draw_thread.joinable()) {

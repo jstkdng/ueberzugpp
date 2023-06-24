@@ -135,16 +135,6 @@ display(wl_display_connect(nullptr))
     logger->info("Canvas created");
 }
 
-void WaylandCanvas::toggle()
-{
-    if (visible) {
-        clear();
-    } else {
-        draw();
-    }
-    visible = !visible;
-}
-
 void WaylandCanvas::show()
 {
     if (visible) {
@@ -160,7 +150,7 @@ void WaylandCanvas::hide()
         return;
     }
     visible = false;
-    clear();
+    remove_image("");
 }
 
 WaylandCanvas::~WaylandCanvas()
@@ -188,13 +178,16 @@ WaylandCanvas::~WaylandCanvas()
     wl_display_disconnect(display);
 }
 
-void WaylandCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
-    wayland_x = dimensions.xpixels() + dimensions.padding_horizontal;
-    wayland_y = dimensions.ypixels() + dimensions.padding_vertical;
+    remove_image(identifier);
     image = std::move(new_image);
+    const auto dims = image->dimensions();
+    wayland_x = dims.xpixels() + dims.padding_horizontal;
+    wayland_y = dims.ypixels() + dims.padding_vertical;
     width = image->width();
     height = image->height();
+    draw();
 }
 
 void WaylandCanvas::move_window()
@@ -252,7 +245,7 @@ void WaylandCanvas::draw()
     visible = true;
 }
 
-void WaylandCanvas::clear()
+void WaylandCanvas::remove_image([[maybe_unused]] const std::string& identifier)
 {
     if (surface == nullptr) {
         return;

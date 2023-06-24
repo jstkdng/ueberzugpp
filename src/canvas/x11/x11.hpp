@@ -47,9 +47,8 @@ public:
     explicit X11Canvas();
     ~X11Canvas() override;
 
-    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
-    void draw() override;
-    void clear() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
+    void remove_image(const std::string& identifier) override;
     void hide() override;
     void show() override;
 
@@ -77,6 +76,7 @@ private:
     EGLDisplay egl_display;
 #endif
 
+    void draw();
     void handle_events();
     void get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows);
     void print_xcb_error(const xcb_generic_error_t* err);

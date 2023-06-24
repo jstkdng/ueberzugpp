@@ -46,13 +46,11 @@ public:
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
     static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
 
-    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
-    void draw() override;
-    void clear() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
+    void remove_image(const std::string& identifier) override;
 
     void show() override;
     void hide() override;
-    void toggle() override;
 
     struct wl_compositor* compositor = nullptr;
     struct wl_surface* surface = nullptr;
@@ -79,6 +77,7 @@ private:
 
     std::unique_ptr<WaylandConfig> config;
 
+    void draw();
     void handle_events();
     void move_window();
 

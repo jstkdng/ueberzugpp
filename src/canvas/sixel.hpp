@@ -35,9 +35,8 @@ public:
     explicit SixelCanvas();
     ~SixelCanvas() override;
 
-    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
-    void draw() override;
-    void clear() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
+    void remove_image(const std::string& identifier) override;
 
 private:
     sixel_dither_t *dither = nullptr;
@@ -55,6 +54,7 @@ private:
     int horizontal_cells = 0;
     int vertical_cells = 0;
 
+    void draw();
     void draw_frame();
 };
 

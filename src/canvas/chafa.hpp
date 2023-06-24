@@ -29,7 +29,7 @@ public:
     ChafaCanvas();
     ~ChafaCanvas() override;
 
-    void add_image(const std::string& identifier, std::unique_ptr<Image> image) override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
     void remove_image(const std::string& identifier) override;
 
 private:
@@ -45,6 +45,8 @@ private:
     int y;
     int horizontal_cells = 0;
     int vertical_cells = 0;
+
+    void draw();
 };
 
 #endif
