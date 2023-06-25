@@ -24,7 +24,7 @@ class Ueberzugpp < Formula
     system "cmake", "-S", ".", "-B", "build",
                     "-DENABLE_X11=OFF",
                     "-DENABLE_OPENCV=OFF",
-                    "-DENABLE_WAYLAND=OFF"
+                    "-DENABLE_WAYLAND=OFF",
                     *std_cmake_args
     system "cmake", "--build", "build"
     system "cmake", "--install", "build"
