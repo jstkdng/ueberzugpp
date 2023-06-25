@@ -32,13 +32,13 @@ Advantages over w3mimgdisplay and ueberzug:
 - [lf](https://github.com/jstkdng/ueberzugpp/blob/master/scripts/lf/lfub)
 - [fzf](https://github.com/jstkdng/ueberzugpp/blob/master/scripts/fzfub)
 
-# Download
+# Install
 
 <a href="https://repology.org/project/ueberzugpp/versions"><img src="https://repology.org/badge/vertical-allrepos/ueberzugpp.svg" /></a>
 
-MacOS: [Homebrew](https://github.com/jstkdng/ueberzugpp/blob/master/homebrew/ueberzugpp.rb)
+Homebrew (MacOS/Linux): `brew install jstkdng/programs/ueberzugpp`
 
-[Debian/*Ubuntu](https://software.opensuse.org/download.html?project=home%3Ajustkidding&package=ueberzugpp)
+[Debian/Ubuntu](https://software.opensuse.org/download.html?project=home%3Ajustkidding&package=ueberzugpp)
 
 # Usage
 
