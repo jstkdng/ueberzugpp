@@ -31,9 +31,8 @@ public:
     KittyCanvas();
     ~KittyCanvas() override = default;
 
-    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
-    void draw() override;
-    void clear() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
+    void remove_image(const std::string& identifier) override;
 
 private:
     std::unique_ptr<Image> image;
@@ -43,6 +42,7 @@ private:
     int x;
     int y;
 
+    void draw();
     void draw_frame();
     auto process_chunks() -> std::vector<KittyChunk>;
 };

@@ -34,11 +34,14 @@ KittyCanvas::KittyCanvas()
     logger->info("Canvas created");
 }
 
-void KittyCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+void KittyCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
+    remove_image(identifier);
     image = std::move(new_image);
-    x = dimensions.x + 1;
-    y = dimensions.y + 1;
+    const auto dims = image->dimensions();
+    x = dims.x + 1;
+    y = dims.y + 1;
+    draw();
 }
 
 void KittyCanvas::draw()
@@ -101,7 +104,7 @@ void KittyCanvas::draw_frame()
     str.clear();
 }
 
-void KittyCanvas::clear()
+void KittyCanvas::remove_image([[maybe_unused]] const std::string& identifier)
 {
     std::cout << "\033_Ga=d\033\\" << std::flush;
     image.reset();

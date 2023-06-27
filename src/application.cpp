@@ -273,10 +273,3 @@ void Application::daemonize(const std::string_view pid_file)
     std::ofstream ofs (pid_file.data());
     ofs << os::get_pid();
 }
-
-void fileclose(std::FILE* file)
-{
-    if (file != nullptr) {
-        std::fclose(file);
-    }
-}

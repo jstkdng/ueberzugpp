@@ -31,8 +31,6 @@
 
 #include <spdlog/spdlog.h>
 
-void fileclose(std::FILE* file);
-
 class Application
 {
 public:
@@ -58,7 +56,7 @@ private:
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;
 
-    c_unique_ptr<std::FILE, fileclose> f_stderr;
+    cn_unique_ptr<std::FILE, std::fclose> f_stderr;
     std::thread socket_thread;
 
     void setup_logger();

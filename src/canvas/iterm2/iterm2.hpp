@@ -31,9 +31,9 @@ class Iterm2Canvas : public Canvas
 public:
     Iterm2Canvas();
     ~Iterm2Canvas() override = default;
-    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
-    void draw() override;
-    void clear() override;
+
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
+    void remove_image(const std::string& identifier) override;
 private:
     std::unique_ptr<Image> image;
     std::shared_ptr<spdlog::logger> logger;
@@ -45,6 +45,7 @@ private:
     int max_height = 0;
 
     void draw_frame();
+    void draw();
     static auto process_chunks(std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
 };
 

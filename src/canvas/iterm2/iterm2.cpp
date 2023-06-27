@@ -39,13 +39,16 @@ Iterm2Canvas::Iterm2Canvas()
     logger->info("Canvas created");
 }
 
-void Iterm2Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+void Iterm2Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
+    remove_image(identifier);
     image = std::move(new_image);
-    x = dimensions.x + 1;
-    y = dimensions.y + 1;
-    max_width = dimensions.max_w;
-    max_height = dimensions.max_h;
+    const auto dims = image->dimensions();
+    x = dims.x + 1;
+    y = dims.y + 1;
+    max_width = dims.max_w;
+    max_height = dims.max_h;
+    draw();
 }
 
 void Iterm2Canvas::draw()
@@ -76,7 +79,7 @@ void Iterm2Canvas::draw()
     str.clear();
 }
 
-void Iterm2Canvas::clear()
+void Iterm2Canvas::remove_image([[maybe_unused]] const std::string& identifier)
 {
     util::clear_terminal_area(x, y, max_width, max_height);
     image.reset();
