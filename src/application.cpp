@@ -107,7 +107,7 @@ void Application::execute(const std::string_view cmd)
         }
         canvas->add_image(json["identifier"], std::move(image));
     } else if (json["action"] == "remove") {
-        logger->info("Removing image.");
+        logger->info("Removing image with id {}", json["identifier"]);
         canvas->remove_image(json["identifier"]);
     } else if (json["action"] == "tmux") {
         handle_tmux_hook(std::string{json["hook"]});
