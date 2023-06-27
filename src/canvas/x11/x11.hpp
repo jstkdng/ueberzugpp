@@ -27,7 +27,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <thread>
-#include <atomic>
 #include <mutex>
 
 #include <xcb/xcb.h>
@@ -62,19 +61,17 @@ private:
 
     std::unique_ptr<X11Util> xutil;
 
+    // map for event handler
     std::unordered_map<xcb_window_t, std::shared_ptr<X11Window>> windows;
 
     // windows per image
     std::unordered_map<std::string,
         std::unordered_map<xcb_window_t, std::shared_ptr<X11Window>>> image_windows;
 
-    std::unordered_map<std::string, std::unique_ptr<Image>> images;
-    std::unordered_map<std::string, std::thread> draw_threads;
-    std::unique_ptr<Image> image;
+    std::unordered_map<std::string, std::shared_ptr<Image>> images;
+    std::unordered_map<std::string, std::jthread> draw_threads;
 
-    std::thread draw_thread;
     std::thread event_handler;
-    std::atomic<bool> can_draw {true};
     std::mutex windows_mutex;
 
     std::shared_ptr<spdlog::logger> logger;
@@ -83,7 +80,7 @@ private:
     EGLDisplay egl_display;
 #endif
 
-    void draw();
+    void draw(const std::string& identifier);
     void handle_events();
     void get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows);
     void print_xcb_error(const xcb_generic_error_t* err);

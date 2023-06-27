@@ -21,6 +21,7 @@
 #include "util/ptr.hpp"
 #include "application.hpp"
 
+#include <iostream>
 #ifdef ENABLE_OPENGL
 #   include <EGL/eglext.h>
 #endif
@@ -54,11 +55,9 @@ connection(xcb_connect(nullptr, nullptr))
 
 X11Canvas::~X11Canvas()
 {
+    draw_threads.clear();
     if (event_handler.joinable()) {
         event_handler.join();
-    }
-    if (draw_thread.joinable()) {
-        draw_thread.join();
     }
 
 #ifdef ENABLE_OPENGL
@@ -72,23 +71,26 @@ X11Canvas::~X11Canvas()
     xcb_disconnect(connection);
 }
 
-void X11Canvas::draw()
+void X11Canvas::draw(const std::string& identifier)
 {
-    if (!image->is_animated()) {
-        for (const auto& [wid, window]: windows) {
+    if (!images.at(identifier)->is_animated()) {
+        for (const auto& [wid, window]: image_windows.at(identifier)) {
             window->generate_frame();
         }
         return;
     }
-    draw_thread = std::thread([&]  {
-        while (can_draw.load()) {
-            for (const auto& [wid, window]: windows) {
-                window->generate_frame();
+    draw_threads.insert({identifier,
+        std::jthread([&] (std::stop_token stoken) {
+            const auto image = images.at(identifier);
+            const auto wins = image_windows.at(identifier);
+            while (!stoken.stop_requested()) {
+                for (const auto& [wid, window]: wins) {
+                    window->generate_frame();
+                }
+                image->next_frame();
+                std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
             }
-            image->next_frame();
-            std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
-        }
-    });
+    })});
 }
 
 void X11Canvas::show()
@@ -156,8 +158,10 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
     remove_image(identifier);
 
     logger->debug("Initializing canvas");
-    image = std::move(new_image);
+    images.insert({identifier, std::move(new_image)});
+    image_windows.insert({identifier, {}});
 
+    const auto image = images.at(identifier);
     const auto dims = image->dimensions();
     std::unordered_set<xcb_window_t> parent_ids {dims.terminal.x11_wid};
     get_tmux_window_ids(parent_ids);
@@ -166,9 +170,10 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
         const auto window_id = xcb_generate_id(connection);
         const auto window = std::make_shared<X11Window>(connection, screen, window_id, parent, dims, *image);
         windows.insert({window_id, window});
+        image_windows.at(identifier).insert({window_id, window});
     });
 
-    draw();
+    draw(identifier);
 }
 
 void X11Canvas::get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows)
@@ -206,16 +211,17 @@ void X11Canvas::print_xcb_error(const xcb_generic_error_t* err)
 #endif
 }
 
-void X11Canvas::remove_image([[maybe_unused]] const std::string& identifier)
+void X11Canvas::remove_image(const std::string& identifier)
 {
-    can_draw.store(false);
-    if (draw_thread.joinable()) {
-        draw_thread.join();
+    draw_threads.erase(identifier);
+    images.erase(identifier);
+
+    std::scoped_lock lock {windows_mutex};
+    const auto old_windows = image_windows.extract(identifier);
+    if (old_windows.empty()) {
+        return;
     }
-    {
-        std::scoped_lock lock {windows_mutex};
-        windows.clear();
+    for (const auto& [key, value]: old_windows.mapped()) {
+        windows.erase(key);
     }
-    image.reset();
-    can_draw.store(true);
 }
