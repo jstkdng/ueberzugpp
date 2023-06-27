@@ -62,7 +62,14 @@ private:
 
     std::unique_ptr<X11Util> xutil;
 
-    std::unordered_map<xcb_window_t, std::unique_ptr<X11Window>> windows;
+    std::unordered_map<xcb_window_t, std::shared_ptr<X11Window>> windows;
+
+    // windows per image
+    std::unordered_map<std::string,
+        std::unordered_map<xcb_window_t, std::shared_ptr<X11Window>>> image_windows;
+
+    std::unordered_map<std::string, std::unique_ptr<Image>> images;
+    std::unordered_map<std::string, std::thread> draw_threads;
     std::unique_ptr<Image> image;
 
     std::thread draw_thread;

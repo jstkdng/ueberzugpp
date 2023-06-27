@@ -164,8 +164,8 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
 
     std::ranges::for_each(std::as_const(parent_ids), [&] (xcb_window_t parent) {
         const auto window_id = xcb_generate_id(connection);
-        auto window = std::make_unique<X11Window>(connection, screen, window_id, parent, dims, *image);
-        windows.insert({window_id, std::move(window)});
+        const auto window = std::make_shared<X11Window>(connection, screen, window_id, parent, dims, *image);
+        windows.insert({window_id, window});
     });
 
     draw();
