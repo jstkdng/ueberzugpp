@@ -89,6 +89,8 @@ void WaylandCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_su
     std::memcpy(canvas->shm->get_data(), canvas->image->data(), canvas->image->size());
     wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
     wl_surface_commit(canvas->surface);
+
+    canvas->move_window();
 }
 
 void WaylandCanvas::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
@@ -241,7 +243,6 @@ void WaylandCanvas::draw()
     xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
     xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
     wl_surface_commit(surface);
-    move_window();
 
     if (image->is_animated()) {
         callback =  wl_surface_frame(surface);
