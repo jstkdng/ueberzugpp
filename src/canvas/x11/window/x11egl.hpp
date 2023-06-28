@@ -18,9 +18,11 @@
 #define __X11EGLWINDOW__
 
 #include "window.hpp"
+#include "util/ptr.hpp"
 
 #include <EGL/egl.h>
 #include <xcb/xcb.h>
+#include <xcb/xcb_image.h>
 
 #include <memory>
 
@@ -43,8 +45,16 @@ private:
     xcb_screen_t* screen;
     xcb_window_t windowid;
     xcb_window_t parentid;
+    xcb_gcontext_t gc;
     EGLDisplay egl_display;
     const Image& image;
+
+    c_unique_ptr<xcb_image_t, xcb_image_destroy> xcb_image;
+    bool visible = false;
+
+    void send_expose_event();
+    void create();
+    void change_title();
 };
 
 #endif
