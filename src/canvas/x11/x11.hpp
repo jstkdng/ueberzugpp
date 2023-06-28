@@ -40,6 +40,8 @@
 #   include <EGL/egl.h>
 #endif
 
+class Flags;
+
 class X11Canvas : public Canvas
 {
 public:
@@ -62,11 +64,11 @@ private:
     std::unique_ptr<X11Util> xutil;
 
     // map for event handler
-    std::unordered_map<xcb_window_t, std::shared_ptr<X11Window>> windows;
+    std::unordered_map<xcb_window_t, std::shared_ptr<Window>> windows;
 
     // windows per image
     std::unordered_map<std::string,
-        std::unordered_map<xcb_window_t, std::shared_ptr<X11Window>>> image_windows;
+        std::unordered_map<xcb_window_t, std::shared_ptr<Window>>> image_windows;
 
     std::unordered_map<std::string, std::shared_ptr<Image>> images;
     std::unordered_map<std::string, std::jthread> draw_threads;
@@ -75,9 +77,11 @@ private:
     std::mutex windows_mutex;
 
     std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<Flags> flags;
 
 #ifdef ENABLE_OPENGL
     EGLDisplay egl_display;
+    bool egl_available = false;
 #endif
 
     void draw(const std::string& identifier);

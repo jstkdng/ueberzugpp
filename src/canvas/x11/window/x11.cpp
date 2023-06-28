@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "window.hpp"
+#include "x11.hpp"
 #include "dimensions.hpp"
 
 #include <xcb/xcb.h>
@@ -24,8 +24,7 @@
 constexpr std::string_view win_name = "ueberzugpp";
 
 X11Window::X11Window(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t window, xcb_window_t parent,
-            const Dimensions& dimensions, const Image& image):
+            xcb_window_t window, xcb_window_t parent, const Image& image):
 connection(connection),
 screen(screen),
 window(window),
@@ -34,6 +33,13 @@ gc(xcb_generate_id(connection)),
 image(image)
 {
     logger = spdlog::get("X11");
+    create();
+    change_title();
+    show();
+}
+
+void X11Window::create()
+{
     const uint32_t value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     struct xcb_create_window_value_list_t value_list;
     value_list.background_pixel = screen->black_pixel;
@@ -41,6 +47,7 @@ image(image)
     value_list.event_mask = XCB_EVENT_MASK_EXPOSURE;
     value_list.colormap = screen->default_colormap;
 
+    const auto dimensions = image.dimensions();
     const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
     xcb_create_window_aux(connection,
@@ -55,12 +62,15 @@ image(image)
             value_mask,
             &value_list);
 
+    xcb_create_gc(connection, gc, window, 0, nullptr);
+    logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
+}
+
+void X11Window::change_title()
+{
     const int bits_in_char = 8;
     xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
             window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, bits_in_char, win_name.size(), win_name.data());
-    xcb_create_gc(connection, gc, window, 0, nullptr);
-    logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
-    show();
 }
 
 void X11Window::show()

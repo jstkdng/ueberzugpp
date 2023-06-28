@@ -111,13 +111,17 @@ if(ENABLE_X11)
     list(APPEND UEBERZUG_SOURCES
         "src/util/x11.cpp"
         "src/canvas/x11/x11.cpp"
-        "src/canvas/x11/window.cpp"
+        "src/canvas/x11/window/x11.cpp"
     )
     list(APPEND UEBERZUG_LIBRARIES
         PkgConfig::XCB
         PkgConfig::XCBIMAGE
         PkgConfig::XCBRES
     )
+
+    if(ENABLE_OPENGL)
+        list(APPEND UEBERZUG_SOURCES "src/canvas/x11/window/x11egl.cpp")
+    endif()
 
     if(ENABLE_XCB_ERRORS)
         target_compile_definitions(ueberzug PRIVATE ENABLE_XCB_ERRORS)

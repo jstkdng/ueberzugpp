@@ -18,13 +18,15 @@
 #include "os.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
-#include "util/ptr.hpp"
 #include "application.hpp"
+#include "flags.hpp"
 
 #include <iostream>
 #ifdef ENABLE_OPENGL
 #   include <EGL/eglext.h>
+#   include "window/x11egl.hpp"
 #endif
+#include "window/x11.hpp"
 
 X11Canvas::X11Canvas():
 connection(xcb_connect(nullptr, nullptr))
@@ -40,11 +42,16 @@ connection(xcb_connect(nullptr, nullptr))
 
 #ifdef ENABLE_OPENGL
     egl_display = eglGetPlatformDisplay(EGL_PLATFORM_XCB_EXT, connection, nullptr);
-    eglInitialize(egl_display, nullptr, nullptr);
+    egl_available = egl_display != EGL_NO_DISPLAY;
+    if (egl_available) {
+        auto eglres = eglInitialize(egl_display, nullptr, nullptr);
+        egl_available = eglres == EGL_TRUE;
+    }
 #endif
 
     xutil = std::make_unique<X11Util>(connection);
     logger = spdlog::get("X11");
+    flags = Flags::instance();
     event_handler = std::thread([&] {
         logger->debug("Started event handler");
         handle_events();
@@ -61,7 +68,9 @@ X11Canvas::~X11Canvas()
     }
 
 #ifdef ENABLE_OPENGL
-    eglTerminate(egl_display);
+    if (egl_available) {
+        eglTerminate(egl_display);
+    }
 #endif
 
 #ifdef ENABLE_XCB_ERRORS
@@ -168,7 +177,16 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
 
     std::ranges::for_each(std::as_const(parent_ids), [&] (xcb_window_t parent) {
         const auto window_id = xcb_generate_id(connection);
-        const auto window = std::make_shared<X11Window>(connection, screen, window_id, parent, dims, *image);
+        std::shared_ptr<Window> window;
+#ifdef ENABLE_OPENGL
+        if (egl_available && flags->use_opengl) {
+            window = std::make_shared<X11EGLWindow>(connection, screen, window_id, parent, egl_display, *image);
+        } else {
+            window = std::make_shared<X11Window>(connection, screen, window_id, parent, *image);
+        }
+#else
+        window = std::make_shared<X11Window>(connection, screen, window_id, parent, *image);
+#endif
         windows.insert({window_id, window});
         image_windows.at(identifier).insert({window_id, window});
     });
