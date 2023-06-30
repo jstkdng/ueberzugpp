@@ -31,7 +31,7 @@
 
 KittyStdout::KittyStdout(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
 image(std::move(new_image)),
-stdou_mutex(stdout_mutex),
+stdout_mutex(stdout_mutex),
 id(util::generate_random_number<uint32_t>(1))
 {
     const auto dims = image->dimensions();
@@ -46,7 +46,6 @@ KittyStdout::~KittyStdout()
 
 void KittyStdout::draw()
 {
-    std::scoped_lock lock {stdou_mutex};
     generate_frame();
 }
 
@@ -68,6 +67,7 @@ void KittyStdout::generate_frame()
     str.append(chunks.back().get_result());
     str.append("\033\\");
 
+    std::scoped_lock lock {stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;

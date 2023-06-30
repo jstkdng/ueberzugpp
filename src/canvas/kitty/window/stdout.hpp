@@ -38,7 +38,7 @@ public:
 private:
     std::string str;
     std::unique_ptr<Image> image;
-    std::mutex& stdou_mutex;
+    std::mutex& stdout_mutex;
     uint32_t id;
     int x;
     int y;

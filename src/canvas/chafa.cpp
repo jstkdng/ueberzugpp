@@ -50,7 +50,7 @@ ChafaCanvas::~ChafaCanvas()
     chafa_term_info_unref(term_info);
 }
 
-void ChafaCanvas::add_image([[maybe_unused]] const std::string& identifier, std::unique_ptr<Image> new_image)
+void ChafaCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
     remove_image(identifier);
 
