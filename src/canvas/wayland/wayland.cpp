@@ -78,7 +78,7 @@ void WaylandCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_su
     auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
     xdg_surface_ack_configure(xdg_surface, serial);
 
-    std::unique_lock lock {canvas->draw_mutex};
+    std::scoped_lock lock {canvas->draw_mutex};
     if (!canvas->can_draw.load()) {
         return;
     }
@@ -94,7 +94,7 @@ void WaylandCanvas::wl_surface_frame_done(void *data, struct wl_callback *callba
 {
     auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
     wl_callback_destroy(callback);
-    std::unique_lock lock {canvas->draw_mutex};
+    std::scoped_lock lock {canvas->draw_mutex};
     if (!canvas->can_draw.load()) {
         return;
     }
@@ -164,7 +164,7 @@ void WaylandCanvas::hide()
 WaylandCanvas::~WaylandCanvas()
 {
     can_draw.store(false);
-    std::unique_lock lock {draw_mutex};
+    std::scoped_lock lock {draw_mutex};
     stop_flag.store(true);
     if (event_handler.joinable()) {
         event_handler.join();
@@ -256,7 +256,7 @@ void WaylandCanvas::clear()
         return;
     }
     can_draw.store(false);
-    std::unique_lock lock {draw_mutex};
+    std::scoped_lock lock {draw_mutex};
     if (xdg_toplevel != nullptr) {
         xdg_toplevel_destroy(xdg_toplevel);
     }
