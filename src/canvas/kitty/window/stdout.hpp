@@ -14,17 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __WINDOW__
-#define __WINDOW__
+#ifndef __KITTY_STDOUT__
+#define __KITTY_STDOUT__
 
-class Window
+#include "window.hpp"
+
+#include <memory>
+#include <mutex>
+#include <vector>
+
+class Image;
+class KittyChunk;
+
+class KittyStdout : public Window
 {
 public:
-    virtual ~Window() = default;
-    virtual void draw() = 0;
-    virtual void generate_frame() = 0;
-    virtual void show() {};
-    virtual void hide() {};
+    explicit KittyStdout(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    ~KittyStdout() override;
+
+    void draw() override;
+    void generate_frame() override;
+
+private:
+    std::string str;
+    std::unique_ptr<Image> image;
+    std::mutex& stdou_mutex;
+    uint32_t id;
+    int x;
+    int y;
+
+    auto process_chunks() -> std::vector<KittyChunk>;
 };
 
 #endif

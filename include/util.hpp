@@ -23,6 +23,8 @@
 #include <memory>
 #include <filesystem>
 #include <functional>
+#include <random>
+#include <limits>
 
 #include "os.hpp"
 
@@ -49,6 +51,15 @@ namespace util
     void send_command(const Flags& flags);
     void clear_terminal_area(int xcoord, int ycoord, int width, int height);
     auto generate_random_string(std::size_t length) -> std::string;
+
+    template<typename T>
+    auto generate_random_number(T min, T max = std::numeric_limits<T>::max()) -> T
+    {
+        std::random_device dev;
+        std::mt19937 rng(dev());
+        std::uniform_int_distribution<T> dist(min, max);
+        return dist(rng);
+    }
 } // namespace util
 
 #endif

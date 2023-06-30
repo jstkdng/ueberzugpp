@@ -20,10 +20,11 @@
 #include "canvas.hpp"
 
 #include <string>
-#include <vector>
+#include <unordered_map>
+#include <mutex>
 #include <spdlog/spdlog.h>
 
-class KittyChunk;
+class Window;
 
 class KittyCanvas : public Canvas
 {
@@ -35,16 +36,9 @@ public:
     void remove_image(const std::string& identifier) override;
 
 private:
-    std::unique_ptr<Image> image;
+    std::unordered_map<std::string, std::unique_ptr<Window>> images;
     std::shared_ptr<spdlog::logger> logger;
-    std::string str;
-
-    int x;
-    int y;
-
-    void draw();
-    void draw_frame();
-    auto process_chunks() -> std::vector<KittyChunk>;
+    std::mutex stdout_mutex;
 };
 
 #endif
