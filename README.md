@@ -25,6 +25,7 @@ Advantages over w3mimgdisplay and ueberzug:
 - [lobster](https://github.com/justchokingaround/lobster)
 - [vifm](https://github.com/vifm/vifm)
 - [rnvimr](https://github.com/kevinhwang91/rnvimr)
+- [image.nvim](https://github.com/3rd/image.nvim)
 - ÜberzugPP is a drop in replacement for Ueberzug, so applications that worked with ueberzug should work out of the box with this project.
 
 # Integration scripts
