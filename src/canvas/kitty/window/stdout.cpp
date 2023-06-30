@@ -41,6 +41,7 @@ id(util::generate_random_number<uint32_t>(1))
 
 KittyStdout::~KittyStdout()
 {
+    std::scoped_lock lock {stdout_mutex};
     std::cout << fmt::format("\033_Ga=d,d=i,i={}\033\\", id) << std::flush;
 }
 
