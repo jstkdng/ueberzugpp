@@ -78,12 +78,9 @@ void WaylandCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_su
     auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
     xdg_surface_ack_configure(xdg_surface, serial);
 
-    std::unique_lock lock {canvas->draw_mutex, std::defer_lock};
-    if (canvas->image->is_animated()) {
-        lock.lock();
-        if (!canvas->can_draw.load()) {
-            return;
-        }
+    std::unique_lock lock {canvas->draw_mutex};
+    if (!canvas->can_draw.load()) {
+        return;
     }
 
     std::memcpy(canvas->shm->get_data(), canvas->image->data(), canvas->image->size());
@@ -242,12 +239,13 @@ void WaylandCanvas::draw()
     xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
     xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
     xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
+
+    can_draw.store(true);
     wl_surface_commit(surface);
 
     if (image->is_animated()) {
         callback =  wl_surface_frame(surface);
         wl_callback_add_listener(callback, &frame_listener, this);
-        can_draw.store(true);
     }
     visible = true;
 }
