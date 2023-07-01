@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "stdout.hpp"
+#include "sixel.hpp"
 #include "image.hpp"
 #include "dimensions.hpp"
 #include "terminal.hpp"
@@ -25,7 +25,7 @@
 
 namespace fs = std::filesystem;
 
-SixelStdout::SixelStdout(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+Sixel::Sixel(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
 image(std::move(new_image)),
 stdout_mutex(stdout_mutex)
 {
@@ -58,7 +58,7 @@ stdout_mutex(stdout_mutex)
             SIXEL_QUALITY_HIGH);
 }
 
-SixelStdout::~SixelStdout()
+Sixel::~Sixel()
 {
     can_draw.store(false);
     if (draw_thread.joinable()) {
@@ -71,7 +71,7 @@ SixelStdout::~SixelStdout()
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
-void SixelStdout::draw()
+void Sixel::draw()
 {
     if (!image->is_animated()) {
         generate_frame();
@@ -88,7 +88,7 @@ void SixelStdout::draw()
     });
 }
 
-void SixelStdout::generate_frame()
+void Sixel::generate_frame()
 {
     // output sixel content to stream
     sixel_encode(const_cast<unsigned char*>(image->data()),

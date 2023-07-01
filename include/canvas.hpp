@@ -20,7 +20,6 @@
 #include <memory>
 
 class Image;
-class Dimensions;
 
 class Canvas
 {

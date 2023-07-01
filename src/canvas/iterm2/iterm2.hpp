@@ -17,7 +17,7 @@
 #ifndef __ITERM2_CANVAS__
 #define __ITERM2_CANVAS__
 
-#include "canvas.hpp"
+#include "window.hpp"
 
 #include <string>
 #include <vector>
@@ -25,27 +25,27 @@
 #include <spdlog/spdlog.h>
 
 class Iterm2Chunk;
+class Image;
 
-class Iterm2Canvas : public Canvas
+class Iterm2 : public Window
 {
 public:
-    Iterm2Canvas();
-    ~Iterm2Canvas() override = default;
+    Iterm2(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    ~Iterm2() override;
 
-    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
-    void remove_image(const std::string& identifier) override;
+    void draw() override;
+    void generate_frame() override {};
 private:
     std::unique_ptr<Image> image;
+    std::mutex& stdout_mutex;
     std::shared_ptr<spdlog::logger> logger;
     std::string str;
 
     int x;
     int y;
-    int max_width = 0;
-    int max_height = 0;
+    int horizontal_cells = 0;
+    int vertical_cells = 0;
 
-    void draw_frame();
-    void draw();
     static auto process_chunks(std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
 };
 

@@ -16,22 +16,93 @@
 
 #include "kitty.hpp"
 #include "image.hpp"
-#include "window/stdout.hpp"
+#include "util.hpp"
+#include "dimensions.hpp"
+#include "chunk.hpp"
 
-KittyCanvas::KittyCanvas()
+#include <fmt/format.h>
+
+#include <iostream>
+#ifndef __APPLE__
+#   include <execution>
+#else
+#   include <oneapi/tbb.h>
+#endif
+
+Kitty::Kitty(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+image(std::move(new_image)),
+stdout_mutex(stdout_mutex),
+id(util::generate_random_number<uint32_t>(1))
 {
-    logger = spdlog::get("kitty");
-    logger->info("Canvas created");
+    const auto dims = image->dimensions();
+    x = dims.x + 1;
+    y = dims.y + 1;
 }
 
-void KittyCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
+Kitty::~Kitty()
 {
-    remove_image(identifier);
-    images.insert({identifier, std::make_unique<KittyStdout>(std::move(new_image), stdout_mutex)});
-    images.at(identifier)->draw();
+    std::scoped_lock lock {stdout_mutex};
+    std::cout << fmt::format("\033_Ga=d,d=i,i={}\033\\", id) << std::flush;
 }
 
-void KittyCanvas::remove_image(const std::string& identifier)
+void Kitty::draw()
 {
-    images.erase(identifier);
+    generate_frame();
 }
+
+void Kitty::generate_frame()
+{
+    const int bits_per_channel = 8;
+    auto chunks = process_chunks();
+    str.append(fmt::format("\033_Ga=T,m=1,i={},q=2,f={},s={},v={};{}\033\\",
+            id, image->channels() * bits_per_channel, image->width(),
+            image->height(), chunks.front().get_result()));
+
+    for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
+        str.append("\033_Gm=1,q=2;");
+        str.append(chunk->get_result());
+        str.append("\033\\");
+    }
+
+    str.append("\033_Gm=0,q=2;");
+    str.append(chunks.back().get_result());
+    str.append("\033\\");
+
+    std::scoped_lock lock {stdout_mutex};
+    util::save_cursor_position();
+    util::move_cursor(y, x);
+    std::cout << str << std::flush;
+    util::restore_cursor_position();
+    str.clear();
+}
+
+auto Kitty::process_chunks() -> std::vector<KittyChunk>
+{
+    const uint64_t chunk_size = 4096;
+    uint64_t num_chunks = image->size() / chunk_size;
+    uint64_t last_chunk_size = image->size() % chunk_size;
+    if (last_chunk_size == 0) {
+        last_chunk_size = chunk_size;
+        num_chunks--;
+    }
+    const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
+    str.reserve((num_chunks + 2) * bytes_per_chunk);
+
+    std::vector<KittyChunk> chunks;
+    chunks.reserve(num_chunks + 2);
+    const auto *ptr = image->data();
+
+    uint64_t idx = 0;
+    for (; idx < num_chunks; idx++) {
+        chunks.emplace_back(ptr + idx * chunk_size, chunk_size);
+    }
+    chunks.emplace_back(ptr + idx * chunk_size, last_chunk_size);
+
+#ifdef __APPLE__
+    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), KittyChunk());
+#else
+    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), KittyChunk::process_chunk);
+#endif
+    return chunks;
+}
+

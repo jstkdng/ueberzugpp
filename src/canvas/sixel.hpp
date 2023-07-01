@@ -14,36 +14,46 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_STDOUT__
-#define __KITTY_STDOUT__
+#ifndef __SIXEL_STDOUT__
+#define __SIXEL_STDOUT__
 
 #include "window.hpp"
 
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <thread>
+#include <atomic>
+
+#include <sixel.h>
 
 class Image;
-class KittyChunk;
 
-class KittyStdout : public Window
+class Sixel : public Window
 {
 public:
-    explicit KittyStdout(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
-    ~KittyStdout() override;
+    Sixel(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    ~Sixel() override;
 
     void draw() override;
     void generate_frame() override;
 
 private:
-    std::string str;
     std::unique_ptr<Image> image;
     std::mutex& stdout_mutex;
-    uint32_t id;
+
+    std::string str;
+    std::thread draw_thread;
+    std::atomic<bool> can_draw {true};
+    
     int x;
     int y;
+    int horizontal_cells = 0;
+    int vertical_cells = 0;
 
-    auto process_chunks() -> std::vector<KittyChunk>;
+    sixel_dither_t *dither = nullptr;
+    sixel_output_t *output = nullptr;
 };
 
 #endif
+

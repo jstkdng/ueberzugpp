@@ -14,46 +14,39 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SIXEL_STDOUT__
-#define __SIXEL_STDOUT__
+#ifndef __STDOUT_CANVAS__
+#define __STDOUT_CANVAS__
 
+#include "canvas.hpp"
 #include "window.hpp"
 
+#include <unordered_map>
 #include <memory>
+#include <string>
 #include <mutex>
-#include <vector>
-#include <thread>
-#include <atomic>
 
-#include <sixel.h>
-
-class Image;
-
-class SixelStdout : public Window
+template<WindowType T>
+class StdoutCanvas : public Canvas
 {
 public:
-    explicit SixelStdout(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
-    ~SixelStdout() override;
+    StdoutCanvas() = default;
+    ~StdoutCanvas() override = default;
 
-    void draw() override;
-    void generate_frame() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override
+    {
+        remove_image(identifier);
+        images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
+        images.at(identifier)->draw();
+    }
+
+    void remove_image(const std::string& identifier) override
+    {
+        images.erase(identifier);
+    }
 
 private:
-    std::string str;
-    std::unique_ptr<Image> image;
-    std::mutex& stdout_mutex;
-
-    std::thread draw_thread;
-    std::atomic<bool> can_draw {true};
-    
-    int x;
-    int y;
-    int horizontal_cells = 0;
-    int vertical_cells = 0;
-
-    sixel_dither_t *dither = nullptr;
-    sixel_output_t *output = nullptr;
+    std::unordered_map<std::string, std::unique_ptr<T>> images;
+    std::mutex stdout_mutex;
 };
 
 #endif
-

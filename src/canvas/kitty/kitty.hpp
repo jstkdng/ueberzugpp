@@ -14,31 +14,36 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_CANVAS__
-#define __KITTY_CANVAS__
+#ifndef __KITTY_STDOUT__
+#define __KITTY_STDOUT__
 
-#include "canvas.hpp"
+#include "window.hpp"
 
-#include <string>
-#include <unordered_map>
+#include <memory>
 #include <mutex>
-#include <spdlog/spdlog.h>
+#include <vector>
 
-class Window;
+class Image;
+class KittyChunk;
 
-class KittyCanvas : public Canvas
+class Kitty : public Window
 {
 public:
-    KittyCanvas();
-    ~KittyCanvas() override = default;
+    explicit Kitty(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    ~Kitty() override;
 
-    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
-    void remove_image(const std::string& identifier) override;
+    void draw() override;
+    void generate_frame() override;
 
 private:
-    std::unordered_map<std::string, std::unique_ptr<Window>> images;
-    std::shared_ptr<spdlog::logger> logger;
-    std::mutex stdout_mutex;
+    std::string str;
+    std::unique_ptr<Image> image;
+    std::mutex& stdout_mutex;
+    uint32_t id;
+    int x;
+    int y;
+
+    auto process_chunks() -> std::vector<KittyChunk>;
 };
 
 #endif

@@ -17,6 +17,8 @@
 #ifndef __WINDOW__
 #define __WINDOW__
 
+#include <concepts>
+
 class Window
 {
 public:
@@ -26,5 +28,8 @@ public:
     virtual void show() {};
     virtual void hide() {};
 };
+
+template<class T>
+concept WindowType = std::is_base_of<Window, T>::value;
 
 #endif

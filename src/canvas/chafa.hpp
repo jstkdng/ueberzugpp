@@ -17,36 +17,38 @@
 #ifndef __CHAFA_CANVAS__
 #define __CHAFA_CANVAS__
 
-#include "canvas.hpp"
+#include "window.hpp"
 
 #include <memory>
+#include <mutex>
 #include <spdlog/spdlog.h>
 #include <chafa.h>
 
-class ChafaCanvas : public Canvas
+class Image;
+
+class Chafa : public Window
 {
 public:
-    ChafaCanvas();
-    ~ChafaCanvas() override;
+    Chafa(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    ~Chafa() override;
 
-    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
-    void remove_image(const std::string& identifier) override;
+    void draw() override;
+    void generate_frame() override {};
 
 private:
+    ChafaTermInfo* term_info = nullptr;
     ChafaSymbolMap* symbol_map = nullptr;
     ChafaCanvasConfig* config = nullptr;
     ChafaCanvas* canvas = nullptr;
-    ChafaTermInfo* term_info = nullptr;
 
     std::unique_ptr<Image> image;
+    std::mutex& stdout_mutex;
     std::shared_ptr<spdlog::logger> logger;
 
     int x;
     int y;
     int horizontal_cells = 0;
     int vertical_cells = 0;
-
-    void draw();
 };
 
 #endif
