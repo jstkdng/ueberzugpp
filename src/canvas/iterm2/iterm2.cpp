@@ -75,6 +75,7 @@ void Iterm2::draw()
     });
     str.append("\a");
 
+    std::scoped_lock lock {stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;
