@@ -15,8 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "canvas.hpp"
-#include "canvas/sixel.hpp"
 #include "canvas/chafa.hpp"
+#include "canvas/sixel/sixel.hpp"
 #include "canvas/kitty/kitty.hpp"
 #include "canvas/iterm2/iterm2.hpp"
 #ifdef ENABLE_X11

@@ -222,8 +222,9 @@ list(APPEND UEBERZUG_SOURCES
     "src/util/socket.cpp"
 
     "src/canvas.cpp"
-    "src/canvas/sixel.cpp"
     "src/canvas/chafa.cpp"
+    "src/canvas/sixel/sixel.cpp"
+    "src/canvas/sixel/stdout.cpp"
     "src/canvas/kitty/kitty.cpp"
     "src/canvas/kitty/chunk.cpp"
     "src/canvas/kitty/window/stdout.cpp"

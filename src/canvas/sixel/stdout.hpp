@@ -14,49 +14,46 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SIXEL_CANVAS__
-#define __SIXEL_CANVAS__
+#ifndef __SIXEL_STDOUT__
+#define __SIXEL_STDOUT__
 
-#include "canvas.hpp"
-#include "image.hpp"
-#include "terminal.hpp"
-#include "dimensions.hpp"
+#include "window.hpp"
 
 #include <memory>
+#include <mutex>
+#include <vector>
 #include <thread>
 #include <atomic>
 
 #include <sixel.h>
-#include <spdlog/spdlog.h>
 
-class SixelCanvas : public Canvas
+class Image;
+
+class SixelStdout : public Window
 {
 public:
-    explicit SixelCanvas();
-    ~SixelCanvas() override;
+    explicit SixelStdout(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    ~SixelStdout() override;
 
-    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
-    void remove_image(const std::string& identifier) override;
+    void draw() override;
+    void generate_frame() override;
 
 private:
-    sixel_dither_t *dither = nullptr;
-    sixel_output_t *output = nullptr;
+    std::string str;
     std::unique_ptr<Image> image;
-    std::shared_ptr<spdlog::logger> logger;
+    std::mutex& stdout_mutex;
 
     std::thread draw_thread;
     std::atomic<bool> can_draw {true};
-
-    std::string str;
-
+    
     int x;
     int y;
     int horizontal_cells = 0;
     int vertical_cells = 0;
 
-    void draw();
-    void draw_frame();
+    sixel_dither_t *dither = nullptr;
+    sixel_output_t *output = nullptr;
 };
 
-
 #endif
+
