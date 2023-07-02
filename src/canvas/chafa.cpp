@@ -29,11 +29,11 @@ void gstring_delete(GString* str) {
     g_string_free(str, true);
 }
 
-Chafa::Chafa(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+Chafa::Chafa(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
 symbol_map(chafa_symbol_map_new()),
 config(chafa_canvas_config_new()),
 image(std::move(new_image)),
-stdout_mutex(stdout_mutex)
+stdout_mutex(std::move(stdout_mutex))
 {
     const auto envp = c_unique_ptr<gchar*, g_strfreev> {
         g_get_environ()
@@ -67,7 +67,7 @@ Chafa::~Chafa()
     chafa_symbol_map_unref(symbol_map);
     chafa_term_info_unref(term_info);
 
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -90,7 +90,7 @@ void Chafa::draw()
     auto ycoord = y;
     const auto lines = util::str_split(result->str, "\n");
 
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
     std::ranges::for_each(std::as_const(lines), [&] (const auto& line) {
         util::move_cursor(ycoord++, x);

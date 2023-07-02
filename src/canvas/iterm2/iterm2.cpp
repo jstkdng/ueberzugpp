@@ -34,9 +34,9 @@
 
 namespace fs = std::filesystem;
 
-Iterm2::Iterm2(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+Iterm2::Iterm2(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
 image(std::move(new_image)),
-stdout_mutex(stdout_mutex)
+stdout_mutex(std::move(stdout_mutex))
 {
     logger = spdlog::get("iterm2");
     logger->info("Canvas created");
@@ -50,7 +50,7 @@ stdout_mutex(stdout_mutex)
 
 Iterm2::~Iterm2()
 {
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -75,7 +75,7 @@ void Iterm2::draw()
     });
     str.append("\a");
 
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;

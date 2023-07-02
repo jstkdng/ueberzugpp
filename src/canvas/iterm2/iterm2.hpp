@@ -30,14 +30,14 @@ class Image;
 class Iterm2 : public Window
 {
 public:
-    Iterm2(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    Iterm2(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex);
     ~Iterm2() override;
 
     void draw() override;
     void generate_frame() override {};
 private:
     std::unique_ptr<Image> image;
-    std::mutex& stdout_mutex;
+    std::shared_ptr<std::mutex> stdout_mutex;
     std::shared_ptr<spdlog::logger> logger;
     std::string str;
 

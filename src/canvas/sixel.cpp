@@ -25,9 +25,9 @@
 
 namespace fs = std::filesystem;
 
-Sixel::Sixel(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+Sixel::Sixel(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
 image(std::move(new_image)),
-stdout_mutex(stdout_mutex)
+stdout_mutex(std::move(stdout_mutex))
 {
     const auto dims = image->dimensions();
     x = dims.x + 1;
@@ -67,7 +67,7 @@ Sixel::~Sixel()
     sixel_dither_destroy(dither);
     sixel_output_destroy(output);
 
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -96,7 +96,7 @@ void Sixel::generate_frame()
             image->height(),
             3 /*unused*/, dither, output);
 
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;

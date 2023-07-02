@@ -29,9 +29,9 @@
 #   include <oneapi/tbb.h>
 #endif
 
-Kitty::Kitty(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+Kitty::Kitty(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
 image(std::move(new_image)),
-stdout_mutex(stdout_mutex),
+stdout_mutex(std::move(stdout_mutex)),
 id(util::generate_random_number<uint32_t>(1))
 {
     const auto dims = image->dimensions();
@@ -41,7 +41,7 @@ id(util::generate_random_number<uint32_t>(1))
 
 Kitty::~Kitty()
 {
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     std::cout << fmt::format("\033_Ga=d,d=i,i={}\033\\", id) << std::flush;
 }
 
@@ -68,7 +68,7 @@ void Kitty::generate_frame()
     str.append(chunks.back().get_result());
     str.append("\033\\");
 
-    std::scoped_lock lock {stdout_mutex};
+    std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;

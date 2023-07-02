@@ -32,7 +32,7 @@ class Image;
 class Sixel : public Window
 {
 public:
-    Sixel(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
+    Sixel(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex);
     ~Sixel() override;
 
     void draw() override;
@@ -40,7 +40,7 @@ public:
 
 private:
     std::unique_ptr<Image> image;
-    std::mutex& stdout_mutex;
+    std::shared_ptr<std::mutex> stdout_mutex;
 
     std::string str;
     std::thread draw_thread;

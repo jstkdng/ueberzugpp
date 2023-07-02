@@ -30,7 +30,11 @@ template<WindowType T>
 class StdoutCanvas : public Canvas
 {
 public:
-    StdoutCanvas() = default;
+    StdoutCanvas()
+    {
+        stdout_mutex = std::make_shared<std::mutex>();
+    }
+
     ~StdoutCanvas() override = default;
 
     void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override
@@ -47,7 +51,7 @@ public:
 
 private:
     std::unordered_map<std::string, std::unique_ptr<T>> images;
-    std::mutex stdout_mutex;
+    std::shared_ptr<std::mutex> stdout_mutex;
 };
 
 #endif
