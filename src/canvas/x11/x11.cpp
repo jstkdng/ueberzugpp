@@ -88,8 +88,9 @@ void X11Canvas::draw(const std::string& identifier)
         }
         return;
     }
+
     draw_threads.insert({identifier,
-        std::jthread([&] (std::stop_token stoken) {
+        std::jthread([this, identifier] (std::stop_token stoken) {
             const auto image = images.at(identifier);
             const auto wins = image_windows.at(identifier);
             while (!stoken.stop_requested()) {
