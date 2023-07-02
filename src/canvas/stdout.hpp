@@ -19,6 +19,7 @@
 
 #include "canvas.hpp"
 #include "window.hpp"
+#include "image.hpp"
 
 #include <unordered_map>
 #include <memory>
