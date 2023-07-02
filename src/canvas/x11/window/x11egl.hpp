@@ -14,46 +14,47 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __WINDOW__
-#define __WINDOW__
+#ifndef __X11EGLWINDOW__
+#define __X11EGLWINDOW__
 
-#include "image.hpp"
+#include "window.hpp"
 #include "util/ptr.hpp"
 
-#include <xcb/xproto.h>
+#include <EGL/egl.h>
+#include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
-#include <spdlog/spdlog.h>
 
-class Dimensions;
+#include <memory>
 
-class X11Window
+class Image;
+
+class X11EGLWindow : public Window
 {
 public:
-    X11Window(xcb_connection_t* connection, xcb_screen_t *screen,
-            xcb_window_t window, xcb_window_t parent,
-            const Dimensions& dimensions, const Image& image);
-    ~X11Window();
+    X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
+            xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display, const Image& image);
+    ~X11EGLWindow() override;
 
-    void draw();
-    void generate_frame();
-    void show();
-    void hide();
+    void draw() override;
+    void generate_frame() override;
+    void show() override;
+    void hide() override;
 
 private:
-    xcb_connection_t *connection;
-    xcb_screen_t *screen;
-
-    xcb_window_t window;
-    xcb_window_t parent;
+    xcb_connection_t* connection;
+    xcb_screen_t* screen;
+    xcb_window_t windowid;
+    xcb_window_t parentid;
     xcb_gcontext_t gc;
+    EGLDisplay egl_display;
+    const Image& image;
 
     c_unique_ptr<xcb_image_t, xcb_image_destroy> xcb_image;
-    std::shared_ptr<spdlog::logger> logger;
-
-    const Image& image;
     bool visible = false;
 
     void send_expose_event();
+    void create();
+    void change_title();
 };
 
 #endif

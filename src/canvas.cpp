@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "canvas.hpp"
-#include "canvas/sixel.hpp"
+#include "canvas/stdout.hpp"
 #include "canvas/chafa.hpp"
+#include "canvas/sixel.hpp"
 #include "canvas/kitty/kitty.hpp"
 #include "canvas/iterm2/iterm2.hpp"
 #ifdef ENABLE_X11
@@ -49,14 +49,14 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
 #endif
 
     if (flags->output == "kitty") {
-        return std::make_unique<KittyCanvas>();
+        return std::make_unique<StdoutCanvas<Kitty>>();
     }
     if (flags->output == "iterm2") {
-        return std::make_unique<Iterm2Canvas>();
+        return std::make_unique<StdoutCanvas<Iterm2>>();
     }
     if (flags->output == "sixel") {
-        return std::make_unique<SixelCanvas>();
+        return std::make_unique<StdoutCanvas<Sixel>>();
     }
     flags->output = "chafa";
-    return std::make_unique<ChafaCanvas>();
+    return std::make_unique<StdoutCanvas<Chafa>>();
 }

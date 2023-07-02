@@ -58,6 +58,9 @@ void Flags::read_config_file()
         if (data.contains("no-opencv")) {
             no_opencv = data["no-opencv"];
         }
+        if (data.contains("opengl")) {
+            use_opengl = data["opengl"];
+        }
     } catch (const json::parse_error& e) {
         std::cerr << "Could not parse config file." << std::endl;
         std::exit(1);

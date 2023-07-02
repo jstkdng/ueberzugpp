@@ -15,10 +15,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "kitty.hpp"
-#include "chunk.hpp"
+#include "image.hpp"
 #include "util.hpp"
+#include "dimensions.hpp"
+#include "chunk.hpp"
 
 #include <fmt/format.h>
+
 #include <iostream>
 #ifndef __APPLE__
 #   include <execution>
@@ -26,25 +29,54 @@
 #   include <oneapi/tbb.h>
 #endif
 
-KittyCanvas::KittyCanvas()
+Kitty::Kitty(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+image(std::move(new_image)),
+stdout_mutex(stdout_mutex),
+id(util::generate_random_number<uint32_t>(1))
 {
-    logger = spdlog::get("kitty");
-    logger->info("Canvas created");
+    const auto dims = image->dimensions();
+    x = dims.x + 1;
+    y = dims.y + 1;
 }
 
-void KittyCanvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+Kitty::~Kitty()
 {
-    image = std::move(new_image);
-    x = dimensions.x + 1;
-    y = dimensions.y + 1;
+    std::scoped_lock lock {stdout_mutex};
+    std::cout << fmt::format("\033_Ga=d,d=i,i={}\033\\", id) << std::flush;
 }
 
-void KittyCanvas::draw()
+void Kitty::draw()
 {
-    draw_frame();
+    generate_frame();
 }
 
-auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
+void Kitty::generate_frame()
+{
+    const int bits_per_channel = 8;
+    auto chunks = process_chunks();
+    str.append(fmt::format("\033_Ga=T,m=1,i={},q=2,f={},s={},v={};{}\033\\",
+            id, image->channels() * bits_per_channel, image->width(),
+            image->height(), chunks.front().get_result()));
+
+    for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
+        str.append("\033_Gm=1,q=2;");
+        str.append(chunk->get_result());
+        str.append("\033\\");
+    }
+
+    str.append("\033_Gm=0,q=2;");
+    str.append(chunks.back().get_result());
+    str.append("\033\\");
+
+    std::scoped_lock lock {stdout_mutex};
+    util::save_cursor_position();
+    util::move_cursor(y, x);
+    std::cout << str << std::flush;
+    util::restore_cursor_position();
+    str.clear();
+}
+
+auto Kitty::process_chunks() -> std::vector<KittyChunk>
 {
     const uint64_t chunk_size = 4096;
     uint64_t num_chunks = image->size() / chunk_size;
@@ -74,33 +106,3 @@ auto KittyCanvas::process_chunks() -> std::vector<KittyChunk>
     return chunks;
 }
 
-void KittyCanvas::draw_frame()
-{
-    const int bits_per_channel = 8;
-    auto chunks = process_chunks();
-    str.append(fmt::format("\033_Ga=T,m=1,i=1337,q=2,f={},s={},v={};{}\033\\",
-            image->channels() * bits_per_channel, image->width(),
-            image->height(), chunks.front().get_result()));
-
-    for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
-        str.append("\033_Gm=1,q=2;");
-        str.append(chunk->get_result());
-        str.append("\033\\");
-    }
-
-    str.append("\033_Gm=0,q=2;");
-    str.append(chunks.back().get_result());
-    str.append("\033\\");
-
-    util::save_cursor_position();
-    util::move_cursor(y, x);
-    std::cout << str << std::flush;
-    util::restore_cursor_position();
-    str.clear();
-}
-
-void KittyCanvas::clear()
-{
-    std::cout << "\033_Ga=d\033\\" << std::flush;
-    image.reset();
-}

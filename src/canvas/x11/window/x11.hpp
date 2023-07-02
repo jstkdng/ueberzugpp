@@ -14,36 +14,48 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_STDOUT__
-#define __KITTY_STDOUT__
+#ifndef __X11WINDOW__
+#define __X11WINDOW__
 
+#include "image.hpp"
+#include "util/ptr.hpp"
 #include "window.hpp"
 
-#include <memory>
-#include <mutex>
-#include <vector>
+#include <xcb/xproto.h>
+#include <xcb/xcb_image.h>
+#include <spdlog/spdlog.h>
 
-class Image;
-class KittyChunk;
+class Dimensions;
 
-class Kitty : public Window
+class X11Window : public Window
 {
 public:
-    explicit Kitty(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
-    ~Kitty() override;
+    X11Window(xcb_connection_t* connection, xcb_screen_t *screen,
+            xcb_window_t window, xcb_window_t parent, const Image& image);
+    ~X11Window() override;
 
     void draw() override;
     void generate_frame() override;
+    void show() override;
+    void hide() override;
 
 private:
-    std::string str;
-    std::unique_ptr<Image> image;
-    std::mutex& stdout_mutex;
-    uint32_t id;
-    int x;
-    int y;
+    xcb_connection_t *connection;
+    xcb_screen_t *screen;
 
-    auto process_chunks() -> std::vector<KittyChunk>;
+    xcb_window_t window;
+    xcb_window_t parent;
+    xcb_gcontext_t gc;
+
+    c_unique_ptr<xcb_image_t, xcb_image_destroy> xcb_image;
+    std::shared_ptr<spdlog::logger> logger;
+
+    const Image& image;
+    bool visible = false;
+
+    void send_expose_event();
+    void create();
+    void change_title();
 };
 
 #endif

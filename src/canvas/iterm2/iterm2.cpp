@@ -17,8 +17,11 @@
 #include "iterm2.hpp"
 #include "chunk.hpp"
 #include "util.hpp"
-#include "fstream"
+#include "dimensions.hpp"
+#include "terminal.hpp"
+#include "image.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <filesystem>
 #include <ranges>
@@ -31,22 +34,27 @@
 
 namespace fs = std::filesystem;
 
-Iterm2Canvas::Iterm2Canvas()
+Iterm2::Iterm2(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex):
+image(std::move(new_image)),
+stdout_mutex(stdout_mutex)
 {
     logger = spdlog::get("iterm2");
     logger->info("Canvas created");
+
+    const auto dims = image->dimensions();
+    x = dims.x + 1;
+    y = dims.y + 1;
+    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dims.terminal.font_width);
+    vertical_cells = std::ceil(static_cast<double>(image->height()) / dims.terminal.font_height);
 }
 
-void Iterm2Canvas::init(const Dimensions& dimensions, std::unique_ptr<Image> new_image)
+Iterm2::~Iterm2()
 {
-    image = std::move(new_image);
-    x = dimensions.x + 1;
-    y = dimensions.y + 1;
-    max_width = dimensions.max_w;
-    max_height = dimensions.max_h;
+    std::scoped_lock lock {stdout_mutex};
+    util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
-void Iterm2Canvas::draw()
+void Iterm2::draw()
 {
     str.append("\033]1337;File=inline=1;");
     const auto filename = image->filename();
@@ -67,6 +75,7 @@ void Iterm2Canvas::draw()
     });
     str.append("\a");
 
+    std::scoped_lock lock {stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;
@@ -74,13 +83,7 @@ void Iterm2Canvas::draw()
     str.clear();
 }
 
-void Iterm2Canvas::clear()
-{
-    util::clear_terminal_area(x, y, max_width, max_height);
-    image.reset();
-}
-
-auto Iterm2Canvas::process_chunks(const std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>
+auto Iterm2::process_chunks(const std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>
 {
     const int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
     std::vector<std::unique_ptr<Iterm2Chunk>> chunks;

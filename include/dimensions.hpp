@@ -17,7 +17,10 @@
 #ifndef __DIMENSIONS__
 #define __DIMENSIONS__
 
-#include "terminal.hpp"
+#include <string>
+#include <cstdint>
+
+class Terminal;
 
 class Dimensions
 {

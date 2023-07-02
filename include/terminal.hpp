@@ -17,8 +17,7 @@
 #ifndef __TERMINAL__
 #define __TERMINAL__
 
-#include "flags.hpp"
-
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -26,6 +25,7 @@
 #include <spdlog/spdlog.h>
 
 class X11Util;
+class Flags;
 
 class Terminal
 {

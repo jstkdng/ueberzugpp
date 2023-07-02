@@ -14,26 +14,38 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "window.hpp"
+#include "image.hpp"
 #include "dimensions.hpp"
+#include "x11egl.hpp"
+#include "util.hpp"
 
-#include <xcb/xcb.h>
 #include <gsl/gsl>
-#include <string_view>
+#include <iostream>
 
-constexpr std::string_view win_name = "ueberzugpp";
-
-X11Window::X11Window(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t window, xcb_window_t parent,
-            const Dimensions& dimensions, const Image& image):
+X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
+            xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display,
+            const Image& image):
 connection(connection),
 screen(screen),
-window(window),
-parent(parent),
+windowid(windowid),
+parentid(parentid),
 gc(xcb_generate_id(connection)),
+egl_display(egl_display),
 image(image)
 {
-    logger = spdlog::get("X11");
+    create();
+    show();
+}
+
+X11EGLWindow::~X11EGLWindow()
+{
+    xcb_destroy_window(connection, windowid);
+    xcb_free_gc(connection, gc);
+    xcb_flush(connection);
+}
+
+void X11EGLWindow::create()
+{
     const uint32_t value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     struct xcb_create_window_value_list_t value_list;
     value_list.background_pixel = screen->black_pixel;
@@ -41,12 +53,13 @@ image(image)
     value_list.event_mask = XCB_EVENT_MASK_EXPOSURE;
     value_list.colormap = screen->default_colormap;
 
+    const auto dimensions = image.dimensions();
     const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
     xcb_create_window_aux(connection,
             screen->root_depth,
-            window,
-            this->parent,
+            windowid,
+            parentid,
             xcoord, ycoord,
             image.width(), image.height(),
             0,
@@ -55,43 +68,18 @@ image(image)
             value_mask,
             &value_list);
 
-    const int bits_in_char = 8;
-    xcb_change_property(connection, XCB_PROP_MODE_REPLACE,
-            window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, bits_in_char, win_name.size(), win_name.data());
-    xcb_create_gc(connection, gc, window, 0, nullptr);
-    logger->debug("Created child window {} at ({},{}) with parent {}", window, xcoord, ycoord, parent);
-    show();
+    xcb_create_gc(connection, gc, windowid, 0, nullptr);
 }
 
-void X11Window::show()
-{
-    if (visible) {
-        return;
-    }
-    visible = true;
-    xcb_map_window(connection, window);
-    xcb_flush(connection);
-}
-
-void X11Window::hide()
-{
-    if (!visible) {
-        return;
-    }
-    visible = false;
-    xcb_unmap_window(connection, window);
-    xcb_flush(connection);
-}
-
-void X11Window::draw()
+void X11EGLWindow::draw()
 {
     if (!xcb_image) {
         return;
     }
-    xcb_image_put(connection, window, gc, xcb_image.get(), 0, 0, 0);
+    xcb_image_put(connection, windowid, gc, xcb_image.get(), 0, 0, 0);
 }
 
-void X11Window::generate_frame()
+void X11EGLWindow::generate_frame()
 {
     xcb_image.reset(
         xcb_image_create_native(connection,
@@ -105,22 +93,34 @@ void X11Window::generate_frame()
     send_expose_event();
 }
 
-X11Window::~X11Window()
+void X11EGLWindow::show()
 {
-    xcb_destroy_window(connection, window);
-    xcb_free_gc(connection, gc);
+    if (visible) {
+        return;
+    }
+    visible = true;
+    xcb_map_window(connection, windowid);
     xcb_flush(connection);
 }
 
-void X11Window::send_expose_event()
+void X11EGLWindow::hide()
+{
+    if (!visible) {
+        return;
+    }
+    visible = false;
+    xcb_unmap_window(connection, windowid);
+    xcb_flush(connection);
+}
+
+void X11EGLWindow::send_expose_event()
 {
     const int event_size = 32;
     std::array<char, event_size> buffer;
     auto *event = reinterpret_cast<xcb_expose_event_t*>(buffer.data());
     event->response_type = XCB_EXPOSE;
-    event->window = window;
-    xcb_send_event(connection, 0, window,
+    event->window = windowid;
+    xcb_send_event(connection, 0, windowid,
             XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(event));
     xcb_flush(connection);
 }
-

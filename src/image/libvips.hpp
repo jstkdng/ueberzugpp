@@ -18,8 +18,6 @@
 #define __VIPS_IMAGE__
 
 #include "image.hpp"
-#include "terminal.hpp"
-#include "dimensions.hpp"
 #include "util/ptr.hpp"
 
 #include <string>
@@ -27,11 +25,15 @@
 #include <filesystem>
 #include <spdlog/spdlog.h>
 
+class Dimensions;
+class Flags;
+
 class LibvipsImage : public Image
 {
 public:
-    LibvipsImage(const Dimensions& dimensions, const std::string &filename, bool in_cache);
+    LibvipsImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache);
 
+    [[nodiscard]] auto dimensions() const -> const Dimensions& override;
     [[nodiscard]] auto width() const -> int override;
     [[nodiscard]] auto height() const -> int override;
     [[nodiscard]] auto size() const -> size_t override;
@@ -49,7 +51,7 @@ private:
 
     c_unique_ptr<unsigned char, g_free> _data;
     std::filesystem::path path;
-    const Dimensions& dimensions;
+    std::shared_ptr<Dimensions> dims;
 
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;

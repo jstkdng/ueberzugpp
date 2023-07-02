@@ -14,36 +14,39 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_STDOUT__
-#define __KITTY_STDOUT__
+#ifndef __STDOUT_CANVAS__
+#define __STDOUT_CANVAS__
 
+#include "canvas.hpp"
 #include "window.hpp"
 
+#include <unordered_map>
 #include <memory>
+#include <string>
 #include <mutex>
-#include <vector>
 
-class Image;
-class KittyChunk;
-
-class Kitty : public Window
+template<WindowType T>
+class StdoutCanvas : public Canvas
 {
 public:
-    explicit Kitty(std::unique_ptr<Image> new_image, std::mutex& stdout_mutex);
-    ~Kitty() override;
+    StdoutCanvas() = default;
+    ~StdoutCanvas() override = default;
 
-    void draw() override;
-    void generate_frame() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override
+    {
+        remove_image(identifier);
+        images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
+        images.at(identifier)->draw();
+    }
+
+    void remove_image(const std::string& identifier) override
+    {
+        images.erase(identifier);
+    }
 
 private:
-    std::string str;
-    std::unique_ptr<Image> image;
-    std::mutex& stdout_mutex;
-    uint32_t id;
-    int x;
-    int y;
-
-    auto process_chunks() -> std::vector<KittyChunk>;
+    std::unordered_map<std::string, std::unique_ptr<T>> images;
+    std::mutex stdout_mutex;
 };
 
 #endif

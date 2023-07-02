@@ -27,7 +27,6 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <thread>
-#include <atomic>
 #include <mutex>
 
 #include <xcb/xcb.h>
@@ -41,15 +40,16 @@
 #   include <EGL/egl.h>
 #endif
 
+class Flags;
+
 class X11Canvas : public Canvas
 {
 public:
     explicit X11Canvas();
     ~X11Canvas() override;
 
-    void init(const Dimensions& dimensions, std::unique_ptr<Image> new_image) override;
-    void draw() override;
-    void clear() override;
+    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
+    void remove_image(const std::string& identifier) override;
     void hide() override;
     void show() override;
 
@@ -63,20 +63,28 @@ private:
 
     std::unique_ptr<X11Util> xutil;
 
-    std::unordered_map<xcb_window_t, std::unique_ptr<X11Window>> windows;
-    std::unique_ptr<Image> image;
+    // map for event handler
+    std::unordered_map<xcb_window_t, std::shared_ptr<Window>> windows;
 
-    std::thread draw_thread;
+    // windows per image
+    std::unordered_map<std::string,
+        std::unordered_map<xcb_window_t, std::shared_ptr<Window>>> image_windows;
+
+    std::unordered_map<std::string, std::shared_ptr<Image>> images;
+    std::unordered_map<std::string, std::jthread> draw_threads;
+
     std::thread event_handler;
-    std::atomic<bool> can_draw {true};
     std::mutex windows_mutex;
 
     std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<Flags> flags;
 
 #ifdef ENABLE_OPENGL
     EGLDisplay egl_display;
+    bool egl_available = false;
 #endif
 
+    void draw(const std::string& identifier);
     void handle_events();
     void get_tmux_window_ids(std::unordered_set<xcb_window_t>& windows);
     void print_xcb_error(const xcb_generic_error_t* err);

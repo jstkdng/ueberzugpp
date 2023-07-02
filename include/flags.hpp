@@ -42,6 +42,7 @@ public:
     bool print_version = false;
     bool no_cache = false;
     bool no_opencv = false;
+    bool use_opengl = false;
     std::string output;
     std::string pid_file;
 

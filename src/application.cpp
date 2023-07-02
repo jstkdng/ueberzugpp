@@ -20,6 +20,7 @@
 #include "util.hpp"
 #include "util/socket.hpp"
 #include "tmux.hpp"
+#include "image.hpp"
 
 #include <filesystem>
 #include <iostream>
@@ -31,8 +32,9 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <fmt/format.h>
 #include <vips/vips8>
+#include <nlohmann/json.hpp>
 
-using json = nlohmann::json;
+using njson = nlohmann::json;
 namespace fs = std::filesystem;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
@@ -74,11 +76,7 @@ Application::~Application()
         socket_thread.join();
     }
     logger->info("Exiting ueberzugpp");
-    canvas->clear();
     vips_shutdown();
-    if (f_stderr != nullptr) {
-        std::fclose(f_stderr);
-    }
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
 }
@@ -88,10 +86,10 @@ void Application::execute(const std::string_view cmd)
     if (!canvas) {
         return;
     }
-    json json;
+    njson json;
     try {
-        json = json::parse(cmd);
-    } catch (const json::parse_error& e) {
+        json = njson::parse(cmd);
+    } catch (const njson::parse_error& e) {
         logger->error("There was an error parsing the command.");
         return;
     }
@@ -102,18 +100,15 @@ void Application::execute(const std::string_view cmd)
             logger->error("Invalid path.");
             return;
         }
-        set_dimensions_from_json(json);
-        auto image = Image::load(*dimensions, json["path"]);
+        auto image = Image::load(json, *terminal);
         if (!image) {
             logger->error("Unable to load image file.");
             return;
         }
-        canvas->clear();
-        canvas->init(*dimensions, std::move(image));
-        canvas->draw();
+        canvas->add_image(json["identifier"], std::move(image));
     } else if (json["action"] == "remove") {
-        logger->info("Removing image.");
-        canvas->clear();
+        logger->info("Removing image with id {}", json["identifier"]);
+        canvas->remove_image(json["identifier"]);
     } else if (json["action"] == "tmux") {
         handle_tmux_hook(std::string{json["hook"]});
     } else {
@@ -155,44 +150,6 @@ void Application::handle_tmux_hook(const std::string_view hook)
     } catch (const std::out_of_range& oor) {
         logger->warn("TMUX hook not recognized");
     }
-}
-
-void Application::set_dimensions_from_json(const json& json)
-{
-    using std::string;
-    int xcoord = 0;
-    int ycoord = 0;
-    int max_width = 0;
-    int max_height = 0;
-    string width_key = "max_width";
-    string height_key = "max_height";
-    string scaler = "contain";
-    if (json.contains("scaler")) {
-        scaler = json["scaler"];
-    }
-    if (json.contains("width")) {
-        width_key = "width";
-        height_key = "height";
-    }
-    if (json[width_key].is_string()) {
-        string width = json[width_key];
-        string height = json[height_key];
-        max_width = std::stoi(width);
-        max_height = std::stoi(height);
-    } else {
-        max_width = json[width_key];
-        max_height = json[height_key];
-    }
-    if (json["x"].is_string()) {
-        string xcoords = json["x"];
-        string ycoords = json["y"];
-        xcoord = std::stoi(xcoords);
-        ycoord = std::stoi(ycoords);
-    } else {
-        xcoord = json["x"];
-        ycoord = json["y"];
-    }
-    dimensions = std::make_unique<Dimensions>(*terminal, xcoord, ycoord, max_width, max_height, scaler);
 }
 
 void Application::setup_logger()
@@ -301,7 +258,7 @@ void Application::set_silent()
     if (!flags->silent) {
         return;
     }
-    f_stderr = std::freopen("/dev/null", "w", stderr);
+    f_stderr.reset(std::freopen("/dev/null", "w", stderr));
 }
 
 void Application::print_version()
