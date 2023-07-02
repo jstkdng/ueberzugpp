@@ -24,14 +24,14 @@
 
 X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
             xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display,
-            const Image& image):
+            std::shared_ptr<Image> image):
 connection(connection),
 screen(screen),
 windowid(windowid),
 parentid(parentid),
 gc(xcb_generate_id(connection)),
 egl_display(egl_display),
-image(image)
+image(std::move(image))
 {
     create();
     show();
@@ -53,7 +53,7 @@ void X11EGLWindow::create()
     value_list.event_mask = XCB_EVENT_MASK_EXPOSURE;
     value_list.colormap = screen->default_colormap;
 
-    const auto dimensions = image.dimensions();
+    const auto dimensions = image->dimensions();
     const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
     xcb_create_window_aux(connection,
@@ -61,7 +61,7 @@ void X11EGLWindow::create()
             windowid,
             parentid,
             xcoord, ycoord,
-            image.width(), image.height(),
+            image->width(), image->height(),
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
@@ -83,13 +83,13 @@ void X11EGLWindow::generate_frame()
 {
     xcb_image.reset(
         xcb_image_create_native(connection,
-            image.width(),
-            image.height(),
+            image->width(),
+            image->height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
             nullptr, 0, nullptr)
     );
-    xcb_image->data = const_cast<unsigned char*>(image.data());
+    xcb_image->data = const_cast<unsigned char*>(image->data());
     send_expose_event();
 }
 

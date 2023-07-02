@@ -32,7 +32,8 @@ class X11EGLWindow : public Window
 {
 public:
     X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display, const Image& image);
+            xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display,
+            std::shared_ptr<Image> image);
     ~X11EGLWindow() override;
 
     void draw() override;
@@ -47,7 +48,7 @@ private:
     xcb_window_t parentid;
     xcb_gcontext_t gc;
     EGLDisplay egl_display;
-    const Image& image;
+    std::shared_ptr<Image> image;
 
     c_unique_ptr<xcb_image_t, xcb_image_destroy> xcb_image;
     bool visible = false;

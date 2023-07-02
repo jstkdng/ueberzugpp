@@ -31,7 +31,7 @@ class X11Window : public Window
 {
 public:
     X11Window(xcb_connection_t* connection, xcb_screen_t *screen,
-            xcb_window_t window, xcb_window_t parent, const Image& image);
+            xcb_window_t window, xcb_window_t parent, std::shared_ptr<Image> image);
     ~X11Window() override;
 
     void draw() override;
@@ -49,8 +49,8 @@ private:
 
     c_unique_ptr<xcb_image_t, xcb_image_destroy> xcb_image;
     std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<Image> image;
 
-    const Image& image;
     bool visible = false;
 
     void send_expose_event();

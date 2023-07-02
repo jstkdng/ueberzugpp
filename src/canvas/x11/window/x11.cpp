@@ -24,13 +24,13 @@
 constexpr std::string_view win_name = "ueberzugpp";
 
 X11Window::X11Window(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t window, xcb_window_t parent, const Image& image):
+            xcb_window_t window, xcb_window_t parent, std::shared_ptr<Image> image):
 connection(connection),
 screen(screen),
 window(window),
 parent(parent),
 gc(xcb_generate_id(connection)),
-image(image)
+image(std::move(image))
 {
     logger = spdlog::get("X11");
     create();
@@ -47,7 +47,7 @@ void X11Window::create()
     value_list.event_mask = XCB_EVENT_MASK_EXPOSURE;
     value_list.colormap = screen->default_colormap;
 
-    const auto dimensions = image.dimensions();
+    const auto dimensions = image->dimensions();
     const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
     const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
     xcb_create_window_aux(connection,
@@ -55,7 +55,7 @@ void X11Window::create()
             window,
             this->parent,
             xcoord, ycoord,
-            image.width(), image.height(),
+            image->width(), image->height(),
             0,
             XCB_WINDOW_CLASS_INPUT_OUTPUT,
             screen->root_visual,
@@ -105,13 +105,13 @@ void X11Window::generate_frame()
 {
     xcb_image.reset(
         xcb_image_create_native(connection,
-            image.width(),
-            image.height(),
+            image->width(),
+            image->height(),
             XCB_IMAGE_FORMAT_Z_PIXMAP,
             screen->root_depth,
             nullptr, 0, nullptr)
     );
-    xcb_image->data = const_cast<unsigned char*>(image.data());
+    xcb_image->data = const_cast<unsigned char*>(image->data());
     send_expose_event();
 }
 

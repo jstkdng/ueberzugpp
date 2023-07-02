@@ -183,12 +183,12 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
         std::shared_ptr<Window> window;
 #ifdef ENABLE_OPENGL
         if (egl_available && flags->use_opengl) {
-            window = std::make_shared<X11EGLWindow>(connection, screen, window_id, parent, egl_display, *image);
+            window = std::make_shared<X11EGLWindow>(connection, screen, window_id, parent, egl_display, image);
         } else {
-            window = std::make_shared<X11Window>(connection, screen, window_id, parent, *image);
+            window = std::make_shared<X11Window>(connection, screen, window_id, parent, image);
         }
 #else
-        window = std::make_shared<X11Window>(connection, screen, window_id, parent, *image);
+        window = std::make_shared<X11Window>(connection, screen, window_id, parent, image);
 #endif
         windows.insert({window_id, window});
         image_windows.at(identifier).insert({window_id, window});
