@@ -105,6 +105,7 @@ void X11Canvas::draw(const std::string& identifier)
 
 void X11Canvas::show()
 {
+    std::scoped_lock lock {windows_mutex};
     for (const auto& [wid, window]: windows) {
         window->show();
     }
@@ -112,6 +113,7 @@ void X11Canvas::show()
 
 void X11Canvas::hide()
 {
+    std::scoped_lock lock {windows_mutex};
     for (const auto& [wid, window]: windows) {
         window->hide();
     }
