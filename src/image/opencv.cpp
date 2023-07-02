@@ -20,13 +20,14 @@
 #include "flags.hpp"
 
 #include <unordered_set>
+#include <iostream>
 #include <string_view>
 
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/core/ocl.hpp>
 
-OpencvImage::OpencvImage(std::unique_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache):
+OpencvImage::OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache):
 path(filename),
 dims(std::move(new_dims)),
 max_width(dims->max_wpixels()),
@@ -34,6 +35,9 @@ max_height(dims->max_hpixels()),
 in_cache(in_cache)
 {
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+    if (image.empty()) {
+        throw std::runtime_error("OpenCV unable to read image");
+    }
     logger = spdlog::get("opencv");
     logger->info("Loading image {}", filename);
     flags = Flags::instance();

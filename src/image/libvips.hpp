@@ -31,7 +31,7 @@ class Flags;
 class LibvipsImage : public Image
 {
 public:
-    LibvipsImage(std::unique_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache);
+    LibvipsImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache);
 
     [[nodiscard]] auto dimensions() const -> const Dimensions& override;
     [[nodiscard]] auto width() const -> int override;
@@ -51,7 +51,7 @@ private:
 
     c_unique_ptr<unsigned char, g_free> _data;
     std::filesystem::path path;
-    std::unique_ptr<Dimensions> dims;
+    std::shared_ptr<Dimensions> dims;
 
     std::shared_ptr<Flags> flags;
     std::shared_ptr<spdlog::logger> logger;

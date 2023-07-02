@@ -29,7 +29,7 @@
 using vips::VImage;
 using vips::VError;
 
-LibvipsImage::LibvipsImage(std::unique_ptr<Dimensions> new_dims,
+LibvipsImage::LibvipsImage(std::shared_ptr<Dimensions> new_dims,
             const std::string &filename, bool in_cache):
 path(filename),
 dims(std::move(new_dims)),

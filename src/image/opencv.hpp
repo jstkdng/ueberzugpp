@@ -32,7 +32,7 @@ class Flags;
 class OpencvImage : public Image
 {
 public:
-    OpencvImage(std::unique_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache);
+    OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache);
     ~OpencvImage() override;
 
     [[nodiscard]] auto dimensions() const -> const Dimensions& override;
@@ -48,7 +48,7 @@ private:
     cv::UMat uimage;
 
     fs::path path;
-    std::unique_ptr<Dimensions> dims;
+    std::shared_ptr<Dimensions> dims;
 
     uint64_t _size;
     uint32_t max_width;
