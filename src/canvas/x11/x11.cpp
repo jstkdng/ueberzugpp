@@ -148,7 +148,8 @@ void X11Canvas::handle_events()
                 case XCB_EXPOSE: {
                     const auto *expose = reinterpret_cast<xcb_expose_event_t*>(event.get());
                     try {
-                        windows.at(expose->window)->draw();
+                        const auto window = windows.at(expose->window);
+                        window->draw();
                         logger->debug("Received expose event for window {}", expose->window);
                     } catch (const std::out_of_range& oor) {
                         logger->debug("Discarding expose event for window {}", expose->window);

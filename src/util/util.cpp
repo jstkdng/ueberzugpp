@@ -124,7 +124,11 @@ auto util::get_b2_hash_ssl(const std::string_view str) -> std::string
     const auto mdctx = c_unique_ptr<EVP_MD_CTX, EVP_MD_CTX_free> {
         EVP_MD_CTX_new()
     };
+#ifdef LIBRESSL_VERSION_NUMBER
+    const auto *evp = EVP_sha256();
+#else
     const auto *evp = EVP_blake2b512();
+#endif
     auto digest = std::vector<unsigned char>(EVP_MD_size(evp), 0);
 
     EVP_DigestInit_ex(mdctx.get(), evp, nullptr);
