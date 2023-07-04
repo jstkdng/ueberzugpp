@@ -42,10 +42,12 @@ connection(xcb_connect(nullptr, nullptr))
 
 #ifdef ENABLE_OPENGL
     egl_display = eglGetPlatformDisplay(EGL_PLATFORM_XCB_EXT, connection, nullptr);
-    egl_available = egl_display != EGL_NO_DISPLAY;
-    if (egl_available) {
+    if (egl_display != EGL_NO_DISPLAY) {
         auto eglres = eglInitialize(egl_display, nullptr, nullptr);
-        egl_available = eglres == EGL_TRUE;
+        if (eglres == EGL_TRUE) {
+            eglres = eglBindAPI(EGL_OPENGL_API);
+            egl_available = eglres == EGL_TRUE;
+        }
     }
 #endif
 
