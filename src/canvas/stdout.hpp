@@ -39,9 +39,7 @@ public:
 
     void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override
     {
-        remove_image(identifier);
-        images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
-        images.at(identifier)->draw();
+        images.insert_or_assign(identifier, std::make_unique<T>(std::move(new_image), stdout_mutex));
     }
 
     void remove_image(const std::string& identifier) override

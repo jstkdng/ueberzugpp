@@ -58,6 +58,8 @@ stdout_mutex(std::move(stdout_mutex))
     chafa_canvas_config_set_symbol_map(config, symbol_map);
     chafa_canvas_config_set_pixel_mode(config, CHAFA_PIXEL_MODE_SYMBOLS);
     chafa_canvas_config_set_geometry(config, horizontal_cells, vertical_cells);
+
+    draw();
 }
 
 Chafa::~Chafa()

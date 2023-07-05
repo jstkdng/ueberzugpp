@@ -56,6 +56,8 @@ stdout_mutex(std::move(stdout_mutex))
             SIXEL_LARGE_LUM,
             SIXEL_REP_CENTER_BOX,
             SIXEL_QUALITY_HIGH);
+
+    draw();
 }
 
 Sixel::~Sixel()

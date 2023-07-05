@@ -37,6 +37,7 @@ id(util::generate_random_number<uint32_t>(1))
     const auto dims = image->dimensions();
     x = dims.x + 1;
     y = dims.y + 1;
+    draw();
 }
 
 Kitty::~Kitty()

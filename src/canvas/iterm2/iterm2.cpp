@@ -46,6 +46,7 @@ stdout_mutex(std::move(stdout_mutex))
     y = dims.y + 1;
     horizontal_cells = std::ceil(static_cast<double>(image->width()) / dims.terminal.font_width);
     vertical_cells = std::ceil(static_cast<double>(image->height()) / dims.terminal.font_height);
+    draw();
 }
 
 Iterm2::~Iterm2()
