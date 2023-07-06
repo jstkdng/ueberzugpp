@@ -38,7 +38,11 @@ struct XdgStruct
 {
     std::weak_ptr<WaylandShmWindow> ptr;
 };
-const auto xdg_struct = std::make_unique<struct XdgStruct>();
+struct XdgStructAgg
+{
+    std::vector<std::unique_ptr<XdgStruct>> ptrs;
+};
+const auto xdgs = std::make_unique<struct XdgStructAgg>();
 
 WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor,
         struct wl_shm *wl_shm, struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
@@ -59,19 +63,22 @@ config(std::move(new_config))
 
 void WaylandShmWindow::finish_init()
 {
-    xdg_struct->ptr = shared_from_this();
+    auto xdg = std::make_unique<XdgStruct>();
+    xdg->ptr = shared_from_this();
+    this_ptr = xdg.get();
+    xdgs->ptrs.push_back(std::move(xdg));
     setup_listeners();
     visible = true;
 }
 
 void WaylandShmWindow::setup_listeners()
 {
-    xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, xdg_struct.get());
+    xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this_ptr);
     wl_surface_commit(surface);
 
     if (image->is_animated()) {
         callback = wl_surface_frame(surface);
-        wl_callback_add_listener(callback, &frame_listener, xdg_struct.get());
+        wl_callback_add_listener(callback, &frame_listener, this_ptr);
     }
 }
 
@@ -148,7 +155,7 @@ void WaylandShmWindow::generate_frame()
 {
     std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
     callback = wl_surface_frame(surface);
-    wl_callback_add_listener(callback, &frame_listener, xdg_struct.get());
+    wl_callback_add_listener(callback, &frame_listener, this_ptr);
 
     image->next_frame();
     std::memcpy(shm->get_data(), image->data(), image->size());

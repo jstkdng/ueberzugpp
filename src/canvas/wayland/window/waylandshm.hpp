@@ -67,6 +67,7 @@ private:
     std::unique_ptr<WaylandShm> shm;
     std::string appid;
     std::shared_ptr<WaylandConfig> config;
+    void* this_ptr;
 
     void move_window();
 };
