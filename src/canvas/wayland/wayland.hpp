@@ -22,11 +22,13 @@
 #include "shm.hpp"
 #include "config.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
+#include "window/waylandshm.hpp"
 
 #include <memory>
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <unordered_map>
 
 #include <fmt/format.h>
 #include <wayland-client.h>
@@ -43,47 +45,27 @@ public:
     static void registry_handle_global_remove(void *data, struct wl_registry *registry,
         uint32_t name);
     static void xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
-    static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
-    static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
 
     void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
     void remove_image(const std::string& identifier) override;
-
     void show() override;
     void hide() override;
 
     struct wl_compositor* compositor = nullptr;
-    struct wl_surface* surface = nullptr;
     struct wl_shm* wl_shm = nullptr;
-    struct wl_callback* callback = nullptr;
     struct xdg_wm_base* xdg_base = nullptr;
-    struct xdg_surface* xdg_surface = nullptr;
-    struct xdg_toplevel* xdg_toplevel = nullptr;
-    std::unique_ptr<WaylandShm> shm;
-    std::unique_ptr<Image> image;
-    std::shared_ptr<spdlog::logger> logger;
-    std::mutex draw_mutex;
-    std::atomic<bool> can_draw {false};
-
-    int width;
-    int height;
 
 private:
     struct wl_display* display = nullptr;
     struct wl_registry* registry = nullptr;
-    std::string appid;
     std::atomic<bool> stop_flag {false};
     std::thread event_handler;
 
-    std::unique_ptr<WaylandConfig> config;
+    std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<WaylandConfig> config;
+    std::unordered_map<std::string, std::shared_ptr<Window>> windows;
 
-    void draw();
     void handle_events();
-    void move_window();
-
-    bool visible = false;
-    int wayland_x;
-    int wayland_y;
 };
 
 #endif

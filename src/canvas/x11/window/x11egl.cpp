@@ -21,19 +21,59 @@
 
 #include <gsl/gsl>
 #include <iostream>
+#include <array>
+
+constexpr auto attrs = std::to_array<EGLint>({
+    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 8,
+    EGL_NONE
+});
+
+constexpr auto ctxattrs = std::to_array<EGLint>({
+    EGL_CONTEXT_MAJOR_VERSION, 4,
+    EGL_CONTEXT_MINOR_VERSION, 6,
+    EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE, EGL_TRUE,
+    EGL_CONTEXT_OPENGL_DEBUG, EGL_TRUE,
+    EGL_CONTEXT_OPENGL_ROBUST_ACCESS, EGL_TRUE,
+    EGL_NONE
+});
 
 X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
             xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display,
-            std::shared_ptr<Image> image):
+            std::shared_ptr<Image> new_image):
 connection(connection),
 screen(screen),
 windowid(windowid),
 parentid(parentid),
 gc(xcb_generate_id(connection)),
 egl_display(egl_display),
-image(std::move(image))
+image(std::move(new_image))
 {
     create();
+    int num_config = 0;
+    auto eglres = eglChooseConfig(egl_display, attrs.data(), &egl_config, 1, &num_config);
+    if (eglres != EGL_TRUE) {
+        std::cout << "bruh1" << std::endl;
+    }
+    if (num_config != 1) {
+        std::cout << "bruh2" << std::endl;
+    }
+    egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_config, &windowid, nullptr);
+    if (egl_surface == EGL_NO_SURFACE) {
+        std::cout << "bruh3" << std::endl;
+    }
+    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, ctxattrs.data());
+    if ( egl_context == EGL_NO_CONTEXT) {
+        std::cout << "bruh4" << std::endl;
+    }
+    //egl_image = eglCreateImage(egl_display, egl_context, EGL_GL_RENDERBUFFER,
+    //        const_cast<unsigned char*>(image->data()), nullptr);
+    //if (egl_image == EGL_NO_IMAGE) {
+    //    std::cout << "bruh5" << std::endl;
+    //}
     show();
 }
 
@@ -42,6 +82,9 @@ X11EGLWindow::~X11EGLWindow()
     xcb_destroy_window(connection, windowid);
     xcb_free_gc(connection, gc);
     xcb_flush(connection);
+
+    eglDestroyContext(egl_display, egl_context);
+    eglDestroySurface(egl_display, egl_surface);
 }
 
 void X11EGLWindow::create()
@@ -73,10 +116,15 @@ void X11EGLWindow::create()
 
 void X11EGLWindow::draw()
 {
-    if (!xcb_image) {
-        return;
-    }
-    xcb_image_put(connection, windowid, gc, xcb_image.get(), 0, 0, 0);
+    //if (!xcb_image) {
+    //    return;
+    //}
+    //xcb_image_put(connection, windowid, gc, xcb_image.get(), 0, 0, 0);
+    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
+
+    // do something
+    
+    eglSwapBuffers(egl_display, egl_surface);
 }
 
 void X11EGLWindow::generate_frame()

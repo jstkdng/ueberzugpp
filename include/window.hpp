@@ -18,6 +18,7 @@
 #define __WINDOW__
 
 #include <concepts>
+#include <memory>
 
 class Window
 {

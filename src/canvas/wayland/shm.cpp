@@ -16,25 +16,24 @@
 
 #include "shm.hpp"
 #include "util.hpp"
+#include "util/ptr.hpp"
 
-#include <algorithm>
-#include <ranges>
-#include <system_error>
-
-#include <fmt/format.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+
+#include <fmt/format.h>
+
 #include <cerrno>
-#include <iostream>
+#include <system_error>
 
 WaylandShm::WaylandShm(int width, int height, struct wl_shm* shm):
 shm(shm),
 width(width),
 height(height),
 stride(width * 4),
-pool_size(height * stride * 2)
+pool_size(height * stride)
 {
     const int path_size = 32;
     shm_path = fmt::format("/{}", util::generate_random_string(path_size));
@@ -60,8 +59,10 @@ void WaylandShm::create_shm_file()
 
 void WaylandShm::allocate_pool_buffers()
 {
-    pool = wl_shm_create_pool(shm, fd, pool_size);
-    buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
+    const auto pool = c_unique_ptr<struct wl_shm_pool, wl_shm_pool_destroy> {
+        wl_shm_create_pool(shm, fd, pool_size)
+    };
+    buffer = wl_shm_pool_create_buffer(pool.get(), 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
 }
 
 auto WaylandShm::get_data(uint32_t offset) -> uint32_t*
@@ -77,9 +78,6 @@ WaylandShm::~WaylandShm()
     shm_unlink(shm_path.c_str());
     close(fd);
     munmap(pool_data, pool_size);
-    if (pool != nullptr) {
-        wl_shm_pool_destroy(pool);
-    }
     if (buffer != nullptr) {
         wl_buffer_destroy(buffer);
     }

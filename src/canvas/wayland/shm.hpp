@@ -33,13 +33,12 @@ private:
     void create_shm_file();
     void allocate_pool_buffers();
 
-    struct wl_shm_pool* pool = nullptr;
+    //struct wl_shm_pool* pool = nullptr;
     struct wl_shm* shm = nullptr;
 
     int fd = 0;
     std::string shm_path;
     uint8_t *pool_data;
-    std::vector<wl_buffer*> buffers;
 
     int width = 0;
     int height = 0;

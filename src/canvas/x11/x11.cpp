@@ -91,7 +91,7 @@ void X11Canvas::draw(const std::string& identifier)
         return;
     }
 
-    draw_threads.insert({identifier,
+    draw_threads.insert_or_assign(identifier,
         std::jthread([this, identifier] (std::stop_token stoken) {
             const auto image = images.at(identifier);
             const auto wins = image_windows.at(identifier);
@@ -102,7 +102,7 @@ void X11Canvas::draw(const std::string& identifier)
                 image->next_frame();
                 std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
             }
-    })});
+    }));
 }
 
 void X11Canvas::show()

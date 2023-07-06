@@ -33,14 +33,6 @@ constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {
     .ping = WaylandCanvas::xdg_wm_base_ping
 };
 
-constexpr struct xdg_surface_listener xdg_surface_listener = {
-    .configure = WaylandCanvas::xdg_surface_configure,
-};
-
-constexpr struct wl_callback_listener frame_listener = {
-    .done = WaylandCanvas::wl_surface_frame_done
-};
-
 void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version)
 {
@@ -74,44 +66,6 @@ void WaylandCanvas::xdg_wm_base_ping([[maybe_unused]] void *data,
     xdg_wm_base_pong(xdg_wm_base, serial);
 }
 
-void WaylandCanvas::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
-{
-    auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
-    xdg_surface_ack_configure(xdg_surface, serial);
-
-    std::scoped_lock lock {canvas->draw_mutex};
-    if (!canvas->can_draw.load()) {
-        return;
-    }
-
-    std::memcpy(canvas->shm->get_data(), canvas->image->data(), canvas->image->size());
-    wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
-    wl_surface_commit(canvas->surface);
-
-    canvas->move_window();
-}
-
-void WaylandCanvas::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
-{
-    auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
-    wl_callback_destroy(callback);
-    std::scoped_lock lock {canvas->draw_mutex};
-    if (!canvas->can_draw.load()) {
-        return;
-    }
-    std::this_thread::sleep_for(std::chrono::milliseconds(canvas->image->frame_delay()));
-
-    // request another callback
-    callback = wl_surface_frame(canvas->surface);
-    wl_callback_add_listener(callback, &frame_listener, canvas);
-
-    canvas->image->next_frame();
-    std::memcpy(canvas->shm->get_data(), canvas->image->data(), canvas->image->size());
-    wl_surface_attach(canvas->surface, canvas->shm->buffer, 0, 0);
-    wl_surface_damage_buffer(canvas->surface, 0, 0, canvas->width, canvas->height);
-    wl_surface_commit(canvas->surface);
-}
-
 WaylandCanvas::WaylandCanvas():
 display(wl_display_connect(nullptr))
 {
@@ -127,41 +81,22 @@ display(wl_display_connect(nullptr))
         handle_events();
     });
 
-    const int idlength = 10;
-    appid = fmt::format("ueberzugpp_{}", util::generate_random_string(idlength));
-
-    config->initial_setup(appid);
     logger->info("Canvas created");
 }
 
 void WaylandCanvas::show()
-{
-    if (visible) {
-        return;
-    }
-    visible = true;
-    draw();
-}
+{}
 
 void WaylandCanvas::hide()
-{
-    if (!visible) {
-        return;
-    }
-    visible = false;
-    remove_image("");
-}
+{}
 
 WaylandCanvas::~WaylandCanvas()
 {
-    can_draw.store(false);
-    std::scoped_lock lock {draw_mutex};
+    windows.clear();
     stop_flag.store(true);
     if (event_handler.joinable()) {
         event_handler.join();
     }
-    stop_flag.store(false);
-    shm.reset();
     if (wl_shm != nullptr) {
         wl_shm_destroy(wl_shm);
     }
@@ -171,30 +106,14 @@ WaylandCanvas::~WaylandCanvas()
     if (registry != nullptr) {
         wl_registry_destroy(registry);
     }
-    if (surface != nullptr) {
-        wl_surface_destroy(surface);
-    }
     wl_display_disconnect(display);
 }
 
 void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
-    remove_image(identifier);
-    image = std::move(new_image);
-    const auto dims = image->dimensions();
-    wayland_x = dims.xpixels() + dims.padding_horizontal;
-    wayland_y = dims.ypixels() + dims.padding_vertical;
-    width = image->width();
-    height = image->height();
-    draw();
-}
-
-void WaylandCanvas::move_window()
-{
-    const auto cur_window = config->get_window_info();
-    const int xcoord = cur_window.x + wayland_x;
-    const int ycoord = cur_window.y + wayland_y;
-    config->move_window(appid, xcoord, ycoord);
+    auto window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
+    window->finish_init();
+    windows.insert_or_assign(identifier, std::move(window));
 }
 
 void WaylandCanvas::handle_events()
@@ -224,43 +143,8 @@ void WaylandCanvas::handle_events()
     }
 }
 
-void WaylandCanvas::draw()
+void WaylandCanvas::remove_image(const std::string& identifier)
 {
-    shm = std::make_unique<WaylandShm>(width, height, wl_shm);
-    surface = wl_compositor_create_surface(compositor);
-    xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
-    xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this);
-    xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
-    xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
-    xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
-
-    can_draw.store(true);
-    wl_surface_commit(surface);
-
-    if (image->is_animated()) {
-        callback =  wl_surface_frame(surface);
-        wl_callback_add_listener(callback, &frame_listener, this);
-    }
-    visible = true;
-}
-
-void WaylandCanvas::remove_image([[maybe_unused]] const std::string& identifier)
-{
-    if (surface == nullptr) {
-        return;
-    }
-    can_draw.store(false);
-    std::scoped_lock lock {draw_mutex};
-    if (xdg_toplevel != nullptr) {
-        xdg_toplevel_destroy(xdg_toplevel);
-    }
-    if (xdg_surface != nullptr) {
-        xdg_surface_destroy(xdg_surface);
-    }
-    if (surface != nullptr) {
-        wl_surface_destroy(surface);
-        surface = nullptr;
-    }
+    windows.erase(identifier);
     wl_display_flush(display);
-    shm.reset();
 }
