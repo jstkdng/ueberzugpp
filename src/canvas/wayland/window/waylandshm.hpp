@@ -47,7 +47,7 @@ public:
     void show() override;
     void hide() override;
 
-    void initial_setup();
+    void xdg_setup();
     void finish_init();
     void setup_listeners();
     void delete_wayland_structs();

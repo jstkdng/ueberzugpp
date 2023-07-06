@@ -53,7 +53,8 @@ shm(std::make_unique<WaylandShm>(image->width(), image->height(), wl_shm)),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
 config(std::move(new_config))
 {
-    initial_setup();
+    config->initial_setup(appid);
+    xdg_setup();
 }
 
 void WaylandShmWindow::finish_init()
@@ -74,9 +75,8 @@ void WaylandShmWindow::setup_listeners()
     }
 }
 
-void WaylandShmWindow::initial_setup()
+void WaylandShmWindow::xdg_setup()
 {
-    config->initial_setup(appid);
     xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
     xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
 }
@@ -99,12 +99,12 @@ void WaylandShmWindow::show()
     if (visible) {
         return;
     }
+    visible = true;
     surface = wl_compositor_create_surface(compositor);
     xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
     xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
-    initial_setup();
+    xdg_setup();
     setup_listeners();
-    visible = true;
 }
 
 void WaylandShmWindow::hide()
@@ -112,9 +112,9 @@ void WaylandShmWindow::hide()
     if (!visible) {
         return;
     }
+    visible = false;
     std::scoped_lock lock {draw_mutex};
     delete_wayland_structs();
-    visible = false;
 }
 
 void WaylandShmWindow::delete_wayland_structs()
