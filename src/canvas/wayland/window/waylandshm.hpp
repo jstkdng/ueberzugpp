@@ -41,7 +41,7 @@ public:
 
     void draw() override;
     void generate_frame() override;
-    void finish_init();
+    void setup_listeners();
 
 private:
     struct wl_surface *surface;

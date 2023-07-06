@@ -56,7 +56,7 @@ config(std::move(new_config))
     xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
 }
 
-void WaylandShmWindow::finish_init()
+void WaylandShmWindow::setup_listeners()
 {
     xdg_struct->ptr = shared_from_this();
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, xdg_struct.get());
@@ -113,10 +113,10 @@ void WaylandShmWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg
 {
     xdg_surface_ack_configure(xdg_surface, serial);
     const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
-    if (tmp->ptr.expired()) {
+    const auto window = tmp->ptr.lock();
+    if (!window) {
         return;
     }
-    const auto window = tmp->ptr.lock();
     window->draw();
 }
 
@@ -124,9 +124,9 @@ void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *cal
 {
     wl_callback_destroy(callback);
     const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
-    if (tmp->ptr.expired()) {
+    const auto window = tmp->ptr.lock();
+    if (!window) {
         return;
     }
-    const auto window = tmp->ptr.lock();
     window->generate_frame();
 }
