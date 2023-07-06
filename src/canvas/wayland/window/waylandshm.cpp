@@ -60,6 +60,7 @@ void WaylandShmWindow::finish_init()
 {
     xdg_struct->ptr = shared_from_this();
     setup_listeners();
+    visible = true;
 }
 
 void WaylandShmWindow::setup_listeners()
@@ -71,8 +72,6 @@ void WaylandShmWindow::setup_listeners()
         callback = wl_surface_frame(surface);
         wl_callback_add_listener(callback, &frame_listener, xdg_struct.get());
     }
-
-    visible = true;
 }
 
 void WaylandShmWindow::initial_setup()
@@ -105,6 +104,7 @@ void WaylandShmWindow::show()
     xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
     initial_setup();
     setup_listeners();
+    visible = true;
 }
 
 void WaylandShmWindow::hide()
@@ -112,9 +112,9 @@ void WaylandShmWindow::hide()
     if (!visible) {
         return;
     }
-    visible = false;
     std::scoped_lock lock {draw_mutex};
     delete_wayland_structs();
+    visible = false;
 }
 
 void WaylandShmWindow::delete_wayland_structs()
