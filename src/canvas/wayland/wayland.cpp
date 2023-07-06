@@ -18,6 +18,7 @@
 #include "os.hpp"
 #include "util.hpp"
 #include "image.hpp"
+#include "config.hpp"
 
 #include <iostream>
 #include <array>

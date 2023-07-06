@@ -18,11 +18,11 @@
 #include "util.hpp"
 #include "image.hpp"
 #include "dimensions.hpp"
+#include "shm.hpp"
 #include "../config.hpp"
 
 #include <fmt/format.h>
 #include <thread>
-#include <iostream>
 
 constexpr int id_len = 10;
 
@@ -47,7 +47,7 @@ surface(wl_compositor_create_surface(compositor)),
 xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
 xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
 image(std::move(new_image)),
-shm(image->width(), image->height(), wl_shm),
+shm(std::make_unique<WaylandShm>(image->width(), image->height(), wl_shm)),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
 config(std::move(new_config))
 {
@@ -79,8 +79,8 @@ WaylandShmWindow::~WaylandShmWindow()
 
 void WaylandShmWindow::draw()
 {
-    std::memcpy(shm.get_data(), image->data(), image->size());
-    wl_surface_attach(surface, shm.buffer, 0, 0);
+    std::memcpy(shm->get_data(), image->data(), image->size());
+    wl_surface_attach(surface, shm->buffer, 0, 0);
     wl_surface_commit(surface);
     move_window();
 }
@@ -103,8 +103,8 @@ void WaylandShmWindow::generate_frame()
     wl_callback_add_listener(callback, &frame_listener, xdg_struct.get());
 
     image->next_frame();
-    std::memcpy(shm.get_data(), image->data(), image->size());
-    wl_surface_attach(surface, shm.buffer, 0, 0);
+    std::memcpy(shm->get_data(), image->data(), image->size());
+    wl_surface_attach(surface, shm->buffer, 0, 0);
     wl_surface_damage_buffer(surface, 0, 0, image->width(), image->height());
     wl_surface_commit(surface);
 }

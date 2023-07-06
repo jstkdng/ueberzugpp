@@ -146,8 +146,8 @@ if(ENABLE_WAYLAND)
 
     list(APPEND UEBERZUG_SOURCES
         "src/canvas/wayland/wayland.cpp"
-        "src/canvas/wayland/shm.cpp"
         "src/canvas/wayland/config.cpp"
+        "src/canvas/wayland/window/shm.cpp"
         "src/canvas/wayland/window/waylandshm.cpp"
         "src/canvas/wayland/config/sway.cpp"
         "src/canvas/wayland/config/hyprland.cpp"

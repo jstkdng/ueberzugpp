@@ -19,21 +19,19 @@
 
 #include <wayland-client.h>
 #include <string>
-#include <vector>
 
 class WaylandShm
 {
 public:
     WaylandShm(int width, int height, struct wl_shm* shm);
     ~WaylandShm();
-    auto get_data(uint32_t offset = 0) -> uint32_t*;
+    auto get_data() -> uint32_t*;
 
     struct wl_buffer* buffer = nullptr;
 private:
     void create_shm_file();
     void allocate_pool_buffers();
 
-    //struct wl_shm_pool* pool = nullptr;
     struct wl_shm* shm = nullptr;
 
     int fd = 0;

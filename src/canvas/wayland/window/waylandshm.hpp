@@ -18,18 +18,18 @@
 #define __WAYLAND_SHM_WINDOW__
 
 #include "window.hpp"
-#include "../shm.hpp"
-#include "util/ptr.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 
 #include <wayland-client.h>
-#include <mutex>
 #include <string>
+#include <memory>
 
 class Image;
 class WaylandConfig;
+class WaylandShm;
 
-class WaylandShmWindow : public Window, public std::enable_shared_from_this<WaylandShmWindow>
+class WaylandShmWindow : public Window,
+    public std::enable_shared_from_this<WaylandShmWindow>
 {
 public:
     WaylandShmWindow(struct wl_compositor *compositor, struct wl_shm *wl_shm,
@@ -49,7 +49,7 @@ private:
     struct xdg_toplevel *xdg_toplevel;
     struct wl_callback *callback;
     std::unique_ptr<Image> image;
-    WaylandShm shm;
+    std::unique_ptr<WaylandShm> shm;
     std::string appid;
     std::shared_ptr<WaylandConfig> config;
     bool visible = false;

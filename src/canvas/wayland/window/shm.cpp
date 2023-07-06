@@ -65,12 +65,9 @@ void WaylandShm::allocate_pool_buffers()
     buffer = wl_shm_pool_create_buffer(pool.get(), 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
 }
 
-auto WaylandShm::get_data(uint32_t offset) -> uint32_t*
+auto WaylandShm::get_data() -> uint32_t*
 {
-    if (offset > 1) {
-        return nullptr;
-    }
-    return reinterpret_cast<uint32_t*>(&pool_data[offset]);
+    return reinterpret_cast<uint32_t*>(&pool_data[0]);
 }
 
 WaylandShm::~WaylandShm()

@@ -18,21 +18,18 @@
 #define __WAYLAND_CANVAS__
 
 #include "canvas.hpp"
-#include "dimensions.hpp"
-#include "shm.hpp"
-#include "config.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 #include "window/waylandshm.hpp"
 
 #include <memory>
 #include <atomic>
 #include <thread>
-#include <mutex>
 #include <unordered_map>
 
-#include <fmt/format.h>
 #include <wayland-client.h>
 #include <spdlog/spdlog.h>
+
+class WaylandConfig;
 
 class WaylandCanvas : public Canvas
 {
