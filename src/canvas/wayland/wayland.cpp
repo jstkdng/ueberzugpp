@@ -86,10 +86,18 @@ display(wl_display_connect(nullptr))
 }
 
 void WaylandCanvas::show()
-{}
+{
+    for (const auto& [key, value]: windows) {
+        value->show();
+    }
+}
 
 void WaylandCanvas::hide()
-{}
+{
+    for (const auto& [key, value]: windows) {
+        value->hide();
+    }
+}
 
 WaylandCanvas::~WaylandCanvas()
 {
@@ -113,7 +121,7 @@ WaylandCanvas::~WaylandCanvas()
 void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
     auto window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
-    window->setup_listeners();
+    window->finish_init();
     windows.insert_or_assign(identifier, std::move(window));
 }
 

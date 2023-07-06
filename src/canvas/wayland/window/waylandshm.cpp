@@ -43,6 +43,8 @@ const auto xdg_struct = std::make_unique<struct XdgStruct>();
 WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor,
         struct wl_shm *wl_shm, struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
         std::shared_ptr<WaylandConfig> new_config):
+compositor(compositor),
+xdg_base(xdg_base),
 surface(wl_compositor_create_surface(compositor)),
 xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
 xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
@@ -51,14 +53,17 @@ shm(std::make_unique<WaylandShm>(image->width(), image->height(), wl_shm)),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
 config(std::move(new_config))
 {
-    config->initial_setup(appid);
-    xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
-    xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
+    initial_setup();
+}
+
+void WaylandShmWindow::finish_init()
+{
+    xdg_struct->ptr = shared_from_this();
+    setup_listeners();
 }
 
 void WaylandShmWindow::setup_listeners()
 {
-    xdg_struct->ptr = shared_from_this();
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, xdg_struct.get());
     wl_surface_commit(surface);
 
@@ -70,11 +75,16 @@ void WaylandShmWindow::setup_listeners()
     visible = true;
 }
 
+void WaylandShmWindow::initial_setup()
+{
+    config->initial_setup(appid);
+    xdg_toplevel_set_app_id(xdg_toplevel, appid.c_str());
+    xdg_toplevel_set_title(xdg_toplevel, appid.c_str());
+}
+
 WaylandShmWindow::~WaylandShmWindow()
 {
-    xdg_toplevel_destroy(xdg_toplevel);
-    xdg_surface_destroy(xdg_surface);
-    wl_surface_destroy(surface);
+    delete_wayland_structs();
 }
 
 void WaylandShmWindow::draw()
@@ -83,6 +93,44 @@ void WaylandShmWindow::draw()
     wl_surface_attach(surface, shm->buffer, 0, 0);
     wl_surface_commit(surface);
     move_window();
+}
+
+void WaylandShmWindow::show()
+{
+    if (visible) {
+        return;
+    }
+    surface = wl_compositor_create_surface(compositor);
+    xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
+    xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
+    initial_setup();
+    setup_listeners();
+}
+
+void WaylandShmWindow::hide()
+{
+    if (!visible) {
+        return;
+    }
+    visible = false;
+    std::scoped_lock lock {draw_mutex};
+    delete_wayland_structs();
+}
+
+void WaylandShmWindow::delete_wayland_structs()
+{
+    if (xdg_toplevel != nullptr) {
+        xdg_toplevel_destroy(xdg_toplevel);
+        xdg_toplevel = nullptr;
+    }
+    if (xdg_surface != nullptr) {
+        xdg_surface_destroy(xdg_surface);
+        xdg_surface = nullptr;
+    }
+    if (surface != nullptr) {
+        wl_surface_destroy(surface);
+        surface = nullptr;
+    }
 }
 
 void WaylandShmWindow::move_window()
@@ -126,6 +174,10 @@ void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *cal
     const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
     const auto window = tmp->ptr.lock();
     if (!window) {
+        return;
+    }
+    std::scoped_lock lock {window->draw_mutex};
+    if (!window->visible) {
         return;
     }
     window->generate_frame();

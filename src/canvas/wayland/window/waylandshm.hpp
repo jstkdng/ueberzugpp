@@ -23,12 +23,15 @@
 #include <wayland-client.h>
 #include <string>
 #include <memory>
+#include <mutex>
+#include <atomic>
 
 class Image;
 class WaylandConfig;
 class WaylandShm;
 
-class WaylandShmWindow : public Window,
+class WaylandShmWindow :
+    public Window,
     public std::enable_shared_from_this<WaylandShmWindow>
 {
 public:
@@ -41,18 +44,29 @@ public:
 
     void draw() override;
     void generate_frame() override;
+    void show() override;
+    void hide() override;
+
+    void initial_setup();
+    void finish_init();
     void setup_listeners();
+    void delete_wayland_structs();
+
+    std::mutex draw_mutex;
+    std::atomic<bool> visible {false};
 
 private:
-    struct wl_surface *surface;
-    struct xdg_surface *xdg_surface;
-    struct xdg_toplevel *xdg_toplevel;
+    struct wl_compositor *compositor;
+    struct xdg_wm_base *xdg_base;
+
+    struct wl_surface *surface = nullptr;
+    struct xdg_surface *xdg_surface = nullptr;
+    struct xdg_toplevel *xdg_toplevel = nullptr;
     struct wl_callback *callback;
     std::unique_ptr<Image> image;
     std::unique_ptr<WaylandShm> shm;
     std::string appid;
     std::shared_ptr<WaylandConfig> config;
-    bool visible = false;
 
     void move_window();
 };
