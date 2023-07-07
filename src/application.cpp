@@ -76,6 +76,7 @@ Application::~Application()
         socket_thread.join();
     }
     logger->info("Exiting ueberzugpp");
+    canvas.reset();
     vips_shutdown();
     tmux::unregister_hooks();
     fs::remove(util::get_socket_path());
