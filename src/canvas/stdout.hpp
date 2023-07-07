@@ -43,7 +43,7 @@ public:
     void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override
     {
         const auto& [mapped, was_inserted] = images.insert_or_assign(identifier, std::make_unique<T>(std::move(new_image), stdout_mutex));
-        const std::string action = was_inserted ? "Displaying" : "Replacing";
+        const std::string_view action = was_inserted ? "Displaying" : "Replacing";
         logger->info("{} image with id {}", action, identifier);
     }
 

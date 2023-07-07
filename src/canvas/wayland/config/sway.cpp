@@ -67,11 +67,7 @@ auto SwaySocket::get_window_info() -> struct WaylandWindow
 
 auto SwaySocket::get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json
 {
-    std::vector<int> pids {Application::parent_pid_};
-    const auto tmux_clients = tmux::get_client_pids();
-    if (tmux_clients.has_value()) {
-        pids = tmux_clients.value();
-    }
+    const auto pids = tmux::get_client_pids().value_or(std::vector<int>{Application::parent_pid_});
 
     for (const auto pid: pids) {
         const auto tree = util::get_process_tree(pid);
