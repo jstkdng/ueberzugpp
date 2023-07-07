@@ -49,14 +49,14 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
 #endif
 
     if (flags->output == "kitty") {
-        return std::make_unique<StdoutCanvas<Kitty>>();
+        return std::make_unique<StdoutCanvas<Kitty>>(flags->output);
     }
     if (flags->output == "iterm2") {
-        return std::make_unique<StdoutCanvas<Iterm2>>();
+        return std::make_unique<StdoutCanvas<Iterm2>>(flags->output);
     }
     if (flags->output == "sixel") {
-        return std::make_unique<StdoutCanvas<Sixel>>();
+        return std::make_unique<StdoutCanvas<Sixel>>(flags->output);
     }
     flags->output = "chafa";
-    return std::make_unique<StdoutCanvas<Chafa>>();
+    return std::make_unique<StdoutCanvas<Chafa>>(flags->output);
 }

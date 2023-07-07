@@ -21,6 +21,8 @@
 #include "window.hpp"
 #include "image.hpp"
 
+#include <spdlog/spdlog.h>
+
 #include <unordered_map>
 #include <memory>
 #include <string>
@@ -30,26 +32,31 @@ template<WindowType T>
 class StdoutCanvas : public Canvas
 {
 public:
-    StdoutCanvas()
+    explicit StdoutCanvas(const std::string& output)
     {
         stdout_mutex = std::make_shared<std::mutex>();
+        logger = spdlog::get(output);
     }
 
     ~StdoutCanvas() override = default;
 
     void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override
     {
-        images.insert_or_assign(identifier, std::make_unique<T>(std::move(new_image), stdout_mutex));
+        const auto& [mapped, was_inserted] = images.insert_or_assign(identifier, std::make_unique<T>(std::move(new_image), stdout_mutex));
+        const std::string action = was_inserted ? "Displaying" : "Replacing";
+        logger->info("{} image with id {}", action, identifier);
     }
 
     void remove_image(const std::string& identifier) override
     {
+        logger->info("Removing image with id {}", identifier);
         images.erase(identifier);
     }
 
 private:
     std::unordered_map<std::string, std::unique_ptr<T>> images;
     std::shared_ptr<std::mutex> stdout_mutex;
+    std::shared_ptr<spdlog::logger> logger;
 };
 
 #endif
