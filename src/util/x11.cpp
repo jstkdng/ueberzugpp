@@ -117,14 +117,8 @@ auto X11Util::get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_win
         if (!reply) {
             continue;
         }
-        uint32_t pid = 0;
-        for (auto iter = xcb_res_query_client_ids_ids_iterator(reply.get()); iter.rem > 0; xcb_res_client_id_value_next(&iter)) {
-            spec = iter.data->spec;
-            if ((spec.mask & XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID) != 0) {
-                pid = *xcb_res_client_id_value_value(iter.data);
-                break;
-            }
-        }
+        const auto iter = xcb_res_query_client_ids_ids_iterator(reply.get());
+        const auto pid = *xcb_res_client_id_value_value(iter.data);
         res.insert_or_assign(pid, *win_iter);
         std::advance(win_iter, 1);
     }
