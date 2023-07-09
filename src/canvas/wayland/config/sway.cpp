@@ -55,13 +55,13 @@ auto SwaySocket::get_window_info() -> struct WaylandWindow
     const auto nodes = get_nodes();
     const auto window = get_active_window(nodes);
     const auto monitor = get_active_monitor(nodes);
-    const auto& mon_rect = monitor["rect"];
-    const auto& rect = window["rect"];
+    const auto& mon_rect = monitor.at("rect");
+    const auto& rect = window.at("rect");
     return {
-        .width = rect["width"],
-        .height = rect["height"],
-        .x = static_cast<int>(rect["x"]) - static_cast<int>(mon_rect["x"]),
-        .y = static_cast<int>(rect["y"]) - static_cast<int>(mon_rect["y"])
+        .width = rect.at("width"),
+        .height = rect.at("height"),
+        .x = rect.at("x").get<int>() - mon_rect.at("x").get<int>(),
+        .y = rect.at("y").get<int>() - mon_rect.at("y").get<int>()
     };
 }
 
@@ -127,45 +127,45 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
     if (!payload.empty()) {
         logger->debug("Running socket command {}", payload);
     }
-    socket->write(reinterpret_cast<const void*>(&header), ipc_header_size);
-    socket->write(reinterpret_cast<const void*>(payload.data()), payload.size());
+    socket->write(&header, ipc_header_size);
+    socket->write(payload.data(), payload.size());
 
-    socket->read(reinterpret_cast<void*>(&header), ipc_header_size);
+    socket->read(&header, ipc_header_size);
     std::string buff (header.len, 0);
-    socket->read(reinterpret_cast<void*>(buff.data()), buff.size());
+    socket->read(buff.data(), buff.size());
     return njson::parse(buff);
 }
 
 auto SwaySocket::get_nodes() const -> std::vector<nlohmann::json>
 {
     logger->debug("Obtaining sway tree");
-    auto tree = ipc_message(IPC_GET_TREE);
+    const auto tree = ipc_message(IPC_GET_TREE);
     std::stack<njson> nodes_st;
     std::vector<njson> nodes_vec;
 
     nodes_st.push(tree);
 
     while (!nodes_st.empty()) {
-        auto top = nodes_st.top();
+        const auto top = nodes_st.top();
         nodes_st.pop();
         nodes_vec.push_back(top);
-        for (auto& node: top["nodes"]) {
+        for (const auto& node: top.at("nodes")) {
             nodes_st.push(node);
         }
-        for (auto& node: top["floating_nodes"]) {
+        for (const auto& node: top.at("floating_nodes")) {
             nodes_st.push(node);
         }
     }
     return nodes_vec;
 }
 
-auto SwaySocket::ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json
+auto SwaySocket::ipc_command(const std::string_view appid, const std::string_view command) const -> nlohmann::json
 {
     const auto cmd = fmt::format(R"(for_window [app_id="{}"] {})", appid, command);
     return ipc_message(IPC_COMMAND, cmd);
 }
 
-auto SwaySocket::ipc_command(std::string_view command) const -> nlohmann::json
+auto SwaySocket::ipc_command(const std::string_view command) const -> nlohmann::json
 {
     return ipc_message(IPC_COMMAND, command);
 }

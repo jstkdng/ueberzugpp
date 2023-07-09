@@ -22,7 +22,7 @@
 #include <string_view>
 
 #include <termios.h>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 class X11Util;
 class Flags;

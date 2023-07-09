@@ -30,7 +30,7 @@
 #include <mutex>
 
 #include <xcb/xcb.h>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 #ifdef ENABLE_XCB_ERRORS
 #   include <xcb/xcb_errors.h>

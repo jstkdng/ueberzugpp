@@ -21,9 +21,11 @@
 
 #include <unordered_set>
 #include <algorithm>
+
 #ifdef ENABLE_OPENCV
     #include <opencv2/videoio.hpp>
 #endif
+#include <spdlog/spdlog.h>
 #include <gsl/gsl>
 
 using vips::VImage;

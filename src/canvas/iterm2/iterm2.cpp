@@ -25,6 +25,8 @@
 #include <iostream>
 #include <filesystem>
 #include <ranges>
+
+#include <spdlog/spdlog.h>
 #include <fmt/format.h>
 #ifndef __APPLE__
 #   include <execution>

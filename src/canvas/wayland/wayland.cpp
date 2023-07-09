@@ -20,10 +20,7 @@
 #include "image.hpp"
 #include "config.hpp"
 
-#include <iostream>
-#include <array>
-#include <string_view>
-#include <cstring>
+#include <spdlog/spdlog.h>
 
 constexpr struct wl_registry_listener registry_listener = {
     .global = WaylandCanvas::registry_handle_global,

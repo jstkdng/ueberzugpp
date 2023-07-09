@@ -25,6 +25,8 @@
 #include <iostream>
 #include <algorithm>
 
+#include <spdlog/spdlog.h>
+
 void gstring_delete(GString* str) {
     g_string_free(str, true);
 }
@@ -84,10 +86,7 @@ void Chafa::draw()
             image->width() * 4);
 
     const auto result = c_unique_ptr<GString, gstring_delete> {
-#if CHAFA_VERSION_CUR_STABLE >= 0x10e00
-#elif CHAFA_VERSION_CUR_STABLE >= 0x10c00
         chafa_canvas_print(canvas, term_info)
-#endif
     };
     auto ycoord = y;
     const auto lines = util::str_split(result->str, "\n");

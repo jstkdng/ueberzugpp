@@ -30,6 +30,7 @@
 #include <tuple>
 #include <string_view>
 
+#include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <fmt/format.h>
 #include <vips/vips8>

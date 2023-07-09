@@ -16,7 +16,6 @@
 
 #include "util/socket.hpp"
 
-#include <iostream>
 #include <system_error>
 #include <memory>
 #include <filesystem>

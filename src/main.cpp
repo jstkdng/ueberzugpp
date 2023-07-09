@@ -19,6 +19,8 @@
 #include <CLI/Config.hpp>
 #include <csignal>
 #include <fmt/format.h>
+
+#include <spdlog/spdlog-inl.h>
 #include <spdlog/cfg/env.h>
 
 #include "application.hpp"
@@ -31,7 +33,7 @@ void signal_handler(const int signal)
     auto& flag = Application::stop_flag_;
     flag.store(true);
 
-    auto logger = spdlog::get("main");
+    const auto logger = spdlog::get("main");
     if (!logger) {
         return;
     }

@@ -29,7 +29,7 @@
 #include <string_view>
 #include <atomic>
 
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 class Application
 {

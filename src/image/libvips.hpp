@@ -23,7 +23,7 @@
 #include <string>
 #include <vips/vips8>
 #include <filesystem>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 class Dimensions;
 class Flags;

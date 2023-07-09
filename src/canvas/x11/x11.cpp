@@ -21,7 +21,8 @@
 #include "application.hpp"
 #include "flags.hpp"
 
-#include <iostream>
+#include <spdlog/spdlog.h>
+
 #ifdef ENABLE_OPENGL
 #   include <EGL/eglext.h>
 #   include "window/x11egl.hpp"

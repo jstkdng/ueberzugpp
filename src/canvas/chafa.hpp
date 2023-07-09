@@ -21,7 +21,8 @@
 
 #include <memory>
 #include <mutex>
-#include <spdlog/spdlog.h>
+
+#include <spdlog/fwd.h>
 #include <chafa.h>
 
 class Image;

@@ -74,7 +74,7 @@ auto HyprlandSocket::get_active_monitor() -> nlohmann::json
 {
     const auto monitors = request_result("j/monitors");
     const auto focused_monitor = std::find_if(begin(monitors), end(monitors), [] (const njson& json) {
-        return json["focused"] == true;
+        return json.at("focused") == true;
     });
     return focused_monitor.value();
 }
@@ -87,10 +87,10 @@ auto HyprlandSocket::get_window_info() -> struct WaylandWindow
     const auto& coords = terminal.at("at");
 
     return {
-        .width = sizes[0],
-        .height = sizes[1],
-        .x = static_cast<int>(coords[0]) - static_cast<int>(monitor.at("x")),
-        .y = static_cast<int>(coords[1]) - static_cast<int>(monitor.at("y")),
+        .width = sizes.at(0),
+        .height = sizes.at(1),
+        .x = coords.at(0).get<int>() - monitor.at("x").get<int>(),
+        .y = coords.at(1).get<int>() - monitor.at("y").get<int>(),
     };
 }
 

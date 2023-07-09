@@ -23,7 +23,7 @@
 
 #include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 class Dimensions;
 

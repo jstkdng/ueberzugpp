@@ -17,9 +17,11 @@
 #include "x11.hpp"
 #include "dimensions.hpp"
 
+#include <string_view>
+
+#include <spdlog/spdlog.h>
 #include <xcb/xcb.h>
 #include <gsl/gsl>
-#include <string_view>
 
 constexpr std::string_view win_name = "ueberzugpp";
 

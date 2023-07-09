@@ -27,7 +27,7 @@
 #include <unordered_map>
 
 #include <wayland-client.h>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 class WaylandConfig;
 

@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 #include <string_view>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 class Iterm2Chunk;
 class Image;

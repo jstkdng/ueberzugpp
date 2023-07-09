@@ -37,6 +37,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <gsl/gsl>
+#include <spdlog/spdlog.h>
 
 Terminal::Terminal():
 pid(os::get_pid()),
