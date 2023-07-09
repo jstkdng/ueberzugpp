@@ -21,6 +21,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 #include <string_view>
 #include <spdlog/fwd.h>
 
