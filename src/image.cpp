@@ -158,8 +158,8 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
         height_key = "height";
     }
     if (json.at(width_key).is_string()) {
-        const string width = json.at(width_key);
-        const string height = json.at(height_key);
+        const string& width = json.at(width_key);
+        const string& height = json.at(height_key);
         max_width = std::stoi(width);
         max_height = std::stoi(height);
     } else {
@@ -167,8 +167,8 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
         max_height = json.at(height_key);
     }
     if (json.at("x"sv).is_string()) {
-        const string xcoords = json.at("x"sv);
-        const string ycoords = json.at("y"sv);
+        const string& xcoords = json.at("x"sv);
+        const string& ycoords = json.at("y"sv);
         xcoord = std::stoi(xcoords);
         ycoord = std::stoi(ycoords);
     } else {
