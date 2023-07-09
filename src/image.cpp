@@ -24,8 +24,6 @@
 #include "flags.hpp"
 #include "dimensions.hpp"
 
-#include <string_view>
-
 #ifdef ENABLE_OPENCV
 #   include <opencv2/imgcodecs.hpp>
 #endif
@@ -36,11 +34,10 @@
 
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
-using namespace std::string_view_literals;
 
 auto Image::load(const njson& command, const Terminal& terminal) -> std::unique_ptr<Image>
 {
-    const std::string& filename = command.at("path"sv);
+    const std::string& filename = command.at("path");
     if (!fs::exists(filename)) {
         return nullptr;
     }
@@ -152,7 +149,7 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
     int max_height = 0;
     string width_key = "max_width";
     string height_key = "max_height";
-    const string scaler = json.value("scaler"sv, "contain");
+    const string scaler = json.value("scaler", "contain");
     if (json.contains("width")) {
         width_key = "width";
         height_key = "height";
@@ -166,14 +163,14 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
         max_width = json.at(width_key);
         max_height = json.at(height_key);
     }
-    if (json.at("x"sv).is_string()) {
-        const string& xcoords = json.at("x"sv);
-        const string& ycoords = json.at("y"sv);
+    if (json.at("x").is_string()) {
+        const string& xcoords = json.at("x");
+        const string& ycoords = json.at("y");
         xcoord = std::stoi(xcoords);
         ycoord = std::stoi(ycoords);
     } else {
-        xcoord = json.at("x"sv);
-        ycoord = json.at("y"sv);
+        xcoord = json.at("x");
+        ycoord = json.at("y");
     }
     return std::make_shared<Dimensions>(terminal, xcoord, ycoord, max_width, max_height, scaler);
 }

@@ -26,9 +26,6 @@
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
-#include <thread>
-#include <tuple>
-#include <string_view>
 
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -86,8 +83,6 @@ Application::~Application()
 
 void Application::execute(const std::string_view cmd)
 {
-    using namespace std::string_view_literals;
-
     if (!canvas) {
         return;
     }
@@ -100,11 +95,11 @@ void Application::execute(const std::string_view cmd)
     }
     logger->info("Command received: {}", json.dump());
 
-    const std::string& action = json.at("action"sv);
-    const std::string& identifier = json.at("identifier"sv);
+    const std::string& action = json.at("action");
+    const std::string& identifier = json.at("identifier");
 
     if (action == "add") {
-        if (!json.at("path"sv).is_string()) {
+        if (!json.at("path").is_string()) {
             logger->error("Path received is not valid");
             return;
         }
@@ -117,7 +112,7 @@ void Application::execute(const std::string_view cmd)
     } else if (action == "remove") {
         canvas->remove_image(identifier);
     } else if (action == "tmux") {
-        handle_tmux_hook(std::string{json.at("hook"sv)});
+        handle_tmux_hook(std::string{json.at("hook")});
     } else {
         logger->warn("Command not supported");
     }

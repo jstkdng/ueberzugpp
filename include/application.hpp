@@ -23,7 +23,6 @@
 #include "util/ptr.hpp"
 
 #include <string>
-#include <memory>
 #include <thread>
 #include <cstdlib>
 #include <string_view>
