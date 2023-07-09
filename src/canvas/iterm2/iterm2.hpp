@@ -23,7 +23,6 @@
 #include <vector>
 #include <mutex>
 #include <string_view>
-#include <spdlog/fwd.h>
 
 class Iterm2Chunk;
 class Image;
@@ -39,7 +38,6 @@ public:
 private:
     std::unique_ptr<Image> image;
     std::shared_ptr<std::mutex> stdout_mutex;
-    std::shared_ptr<spdlog::logger> logger;
     std::string str;
 
     int x;

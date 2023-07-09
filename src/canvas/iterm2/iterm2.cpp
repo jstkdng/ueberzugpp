@@ -40,9 +40,6 @@ Iterm2::Iterm2(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> std
 image(std::move(new_image)),
 stdout_mutex(std::move(stdout_mutex))
 {
-    logger = spdlog::get("iterm2");
-    logger->info("Canvas created");
-
     const auto dims = image->dimensions();
     x = dims.x + 1;
     y = dims.y + 1;
