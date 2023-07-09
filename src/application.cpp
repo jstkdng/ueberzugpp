@@ -28,6 +28,7 @@
 #include <unordered_map>
 #include <thread>
 #include <tuple>
+#include <string_view>
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <fmt/format.h>
@@ -84,6 +85,8 @@ Application::~Application()
 
 void Application::execute(const std::string_view cmd)
 {
+    using namespace std::string_view_literals;
+
     if (!canvas) {
         return;
     }
@@ -96,8 +99,11 @@ void Application::execute(const std::string_view cmd)
     }
     logger->info("Command received: {}", json.dump());
 
-    if (json["action"] == "add") {
-        if (!json["path"].is_string()) {
+    const std::string& action = json.at("action"sv);
+    const std::string& identifier = json.at("identifier"sv);
+
+    if (action == "add") {
+        if (!json.at("path"sv).is_string()) {
             logger->error("Path received is not valid");
             return;
         }
@@ -106,13 +112,13 @@ void Application::execute(const std::string_view cmd)
             logger->error("Unable to load image file");
             return;
         }
-        canvas->add_image(json["identifier"], std::move(image));
-    } else if (json["action"] == "remove") {
-        canvas->remove_image(json["identifier"]);
-    } else if (json["action"] == "tmux") {
-        handle_tmux_hook(std::string{json["hook"]});
+        canvas->add_image(identifier, std::move(image));
+    } else if (action == "remove") {
+        canvas->remove_image(identifier);
+    } else if (action == "tmux") {
+        handle_tmux_hook(std::string{json.at("hook"sv)});
     } else {
-        logger->warn("Command not supported.");
+        logger->warn("Command not supported");
     }
 }
 
