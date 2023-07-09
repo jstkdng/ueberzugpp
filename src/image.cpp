@@ -30,6 +30,7 @@
 #include <vips/vips.h>
 #include <unordered_set>
 #include <gsl/gsl>
+#include <spdlog/spdlog.h>
 
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
@@ -41,7 +42,14 @@ auto Image::load(const njson& command, const Terminal& terminal) -> std::unique_
         return nullptr;
     }
     const auto flags = Flags::instance();
-    const auto dimensions = get_dimensions(command, terminal);
+    const auto logger = spdlog::get("main");
+    std::shared_ptr<Dimensions> dimensions;
+    try {
+        dimensions = get_dimensions(command, terminal);
+    } catch (const std::invalid_argument& inv_arg) {
+        logger->error("Could not parse dimensions from command");
+        return nullptr;
+    }
     std::string image_path = filename;
     bool in_cache = false;
     if (!flags->no_cache) {
@@ -150,8 +158,8 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
         height_key = "height";
     }
     if (json[width_key].is_string()) {
-        string width = json[width_key];
-        string height = json[height_key];
+        const string width = json[width_key];
+        const string height = json[height_key];
         max_width = std::stoi(width);
         max_height = std::stoi(height);
     } else {
@@ -159,8 +167,8 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
         max_height = json[height_key];
     }
     if (json["x"].is_string()) {
-        string xcoords = json["x"];
-        string ycoords = json["y"];
+        const string xcoords = json["x"];
+        const string ycoords = json["y"];
         xcoord = std::stoi(xcoords);
         ycoord = std::stoi(ycoords);
     } else {

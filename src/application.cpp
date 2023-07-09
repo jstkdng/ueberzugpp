@@ -91,19 +91,19 @@ void Application::execute(const std::string_view cmd)
     try {
         json = njson::parse(cmd);
     } catch (const njson::parse_error& e) {
-        logger->error("There was an error parsing the command.");
+        logger->error("Command received is not valid json");
         return;
     }
     logger->info("Command received: {}", json.dump());
 
     if (json["action"] == "add") {
         if (!json["path"].is_string()) {
-            logger->error("Invalid path.");
+            logger->error("Path received is not valid");
             return;
         }
         auto image = Image::load(json, *terminal);
         if (!image) {
-            logger->error("Unable to load image file.");
+            logger->error("Unable to load image file");
             return;
         }
         canvas->add_image(json["identifier"], std::move(image));
