@@ -26,6 +26,7 @@
 #include <algorithm>
 
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 using njson = nlohmann::json;
 

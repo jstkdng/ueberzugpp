@@ -19,8 +19,9 @@
 
 #include "util/socket.hpp"
 #include "../config.hpp"
+
 #include <memory>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 #include <nlohmann/json.hpp>
 
 class HyprlandSocket : public WaylandConfig

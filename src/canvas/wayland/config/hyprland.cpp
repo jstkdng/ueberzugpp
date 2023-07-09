@@ -20,10 +20,11 @@
 #include "application.hpp"
 #include "tmux.hpp"
 
-#include <fmt/format.h>
-#include <iostream>
-#include <nlohmann/json.hpp>
 #include <algorithm>
+
+#include <spdlog/spdlog.h>
+#include <fmt/format.h>
+#include <nlohmann/json.hpp>
 
 using njson = nlohmann::json;
 using std::begin;

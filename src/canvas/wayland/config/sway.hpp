@@ -23,7 +23,7 @@
 #include <string_view>
 #include <memory>
 #include <nlohmann/json.hpp>
-#include <spdlog/spdlog.h>
+#include <spdlog/fwd.h>
 
 enum ipc_message_type {
     IPC_COMMAND = 0,
