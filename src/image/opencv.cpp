@@ -46,11 +46,6 @@ in_cache(in_cache)
     process_image();
 }
 
-OpencvImage::~OpencvImage()
-{
-    image.release();
-}
-
 auto OpencvImage::filename() const -> std::string
 {
     return path.string();

@@ -33,7 +33,7 @@ class OpencvImage : public Image
 {
 public:
     OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache);
-    ~OpencvImage() override;
+    ~OpencvImage() override = default;
 
     [[nodiscard]] auto dimensions() const -> const Dimensions& override;
     [[nodiscard]] auto width() const -> int override;
