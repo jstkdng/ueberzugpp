@@ -147,7 +147,13 @@ auto LibvipsImage::resize_image() -> void
     }
 
     logger->debug("Resizing image");
-    const double scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
+
+    double scale = 0;
+    if (new_width > width()) {
+        scale = static_cast<double>(new_width) / width();
+    } else {
+        scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
+    }
     image = image.resize(scale);
     if (is_anim || flags->no_cache) {
         return;
