@@ -28,10 +28,10 @@
 
 #include <spdlog/spdlog.h>
 #include <fmt/format.h>
-#ifndef __APPLE__
-#   include <execution>
-#else
+#if !defined(__cpp_lib_execution) || (__cpp_lib_execution < 201902L)
 #   include <oneapi/tbb.h>
+#else
+#   include <execution>
 #endif
 
 namespace fs = std::filesystem;
@@ -97,7 +97,7 @@ auto Iterm2::process_chunks(const std::string_view filename, int chunk_size, siz
         chunks.push_back(std::move(chunk));
     }
 
-#ifdef __APPLE__
+#if !defined(__cpp_lib_execution) || (__cpp_lib_execution < 201902L)
     oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), Iterm2Chunk());
 #else
     std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), Iterm2Chunk::process_chunk);
