@@ -40,7 +40,7 @@ namespace fs = std::filesystem;
 std::atomic<bool> Application::stop_flag_ {false};
 const pid_t Application::parent_pid_ = os::get_ppid();
 
-Application::Application(std::string_view executable)
+Application::Application(const std::string_view executable)
 {
     flags = Flags::instance();
     print_header();
