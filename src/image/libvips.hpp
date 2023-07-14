@@ -58,7 +58,7 @@ private:
 
     uint32_t max_width;
     uint32_t max_height;
-    size_t _size;
+    size_t _size = 0;
 
     // for animated pictures
     int top = 0;

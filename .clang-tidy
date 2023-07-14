@@ -1,11 +1,13 @@
 ---
 Checks: -*,
         readability-*,
-        modernize-*, -modernize-use-using,
-        cppcoreguidelines-*, -cppcoreguidelines-pro-*, -cppcoreguidelines-special-member-functions, -cppcoreguidelines-owning-memory, -cppcoreguidelines-non-private-member-variables-in-classes,
-        performance-*, -performance-unnecessary-value-param,
-        misc-*, -misc-misplaced-const, -misc-non-private-member-variables-in-classes,
-        bugprone-*, -bugprone-suspicious-missing-comma, -bugprone-sizeof-expression, -bugprone-easily-swappable-parameters
+        modernize-*,
+        portability-*,
+        performance-*,
+        concurrency-*,
+        cppcoreguidelines-*, -cppcoreguidelines-pro-*, -cppcoreguidelines-special-member-functions, -cppcoreguidelines-non-private-member-variables-in-classes, -cppcoreguidelines-owning-memory
+        misc-*, -misc-non-private-member-variables-in-classes,
+        bugprone-*, -bugprone-easily-swappable-parameters,
         google-*, -google-runtime-references, -google-readability-todo
 WarningsAsErrors: '*'
 HeaderFilterRegex: 'compute_samples/'

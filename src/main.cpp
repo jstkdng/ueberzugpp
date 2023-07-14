@@ -96,20 +96,20 @@ auto main(int argc, char *argv[]) -> int
     auto *query_win_command = program.add_subcommand("query_windows", "**UNUSED**, only present for backwards compatibility.");
     query_win_command->allow_extras();
 
-    CLI11_PARSE(program, argc, argv);
+    CLI11_PARSE(program, argc, argv)
 
     if (query_win_command->parsed()) {
-        std::exit(0);
+        return 0;
     }
 
     if (flags->print_version) {
         Application::print_version();
-        std::exit(0);
+        return 0;
     }
 
     if (!layer_command->parsed() && !tmux_command->parsed() && !cmd_comand->parsed()) {
         program.exit(CLI::CallForHelp());
-        std::exit(1);
+        return 1;
     }
 
     if (layer_command->parsed()) {

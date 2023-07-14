@@ -50,11 +50,11 @@ private:
     fs::path path;
     std::shared_ptr<Dimensions> dims;
 
-    uint64_t _size;
+    uint64_t _size = 0;
     uint32_t max_width;
     uint32_t max_height;
     bool in_cache;
-    bool opencl_available;
+    bool opencl_available = false;
 
     std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<Flags> flags;

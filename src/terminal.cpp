@@ -233,7 +233,7 @@ auto Terminal::read_raw_str(const std::string_view esc) -> std::string
         if (!in_event) {
             return "";
         }
-        return os::read_data_from_stdin(esc.back());;
+        return os::read_data_from_stdin(esc.back());
     } catch (const std::system_error& err) {
         return "";
     }
