@@ -44,7 +44,8 @@ public:
     {
         logger->info("Displaying image with id {}", identifier);
         images.erase(identifier);
-        images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
+        const auto [entry, success] = images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
+        entry->second->draw();
     }
 
     void remove_image(const std::string& identifier) override

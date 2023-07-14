@@ -74,7 +74,6 @@ image(std::move(new_image))
     //if (egl_image == EGL_NO_IMAGE) {
     //    std::cout << "bruh5" << std::endl;
     //}
-    show();
 }
 
 X11EGLWindow::~X11EGLWindow()

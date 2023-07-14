@@ -37,7 +37,6 @@ image(std::move(image))
     logger = spdlog::get("X11");
     create();
     change_title();
-    show();
 }
 
 void X11Window::create()
