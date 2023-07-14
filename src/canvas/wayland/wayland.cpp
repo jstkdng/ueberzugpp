@@ -34,7 +34,7 @@ constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {
 void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version)
 {
-    std::string_view interface_str { interface };
+    const std::string_view interface_str { interface };
     auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
     if (interface_str == wl_compositor_interface.name) {
         canvas->compositor = reinterpret_cast<struct wl_compositor*>(

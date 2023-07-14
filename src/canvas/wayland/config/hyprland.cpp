@@ -129,7 +129,7 @@ void HyprlandSocket::remove_borders(const std::string_view appid)
 
 void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    const auto payload = fmt::format("/dispatch movewindowpixel exact {} {},title:{}", xcoord, ycoord, appid);
+    const auto payload = fmt::format("/dispatch movewindowpixel {} {},title:{}", xcoord, ycoord, appid);
     request(payload);
 }
 

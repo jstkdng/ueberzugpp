@@ -120,7 +120,7 @@ void WaylandShmWindow::hide()
         return;
     }
     visible = false;
-    std::scoped_lock lock {draw_mutex};
+    const std::scoped_lock lock {draw_mutex};
     delete_wayland_structs();
 }
 
@@ -183,7 +183,7 @@ void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *cal
     if (!window) {
         return;
     }
-    std::scoped_lock lock {window->draw_mutex};
+    const std::scoped_lock lock {window->draw_mutex};
     if (!window->visible) {
         return;
     }
