@@ -301,13 +301,13 @@ void Terminal::open_first_pty()
         for (const auto &proc: tree) {
             stat(proc.pty_path.c_str(), &stat_info);
             if (proc.tty_nr == stat_info.st_rdev) {
-                pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+                pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NONBLOCK | O_NOCTTY);
                 terminal_pid = proc.pid;
-                logger->debug("PTY = {}" , proc.pty_path.c_str());
+                logger->info("PTY = {}" , proc.pty_path);
                 return;
             }
         }
     }
-
+    logger->warn("Could not open pty, using stdout as fallback");
     pty_fd = STDOUT_FILENO;
 }
