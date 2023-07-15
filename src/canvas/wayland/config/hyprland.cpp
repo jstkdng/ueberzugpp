@@ -74,6 +74,7 @@ auto HyprlandSocket::get_active_window() -> nlohmann::json
 auto HyprlandSocket::get_active_monitor() -> nlohmann::json
 {
     const auto monitors = request_result("j/monitors");
+    multimonitor = monitors.size() > 1;
     const auto focused_monitor = std::find_if(begin(monitors), end(monitors), [] (const njson& json) {
         return json.at("focused") == true;
     });
@@ -129,7 +130,8 @@ void HyprlandSocket::remove_borders(const std::string_view appid)
 
 void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    const auto payload = fmt::format("/dispatch movewindowpixel {} {},title:{}", xcoord, ycoord, appid);
+    const std::string_view exact_move = multimonitor ? "" : "exact ";
+    const auto payload = fmt::format("/dispatch movewindowpixel {}{} {},title:{}", exact_move, xcoord, ycoord, appid);
     request(payload);
 }
 
