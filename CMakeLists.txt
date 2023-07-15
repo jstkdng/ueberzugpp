@@ -40,7 +40,7 @@ option(ENABLE_OPENGL        "Enable canvas rendering with OpenGL." OFF)
 
 include(FetchContent)
 include(GNUInstallDirs)
-include(CheckIncludeFileCXX)
+include(CheckCXXSymbolExists)
 
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
@@ -49,7 +49,7 @@ find_package(TBB REQUIRED)
 
 # check if <execution> is available
 set(CMAKE_REQUIRED_LIBRARIES TBB::tbb)
-check_include_file_cxx(execution HAVE_STD_EXECUTION_H)
+check_cxx_symbol_exists(std::execution::par_unseq execution HAVE_STD_EXECUTION_H)
 if (HAVE_STD_EXECUTION_H)
     target_compile_definitions(ueberzug PRIVATE HAVE_STD_EXECUTION_H)
 endif()
