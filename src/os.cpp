@@ -100,7 +100,7 @@ auto os::wait_for_data_on_stdin(int waitms) -> bool
 
 auto os::getenv(const std::string_view var) -> std::optional<std::string>
 {
-    auto *res = std::getenv(var.data());
+    const auto *res = std::getenv(var.data());
     if (res == nullptr) {
         return {};
     }
