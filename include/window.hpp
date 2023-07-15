@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __WINDOW__
-#define __WINDOW__
+#ifndef WINDOW_H
+#define WINDOW_H
 
 #include <concepts>
 #include <memory>

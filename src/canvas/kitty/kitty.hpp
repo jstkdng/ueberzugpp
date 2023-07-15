@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_STDOUT__
-#define __KITTY_STDOUT__
+#ifndef KITTY_WINDOW_H
+#define KITTY_WINDOW_H
 
 #include "window.hpp"
 

@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __PROCESS_INFO__
-#define __PROCESS_INFO__
+#ifndef PROCESS_INFO_H
+#define PROCESS_INFO_H
 
 #include <string>
 

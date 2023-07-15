@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __UTIL_SOCKET__
-#define __UTIL_SOCKET__
+#ifndef UTIL_SOCKET_H
+#define UTIL_SOCKET_H
 
 #include <string_view>
 #include <cstdint>

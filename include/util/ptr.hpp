@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __UTIL_PTR__
-#define __UTIL_PTR__
+#ifndef UTIL_PTR_H
+#define UTIL_PTR_H
 
 #include <memory>
 

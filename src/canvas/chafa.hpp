@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __CHAFA_CANVAS__
-#define __CHAFA_CANVAS__
+#ifndef CHAFA_WINDOW_H
+#define CHAFA_WINDOW_H
 
 #include "window.hpp"
 

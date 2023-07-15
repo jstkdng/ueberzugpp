@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __CANVAS__
-#define __CANVAS__
+#ifndef CANVAS_H
+#define CANVAS_H
 
 #include <memory>
 

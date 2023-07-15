@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __X11_CANVAS__
-#define __X11_CANVAS__
+#ifndef X11_CANVAS_H
+#define X11_CANVAS_H
 
 #include "canvas.hpp"
 #include "image.hpp"

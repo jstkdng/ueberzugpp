@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __DIMENSIONS__
-#define __DIMENSIONS__
+#ifndef DIMENSIONS_H
+#define DIMENSIONS_H
 
 #include <string>
 #include <cstdint>

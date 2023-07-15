@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __WAYLAND_CANVAS__
-#define __WAYLAND_CANVAS__
+#ifndef WAYLAND_CANVAS_H
+#define WAYLAND_CANVAS_H
 
 #include "canvas.hpp"
 #include "wayland-xdg-shell-client-protocol.h"

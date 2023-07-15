@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __WAYLAND_SHM_WINDOW__
-#define __WAYLAND_SHM_WINDOW__
+#ifndef WAYLAND_SHM_WINDOW_H
+#define WAYLAND_SHM_WINDOW_W
 
 #include "window.hpp"
 #include "wayland-xdg-shell-client-protocol.h"

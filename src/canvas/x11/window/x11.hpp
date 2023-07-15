@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __X11WINDOW__
-#define __X11WINDOW__
+#ifndef X11_WINDOW_H
+#define X11_WINDOW_H
 
 #include "image.hpp"
 #include "util/ptr.hpp"

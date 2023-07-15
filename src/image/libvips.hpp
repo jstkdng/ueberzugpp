@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __VIPS_IMAGE__
-#define __VIPS_IMAGE__
+#ifndef LIBVIPS_IMAGE_H
+#define LIBVIPS_IMAGE_H
 
 #include "image.hpp"
 #include "util/ptr.hpp"

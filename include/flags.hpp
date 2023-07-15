@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __FLAGS__
-#define __FLAGS__
+#ifndef FLAGS_H
+#define FLAGS_H
 
 #include <string>
 #include <filesystem>

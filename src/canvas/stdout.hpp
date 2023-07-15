@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __STDOUT_CANVAS__
-#define __STDOUT_CANVAS__
+#ifndef STDOUT_CANVAS_H
+#define STDOUT_CANVAS_H
 
 #include "canvas.hpp"
 #include "window.hpp"

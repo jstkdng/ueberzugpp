@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __KITTY_CHUNK__
-#define __KITTY_CHUNK__
+#ifndef KITTY_CHUNK_H
+#define KITTY_CHUNK_H
 
 #include <vector>
 #include <cstdint>

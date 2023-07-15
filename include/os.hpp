@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __NAMESPACE_OS__
-#define __NAMESPACE_OS__
+#ifndef NAMESPACE_OS_H
+#define NAMESPACE_OS_H
 
 #include <optional>
 #include <string>

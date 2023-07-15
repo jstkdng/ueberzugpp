@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __ITERM2_CANVAS__
-#define __ITERM2_CANVAS__
+#ifndef ITERM2_CANVAS_H
+#define ITERM2_CANVAS_H
 
 #include "window.hpp"
 

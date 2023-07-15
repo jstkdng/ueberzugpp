@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __APPLICATION__
-#define __APPLICATION__
+#ifndef APPLICATION_H
+#define APPLICATION_H
 
 #include "canvas.hpp"
 #include "terminal.hpp"

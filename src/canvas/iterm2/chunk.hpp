@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __ITERM2_CHUNK__
-#define __ITERM2_CHUNK__
+#ifndef ITERM2_CHUNK_H
+#define ITERM2_CHUNK_H
 
 #include <vector>
 #include <memory>

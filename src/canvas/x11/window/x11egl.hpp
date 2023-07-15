@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __X11EGLWINDOW__
-#define __X11EGLWINDOW__
+#ifndef X11_EGL_WINDOW_H
+#define X11_EGL_WINDOW_H
 
 #include "window.hpp"
 #include "util/ptr.hpp"

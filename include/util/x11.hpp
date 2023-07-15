@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __X11_UTIL__
-#define __X11_UTIL__
+#ifndef X11_UTIL_H
+#define X11_UTIL_H
 
 #include <vector>
 #include <unordered_map>
@@ -33,7 +33,7 @@ public:
 
     [[nodiscard]] auto get_server_window_ids() const -> std::vector<xcb_window_t>;
     [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_window_t>;
-    [[nodiscard]] auto get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>;
+    [[nodiscard]] auto get_window_dimensions(xcb_window_t window) const -> std::pair<uint16_t, uint16_t>;
     [[nodiscard]] auto get_parent_window(int pid) const -> xcb_window_t;
     [[nodiscard]] auto window_has_properties(xcb_window_t window, std::initializer_list<xcb_atom_t> properties) const -> bool;
 

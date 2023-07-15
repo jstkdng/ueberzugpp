@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __HYPRLAND_SOCKET__
-#define __HYPRLAND_SOCKET__
+#ifndef HYPRLAND_SOCKET_H
+#define HYPRLAND_SOCKET_H
 
 #include "util/socket.hpp"
 #include "../config.hpp"

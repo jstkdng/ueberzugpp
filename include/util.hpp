@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __NAMESPACE_UTIL__
-#define __NAMESPACE_UTIL__
+#ifndef NAMESPACE_UTIL_H
+#define NAMESPACE_UTIL_H
 
 #include <string>
 #include <vector>

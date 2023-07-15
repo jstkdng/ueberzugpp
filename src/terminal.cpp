@@ -265,9 +265,9 @@ void Terminal::get_fallback_x11_terminal_sizes()
         return;
     }
     x11_wid = xutil.get_parent_window(terminal_pid);
-    const auto dims = xutil.get_window_dimensions(x11_wid);
-    fallback_xpixel = dims.first;
-    fallback_ypixel = dims.second;
+    const auto [xpix, ypix] = xutil.get_window_dimensions(x11_wid);
+    fallback_xpixel = xpix;
+    fallback_ypixel = ypix;
     logger->debug("X11 sizes: XPIXEL={} YPIXEL={}", fallback_xpixel, fallback_ypixel);
 #endif
 }
@@ -296,7 +296,7 @@ void Terminal::open_first_pty()
     for (const auto spid: pids) {
         auto tree = util::get_process_tree_v2(spid);
         tree.pop_back();
-        std::reverse(tree.begin(), tree.end());
+        std::ranges::reverse(tree);
         for (const auto &proc: tree) {
             pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
             if (pty_fd != -1) {

@@ -140,7 +140,7 @@ auto X11Util::window_has_properties(xcb_window_t window, std::initializer_list<x
     });
 }
 
-auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<int, int>
+auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<uint16_t, uint16_t>
 {
     const auto cookie = xcb_get_geometry_unchecked(connection, window);
     const auto reply = unique_C_ptr<xcb_get_geometry_reply_t> {

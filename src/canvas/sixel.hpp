@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SIXEL_STDOUT__
-#define __SIXEL_STDOUT__
+#ifndef SIXEL_WINDOW_H
+#define SIXEL_WINDOW_H
 
 #include "window.hpp"
 

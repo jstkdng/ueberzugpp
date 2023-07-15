@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __OPENCV_IMAGE__
-#define __OPENCV_IMAGE__
+#ifndef OPENCV_IMAGE_H
+#define OPENCV_IMAGE_H
 
 #include "image.hpp"
 

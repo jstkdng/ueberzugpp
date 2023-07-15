@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __SWAY_SOCKET__
-#define __SWAY_SOCKET__
+#ifndef SWAY_SOCKET_H
+#define SWAY_SOCKET_H
 
 #include "util/socket.hpp"
 #include "../config.hpp"

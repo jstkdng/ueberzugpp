@@ -14,8 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef __IMAGE__
-#define __IMAGE__
+#ifndef IMAGE_H
+#define IMAGE_H
 
 #include <memory>
 #include <string>
