@@ -115,7 +115,7 @@ void SwaySocket::enable_floating(const std::string_view appid)
 
 void SwaySocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    std::ignore = ipc_command(fmt::format(R"([app_id="{}"] move absolute position {} {})", appid, xcoord, ycoord));
+    std::ignore = ipc_command(fmt::format(R"([app_id="{}"] move position {} {})", appid, xcoord, ycoord));
 }
 
 auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view payload) const -> nlohmann::json

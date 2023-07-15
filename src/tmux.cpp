@@ -83,10 +83,9 @@ auto tmux::get_offset() -> std::pair<int, int>
 
 auto tmux::get_pane_offset() -> std::pair<int, int>
 {
-    const std::string cmd = "tmux display -p -F '#{pane_top},#{pane_left},\
-                                     #{pane_bottom},#{pane_right},\
-                                     #{window_height},#{window_width}' \
-                                  -t" +  tmux::get_pane();
+    const std::string cmd = R"(tmux display -p -F '#{pane_top},#{pane_left},
+                                     #{pane_bottom},#{pane_right},
+                                     #{window_height},#{window_width}' -t)" +  tmux::get_pane();
     const auto output = util::str_split(os::exec(cmd), ",");
     return std::make_pair(std::stoi(output[1]), std::stoi(output[0]));
 }
@@ -130,8 +129,7 @@ void tmux::unregister_hooks()
         return;
     }
     for (const auto& hook: hooks) {
-        const auto cmd = fmt::format(
-                "tmux set-hook -u -t {} {}", get_pane(), hook);
+        const auto cmd = fmt::format("tmux set-hook -u -t {} {}", get_pane(), hook);
         os::exec(cmd);
     }
 }
