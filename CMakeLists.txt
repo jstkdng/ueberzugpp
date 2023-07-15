@@ -20,6 +20,7 @@ cmake_minimum_required(VERSION 3.18)
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
     cmake_policy(SET CMP0135 NEW)
 endif()
+cmake_policy(SET CMP0075 NEW)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -39,11 +40,19 @@ option(ENABLE_OPENGL        "Enable canvas rendering with OpenGL." OFF)
 
 include(FetchContent)
 include(GNUInstallDirs)
+include(CheckIncludeFileCXX)
 
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(TBB REQUIRED)
+
+# check if <execution> is available
+set(CMAKE_REQUIRED_LIBRARIES TBB::tbb)
+check_include_file_cxx(execution HAVE_STD_EXECUTION_H)
+if (HAVE_STD_EXECUTION_H)
+    target_compile_definitions(ueberzug PRIVATE HAVE_STD_EXECUTION_H)
+endif()
 
 find_package(Microsoft.GSL CONFIG QUIET)
 if (NOT Microsoft.GSL_FOUND)

@@ -23,10 +23,11 @@
 #include <fmt/format.h>
 
 #include <iostream>
-#if !defined(__cpp_lib_execution) || (__cpp_lib_execution < 201902L)
-#   include <oneapi/tbb.h>
-#else
+
+#ifdef HAVE_STD_EXECUTION_H
 #   include <execution>
+#else
+#   include <oneapi/tbb.h>
 #endif
 
 Kitty::Kitty(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
@@ -98,11 +99,12 @@ auto Kitty::process_chunks() -> std::vector<KittyChunk>
     }
     chunks.emplace_back(ptr + idx * chunk_size, last_chunk_size);
 
-#if !defined(__cpp_lib_execution) || (__cpp_lib_execution < 201902L)
-    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), KittyChunk());
-#else
+#ifdef HAVE_STD_EXECUTION_H
     std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), KittyChunk::process_chunk);
+#else
+    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), KittyChunk());
 #endif
+
     return chunks;
 }
 

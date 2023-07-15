@@ -28,10 +28,11 @@
 
 #include <spdlog/spdlog.h>
 #include <fmt/format.h>
-#if !defined(__cpp_lib_execution) || (__cpp_lib_execution < 201902L)
-#   include <oneapi/tbb.h>
-#else
+
+#ifdef HAVE_STD_EXECUTION_H
 #   include <execution>
+#else
+#   include <oneapi/tbb.h>
 #endif
 
 namespace fs = std::filesystem;
@@ -96,10 +97,11 @@ auto Iterm2::process_chunks(const std::string_view filename, int chunk_size, siz
         chunks.push_back(std::move(chunk));
     }
 
-#if !defined(__cpp_lib_execution) || (__cpp_lib_execution < 201902L)
-    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), Iterm2Chunk());
-#else
+#ifdef HAVE_STD_EXECUTION_H
     std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), Iterm2Chunk::process_chunk);
+#else
+    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), Iterm2Chunk());
 #endif
+
     return chunks;
 }
