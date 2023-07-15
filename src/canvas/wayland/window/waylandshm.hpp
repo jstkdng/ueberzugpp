@@ -15,7 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef WAYLAND_SHM_WINDOW_H
-#define WAYLAND_SHM_WINDOW_W
+#define WAYLAND_SHM_WINDOW_H
 
 #include "window.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
