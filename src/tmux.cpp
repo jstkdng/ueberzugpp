@@ -76,31 +76,31 @@ auto tmux::get_offset() -> std::pair<int, int>
     if (!tmux::is_used()) {
         return std::make_pair(0, 0);
     }
-    const auto [p_x, p_y] = get_pane_offset();
-    const auto s_y = get_statusbar_offset();
+    const auto [p_x, p_y] = tmux::get_pane_offset();
+    const auto s_y = tmux::get_statusbar_offset();
     return std::make_pair(p_x, p_y + s_y);
 }
 
 auto tmux::get_pane_offset() -> std::pair<int, int>
 {
-    const std::string cmd = R"(tmux display -p -F '#{pane_top},#{pane_left},
-                                     #{pane_bottom},#{pane_right},
-                                     #{window_height},#{window_width}' -t)" +  tmux::get_pane();
+    const auto cmd = fmt::format(R"(tmux display -p -F '#{{pane_top}},#{{pane_left}},
+                                     #{{pane_bottom}},#{{pane_right}},
+                                     #{{window_height}},#{{window_width}}' -t {})", tmux::get_pane());
     const auto output = util::str_split(os::exec(cmd), ",");
-    return std::make_pair(std::stoi(output[1]), std::stoi(output[0]));
+    return std::make_pair(std::stoi(output.at(1)), std::stoi(output.at(0)));
 }
 
 auto tmux::get_statusbar_offset() -> int
 {
     const std::string cmd = "tmux display -p '#{status},#{status-position}'";
     const auto output = util::str_split(os::exec(cmd), ",");
-    if (output[1] != "top" || output[0] == "off") {
+    if (output.at(1) != "top" || output.at(0) == "off") {
         return 0;
     }
-    if (output[0] == "on") {
+    if (output.at(0) == "on") {
         return 1;
     }
-    return std::stoi(output[0]);
+    return std::stoi(output.at(0));
 }
 
 void tmux::handle_hook(const std::string_view hook, int pid)
@@ -112,24 +112,24 @@ void tmux::handle_hook(const std::string_view hook, int pid)
 
 void tmux::register_hooks()
 {
-    if (!is_used()) {
+    if (!tmux::is_used()) {
         return;
     }
     for (const auto& hook: hooks) {
         const auto cmd = fmt::format(
                 R"(tmux set-hook -t {} {} "run-shell 'ueberzugpp tmux {} {}'")",
-                get_pane(), hook, hook, os::get_pid());
+                tmux::get_pane(), hook, hook, os::get_pid());
         os::exec(cmd);
     }
 }
 
 void tmux::unregister_hooks()
 {
-    if (!is_used()) {
+    if (!tmux::is_used()) {
         return;
     }
     for (const auto& hook: hooks) {
-        const auto cmd = fmt::format("tmux set-hook -u -t {} {}", get_pane(), hook);
+        const auto cmd = fmt::format("tmux set-hook -u -t {} {}", tmux::get_pane(), hook);
         os::exec(cmd);
     }
 }

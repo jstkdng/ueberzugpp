@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <sys/stat.h>
 #include <gsl/gsl>
 #include <spdlog/spdlog.h>
 
@@ -293,17 +294,27 @@ void Terminal::open_first_pty()
 {
     const auto pids = tmux::get_client_pids().value_or(std::vector<int>{pid});
 
+    struct stat stat_info;
     for (const auto spid: pids) {
         auto tree = util::get_process_tree_v2(spid);
-        tree.pop_back();
+        //tree.pop_back();
         std::ranges::reverse(tree);
         for (const auto &proc: tree) {
+            stat(proc.pty_path.c_str(), &stat_info);
+            //std::cout << proc.pid << " " << proc.tty_nr << " " << stat_info.st_rdev << std::endl;
+            if (proc.tty_nr == stat_info.st_rdev) {
+                pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
+                terminal_pid = proc.pid;
+                logger->debug("PTY = {}" , proc.pty_path.c_str());
+                return;
+            }
+            /*
             pty_fd = open(proc.pty_path.c_str(), O_NONBLOCK);
             if (pty_fd != -1) {
                 terminal_pid = proc.pid;
                 logger->debug("PTY = {}" , proc.pty_path.c_str());
                 return;
-            }
+            }*/
         }
     }
 
