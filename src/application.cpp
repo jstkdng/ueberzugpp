@@ -56,7 +56,7 @@ Application::Application(const std::string_view executable)
         fs::create_directories(cache_path);
     }
     tmux::register_hooks();
-    socket_thread = std::thread([&] {
+    socket_thread = std::thread([this] {
         logger->info("Listening for commands on socket {}.", util::get_socket_path());
         socket_loop();
     });
@@ -125,13 +125,13 @@ void Application::handle_tmux_hook(const std::string_view hook)
 {
     const std::unordered_map<std::string_view, std::function<void()>> hook_fns {
         {"client-session-changed",
-            [&] {
+            [this] {
                 if (tmux::is_window_focused()) {
                     canvas->show();
                 }
             }},
         {"session-window-changed",
-            [&] {
+            [this] {
                 if (tmux::is_window_focused()) {
                     canvas->show();
                 } else {
@@ -139,11 +139,11 @@ void Application::handle_tmux_hook(const std::string_view hook)
                 }
             }},
         {"client-detached",
-            [&] {
+            [this] {
                 canvas->hide();
             }},
         {"window-layout-changed",
-            [&] {
+            [this] {
                 if (tmux::is_window_focused()) {
                     canvas->hide();
                 }

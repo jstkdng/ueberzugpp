@@ -41,7 +41,7 @@ id(util::generate_random_number<uint32_t>(1))
 
 Kitty::~Kitty()
 {
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     std::cout << fmt::format("\033_Ga=d,d=i,i={}\033\\", id) << std::flush;
 }
 
@@ -68,7 +68,7 @@ void Kitty::generate_frame()
     str.append(chunks.back().get_result());
     str.append("\033\\");
 
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;

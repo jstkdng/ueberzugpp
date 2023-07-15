@@ -44,7 +44,7 @@ HyprlandSocket::HyprlandSocket()
     address = active.at("address");
 }
 
-auto HyprlandSocket::request_result(std::string_view payload) -> nlohmann::json
+auto HyprlandSocket::request_result(const std::string_view payload) -> nlohmann::json
 {
     socket = std::make_unique<UnixSocket>(socket_path);
     const int bufsize = 8192;
@@ -62,7 +62,7 @@ auto HyprlandSocket::get_active_window() -> nlohmann::json
         address = active.at("address");
     }
     const auto clients = request_result("j/clients");
-    const auto client = std::find_if(begin(clients), end(clients), [&] (const njson& json) {
+    const auto client = std::find_if(begin(clients), end(clients), [this] (const njson& json) {
         return json.at("address") == address;
     });
     if (client == end(clients)) {

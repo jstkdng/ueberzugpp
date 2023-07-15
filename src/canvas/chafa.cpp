@@ -69,7 +69,7 @@ Chafa::~Chafa()
     chafa_symbol_map_unref(symbol_map);
     chafa_term_info_unref(term_info);
 
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -89,9 +89,9 @@ void Chafa::draw()
     auto ycoord = y;
     const auto lines = util::str_split(result->str, "\n");
 
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
-    std::ranges::for_each(std::as_const(lines), [&] (const auto& line) {
+    std::ranges::for_each(std::as_const(lines), [this, &ycoord] (const auto& line) {
         util::move_cursor(ycoord++, x);
         std::cout << line;
     });

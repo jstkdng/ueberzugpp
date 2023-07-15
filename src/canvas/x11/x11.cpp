@@ -61,7 +61,7 @@ connection(xcb_connect(nullptr, &screen_num))
     xutil = std::make_unique<X11Util>(connection);
     logger = spdlog::get("X11");
     flags = Flags::instance();
-    event_handler = std::thread([&] {
+    event_handler = std::thread([this] {
         logger->debug("Started event handler");
         handle_events();
         logger->debug("Stopped event handler");
@@ -99,7 +99,7 @@ void X11Canvas::draw(const std::string& identifier)
     }
 
     draw_threads.insert_or_assign(identifier,
-        std::jthread([this, identifier] (std::stop_token stoken) {
+        std::jthread([this, identifier] (const std::stop_token& stoken) {
             const auto image = images.at(identifier);
             const auto wins = image_windows.at(identifier);
             while (!stoken.stop_requested()) {
@@ -114,7 +114,7 @@ void X11Canvas::draw(const std::string& identifier)
 
 void X11Canvas::show()
 {
-    std::scoped_lock lock {windows_mutex};
+    const std::scoped_lock lock {windows_mutex};
     for (const auto& [wid, window]: windows) {
         window->show();
     }
@@ -122,7 +122,7 @@ void X11Canvas::show()
 
 void X11Canvas::hide()
 {
-    std::scoped_lock lock {windows_mutex};
+    const std::scoped_lock lock {windows_mutex};
     for (const auto& [wid, window]: windows) {
         window->hide();
     }
@@ -142,7 +142,7 @@ void X11Canvas::handle_events()
         if (!status) {
             continue;
         }
-        std::scoped_lock lock {windows_mutex};
+        const std::scoped_lock lock {windows_mutex};
         auto event = unique_C_ptr<xcb_generic_event_t> {
             xcb_poll_for_event(connection)
         };
@@ -188,7 +188,7 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
     std::unordered_set<xcb_window_t> parent_ids {dims.terminal.x11_wid};
     get_tmux_window_ids(parent_ids);
 
-    std::ranges::for_each(std::as_const(parent_ids), [&] (xcb_window_t parent) {
+    std::ranges::for_each(std::as_const(parent_ids), [this, &identifier, &image] (xcb_window_t parent) {
         const auto window_id = xcb_generate_id(connection);
         std::shared_ptr<Window> window;
 #ifdef ENABLE_OPENGL
@@ -248,7 +248,7 @@ void X11Canvas::remove_image(const std::string& identifier)
     draw_threads.erase(identifier);
     images.erase(identifier);
 
-    std::scoped_lock lock {windows_mutex};
+    const std::scoped_lock lock {windows_mutex};
     const auto old_windows = image_windows.extract(identifier);
     if (old_windows.empty()) {
         return;

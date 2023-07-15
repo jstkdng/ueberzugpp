@@ -67,7 +67,7 @@ Sixel::~Sixel()
     sixel_dither_destroy(dither);
     sixel_output_destroy(output);
 
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -79,7 +79,7 @@ void Sixel::draw()
     }
 
     // start drawing loop
-    draw_thread = std::thread([&] {
+    draw_thread = std::thread([this] {
         while (can_draw.load()) {
             generate_frame();
             image->next_frame();
@@ -96,7 +96,7 @@ void Sixel::generate_frame()
             image->height(),
             3 /*unused*/, dither, output);
 
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;

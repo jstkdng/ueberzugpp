@@ -222,6 +222,6 @@ auto util::generate_random_string(std::size_t length) -> std::string
     auto rng = std::mt19937(rng_dev());
     auto dist = std::uniform_int_distribution{{}, chars.size() - 1};
     std::string result(length, 0);
-    std::generate_n(std::begin(result), length, [&] { return chars[dist(rng)]; });
+    std::generate_n(std::begin(result), length, [&chars, &dist, &rng] { return chars[dist(rng)]; });
     return result;
 }

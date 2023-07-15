@@ -132,7 +132,7 @@ auto X11Util::window_has_properties(xcb_window_t window, std::initializer_list<x
     for (const auto prop: properties) {
         cookies.push_back(xcb_get_property_unchecked(connection, 0, window, prop, XCB_ATOM_ANY, 0, 4));
     }
-    return std::ranges::all_of(std::as_const(cookies), [&] (xcb_get_property_cookie_t cookie) -> bool {
+    return std::ranges::all_of(std::as_const(cookies), [this] (xcb_get_property_cookie_t cookie) -> bool {
         const auto reply = unique_C_ptr<xcb_get_property_reply_t> {
             xcb_get_property_reply(connection, cookie, nullptr)
         };

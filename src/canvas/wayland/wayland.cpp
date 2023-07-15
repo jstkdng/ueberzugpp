@@ -75,7 +75,7 @@ display(wl_display_connect(nullptr))
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
     config = WaylandConfig::get();
-    event_handler = std::thread([&] {
+    event_handler = std::thread([this] {
         handle_events();
     });
 

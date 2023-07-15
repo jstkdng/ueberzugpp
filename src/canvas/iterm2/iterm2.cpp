@@ -49,7 +49,7 @@ stdout_mutex(std::move(stdout_mutex))
 
 Iterm2::~Iterm2()
 {
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -69,12 +69,12 @@ void Iterm2::draw()
     const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
     str.reserve((num_chunks + 2) * bytes_per_chunk);
 
-    std::ranges::for_each(std::as_const(chunks), [&] (const std::unique_ptr<Iterm2Chunk>& chunk) {
+    std::ranges::for_each(std::as_const(chunks), [this] (const std::unique_ptr<Iterm2Chunk>& chunk) {
         str.append(chunk->get_result());
     });
     str.append("\a");
 
-    std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;
