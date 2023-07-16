@@ -17,7 +17,6 @@
 #ifndef HYPRLAND_SOCKET_H
 #define HYPRLAND_SOCKET_H
 
-#include "util/socket.hpp"
 #include "../config.hpp"
 
 #include <memory>
@@ -43,7 +42,6 @@ private:
     auto get_active_window() -> nlohmann::json;
     auto get_active_monitor() -> nlohmann::json;
 
-    std::unique_ptr<UnixSocket> socket;
     std::shared_ptr<spdlog::logger> logger;
     std::string socket_path;
     std::string address;

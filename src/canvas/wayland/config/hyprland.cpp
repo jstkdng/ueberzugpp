@@ -17,6 +17,7 @@
 #include "hyprland.hpp"
 #include "os.hpp"
 #include "tmux.hpp"
+#include "util/socket.hpp"
 
 #include <algorithm>
 
@@ -42,10 +43,17 @@ HyprlandSocket::HyprlandSocket()
 
 auto HyprlandSocket::request_result(const std::string_view payload) -> nlohmann::json
 {
-    socket = std::make_unique<UnixSocket>(socket_path);
-    socket->write(payload.data(), payload.size());
-    const std::string result = socket->read_until_empty();
+    const UnixSocket socket {socket_path};
+    socket.write(payload.data(), payload.size());
+    const std::string result = socket.read_until_empty();
     return njson::parse(result);
+}
+
+void HyprlandSocket::request(const std::string_view payload)
+{
+    const UnixSocket socket {socket_path};
+    logger->debug("Running socket command {}", payload);
+    socket.write(payload.data(), payload.length());
 }
 
 auto HyprlandSocket::get_active_window() -> nlohmann::json
@@ -127,11 +135,4 @@ void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int y
     const std::string_view exact_move = multimonitor ? "" : "exact ";
     const auto payload = fmt::format("/dispatch movewindowpixel {}{} {},title:{}", exact_move, xcoord, ycoord, appid);
     request(payload);
-}
-
-void HyprlandSocket::request(const std::string_view payload)
-{
-    socket = std::make_unique<UnixSocket>(socket_path);
-    logger->debug("Running socket command {}", payload);
-    socket->write(payload.data(), payload.length());
 }
