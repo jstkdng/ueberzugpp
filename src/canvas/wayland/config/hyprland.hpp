@@ -45,7 +45,6 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     std::string socket_path;
     std::string address;
-    bool multimonitor = false;
 };
 
 #endif
