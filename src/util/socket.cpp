@@ -150,6 +150,22 @@ void UnixSocket::read(void* data, std::size_t len) const
     }
 }
 
+auto UnixSocket::read_until_empty() const -> std::string
+{
+    std::string result;
+    const int read_buffer_size = 4096;
+    std::array<char, read_buffer_size> read_buffer;
+    result.reserve(read_buffer_size);
+    while (true) {
+        const auto status = recv(fd, read_buffer.data(), read_buffer_size, 0);
+        if (status <= 0) {
+            break;
+        }
+        result.append(read_buffer.data(), status);
+    }
+    return result;
+}
+
 UnixSocket::~UnixSocket()
 {
     close(fd);

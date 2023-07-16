@@ -43,10 +43,8 @@ HyprlandSocket::HyprlandSocket()
 auto HyprlandSocket::request_result(const std::string_view payload) -> nlohmann::json
 {
     socket = std::make_unique<UnixSocket>(socket_path);
-    const int bufsize = 8192;
-    std::string result (bufsize, 0);
     socket->write(payload.data(), payload.size());
-    socket->read(result.data(), result.size());
+    const std::string result = socket->read_until_empty();
     return njson::parse(result);
 }
 

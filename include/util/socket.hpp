@@ -35,6 +35,8 @@ public:
     [[nodiscard]] auto read_data_from_connection(int filde) -> std::vector<std::string>;
     void write(const void* data, std::size_t len) const;
     void read(void* data, std::size_t len) const;
+    [[nodiscard]] auto read_until_empty() const -> std::string;
+
 private:
     int fd;
     bool connected = true;
