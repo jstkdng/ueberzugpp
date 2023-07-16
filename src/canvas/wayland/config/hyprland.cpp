@@ -16,8 +16,6 @@
 
 #include "hyprland.hpp"
 #include "os.hpp"
-#include "util.hpp"
-#include "application.hpp"
 #include "tmux.hpp"
 
 #include <algorithm>
@@ -27,8 +25,6 @@
 #include <nlohmann/json.hpp>
 
 using njson = nlohmann::json;
-using std::begin;
-using std::end;
 
 HyprlandSocket::HyprlandSocket()
 {
@@ -62,10 +58,10 @@ auto HyprlandSocket::get_active_window() -> nlohmann::json
         address = active.at("address");
     }
     const auto clients = request_result("j/clients");
-    const auto client = std::find_if(begin(clients), end(clients), [this] (const njson& json) {
+    const auto client = std::ranges::find_if(clients, [this] (const njson& json) {
         return json.at("address") == address;
     });
-    if (client == end(clients)) {
+    if (client == clients.end()) {
         throw std::runtime_error("Active window not found");
     }
     return *client;
@@ -75,7 +71,7 @@ auto HyprlandSocket::get_active_monitor() -> nlohmann::json
 {
     const auto monitors = request_result("j/monitors");
     multimonitor = monitors.size() > 1;
-    const auto focused_monitor = std::find_if(begin(monitors), end(monitors), [] (const njson& json) {
+    const auto focused_monitor = std::ranges::find_if(monitors, [] (const njson& json) {
         return json.at("focused") == true;
     });
     return focused_monitor.value();
