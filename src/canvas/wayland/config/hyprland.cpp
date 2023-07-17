@@ -92,8 +92,8 @@ auto HyprlandSocket::get_window_info() -> struct WaylandWindow
     return {
         .width = sizes.at(0),
         .height = sizes.at(1),
-        .x = coords.at(0).get<int>() - monitor.at("x").get<int>(),
-        .y = coords.at(1).get<int>() - monitor.at("y").get<int>(),
+        .x = coords.at(0).get<int>()/* - monitor.at("x").get<int>()*/,
+        .y = coords.at(1).get<int>()/* - monitor.at("y").get<int>()*/,
     };
 }
 
