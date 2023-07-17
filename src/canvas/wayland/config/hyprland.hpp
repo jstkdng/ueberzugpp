@@ -40,7 +40,6 @@ private:
     void request(std::string_view payload);
     auto request_result(std::string_view payload) -> nlohmann::json;
     auto get_active_window() -> nlohmann::json;
-    auto get_active_monitor() -> nlohmann::json;
 
     std::shared_ptr<spdlog::logger> logger;
     std::string socket_path;
