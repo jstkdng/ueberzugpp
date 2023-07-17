@@ -47,9 +47,9 @@ private:
 
     void disable_focus(std::string_view appid);
     void enable_floating(std::string_view appid);
+    void ipc_command(std::string_view appid, std::string_view command) const;
+    void ipc_command(std::string_view payload) const;
     [[nodiscard]] auto get_nodes() const -> std::vector<nlohmann::json>;
-    [[nodiscard]] auto ipc_command(std::string_view appid, std::string_view command) const -> nlohmann::json;
-    [[nodiscard]] auto ipc_command(std::string_view command) const -> nlohmann::json;
     [[nodiscard]] auto ipc_message(ipc_message_type type, std::string_view payload = "") const -> nlohmann::json;
     [[nodiscard]] static auto get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
     [[nodiscard]] static auto get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;

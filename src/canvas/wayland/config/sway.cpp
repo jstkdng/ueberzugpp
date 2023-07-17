@@ -105,17 +105,19 @@ void SwaySocket::initial_setup(const std::string_view appid)
 
 void SwaySocket::disable_focus(const std::string_view appid)
 {
-    std::ignore = ipc_command(fmt::format(R"(no_focus [app_id="{}"])", appid));
+    const auto payload = fmt::format(R"(no_focus [app_id="{}"])", appid);
+    ipc_command(payload);
 }
 
 void SwaySocket::enable_floating(const std::string_view appid)
 {
-    std::ignore = ipc_command(appid, "floating enable");
+    ipc_command(appid, "floating enable");
 }
 
 void SwaySocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    std::ignore = ipc_command(fmt::format(R"([app_id="{}"] move position {} {})", appid, xcoord, ycoord));
+    const auto payload = fmt::format(R"([app_id="{}"] move position {} {})", appid, xcoord, ycoord);
+    ipc_command(payload);
 }
 
 auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view payload) const -> nlohmann::json
@@ -160,13 +162,13 @@ auto SwaySocket::get_nodes() const -> std::vector<nlohmann::json>
     return nodes_vec;
 }
 
-auto SwaySocket::ipc_command(const std::string_view appid, const std::string_view command) const -> nlohmann::json
+void SwaySocket::ipc_command(const std::string_view appid, const std::string_view command) const
 {
-    const auto cmd = fmt::format(R"(for_window [app_id="{}"] {})", appid, command);
-    return ipc_message(IPC_COMMAND, cmd);
+    const auto payload = fmt::format(R"(for_window [app_id="{}"] {})", appid, command);
+    ipc_command(payload);
 }
 
-auto SwaySocket::ipc_command(const std::string_view command) const -> nlohmann::json
+void SwaySocket::ipc_command(const std::string_view payload) const
 {
-    return ipc_message(IPC_COMMAND, command);
+    std::ignore = ipc_message(IPC_COMMAND, payload);
 }

@@ -145,7 +145,12 @@ if(ENABLE_WAYLAND)
     list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
     find_library(LIBRT rt REQUIRED)
-    find_package(Wayland REQUIRED COMPONENTS Client)
+    if (ENABLE_OPENGL)
+        find_package(Wayland REQUIRED COMPONENTS Client Egl)
+        list(APPEND UEBERZUG_LIBRARIES Wayland::Egl)
+    else()
+        find_package(Wayland REQUIRED COMPONENTS Client)
+    endif()
     find_package(WaylandProtocols REQUIRED)
     find_package(WaylandScanner REQUIRED)
 
