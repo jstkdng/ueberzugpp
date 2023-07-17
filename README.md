@@ -57,10 +57,12 @@ Options:
   -h,--help                   Print this help message and exit
   -s,--silent                 Print stderr to /dev/null.
   --use-escape-codes [0]      Use escape codes to get terminal capabilities.
-  --no-stdin                  Do not listen on stdin for commands.
+  --pid-file TEXT             Output file where to write the daemon PID.
+  --no-stdin Needs: --pid-file
+                              Do not listen on stdin for commands.
   --no-cache                  Disable caching of resized images.
   --no-opencv                 Do not use OpenCV, use Libvips instead.
-  -o,--output TEXT:{x11,sixel,kitty,iterm2}
+  -o,--output TEXT:{x11,wayland,sixel,kitty,iterm2,chafa}
                               Image output method
   -p,--parser                 **UNUSED**, only present for backwards compatibility.
   -l,--loader                 **UNUSED**, only present for backwards compatibility.
@@ -135,6 +137,7 @@ and included in the binary.
 - cli11
 - spdlog
 - fmt
+- microsoft.gsl
 
 ## Optional dependencies
 
@@ -197,3 +200,8 @@ cmake --build .
 
 after running these commands the resulting binary is ready to be used.
 
+# Donate
+
+If you like my work you can send some monero my way.
+
+XMR Address: `8BRt2qYXjyR9Bb2CXtjVWSYNCepqgcZkheoMWTXTNmwLLU3ZEscuxtYFGaytSMNn1FETLdbdhXimCTTLSkN5r5j7SEBLMho`
