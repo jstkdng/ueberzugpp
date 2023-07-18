@@ -37,9 +37,13 @@ Advantages over w3mimgdisplay and ueberzug:
 
 <a href="https://repology.org/project/ueberzugpp/versions"><img src="https://repology.org/badge/vertical-allrepos/ueberzugpp.svg" /></a>
 
-Homebrew (MacOS/Linux): `brew install jstkdng/programs/ueberzugpp`
+### Homebrew (MacOS/Linux)
 
-[Debian/Ubuntu](https://software.opensuse.org/download.html?project=home%3Ajustkidding&package=ueberzugpp)
+`brew install jstkdng/programs/ueberzugpp`
+
+### Debian/Ubuntu/Fedora
+
+https://software.opensuse.org/download.html?project=home%3Ajustkidding&package=ueberzugpp
 
 # Usage
 
