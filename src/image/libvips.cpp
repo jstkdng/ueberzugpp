@@ -174,6 +174,12 @@ auto LibvipsImage::process_image() -> void
         "x11", "chafa", "wayland"
     };
 
+#ifdef ENABLE_OPENGL
+    if (flags->use_opengl) {
+        image = image.flipver();
+    }
+#endif
+
     if (bgra_trifecta.contains(flags->output)) {
         // alpha channel required
         if (!image.has_alpha()) {
