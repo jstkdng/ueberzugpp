@@ -91,6 +91,7 @@ void WaylandShmWindow::xdg_setup()
 WaylandShmWindow::~WaylandShmWindow()
 {
     delete_wayland_structs();
+    delete_xdg_structs();
 }
 
 void WaylandShmWindow::draw()
@@ -121,10 +122,10 @@ void WaylandShmWindow::hide()
     }
     visible = false;
     const std::scoped_lock lock {draw_mutex};
-    delete_wayland_structs();
+    delete_xdg_structs();
 }
 
-void WaylandShmWindow::delete_wayland_structs()
+void WaylandShmWindow::delete_xdg_structs()
 {
     if (xdg_toplevel != nullptr) {
         xdg_toplevel_destroy(xdg_toplevel);
@@ -134,6 +135,10 @@ void WaylandShmWindow::delete_wayland_structs()
         xdg_surface_destroy(xdg_surface);
         xdg_surface = nullptr;
     }
+}
+
+void WaylandShmWindow::delete_wayland_structs()
+{
     if (surface != nullptr) {
         wl_surface_destroy(surface);
         surface = nullptr;

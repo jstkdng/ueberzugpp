@@ -29,7 +29,12 @@
 #include <wayland-client.h>
 #include <spdlog/fwd.h>
 
+#ifdef ENABLE_OPENGL
+#   include <EGL/egl.h>
+#endif
+
 class WaylandConfig;
+class Flags;
 
 class WaylandCanvas : public Canvas
 {
@@ -60,7 +65,13 @@ private:
 
     std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<WaylandConfig> config;
+    std::shared_ptr<Flags> flags;
     std::unordered_map<std::string, std::shared_ptr<Window>> windows;
+
+#ifdef ENABLE_OPENGL
+    EGLDisplay egl_display;
+    bool egl_available = false;
+#endif
 
     void handle_events();
 };

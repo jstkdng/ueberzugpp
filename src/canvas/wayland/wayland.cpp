@@ -19,8 +19,14 @@
 #include "util.hpp"
 #include "image.hpp"
 #include "config.hpp"
+#include "flags.hpp"
 
 #include <spdlog/spdlog.h>
+
+#ifdef ENABLE_OPENGL
+#   include <EGL/eglext.h>
+#   include "window/waylandegl.hpp"
+#endif
 
 constexpr struct wl_registry_listener registry_listener = {
     .global = WaylandCanvas::registry_handle_global,
@@ -71,6 +77,7 @@ display(wl_display_connect(nullptr))
         throw std::runtime_error("Failed to connect to wayland display.");
     }
     logger = spdlog::get("wayland");
+    flags = Flags::instance();
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
@@ -78,6 +85,17 @@ display(wl_display_connect(nullptr))
     event_handler = std::thread([this] {
         handle_events();
     });
+
+#ifdef ENABLE_OPENGL
+    egl_display = eglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_EXT, display, nullptr);
+    if (egl_display != EGL_NO_DISPLAY) {
+        auto eglres = eglInitialize(egl_display, nullptr, nullptr);
+        if (eglres == EGL_TRUE) {
+            eglres = eglBindAPI(EGL_OPENGL_API);
+            egl_available = eglres == EGL_TRUE;
+        }
+    }
+#endif
 
     logger->info("Canvas created");
 }
@@ -103,6 +121,13 @@ WaylandCanvas::~WaylandCanvas()
     if (event_handler.joinable()) {
         event_handler.join();
     }
+
+#ifdef ENABLE_OPENGL
+    if (egl_available) {
+        eglTerminate(egl_display);
+    }
+#endif
+
     if (wl_shm != nullptr) {
         wl_shm_destroy(wl_shm);
     }
@@ -117,8 +142,22 @@ WaylandCanvas::~WaylandCanvas()
 
 void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
-    auto window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
-    window->finish_init();
+    std::shared_ptr<Window> window;
+#ifdef ENABLE_OPENGL
+    if (egl_available && flags->use_opengl) {
+        auto wl_window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl_display, std::move(new_image), config);
+        wl_window->finish_init();
+        window = wl_window;
+    } else {
+        auto wl_window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
+        wl_window->finish_init();
+        window = wl_window;
+    }
+#else
+    auto wl_window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
+    wl_window->finish_init();
+    window = wl_window;
+#endif
     windows.insert_or_assign(identifier, std::move(window));
 }
 
