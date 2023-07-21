@@ -30,7 +30,7 @@ public:
     explicit EGLUtil(EGLDisplay display);
     ~EGLUtil();
 
-    static auto get_texture_from_image(const Image& image) -> GLuint;
+    static auto get_texture_from_image(const Image& image, GLuint texture) -> GLuint;
     static void GLAPIENTRY debug_callback(GLenum source, GLenum type,
             GLuint gl_id, GLenum severity, GLsizei length, const GLchar* message, const void* user);
 

@@ -24,12 +24,6 @@
 
 #include <gsl/gsl>
 
-constexpr auto surface_attrs = std::to_array<EGLAttrib>({
-    EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_LINEAR, // or use EGL_GL_COLORSPACE_SRGB for sRGB framebuffer
-    EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
-    EGL_NONE,
-});
-
 X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
             xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display,
             std::shared_ptr<Image> new_image):
@@ -44,71 +38,21 @@ image(std::move(new_image))
 {
     create();
     egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config,
-            &windowid, surface_attrs.data());
+            &windowid, nullptr);
     if (egl_surface == EGL_NO_SURFACE) {
-        std::cout << "bruh3" << std::endl;
+        std::cout << "Could not create surface" << std::endl;
     }
 
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+
+    glGenFramebuffers(1, &fbo);
+    glGenTextures(1, &texture);
+#ifdef DEBUG
     glDebugMessageCallback(EGLUtil::debug_callback, nullptr);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
 
-    std::array<char*, 1> buff;
-    std::string vertex_shader_source = R"(
-        #version 460 core
-        layout (location = 0) in vec3 aPos;
-
-        void main()
-        {
-            gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-        }
-    )";
-    buff.at(0) = vertex_shader_source.data();
-
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, buff.data(), nullptr);
-    glCompileShader(vertex_shader);
-
-    std::string vertex_shader_source_2 = R"(
-        #version 460 core
-        out vec4 FragColor;
-
-        void main()
-        {
-            FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
-        } 
-    )";
-    buff.at(0) = vertex_shader_source_2.data();
-
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, buff.data(), nullptr);
-    glCompileShader(fragment_shader);
-
-    shader_program = glCreateProgram();
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    glDeleteShader(fragment_shader);
-    glDeleteShader(vertex_shader);
-
-    const auto vertices = std::to_array<GLfloat>({
-        -0.5, -0.5, 0.0,
-         0.5, -0.5, 0.0,
-         0.0,  0.5, 0.0
-    });
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
-    glBindVertexArray(vao);
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size(), vertices.data(), GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 X11EGLWindow::~X11EGLWindow()
@@ -116,6 +60,8 @@ X11EGLWindow::~X11EGLWindow()
     xcb_destroy_window(connection, windowid);
     xcb_flush(connection);
 
+    glDeleteTextures(1, &texture);
+    glDeleteFramebuffers(1, &fbo);
     eglDestroySurface(egl_display, egl_surface);
 }
 
@@ -146,17 +92,27 @@ void X11EGLWindow::create()
 
 void X11EGLWindow::draw()
 {
+    const std::scoped_lock lock {egl_mutex};
+    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
+
+    glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
+                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
     eglSwapBuffers(egl_display, egl_surface);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void X11EGLWindow::generate_frame()
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    const std::scoped_lock lock {egl_mutex};
+    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
 
-    //glUseProgram(shader_program);
-    //glBindVertexArray(vao);
-    //glDrawArrays(GL_TRIANGLES, 0, 3);
+    EGLUtil::get_texture_from_image(*image, texture);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+            GL_TEXTURE_2D, texture, 0);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
     send_expose_event();
 }
 

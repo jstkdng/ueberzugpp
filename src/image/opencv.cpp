@@ -130,6 +130,10 @@ void OpencvImage::process_image()
         "x11", "chafa", "wayland"
     };
 
+    if (flags->use_opengl) {
+        cv::flip(image, image, 0);
+    }
+
     if (image.channels() == 1) {
         cv::cvtColor(image, image, cv::COLOR_GRAY2BGRA);
     }

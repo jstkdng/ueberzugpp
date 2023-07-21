@@ -52,12 +52,12 @@ void EGLUtil::set_config()
         EGL_CONFORMANT,        EGL_OPENGL_BIT,
         EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
         EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
-    
+
         EGL_RED_SIZE, 8,
         EGL_GREEN_SIZE, 8,
         EGL_BLUE_SIZE, 8,
         EGL_ALPHA_SIZE, 8,
-    
+
         EGL_DEPTH_SIZE,   24,
         EGL_STENCIL_SIZE,  8,
     
@@ -77,8 +77,8 @@ void EGLUtil::set_context()
         EGL_CONTEXT_MINOR_VERSION, 6,
 #ifdef DEBUG
         EGL_CONTEXT_OPENGL_DEBUG, EGL_TRUE,
-#endif
         EGL_CONTEXT_OPENGL_ROBUST_ACCESS, EGL_TRUE,
+#endif
         EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
         EGL_NONE
     });
@@ -88,19 +88,16 @@ void EGLUtil::set_context()
     }
 }
 
-auto EGLUtil::get_texture_from_image(const Image& image) -> GLuint
+auto EGLUtil::get_texture_from_image(const Image& image, GLuint texture) -> GLuint
 {
-    GLuint texture = 0;
-    glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     glTexImage2D(GL_TEXTURE_2D, 0,
             GL_RGBA8, image.width(), image.height(), 0,
             GL_BGRA, GL_UNSIGNED_BYTE, image.data());
 
-    glBindTexture(GL_TEXTURE_2D, 0);
     return texture;
 }

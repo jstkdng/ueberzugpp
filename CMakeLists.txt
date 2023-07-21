@@ -214,6 +214,7 @@ target_compile_options(ueberzug PRIVATE
         -Wall -Wextra -Wpedantic -Werror
     >
 )
+
 target_compile_definitions(ueberzug PRIVATE
     $<$<CONFIG:Debug>:
         DEBUG

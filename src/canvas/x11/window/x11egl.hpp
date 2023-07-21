@@ -23,6 +23,7 @@
 #include <xcb/xcb.h>
 
 #include <memory>
+#include <mutex>
 
 class Image;
 
@@ -50,14 +51,9 @@ private:
     EGLUtil egl_util;
 
     GLuint texture;
-    GLuint buffer;
-    GLuint vbo;
-    GLuint vao;
-    GLuint vertex_shader;
-    GLuint fragment_shader;
-    GLuint shader_program;
+    GLuint fbo;
 
-
+    std::mutex egl_mutex;
     std::shared_ptr<Image> image;
 
     bool visible = false;
