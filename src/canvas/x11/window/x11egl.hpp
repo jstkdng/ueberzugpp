@@ -18,11 +18,9 @@
 #define X11_EGL_WINDOW_H
 
 #include "window.hpp"
-#include "util/ptr.hpp"
+#include "util/egl.hpp"
 
-#include <EGL/egl.h>
 #include <xcb/xcb.h>
-#include <xcb/xcb_image.h>
 
 #include <memory>
 
@@ -48,13 +46,20 @@ private:
     xcb_window_t parentid;
     xcb_gcontext_t gc;
     EGLDisplay egl_display;
-    EGLConfig egl_config;
-    EGLContext egl_context;
     EGLSurface egl_surface;
-    //EGLImage egl_image;
+    EGLUtil egl_util;
+
+    GLuint texture;
+    GLuint buffer;
+    GLuint vbo;
+    GLuint vao;
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+    GLuint shader_program;
+
+
     std::shared_ptr<Image> image;
 
-    c_unique_ptr<xcb_image_t, xcb_image_destroy> xcb_image;
     bool visible = false;
 
     void send_expose_event();

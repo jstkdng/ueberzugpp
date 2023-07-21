@@ -106,6 +106,9 @@ endif()
 if(ENABLE_OPENGL)
     target_compile_definitions(ueberzug PRIVATE ENABLE_OPENGL)
     find_package(OpenGL REQUIRED)
+    list(APPEND UEBERZUG_SOURCES
+        "src/util/egl.cpp"
+    )
     list(APPEND UEBERZUG_LIBRARIES
         OpenGL::OpenGL
         OpenGL::EGL
@@ -209,6 +212,11 @@ endif()
 target_compile_options(ueberzug PRIVATE
     $<$<CONFIG:Debug>:
         -Wall -Wextra -Wpedantic -Werror
+    >
+)
+target_compile_definitions(ueberzug PRIVATE
+    $<$<CONFIG:Debug>:
+        DEBUG
     >
 )
 

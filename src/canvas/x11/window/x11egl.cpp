@@ -19,26 +19,15 @@
 #include "x11egl.hpp"
 #include "util.hpp"
 
-#include <gsl/gsl>
 #include <iostream>
 #include <array>
 
-constexpr auto attrs = std::to_array<EGLint>({
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 8,
-    EGL_GREEN_SIZE, 8,
-    EGL_BLUE_SIZE, 8,
-    EGL_ALPHA_SIZE, 8,
-    EGL_NONE
-});
+#include <gsl/gsl>
 
-constexpr auto ctxattrs = std::to_array<EGLint>({
-    EGL_CONTEXT_MAJOR_VERSION, 4,
-    EGL_CONTEXT_MINOR_VERSION, 6,
-    EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE, EGL_TRUE,
-    EGL_CONTEXT_OPENGL_DEBUG, EGL_TRUE,
-    EGL_CONTEXT_OPENGL_ROBUST_ACCESS, EGL_TRUE,
-    EGL_NONE
+constexpr auto surface_attrs = std::to_array<EGLAttrib>({
+    EGL_GL_COLORSPACE, EGL_GL_COLORSPACE_LINEAR, // or use EGL_GL_COLORSPACE_SRGB for sRGB framebuffer
+    EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
+    EGL_NONE,
 });
 
 X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
@@ -50,39 +39,83 @@ windowid(windowid),
 parentid(parentid),
 gc(xcb_generate_id(connection)),
 egl_display(egl_display),
+egl_util(egl_display),
 image(std::move(new_image))
 {
     create();
-    int num_config = 0;
-    auto eglres = eglChooseConfig(egl_display, attrs.data(), &egl_config, 1, &num_config);
-    if (eglres != EGL_TRUE) {
-        std::cout << "bruh1" << std::endl;
-    }
-    if (num_config != 1) {
-        std::cout << "bruh2" << std::endl;
-    }
-    egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_config, &windowid, nullptr);
+    egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config,
+            &windowid, surface_attrs.data());
     if (egl_surface == EGL_NO_SURFACE) {
         std::cout << "bruh3" << std::endl;
     }
-    egl_context = eglCreateContext(egl_display, egl_config, EGL_NO_CONTEXT, ctxattrs.data());
-    if ( egl_context == EGL_NO_CONTEXT) {
-        std::cout << "bruh4" << std::endl;
-    }
-    //egl_image = eglCreateImage(egl_display, egl_context, EGL_GL_RENDERBUFFER,
-    //        const_cast<unsigned char*>(image->data()), nullptr);
-    //if (egl_image == EGL_NO_IMAGE) {
-    //    std::cout << "bruh5" << std::endl;
-    //}
+
+    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(EGLUtil::debug_callback, nullptr);
+
+    std::array<char*, 1> buff;
+    std::string vertex_shader_source = R"(
+        #version 460 core
+        layout (location = 0) in vec3 aPos;
+
+        void main()
+        {
+            gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+        }
+    )";
+    buff.at(0) = vertex_shader_source.data();
+
+    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertex_shader, 1, buff.data(), nullptr);
+    glCompileShader(vertex_shader);
+
+    std::string vertex_shader_source_2 = R"(
+        #version 460 core
+        out vec4 FragColor;
+
+        void main()
+        {
+            FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+        } 
+    )";
+    buff.at(0) = vertex_shader_source_2.data();
+
+    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragment_shader, 1, buff.data(), nullptr);
+    glCompileShader(fragment_shader);
+
+    shader_program = glCreateProgram();
+    glAttachShader(shader_program, vertex_shader);
+    glAttachShader(shader_program, fragment_shader);
+    glLinkProgram(shader_program);
+
+    glDeleteShader(fragment_shader);
+    glDeleteShader(vertex_shader);
+
+    const auto vertices = std::to_array<GLfloat>({
+        -0.5, -0.5, 0.0,
+         0.5, -0.5, 0.0,
+         0.0,  0.5, 0.0
+    });
+    glGenVertexArrays(1, &vao);
+    glGenBuffers(1, &vbo);
+    glBindVertexArray(vao);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size(), vertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 X11EGLWindow::~X11EGLWindow()
 {
     xcb_destroy_window(connection, windowid);
-    xcb_free_gc(connection, gc);
     xcb_flush(connection);
 
-    eglDestroyContext(egl_display, egl_context);
     eglDestroySurface(egl_display, egl_surface);
 }
 
@@ -109,34 +142,21 @@ void X11EGLWindow::create()
             screen->root_visual,
             value_mask,
             &value_list);
-
-    xcb_create_gc(connection, gc, windowid, 0, nullptr);
 }
 
 void X11EGLWindow::draw()
 {
-    //if (!xcb_image) {
-    //    return;
-    //}
-    //xcb_image_put(connection, windowid, gc, xcb_image.get(), 0, 0, 0);
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_context);
-
-    // do something
-    
     eglSwapBuffers(egl_display, egl_surface);
 }
 
 void X11EGLWindow::generate_frame()
 {
-    xcb_image.reset(
-        xcb_image_create_native(connection,
-            image->width(),
-            image->height(),
-            XCB_IMAGE_FORMAT_Z_PIXMAP,
-            screen->root_depth,
-            nullptr, 0, nullptr)
-    );
-    xcb_image->data = const_cast<unsigned char*>(image->data());
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    //glUseProgram(shader_program);
+    //glBindVertexArray(vao);
+    //glDrawArrays(GL_TRIANGLES, 0, 3);
     send_expose_event();
 }
 
