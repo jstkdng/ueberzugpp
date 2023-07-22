@@ -72,12 +72,7 @@ void WaylandEglWindow::finish_init()
     xdg_agg.ptrs.push_back(std::move(xdg));
     setup_listeners();
 
-    //region = wl_compositor_create_region(compositor);
-    //wl_region_add(region, 0, 0, image->width(), image->height());
-    //wl_surface_set_opaque_region(surface, region);
-
     egl_window = wl_egl_window_create(surface, image->width(), image->height());
-
     egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config, egl_window, nullptr);
 
     if (egl_surface == EGL_NO_SURFACE) {
@@ -102,13 +97,12 @@ void WaylandEglWindow::finish_init()
 void WaylandEglWindow::setup_listeners()
 {
     xdg_surface_add_listener(xdg_surface, &xdg_surface_listener_egl, this_ptr);
+    wl_surface_commit(surface);
 
     if (image->is_animated()) {
         callback = wl_surface_frame(surface);
         wl_callback_add_listener(callback, &frame_listener_egl, this_ptr);
     }
-
-    wl_surface_commit(surface);
 }
 
 void WaylandEglWindow::xdg_setup()
@@ -143,8 +137,7 @@ void WaylandEglWindow::delete_wayland_structs()
 
 void WaylandEglWindow::draw()
 {
-    //const std::scoped_lock lock {egl_mutex};
-    std::cout << "?" << std::endl;
+    const std::scoped_lock lock {egl_mutex};
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
 
     glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
@@ -176,7 +169,7 @@ void WaylandEglWindow::generate_frame()
 
     image->next_frame();
 
-    //const std::scoped_lock lock {egl_mutex};
+    const std::scoped_lock lock {egl_mutex};
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
 
     EGLUtil::get_texture_from_image(*image, texture);

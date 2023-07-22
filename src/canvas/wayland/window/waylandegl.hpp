@@ -40,11 +40,6 @@ public:
     ~WaylandEglWindow() override;
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
     static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
-    static void xdg_toplevel_configure(void *data,
-		struct xdg_toplevel *xdg_toplevel, int32_t width, int32_t height,
-		struct wl_array *states);
-    static void xdg_toplevel_close(void *data,
-		struct xdg_toplevel *xdg_toplevel);
 
     void draw() override;
     void generate_frame() override;
@@ -58,7 +53,6 @@ private:
     struct xdg_wm_base *xdg_base;
 
     struct wl_surface *surface = nullptr;
-    struct wl_region *region = nullptr;
     struct xdg_surface *xdg_surface = nullptr;
     struct xdg_toplevel *xdg_toplevel = nullptr;
     struct wl_callback *callback;
