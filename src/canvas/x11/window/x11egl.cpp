@@ -60,8 +60,10 @@ X11EGLWindow::~X11EGLWindow()
     xcb_destroy_window(connection, windowid);
     xcb_flush(connection);
 
+    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
     glDeleteTextures(1, &texture);
     glDeleteFramebuffers(1, &fbo);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     eglDestroySurface(egl_display, egl_surface);
 }
 

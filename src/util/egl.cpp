@@ -75,10 +75,11 @@ void EGLUtil::set_context()
     const auto attrs = std::to_array<EGLint>({
         EGL_CONTEXT_MAJOR_VERSION, 4,
         EGL_CONTEXT_MINOR_VERSION, 6,
+        EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE, EGL_TRUE,
 #ifdef DEBUG
         EGL_CONTEXT_OPENGL_DEBUG, EGL_TRUE,
-        EGL_CONTEXT_OPENGL_ROBUST_ACCESS, EGL_TRUE,
 #endif
+        EGL_CONTEXT_OPENGL_ROBUST_ACCESS, EGL_TRUE,
         EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
         EGL_NONE
     });
@@ -92,8 +93,8 @@ auto EGLUtil::get_texture_from_image(const Image& image, GLuint texture) -> GLui
 {
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     glTexImage2D(GL_TEXTURE_2D, 0,
             GL_RGBA8, image.width(), image.height(), 0,
