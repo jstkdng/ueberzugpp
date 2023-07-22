@@ -57,7 +57,19 @@ egl_util(egl_display),
 egl_window(wl_egl_window_create(surface, image->width(), image->height())),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len)))
 {
+    config->initial_setup(appid);
+    xdg_setup();
+    /*
+    egl_window = wl_egl_window_create(surface, image->width(), image->height());
     egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config, egl_window, nullptr);
+
+    if (egl_surface == EGL_NO_SURFACE) {
+        std::cout << "Could not create surface" << std::endl;
+    }
+
+    xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
+    xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
+
 
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
 
@@ -68,8 +80,7 @@ appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len)))
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
 #endif
 
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    xdg_setup();
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);*/
 }
 
 WaylandEglWindow::~WaylandEglWindow()
@@ -142,10 +153,9 @@ void WaylandEglWindow::draw()
                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     eglSwapBuffers(egl_display, egl_surface);
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
     wl_surface_commit(surface);
     move_window(); 
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void WaylandEglWindow::move_window()
@@ -195,13 +205,29 @@ void WaylandEglWindow::hide()
     delete_xdg_structs();
 }
 
-void WaylandEglWindow::xdg_surface_configure([[maybe_unused]] void *data, struct xdg_surface *xdg_surface, uint32_t serial)
+void WaylandEglWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
 {
     xdg_surface_ack_configure(xdg_surface, serial);
+    const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
+    const auto window = tmp->ptr.lock();
+    if (!window) {
+        return;
+    }
+    window->draw();
 }
 
-void WaylandEglWindow::wl_surface_frame_done([[maybe_unused]] void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
+void WaylandEglWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
 {
     wl_callback_destroy(callback);
+    const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
+    const auto window = tmp->ptr.lock();
+    if (!window) {
+        return;
+    }
+    const std::scoped_lock lock {window->draw_mutex};
+    if (!window->visible) {
+        return;
+    }
+    window->generate_frame();
 }
 

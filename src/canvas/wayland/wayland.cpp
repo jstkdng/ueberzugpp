@@ -27,6 +27,7 @@
 #   include <EGL/eglext.h>
 #   include "window/waylandegl.hpp"
 #endif
+#include "window/waylandshm.hpp"
 
 constexpr struct wl_registry_listener registry_listener = {
     .global = WaylandCanvas::registry_handle_global,

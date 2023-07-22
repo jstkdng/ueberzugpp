@@ -19,7 +19,6 @@
 
 #include "canvas.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
-#include "window/waylandshm.hpp"
 
 #include <memory>
 #include <atomic>
@@ -35,6 +34,7 @@
 
 class WaylandConfig;
 class Flags;
+class Window;
 
 class WaylandCanvas : public Canvas
 {
