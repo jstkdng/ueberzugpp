@@ -23,6 +23,7 @@
 
 #include <fmt/format.h>
 #include <thread>
+#include <iostream>
 
 constexpr int id_len = 10;
 
@@ -34,19 +35,9 @@ constexpr struct wl_callback_listener frame_listener = {
     .done = WaylandShmWindow::wl_surface_frame_done
 };
 
-struct XdgStruct
-{
-    std::weak_ptr<WaylandShmWindow> ptr;
-};
-struct XdgStructAgg
-{
-    std::vector<std::unique_ptr<XdgStruct>> ptrs;
-};
-const auto xdgs = std::make_unique<struct XdgStructAgg>();
-
 WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor,
         struct wl_shm *wl_shm, struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
-        std::shared_ptr<WaylandConfig> new_config):
+        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg& xdg_agg):
 compositor(compositor),
 xdg_base(xdg_base),
 surface(wl_compositor_create_surface(compositor)),
@@ -55,7 +46,8 @@ xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
 image(std::move(new_image)),
 shm(std::make_unique<WaylandShm>(image->width(), image->height(), wl_shm)),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
-config(std::move(new_config))
+config(std::move(new_config)),
+xdg_agg(xdg_agg)
 {
     config->initial_setup(appid);
     xdg_setup();
@@ -66,7 +58,7 @@ void WaylandShmWindow::finish_init()
     auto xdg = std::make_unique<XdgStruct>();
     xdg->ptr = shared_from_this();
     this_ptr = xdg.get();
-    xdgs->ptrs.push_back(std::move(xdg));
+    xdg_agg.ptrs.push_back(std::move(xdg));
     setup_listeners();
     visible = true;
 }
@@ -188,9 +180,10 @@ void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *cal
     if (!window) {
         return;
     }
-    const std::scoped_lock lock {window->draw_mutex};
-    if (!window->visible) {
+    auto* shm_window = dynamic_cast<WaylandShmWindow*>(window.get());
+    const std::scoped_lock lock {shm_window->draw_mutex};
+    if (!shm_window->visible) {
         return;
     }
-    window->generate_frame();
+    shm_window->generate_frame();
 }

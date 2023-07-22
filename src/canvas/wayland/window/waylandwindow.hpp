@@ -14,20 +14,32 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef DUMMY_WAYLAND_CONFIG_H
-#define DUMMY_WAYLAND_CONFIG_H
+#ifndef WAYLAND_WINDOW_H
+#define WAYLAND_WINDOW_H
 
-#include "../config.hpp"
+#include "window.hpp"
 
-class DummyWaylandConfig : public WaylandConfig
+#include <memory>
+#include <vector>
+
+class WaylandWindow:
+    public Window,
+    public std::enable_shared_from_this<WaylandWindow>
 {
 public:
-    DummyWaylandConfig() = default;
-    ~DummyWaylandConfig() override = default;
-    [[nodiscard]] auto get_window_info() -> struct WaylandWindowGeometry override;
-    auto is_dummy() -> bool override { return true; }
-    void initial_setup(std::string_view appid) override;
-    void move_window(std::string_view appid, int xcoord, int ycoord) override;
+    ~WaylandWindow() override = default;
+
+    virtual void finish_init() = 0;
+};
+
+struct XdgStruct
+{
+    std::weak_ptr<WaylandWindow> ptr;
+};
+
+struct XdgStructAgg
+{
+    std::vector<std::unique_ptr<XdgStruct>> ptrs;
 };
 
 #endif

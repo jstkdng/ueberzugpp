@@ -22,6 +22,7 @@
 #include "flags.hpp"
 
 #include <spdlog/spdlog.h>
+#include <iostream>
 
 #ifdef ENABLE_OPENGL
 #   include <EGL/eglext.h>
@@ -143,22 +144,17 @@ WaylandCanvas::~WaylandCanvas()
 
 void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
 {
-    std::shared_ptr<Window> window;
+    std::shared_ptr<WaylandWindow> window;
 #ifdef ENABLE_OPENGL
     if (egl_available && flags->use_opengl) {
-        auto wl_window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl_display, std::move(new_image), config);
-        wl_window->finish_init();
-        window = wl_window;
+        window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl_display, std::move(new_image), config, xdg_agg);
     } else {
-        auto wl_window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
-        wl_window->finish_init();
-        window = wl_window;
+        window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, xdg_agg);
     }
 #else
-    auto wl_window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
-    wl_window->finish_init();
-    window = wl_window;
+    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
 #endif
+    window->finish_init();
     windows.insert_or_assign(identifier, std::move(window));
 }
 

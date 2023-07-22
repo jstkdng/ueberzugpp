@@ -73,7 +73,7 @@ auto HyprlandSocket::get_active_window() -> nlohmann::json
     return *client;
 }
 
-auto HyprlandSocket::get_window_info() -> struct WaylandWindow
+auto HyprlandSocket::get_window_info() -> struct WaylandWindowGeometry
 {
     const auto terminal = get_active_window();
     const auto& sizes = terminal.at("size");

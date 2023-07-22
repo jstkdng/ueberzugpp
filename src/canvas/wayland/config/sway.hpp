@@ -36,7 +36,7 @@ class SwaySocket : public WaylandConfig
 public:
     SwaySocket();
     ~SwaySocket() override = default;
-    [[nodiscard]] auto get_window_info() -> struct WaylandWindow override;
+    [[nodiscard]] auto get_window_info() -> struct WaylandWindowGeometry override;
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 

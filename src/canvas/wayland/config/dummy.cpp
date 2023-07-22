@@ -16,7 +16,7 @@
 
 #include "dummy.hpp"
 
-auto DummyWaylandConfig::get_window_info() -> struct WaylandWindow
+auto DummyWaylandConfig::get_window_info() -> struct WaylandWindowGeometry
 {
     return {};
 }

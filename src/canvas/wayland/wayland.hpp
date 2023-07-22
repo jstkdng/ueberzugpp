@@ -18,6 +18,7 @@
 #define WAYLAND_CANVAS_H
 
 #include "canvas.hpp"
+#include "window/waylandwindow.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 
 #include <memory>
@@ -34,7 +35,7 @@
 
 class WaylandConfig;
 class Flags;
-class Window;
+class WaylandWindow;
 
 class WaylandCanvas : public Canvas
 {
@@ -66,12 +67,14 @@ private:
     std::shared_ptr<spdlog::logger> logger;
     std::shared_ptr<WaylandConfig> config;
     std::shared_ptr<Flags> flags;
-    std::unordered_map<std::string, std::shared_ptr<Window>> windows;
+    std::unordered_map<std::string, std::shared_ptr<WaylandWindow>> windows;
 
 #ifdef ENABLE_OPENGL
     EGLDisplay egl_display;
     bool egl_available = false;
 #endif
+
+    struct XdgStructAgg xdg_agg;
 
     void handle_events();
 };

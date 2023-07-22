@@ -21,30 +21,23 @@
 #include "../config.hpp"
 
 #include <fmt/format.h>
+
+#include <thread>
 #include <iostream>
 
 constexpr int id_len = 10;
 
-constexpr struct xdg_surface_listener xdg_surface_listener = {
+constexpr struct xdg_surface_listener xdg_surface_listener_egl = {
     .configure = WaylandEglWindow::xdg_surface_configure,
 };
 
-constexpr struct wl_callback_listener frame_listener = {
+constexpr struct wl_callback_listener frame_listener_egl = {
     .done = WaylandEglWindow::wl_surface_frame_done
 };
 
-struct XdgStruct
-{
-    std::weak_ptr<WaylandEglWindow> ptr;
-};
-struct XdgStructAgg
-{
-    std::vector<std::unique_ptr<XdgStruct>> ptrs;
-};
-const auto xdgs = std::make_unique<struct XdgStructAgg>();
-
 WaylandEglWindow::WaylandEglWindow(struct wl_compositor *compositor, struct xdg_wm_base *xdg_base,
-        EGLDisplay egl_display, std::unique_ptr<Image> new_image, std::shared_ptr<WaylandConfig> new_config):
+        EGLDisplay egl_display, std::unique_ptr<Image> new_image,
+        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg& xdg_agg):
 compositor(compositor),
 xdg_base(xdg_base),
 surface(wl_compositor_create_surface(compositor)),
@@ -54,33 +47,11 @@ image(std::move(new_image)),
 config(std::move(new_config)),
 egl_display(egl_display),
 egl_util(egl_display),
-egl_window(wl_egl_window_create(surface, image->width(), image->height())),
-appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len)))
+appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
+xdg_agg(xdg_agg)
 {
     config->initial_setup(appid);
     xdg_setup();
-    /*
-    egl_window = wl_egl_window_create(surface, image->width(), image->height());
-    egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config, egl_window, nullptr);
-
-    if (egl_surface == EGL_NO_SURFACE) {
-        std::cout << "Could not create surface" << std::endl;
-    }
-
-    xdg_surface = xdg_wm_base_get_xdg_surface(xdg_base, surface);
-    xdg_toplevel = xdg_surface_get_toplevel(xdg_surface);
-
-
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-
-    glGenFramebuffers(1, &fbo);
-    glGenTextures(1, &texture);
-#ifdef DEBUG
-    glDebugMessageCallback(EGLUtil::debug_callback, nullptr);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
-
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);*/
 }
 
 WaylandEglWindow::~WaylandEglWindow()
@@ -98,20 +69,46 @@ void WaylandEglWindow::finish_init()
     auto xdg = std::make_unique<XdgStruct>();
     xdg->ptr = shared_from_this();
     this_ptr = xdg.get();
-    xdgs->ptrs.push_back(std::move(xdg));
+    xdg_agg.ptrs.push_back(std::move(xdg));
     setup_listeners();
+
+    //region = wl_compositor_create_region(compositor);
+    //wl_region_add(region, 0, 0, image->width(), image->height());
+    //wl_surface_set_opaque_region(surface, region);
+
+    egl_window = wl_egl_window_create(surface, image->width(), image->height());
+
+    egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config, egl_window, nullptr);
+
+    if (egl_surface == EGL_NO_SURFACE) {
+        std::cout << "Could not create surface" << std::endl;
+    }
+
+    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
+    eglSwapInterval(egl_display, 0);
+
+    glGenFramebuffers(1, &fbo);
+    glGenTextures(1, &texture);
+#ifdef DEBUG
+    glDebugMessageCallback(EGLUtil::debug_callback, nullptr);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
+
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
     visible = true;
 }
 
 void WaylandEglWindow::setup_listeners()
 {
-    xdg_surface_add_listener(xdg_surface, &xdg_surface_listener, this_ptr);
-    wl_surface_commit(surface);
+    xdg_surface_add_listener(xdg_surface, &xdg_surface_listener_egl, this_ptr);
 
     if (image->is_animated()) {
         callback = wl_surface_frame(surface);
-        wl_callback_add_listener(callback, &frame_listener, this_ptr);
+        wl_callback_add_listener(callback, &frame_listener_egl, this_ptr);
     }
+
+    wl_surface_commit(surface);
 }
 
 void WaylandEglWindow::xdg_setup()
@@ -146,16 +143,18 @@ void WaylandEglWindow::delete_wayland_structs()
 
 void WaylandEglWindow::draw()
 {
-    const std::scoped_lock lock {egl_mutex};
+    //const std::scoped_lock lock {egl_mutex};
+    std::cout << "?" << std::endl;
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
 
     glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
                   GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
     eglSwapBuffers(egl_display, egl_surface);
+    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+
     wl_surface_commit(surface);
     move_window(); 
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 void WaylandEglWindow::move_window()
@@ -171,7 +170,13 @@ void WaylandEglWindow::move_window()
 
 void WaylandEglWindow::generate_frame()
 {
-    const std::scoped_lock lock {egl_mutex};
+    std::this_thread::sleep_for(std::chrono::milliseconds(image->frame_delay()));
+    callback = wl_surface_frame(surface);
+    wl_callback_add_listener(callback, &frame_listener_egl, this_ptr);
+
+    image->next_frame();
+
+    //const std::scoped_lock lock {egl_mutex};
     eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
 
     EGLUtil::get_texture_from_image(*image, texture);
@@ -180,6 +185,7 @@ void WaylandEglWindow::generate_frame()
             GL_TEXTURE_2D, texture, 0);
     eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 
+    wl_surface_damage_buffer(surface, 0, 0, image->width(), image->height());
     wl_surface_commit(surface);
 }
 
@@ -213,7 +219,8 @@ void WaylandEglWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg
     if (!window) {
         return;
     }
-    window->draw();
+    auto* egl_window = dynamic_cast<WaylandEglWindow*>(window.get());
+    egl_window->draw();
 }
 
 void WaylandEglWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
@@ -224,10 +231,11 @@ void WaylandEglWindow::wl_surface_frame_done(void *data, struct wl_callback *cal
     if (!window) {
         return;
     }
-    const std::scoped_lock lock {window->draw_mutex};
-    if (!window->visible) {
+    auto* egl_window = dynamic_cast<WaylandEglWindow*>(window.get());
+    const std::scoped_lock lock {egl_window->draw_mutex};
+    if (!egl_window->visible) {
         return;
     }
-    window->generate_frame();
+    egl_window->generate_frame();
 }
 

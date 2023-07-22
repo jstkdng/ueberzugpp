@@ -51,7 +51,7 @@ struct __attribute__((packed)) ipc_header {
     uint32_t type;
 };
 
-auto SwaySocket::get_window_info() -> struct WaylandWindow
+auto SwaySocket::get_window_info() -> struct WaylandWindowGeometry
 {
     const auto nodes = get_nodes();
     const auto window = get_active_window(nodes);
