@@ -32,7 +32,7 @@ template <class T, class V>
 class EGLUtil
 {
 public:
-    EGLUtil(EGLenum platform, T* native_display);
+    EGLUtil(EGLenum platform, T* native_display, const EGLAttrib* attrib = nullptr);
     ~EGLUtil();
 
     void get_texture_from_image(const Image& image, GLuint texture);
@@ -49,6 +49,8 @@ public:
 private:
     EGLConfig config;
     std::shared_ptr<spdlog::logger> logger;
+
+    [[nodiscard]] auto error_to_string() const -> std::string_view;
 };
 
 #endif
