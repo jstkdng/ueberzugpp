@@ -41,17 +41,22 @@ connection(xcb_connect(nullptr, nullptr))
     xcb_errors_context_new(connection, &err_ctx);
 #endif
 
+    flags = Flags::instance();
+
 #ifdef ENABLE_OPENGL
-    try {
-        egl = std::make_unique<EGLUtil<xcb_connection_t, xcb_window_t>>(EGL_PLATFORM_XCB_EXT, connection);
-    } catch (const std::runtime_error& err) {
+    if (flags->use_opengl) {
+        try {
+            egl = std::make_unique<EGLUtil<xcb_connection_t, xcb_window_t>>(EGL_PLATFORM_XCB_EXT, connection);
+        } catch (const std::runtime_error& err) {
+            egl_available = false;
+        }
+    } else {
         egl_available = false;
     }
 #endif
 
     xutil = std::make_unique<X11Util>(connection);
     logger = spdlog::get("X11");
-    flags = Flags::instance();
     event_handler = std::thread([this] {
         logger->debug("Started event handler");
         handle_events();
@@ -180,7 +185,7 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
         const auto window_id = xcb_generate_id(connection);
         std::shared_ptr<Window> window;
 #ifdef ENABLE_OPENGL
-        if (egl_available && flags->use_opengl) {
+        if (egl_available) {
             try {
                 window = std::make_shared<X11EGLWindow>(connection, screen, window_id, parent, *egl, image);
             } catch (const std::runtime_error& err) {

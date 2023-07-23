@@ -89,9 +89,13 @@ display(wl_display_connect(nullptr))
     });
 
 #ifdef ENABLE_OPENGL
-    try {
-        egl = std::make_unique<EGLUtil<struct wl_display, struct wl_egl_window>>(EGL_PLATFORM_WAYLAND_EXT, display);
-    } catch (const std::runtime_error& err) {
+    if (flags->use_opengl) {
+        try {
+            egl = std::make_unique<EGLUtil<struct wl_display, struct wl_egl_window>>(EGL_PLATFORM_WAYLAND_EXT, display);
+        } catch (const std::runtime_error& err) {
+            egl_available = false;
+        }
+    } else {
         egl_available = false;
     }
 #endif
@@ -138,7 +142,7 @@ void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Ima
 {
     std::shared_ptr<WaylandWindow> window;
 #ifdef ENABLE_OPENGL
-    if (egl_available && flags->use_opengl) {
+    if (egl_available) {
         try {
             window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, *egl, std::move(new_image), config, xdg_agg);
         } catch (const std::runtime_error& err) {
