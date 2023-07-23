@@ -45,24 +45,27 @@ xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
 xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
 image(std::move(new_image)),
 config(std::move(new_config)),
+egl_window(wl_egl_window_create(surface, image->width(), image->height())),
 egl(egl),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
 xdg_agg(xdg_agg)
 {
     config->initial_setup(appid);
     xdg_setup();
+    opengl_setup();
 }
 
 WaylandEglWindow::~WaylandEglWindow()
 {
-    delete_xdg_structs();
-    delete_wayland_structs();
-
     egl.run_contained(egl_context, egl_surface, [this] {
         glDeleteTextures(1, &texture);
         glDeleteFramebuffers(1, &fbo);
     });
     eglDestroySurface(egl.display, egl_surface);
+    eglDestroyContext(egl.display, egl_context);
+
+    delete_xdg_structs();
+    delete_wayland_structs();
 }
 
 void WaylandEglWindow::finish_init()
@@ -72,24 +75,23 @@ void WaylandEglWindow::finish_init()
     this_ptr = xdg.get();
     xdg_agg.ptrs.push_back(std::move(xdg));
     setup_listeners();
-    opengl_setup();
     visible = true;
 }
 
 void WaylandEglWindow::opengl_setup()
 {
-    egl_window = wl_egl_window_create(surface, image->width(), image->height());
-
     egl_surface = egl.create_surface(egl_window);
     if (egl_surface == EGL_NO_SURFACE) {
         throw std::runtime_error("");
     }
 
     egl_context = egl.create_context(egl_surface);
+    if (egl_context == EGL_NO_CONTEXT) {
+        throw std::runtime_error("");
+    }
 
     egl.run_contained(egl_surface, egl_context, [this] {
         eglSwapInterval(egl.display, 0);
-
         glGenFramebuffers(1, &fbo);
         glGenTextures(1, &texture);
     });
@@ -126,29 +128,37 @@ void WaylandEglWindow::delete_xdg_structs()
 
 void WaylandEglWindow::delete_wayland_structs()
 {
-    if (surface != nullptr) {
-        wl_surface_destroy(surface);
-        surface = nullptr;
-    }
     if (egl_window != nullptr) {
         wl_egl_window_destroy(egl_window);
         egl_window = nullptr;
+    }
+    if (surface != nullptr) {
+        wl_surface_destroy(surface);
+        surface = nullptr;
     }
 }
 
 void WaylandEglWindow::draw()
 {
-    const std::scoped_lock lock {egl_mutex};
+    load_framebuffer();
 
+    wl_surface_commit(surface);
+    move_window();
+}
+
+void WaylandEglWindow::load_framebuffer()
+{
+    std::scoped_lock lock {egl_mutex};
     egl.run_contained(egl_surface, egl_context, [this] {
+        egl.get_texture_from_image(*image, texture);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D, texture, 0);
         glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         eglSwapBuffers(egl.display, egl_surface);
     });
-
-    wl_surface_commit(surface);
-    move_window(); 
 }
 
 void WaylandEglWindow::move_window()
@@ -169,16 +179,8 @@ void WaylandEglWindow::generate_frame()
     wl_callback_add_listener(callback, &frame_listener_egl, this_ptr);
 
     image->next_frame();
+    load_framebuffer();
 
-    const std::scoped_lock lock {egl_mutex};
-    egl.run_contained(egl_surface, egl_context, [this] {
-        egl.get_texture_from_image(*image, texture);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D, texture, 0);
-    });
-
-    wl_surface_damage_buffer(surface, 0, 0, image->width(), image->height());
     wl_surface_commit(surface);
 }
 

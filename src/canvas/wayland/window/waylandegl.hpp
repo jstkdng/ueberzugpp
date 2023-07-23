@@ -83,6 +83,7 @@ private:
     void xdg_setup();
     void setup_listeners();
     void opengl_setup();
+    void load_framebuffer();
 };
 #endif
 
