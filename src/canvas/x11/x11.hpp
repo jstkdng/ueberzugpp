@@ -56,7 +56,6 @@ public:
 private:
     xcb_connection_t *connection;
     xcb_screen_t *screen;
-    int screen_num;
 
 #ifdef ENABLE_XCB_ERRORS
     xcb_errors_context_t *err_ctx;

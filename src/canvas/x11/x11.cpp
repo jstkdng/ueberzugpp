@@ -30,17 +30,12 @@
 #include "window/x11.hpp"
 
 X11Canvas::X11Canvas():
-connection(xcb_connect(nullptr, &screen_num))
+connection(xcb_connect(nullptr, nullptr))
 {
     if (xcb_connection_has_error(connection) > 0) {
         throw std::runtime_error("Can't connect to X11 server");
     }
-    const auto* xcb_setup = xcb_get_setup(connection);
-    auto iter = xcb_setup_roots_iterator(xcb_setup);
-    for (int i = 0; i < screen_num; ++i) {
-        xcb_screen_next(&iter);
-    }
-    screen = iter.data;
+    screen = xcb_setup_roots_iterator(xcb_get_setup(connection)).data;
 
 #ifdef ENABLE_XCB_ERRORS
     xcb_errors_context_new(connection, &err_ctx);

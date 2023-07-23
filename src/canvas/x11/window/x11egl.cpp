@@ -41,15 +41,15 @@ egl(egl)
 
 X11EGLWindow::~X11EGLWindow()
 {
-    xcb_destroy_window(connection, windowid);
-    xcb_flush(connection);
-
     egl.run_contained(egl_surface, egl_context, [this] {
         glDeleteTextures(1, &texture);
         glDeleteFramebuffers(1, &fbo);
     });
     eglDestroySurface(egl.display, egl_surface);
     eglDestroyContext(egl.display, egl_context);
+
+    xcb_destroy_window(connection, windowid);
+    xcb_flush(connection);
 }
 
 void X11EGLWindow::create()
