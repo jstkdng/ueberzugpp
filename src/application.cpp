@@ -175,6 +175,7 @@ void Application::setup_logger()
         const auto iterm2_logger = std::make_shared<spdlog::logger>("iterm2", sink);
         const auto chafa_logger = std::make_shared<spdlog::logger>("chafa", sink);
         const auto wayland_logger = std::make_shared<spdlog::logger>("wayland", sink);
+        const auto opengl_logger = std::make_shared<spdlog::logger>("opengl", sink);
 
         spdlog::initialize_logger(main_logger);
         spdlog::initialize_logger(terminal_logger);
@@ -186,6 +187,7 @@ void Application::setup_logger()
         spdlog::initialize_logger(iterm2_logger);
         spdlog::initialize_logger(chafa_logger);
         spdlog::initialize_logger(wayland_logger);
+        spdlog::initialize_logger(opengl_logger);
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex& ex) {

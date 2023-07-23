@@ -37,7 +37,7 @@
 #endif
 
 #ifdef ENABLE_OPENGL
-#   include <EGL/egl.h>
+#   include "util/egl.hpp"
 #endif
 
 class Flags;
@@ -81,8 +81,8 @@ private:
     std::shared_ptr<Flags> flags;
 
 #ifdef ENABLE_OPENGL
-    EGLDisplay egl_display;
-    bool egl_available = false;
+    std::unique_ptr<EGLUtil<xcb_connection_t, xcb_window_t>> egl;
+    bool egl_available = true;
 #endif
 
     void draw(const std::string& identifier);

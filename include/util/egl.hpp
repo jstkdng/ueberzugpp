@@ -17,31 +17,38 @@
 #ifndef UTIL_EGL_H
 #define UTIL_EGL_H
 
-#include <EGL/egl.h>
+#include <memory>
+#include <functional>
 
+#include <spdlog/fwd.h>
+
+#include <EGL/egl.h>
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 
 class Image;
 
+template <class T, class V>
 class EGLUtil
 {
 public:
-    explicit EGLUtil(EGLDisplay display);
+    EGLUtil(EGLenum platform, T* native_display);
     ~EGLUtil();
 
-    static auto get_texture_from_image(const Image& image, GLuint texture) -> GLuint;
-    static void GLAPIENTRY debug_callback(GLenum source, GLenum type,
-            GLuint gl_id, GLenum severity, GLsizei length, const GLchar* message, const void* user);
+    void get_texture_from_image(const Image& image, GLuint texture);
 
-    EGLContext context;
-    EGLConfig config;
+    auto create_surface(V* native_window) -> EGLSurface;
+    auto create_context(EGLSurface surface) -> EGLContext;
 
-private:
-    void set_context();
-    void set_config();
+    void run_contained(EGLSurface surface, EGLContext context, const std::function<void()>& func);
+    void make_current(EGLSurface surface, EGLContext context);
+    void restore();
 
     EGLDisplay display;
+
+private:
+    EGLConfig config;
+    std::shared_ptr<spdlog::logger> logger;
 };
 
 #endif

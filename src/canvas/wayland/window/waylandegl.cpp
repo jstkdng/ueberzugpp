@@ -36,7 +36,7 @@ constexpr struct wl_callback_listener frame_listener_egl = {
 };
 
 WaylandEglWindow::WaylandEglWindow(struct wl_compositor *compositor, struct xdg_wm_base *xdg_base,
-        EGLDisplay egl_display, std::unique_ptr<Image> new_image,
+        EGLUtil<struct wl_display, struct wl_egl_window>& egl, std::unique_ptr<Image> new_image,
         std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg& xdg_agg):
 compositor(compositor),
 xdg_base(xdg_base),
@@ -45,8 +45,7 @@ xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
 xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
 image(std::move(new_image)),
 config(std::move(new_config)),
-egl_display(egl_display),
-egl_util(egl_display),
+egl(egl),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
 xdg_agg(xdg_agg)
 {
@@ -59,9 +58,11 @@ WaylandEglWindow::~WaylandEglWindow()
     delete_xdg_structs();
     delete_wayland_structs();
 
-    glDeleteTextures(1, &texture);
-    glDeleteFramebuffers(1, &fbo);
-    eglDestroySurface(egl_display, egl_surface);
+    egl.run_contained(egl_context, egl_surface, [this] {
+        glDeleteTextures(1, &texture);
+        glDeleteFramebuffers(1, &fbo);
+    });
+    eglDestroySurface(egl.display, egl_surface);
 }
 
 void WaylandEglWindow::finish_init()
@@ -71,27 +72,27 @@ void WaylandEglWindow::finish_init()
     this_ptr = xdg.get();
     xdg_agg.ptrs.push_back(std::move(xdg));
     setup_listeners();
+    opengl_setup();
+    visible = true;
+}
 
+void WaylandEglWindow::opengl_setup()
+{
     egl_window = wl_egl_window_create(surface, image->width(), image->height());
-    egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config, egl_window, nullptr);
 
+    egl_surface = egl.create_surface(egl_window);
     if (egl_surface == EGL_NO_SURFACE) {
-        std::cout << "Could not create surface" << std::endl;
+        throw std::runtime_error("");
     }
 
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-    eglSwapInterval(egl_display, 0);
+    egl_context = egl.create_context(egl_surface);
 
-    glGenFramebuffers(1, &fbo);
-    glGenTextures(1, &texture);
-#ifdef DEBUG
-    glDebugMessageCallback(EGLUtil::debug_callback, nullptr);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
+    egl.run_contained(egl_surface, egl_context, [this] {
+        eglSwapInterval(egl.display, 0);
 
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-    visible = true;
+        glGenFramebuffers(1, &fbo);
+        glGenTextures(1, &texture);
+    });
 }
 
 void WaylandEglWindow::setup_listeners()
@@ -138,13 +139,13 @@ void WaylandEglWindow::delete_wayland_structs()
 void WaylandEglWindow::draw()
 {
     const std::scoped_lock lock {egl_mutex};
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
 
-    glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
-                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    egl.run_contained(egl_surface, egl_context, [this] {
+        glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-    eglSwapBuffers(egl_display, egl_surface);
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglSwapBuffers(egl.display, egl_surface);
+    });
 
     wl_surface_commit(surface);
     move_window(); 
@@ -170,13 +171,12 @@ void WaylandEglWindow::generate_frame()
     image->next_frame();
 
     const std::scoped_lock lock {egl_mutex};
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-
-    EGLUtil::get_texture_from_image(*image, texture);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D, texture, 0);
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    egl.run_contained(egl_surface, egl_context, [this] {
+        egl.get_texture_from_image(*image, texture);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D, texture, 0);
+    });
 
     wl_surface_damage_buffer(surface, 0, 0, image->width(), image->height());
     wl_surface_commit(surface);

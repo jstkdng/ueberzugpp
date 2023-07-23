@@ -19,40 +19,24 @@
 #include "x11egl.hpp"
 #include "util.hpp"
 
-#include <iostream>
+#include <spdlog/spdlog.h>
 #include <array>
 
 #include <gsl/gsl>
 
 X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display,
+            xcb_window_t windowid, xcb_window_t parentid, EGLUtil<xcb_connection_t, xcb_window_t>& egl,
             std::shared_ptr<Image> new_image):
 connection(connection),
 screen(screen),
 windowid(windowid),
 parentid(parentid),
-gc(xcb_generate_id(connection)),
-egl_display(egl_display),
-egl_util(egl_display),
-image(std::move(new_image))
+image(std::move(new_image)),
+egl(egl)
 {
+    logger = spdlog::get("x11");
     create();
-    egl_surface = eglCreatePlatformWindowSurface(egl_display, egl_util.config,
-            &windowid, nullptr);
-    if (egl_surface == EGL_NO_SURFACE) {
-        std::cout << "Could not create surface" << std::endl;
-    }
-
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-
-    glGenFramebuffers(1, &fbo);
-    glGenTextures(1, &texture);
-#ifdef DEBUG
-    glDebugMessageCallback(EGLUtil::debug_callback, nullptr);
-    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-#endif
-
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    opengl_setup();
 }
 
 X11EGLWindow::~X11EGLWindow()
@@ -60,11 +44,12 @@ X11EGLWindow::~X11EGLWindow()
     xcb_destroy_window(connection, windowid);
     xcb_flush(connection);
 
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-    glDeleteTextures(1, &texture);
-    glDeleteFramebuffers(1, &fbo);
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    eglDestroySurface(egl_display, egl_surface);
+    egl.run_contained(egl_surface, egl_context, [this] {
+        glDeleteTextures(1, &texture);
+        glDeleteFramebuffers(1, &fbo);
+    });
+    eglDestroySurface(egl.display, egl_surface);
+    eglDestroyContext(egl.display, egl_context);
 }
 
 void X11EGLWindow::create()
@@ -92,28 +77,43 @@ void X11EGLWindow::create()
             &value_list);
 }
 
+void X11EGLWindow::opengl_setup()
+{
+    egl_surface = egl.create_surface(&windowid);
+    if (egl_surface == EGL_NO_SURFACE) {
+        throw std::runtime_error("");
+    }
+
+    egl_context = egl.create_context(egl_surface);
+    if (egl_context == EGL_NO_CONTEXT) {
+        throw std::runtime_error("");
+    }
+
+    egl.run_contained(egl_surface, egl_context, [this] {
+        glGenFramebuffers(1, &fbo);
+        glGenTextures(1, &texture);
+    });
+}
+
 void X11EGLWindow::draw()
 {
     const std::scoped_lock lock {egl_mutex};
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-
-    glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
-                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-    eglSwapBuffers(egl_display, egl_surface);
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    egl.run_contained(egl_surface, egl_context, [this] {
+        glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        eglSwapBuffers(egl.display, egl_surface);
+    });
 }
 
 void X11EGLWindow::generate_frame()
 {
     const std::scoped_lock lock {egl_mutex};
-    eglMakeCurrent(egl_display, egl_surface, egl_surface, egl_util.context);
-
-    EGLUtil::get_texture_from_image(*image, texture);
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-            GL_TEXTURE_2D, texture, 0);
-    eglMakeCurrent(egl_display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    egl.run_contained(egl_surface, egl_context, [this] {
+        egl.get_texture_from_image(*image, texture);
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                GL_TEXTURE_2D, texture, 0);
+    });
 
     send_expose_event();
 }

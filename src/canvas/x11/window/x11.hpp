@@ -21,7 +21,6 @@
 #include "util/ptr.hpp"
 #include "window.hpp"
 
-#include <xcb/xproto.h>
 #include <xcb/xcb_image.h>
 #include <spdlog/fwd.h>
 

@@ -30,7 +30,8 @@
 #include <spdlog/fwd.h>
 
 #ifdef ENABLE_OPENGL
-#   include <EGL/egl.h>
+#   include "util/egl.hpp"
+#   include <wayland-egl.h>
 #endif
 
 class WaylandConfig;
@@ -70,8 +71,8 @@ private:
     std::unordered_map<std::string, std::shared_ptr<WaylandWindow>> windows;
 
 #ifdef ENABLE_OPENGL
-    EGLDisplay egl_display;
-    bool egl_available = false;
+    std::unique_ptr<EGLUtil<struct wl_display, struct wl_egl_window>> egl;
+    bool egl_available = true;
 #endif
 
     struct XdgStructAgg xdg_agg;

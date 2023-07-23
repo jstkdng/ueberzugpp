@@ -35,7 +35,7 @@ class WaylandEglWindow :
 {
 public:
     WaylandEglWindow(struct wl_compositor *compositor, struct xdg_wm_base *xdg_base,
-            EGLDisplay egl_display, std::unique_ptr<Image> new_image,
+            EGLUtil<struct wl_display, struct wl_egl_window>& egl, std::unique_ptr<Image> new_image,
             std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg& xdg_agg);
     ~WaylandEglWindow() override;
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
@@ -60,10 +60,11 @@ private:
     std::unique_ptr<Image> image;
     std::shared_ptr<WaylandConfig> config;
 
-    EGLDisplay egl_display;
     EGLSurface egl_surface;
-    EGLUtil egl_util;
+    EGLContext egl_context;
+
     struct wl_egl_window *egl_window = nullptr;
+    EGLUtil<struct wl_display, struct wl_egl_window>& egl;
 
     GLuint texture;
     GLuint fbo;
@@ -81,6 +82,7 @@ private:
     void delete_xdg_structs();
     void xdg_setup();
     void setup_listeners();
+    void opengl_setup();
 };
 #endif
 

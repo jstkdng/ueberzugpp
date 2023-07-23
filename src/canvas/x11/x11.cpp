@@ -35,7 +35,6 @@ connection(xcb_connect(nullptr, &screen_num))
     if (xcb_connection_has_error(connection) > 0) {
         throw std::runtime_error("Can't connect to X11 server");
     }
-
     const auto* xcb_setup = xcb_get_setup(connection);
     auto iter = xcb_setup_roots_iterator(xcb_setup);
     for (int i = 0; i < screen_num; ++i) {
@@ -48,13 +47,10 @@ connection(xcb_connect(nullptr, &screen_num))
 #endif
 
 #ifdef ENABLE_OPENGL
-    egl_display = eglGetPlatformDisplay(EGL_PLATFORM_XCB_EXT, connection, nullptr);
-    if (egl_display != EGL_NO_DISPLAY) {
-        auto eglres = eglInitialize(egl_display, nullptr, nullptr);
-        if (eglres == EGL_TRUE) {
-            eglres = eglBindAPI(EGL_OPENGL_API);
-            egl_available = eglres == EGL_TRUE;
-        }
+    try {
+        egl = std::make_unique<EGLUtil<xcb_connection_t, xcb_window_t>>(EGL_PLATFORM_XCB_EXT, connection);
+    } catch (const std::runtime_error& err) {
+        egl_available = false;
     }
 #endif
 
@@ -78,12 +74,6 @@ X11Canvas::~X11Canvas()
     if (event_handler.joinable()) {
         event_handler.join();
     }
-
-#ifdef ENABLE_OPENGL
-    if (egl_available) {
-        eglTerminate(egl_display);
-    }
-#endif
 
 #ifdef ENABLE_XCB_ERRORS
     xcb_errors_context_free(err_ctx);
@@ -196,7 +186,11 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
         std::shared_ptr<Window> window;
 #ifdef ENABLE_OPENGL
         if (egl_available && flags->use_opengl) {
-            window = std::make_shared<X11EGLWindow>(connection, screen, window_id, parent, egl_display, image);
+            try {
+                window = std::make_shared<X11EGLWindow>(connection, screen, window_id, parent, *egl, image);
+            } catch (const std::runtime_error& err) {
+                return;
+            }
         } else {
             window = std::make_shared<X11Window>(connection, screen, window_id, parent, image);
         }

@@ -21,6 +21,7 @@
 #include "util/egl.hpp"
 
 #include <xcb/xcb.h>
+#include <spdlog/fwd.h>
 
 #include <memory>
 #include <mutex>
@@ -31,7 +32,7 @@ class X11EGLWindow : public Window
 {
 public:
     X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t windowid, xcb_window_t parentid, EGLDisplay egl_display,
+            xcb_window_t windowid, xcb_window_t parentid, EGLUtil<xcb_connection_t, xcb_window_t>& egl,
             std::shared_ptr<Image> new_image);
     ~X11EGLWindow() override;
 
@@ -45,22 +46,23 @@ private:
     xcb_screen_t* screen;
     xcb_window_t windowid;
     xcb_window_t parentid;
-    xcb_gcontext_t gc;
-    EGLDisplay egl_display;
-    EGLSurface egl_surface;
-    EGLUtil egl_util;
+    std::shared_ptr<Image> image;
+    EGLUtil<xcb_connection_t, xcb_window_t>& egl;
 
     GLuint texture;
     GLuint fbo;
+    EGLContext egl_context;
+    EGLSurface egl_surface;
 
     std::mutex egl_mutex;
-    std::shared_ptr<Image> image;
+    std::shared_ptr<spdlog::logger> logger;
 
     bool visible = false;
 
     void send_expose_event();
     void create();
     void change_title();
+    void opengl_setup();
 };
 
 #endif

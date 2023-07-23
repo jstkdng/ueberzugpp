@@ -17,9 +17,37 @@
 #include "util/egl.hpp"
 #include "image.hpp"
 
-#include <iostream>
+#include <spdlog/spdlog.h>
 
-void GLAPIENTRY EGLUtil::debug_callback(
+constexpr auto config_attrs = std::to_array<EGLint>({
+    EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
+    EGL_CONFORMANT,        EGL_OPENGL_BIT,
+    EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
+    EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+
+    EGL_RED_SIZE, 8,
+    EGL_GREEN_SIZE, 8,
+    EGL_BLUE_SIZE, 8,
+    EGL_ALPHA_SIZE, 8,
+
+    EGL_DEPTH_SIZE,   24,
+    EGL_STENCIL_SIZE,  8,
+
+    EGL_NONE
+});
+
+const auto context_attrs = std::to_array<EGLint>({
+    EGL_CONTEXT_MAJOR_VERSION, 4,
+    EGL_CONTEXT_MINOR_VERSION, 6,
+#ifdef DEBUG
+    EGL_CONTEXT_OPENGL_DEBUG, EGL_TRUE,
+#endif
+    EGL_CONTEXT_OPENGL_ROBUST_ACCESS, EGL_TRUE,
+    EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
+    EGL_NONE
+});
+
+void GLAPIENTRY debug_callback(
             [[maybe_unused]] GLenum source,
             [[maybe_unused]] GLenum type,
             [[maybe_unused]] GLuint gl_id, GLenum severity,
@@ -29,67 +57,100 @@ void GLAPIENTRY EGLUtil::debug_callback(
     if (type != GL_DEBUG_TYPE_ERROR) {
         return;
     }
-    std::cout << "[OpenGL Error](" << type << ")[" << severity << "] "
-        << message << std::endl;
+    const auto logger = spdlog::get("opengl");
+    logger->error("Type: {:#X}, Severity: {:#X}, Message: {}", type, severity, message);
 }
 
-EGLUtil::EGLUtil(EGLDisplay display):
-display(display)
+template <class T, class V>
+EGLUtil<T, V>::EGLUtil(EGLenum platform, T* native_display):
+display(eglGetPlatformDisplay(platform, native_display, nullptr))
 {
-    set_config();
-    set_context();
-}
+    logger = spdlog::get("opengl");
 
-EGLUtil::~EGLUtil()
-{
-    eglDestroyContext(display, context);
-}
+    if (display == EGL_NO_DISPLAY) {
+        logger->error("Could not obtain display, error {:#X}", eglGetError());
+        throw std::runtime_error("");
+    }
 
-void EGLUtil::set_config()
-{
-    constexpr auto attrs = std::to_array<EGLint>({
-        EGL_SURFACE_TYPE,      EGL_WINDOW_BIT,
-        EGL_CONFORMANT,        EGL_OPENGL_BIT,
-        EGL_RENDERABLE_TYPE,   EGL_OPENGL_BIT,
-        EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
+    EGLBoolean eglres = eglInitialize(display, nullptr, nullptr);
+    if (eglres != EGL_TRUE) {
+        logger->error("Could not initialize display, error {:#X}", eglGetError());
+        throw std::runtime_error("");
+    }
 
-        EGL_RED_SIZE, 8,
-        EGL_GREEN_SIZE, 8,
-        EGL_BLUE_SIZE, 8,
-        EGL_ALPHA_SIZE, 8,
+    eglres = eglBindAPI(EGL_OPENGL_API);
+    if (eglres != EGL_TRUE) {
+        logger->error("Could not bind to OpenGL API, error {:#X}", eglGetError());
+        throw std::runtime_error("");
+    }
 
-        EGL_DEPTH_SIZE,   24,
-        EGL_STENCIL_SIZE,  8,
-    
-        EGL_NONE
-    });
     int num_config = 0;
-    auto eglres = eglChooseConfig(display, attrs.data(), &config, 1, &num_config);
+    eglres = eglChooseConfig(display, config_attrs.data(), &config, 1, &num_config);
     if (eglres != EGL_TRUE || num_config != 1) {
-        std::cout << "Could not create config" << std::endl;
+        logger->error("Could not create config, error {:#X}", eglGetError());
+        throw std::runtime_error("");
     }
+
+    logger->info("Using EGL 1.5 and OpenGL 4.6");
 }
 
-void EGLUtil::set_context()
+template <class T, class V>
+EGLUtil<T, V>::~EGLUtil()
 {
-    const auto attrs = std::to_array<EGLint>({
-        EGL_CONTEXT_MAJOR_VERSION, 4,
-        EGL_CONTEXT_MINOR_VERSION, 6,
-        EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE, EGL_TRUE,
-#ifdef DEBUG
-        EGL_CONTEXT_OPENGL_DEBUG, EGL_TRUE,
-#endif
-        EGL_CONTEXT_OPENGL_ROBUST_ACCESS, EGL_TRUE,
-        EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
-        EGL_NONE
-    });
-    context = eglCreateContext(display, config, EGL_NO_CONTEXT, attrs.data());
-    if (context == EGL_NO_CONTEXT) {
-        std::cout << "Could not create context" << std::endl;
-    }
+    eglTerminate(display);
 }
 
-auto EGLUtil::get_texture_from_image(const Image& image, GLuint texture) -> GLuint
+template <class T, class V>
+auto EGLUtil<T, V>::create_context(EGLSurface surface) -> EGLContext
+{
+    EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attrs.data());
+    if (context == EGL_NO_CONTEXT) {
+        logger->error("Could not create context, error {:#X}", eglGetError());
+        return context;
+    }
+
+#ifdef DEBUG
+    run_contained(surface, context, [] {
+        glDebugMessageCallback(debug_callback, nullptr);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    });
+#endif
+
+    return context;
+}
+
+template <class T, class V>
+auto EGLUtil<T, V>::create_surface(V* native_window) -> EGLSurface
+{
+    EGLSurface surface = eglCreatePlatformWindowSurface(display, config, native_window, nullptr);
+    if (surface == EGL_NO_SURFACE) {
+        logger->error("Could not create surface, error {:#X}", eglGetError());
+    }
+    return surface;
+}
+
+template <class T, class V>
+void EGLUtil<T, V>::make_current(EGLSurface surface, EGLContext context)
+{
+    eglMakeCurrent(display, surface, surface, context);
+}
+
+template <class T, class V>
+void EGLUtil<T, V>::restore()
+{
+    eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+}
+
+template <class T, class V>
+void EGLUtil<T, V>::run_contained(EGLSurface surface, EGLContext context, const std::function<void()>& func)
+{
+    make_current(surface, context);
+    func();
+    restore();
+}
+
+template <class T, class V>
+void EGLUtil<T, V>::get_texture_from_image(const Image& image, GLuint texture)
 {
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -99,6 +160,15 @@ auto EGLUtil::get_texture_from_image(const Image& image, GLuint texture) -> GLui
     glTexImage2D(GL_TEXTURE_2D, 0,
             GL_RGBA8, image.width(), image.height(), 0,
             GL_BGRA, GL_UNSIGNED_BYTE, image.data());
-
-    return texture;
 }
+
+#ifdef ENABLE_X11
+#include <xcb/xcb.h>
+template class EGLUtil<xcb_connection_t, xcb_window_t>;
+#endif
+
+#ifdef ENABLE_WAYLAND
+#include <wayland-egl.h>
+#include <wayland-client.h>
+template class EGLUtil<struct wl_display, struct wl_egl_window>;
+#endif
