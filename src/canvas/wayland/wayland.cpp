@@ -125,7 +125,10 @@ WaylandCanvas::~WaylandCanvas()
         event_handler.join();
     }
 
+#ifdef ENABLE_OPENGL
     egl.reset();
+#endif
+
     if (wl_shm != nullptr) {
         wl_shm_destroy(wl_shm);
     }
