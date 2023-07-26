@@ -69,8 +69,8 @@ private:
 
     void move_window();
     void xdg_setup();
+
     void setup_listeners();
-    void delete_xdg_structs();
     void delete_wayland_structs();
 };
 
