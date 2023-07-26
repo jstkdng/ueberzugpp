@@ -155,7 +155,7 @@ void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Ima
         window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, xdg_agg);
     }
 #else
-    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config);
+    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, xdg_agg);
 #endif
     window->finish_init();
     windows.insert_or_assign(identifier, std::move(window));
