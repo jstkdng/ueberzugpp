@@ -51,11 +51,18 @@ appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
 xdg_agg(xdg_agg)
 {
     config->initial_setup(appid);
-    xdg_setup();
     opengl_setup();
+    xdg_setup();
 }
 
 WaylandEglWindow::~WaylandEglWindow()
+{
+    opengl_cleanup();
+    delete_xdg_structs();
+    delete_wayland_structs();
+}
+
+void WaylandEglWindow::opengl_cleanup()
 {
     egl.run_contained(egl_context, egl_surface, [this] {
         glDeleteTextures(1, &texture);
@@ -63,9 +70,6 @@ WaylandEglWindow::~WaylandEglWindow()
     });
     eglDestroySurface(egl.display, egl_surface);
     eglDestroyContext(egl.display, egl_context);
-
-    delete_xdg_structs();
-    delete_wayland_structs();
 }
 
 void WaylandEglWindow::finish_init()
@@ -204,6 +208,8 @@ void WaylandEglWindow::hide()
     visible = false;
     const std::scoped_lock lock {draw_mutex};
     delete_xdg_structs();
+    wl_surface_attach(surface, nullptr, 0, 0);
+    wl_surface_commit(surface);
 }
 
 void WaylandEglWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)

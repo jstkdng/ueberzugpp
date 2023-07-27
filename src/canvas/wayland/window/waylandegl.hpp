@@ -80,6 +80,8 @@ private:
     void move_window();
     void delete_wayland_structs();
     void delete_xdg_structs();
+
+    void opengl_cleanup();
     void xdg_setup();
     void setup_listeners();
     void opengl_setup();

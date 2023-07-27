@@ -72,6 +72,7 @@ private:
 
     void setup_listeners();
     void delete_wayland_structs();
+    void delete_xdg_structs();
 };
 
 #endif
