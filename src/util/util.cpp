@@ -29,6 +29,7 @@
 #include <array>
 #include <random>
 
+#include <nlohmann/json.hpp>
 #include <fmt/format.h>
 #include <openssl/evp.h>
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -44,6 +45,7 @@
 #endif
 
 namespace fs = std::filesystem;
+using njson = nlohmann::json;
 
 auto util::str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>
 {
@@ -183,19 +185,26 @@ void util::send_command(const Flags& flags)
         util::send_socket_message("EXIT", flags.cmd_socket);
         return;
     }
+
     if (flags.cmd_action == "remove") {
-        const auto json = fmt::format(R"({{"action":"remove","identifier":"{}"}})", flags.cmd_id);
-        util::send_socket_message(json, flags.cmd_socket);
+        const njson json = {
+            {"action", "remove"},
+            {"identifier", flags.cmd_id}
+        };
+        util::send_socket_message(json.dump(), flags.cmd_socket);
         return;
     }
-    const auto xcoord = std::stoi(flags.cmd_x);
-    const auto ycoord = std::stoi(flags.cmd_y);
-    const auto max_width = std::stoi(flags.cmd_max_width);
-    const auto max_height = std::stoi(flags.cmd_max_height);
 
-    const auto json = fmt::format(R"({{"action":"{}","identifier":"{}","max_width":{},"max_height":{},"x":{},"y":{},"path":"{}"}})",
-            flags.cmd_action, flags.cmd_id, max_width, max_height, xcoord, ycoord, flags.cmd_file_path);
-    util::send_socket_message(json, flags.cmd_socket);
+    const njson json = {
+        {"action", flags.cmd_action},
+        {"identifier", flags.cmd_id},
+        {"max_width", std::stoi(flags.cmd_max_width)},
+        {"max_height", std::stoi(flags.cmd_max_height)},
+        {"x", std::stoi(flags.cmd_x)},
+        {"y", std::stoi(flags.cmd_y)},
+        {"path", flags.cmd_file_path}
+    };
+    util::send_socket_message(json.dump(), flags.cmd_socket);
 }
 
 void util::clear_terminal_area(int xcoord, int ycoord, int width, int height)
