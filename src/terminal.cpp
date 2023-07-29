@@ -57,11 +57,11 @@ terminal_pid(pid)
 Terminal::~Terminal()
 {
     if (pty_fd > 0) {
-        close(this->pty_fd);
+        close(pty_fd);
     }
 }
 
-auto Terminal::get_terminal_size() -> void
+void Terminal::get_terminal_size()
 {
     struct winsize size;
     ioctl(pty_fd, TIOCGWINSZ, &size);
@@ -240,7 +240,7 @@ auto Terminal::read_raw_str(const std::string_view esc) -> std::string
     }
 }
 
-auto Terminal::init_termios() -> void
+void Terminal::init_termios()
 {
     tcgetattr(0, &old_term); /* grab old terminal i/o settings */
     new_term = old_term; /* make new settings same as old settings */
@@ -249,7 +249,7 @@ auto Terminal::init_termios() -> void
     tcsetattr(0, TCSANOW, &new_term); /* use these new terminal i/o settings now */
 }
 
-auto Terminal::reset_termios() -> void
+void Terminal::reset_termios()
 {
     tcsetattr(0, TCSANOW, &old_term);
 }

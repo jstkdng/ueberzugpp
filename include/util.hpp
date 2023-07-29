@@ -42,8 +42,8 @@ namespace util
     auto get_log_filename() -> std::string;
     auto get_socket_path(int pid = os::get_pid()) -> std::string;
     void send_socket_message(std::string_view msg, std::string_view endpoint);
-    auto base64_encode(const unsigned char *input, uint64_t length) -> std::string;
-    void base64_encode_v2(const unsigned char *input, uint64_t length, unsigned char *out);
+    auto base64_encode(const unsigned char *input, size_t length) -> std::string;
+    void base64_encode_v2(const unsigned char *input, size_t length, unsigned char *out);
     void move_cursor(int row, int col);
     void save_cursor_position();
     void restore_cursor_position();

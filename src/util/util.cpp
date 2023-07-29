@@ -30,6 +30,7 @@
 #include <random>
 
 #include <nlohmann/json.hpp>
+#include <gsl/gsl>
 #include <fmt/format.h>
 #include <openssl/evp.h>
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -103,20 +104,20 @@ void util::send_socket_message(const std::string_view msg, const std::string_vie
     } catch (const std::system_error& err) {}
 }
 
-auto util::base64_encode(const unsigned char *input, uint64_t length) -> std::string
+auto util::base64_encode(const unsigned char *input, size_t length) -> std::string
 {
-    size_t bufsize = 4 * ((length+2)/3);
-    auto res = std::vector<char>(bufsize + 1, 0);
+    const size_t bufsize = 4 * ((length+2)/3) + 1;
+    std::vector<char> res (bufsize, 0);
     base64_encode_v2(input, length, reinterpret_cast<unsigned char*>(res.data()));
     return { res.data() };
 }
 
-void util::base64_encode_v2(const unsigned char *input, uint64_t length, unsigned char *out)
+void util::base64_encode_v2(const unsigned char *input, size_t length, unsigned char *out)
 {
 #ifdef ENABLE_TURBOBASE64
     tb64enc(input, length, out);
 #else
-    EVP_EncodeBlock(reinterpret_cast<unsigned char*>(out), input, length);
+    EVP_EncodeBlock(out, input, gsl::narrow_cast<int>(length));
 #endif
 }
 
@@ -219,7 +220,7 @@ void util::clear_terminal_area(int xcoord, int ycoord, int width, int height)
     restore_cursor_position();
 }
 
-auto util::generate_random_string(std::size_t length) -> std::string
+auto util::generate_random_string(size_t length) -> std::string
 {
     constexpr auto chars = std::to_array({
         '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
