@@ -88,7 +88,7 @@ display(eglGetPlatformDisplay(platform, native_display, attrib))
         throw std::runtime_error("");
     }
     if (egl_major != egl_major_version && egl_minor != egl_minor_version) {
-        logger->error("EGL 1.5 is not available");
+        logger->error("EGL {}.{} is not available", egl_major_version, egl_minor_version);
         throw std::runtime_error("");
     }
 
