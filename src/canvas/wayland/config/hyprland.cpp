@@ -27,16 +27,11 @@
 
 using njson = nlohmann::json;
 
-HyprlandSocket::HyprlandSocket()
+HyprlandSocket::HyprlandSocket(const std::string_view signature):
+logger(spdlog::get("wayland")),
+socket_path(fmt::format("/tmp/hypr/{}/.socket.sock", signature))
 {
-    const auto env = os::getenv("HYPRLAND_INSTANCE_SIGNATURE");
-    if (!env.has_value()) {
-        throw std::runtime_error("HYPRLAND NOT SUPPORTED");
-    }
-    logger = spdlog::get("wayland");
-    socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", env.value());
     logger->info("Using hyprland socket {}", socket_path);
-
     const auto active = request_result("j/activewindow");
     address = active.at("address");
 }

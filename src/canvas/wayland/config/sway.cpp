@@ -33,16 +33,11 @@ using njson = nlohmann::json;
 constexpr auto ipc_magic = std::string_view{"i3-ipc"};
 constexpr auto ipc_header_size = ipc_magic.size() + 8;
 
-SwaySocket::SwaySocket()
+SwaySocket::SwaySocket(const std::string_view endpoint):
+socket(endpoint),
+logger(spdlog::get("wayland"))
 {
-    const auto sway_sock = os::getenv("SWAYSOCK");
-    if (!sway_sock.has_value()) {
-        throw std::runtime_error("SWAY NOT SUPPORTED");
-    }
-    socket_path = sway_sock.value();
-    logger = spdlog::get("wayland");
-    socket = std::make_unique<UnixSocket>(socket_path);
-    logger->info("Using sway socket {}", socket_path);
+    logger->info("Using sway socket {}", endpoint);
 }
 
 struct __attribute__((packed)) ipc_header {
@@ -130,12 +125,12 @@ auto SwaySocket::ipc_message(ipc_message_type type, const std::string_view paylo
     if (!payload.empty()) {
         logger->debug("Running socket command {}", payload);
     }
-    socket->write(&header, ipc_header_size);
-    socket->write(payload.data(), payload.size());
+    socket.write(&header, ipc_header_size);
+    socket.write(payload.data(), payload.size());
 
-    socket->read(&header, ipc_header_size);
+    socket.read(&header, ipc_header_size);
     std::string buff (header.len, 0);
-    socket->read(buff.data(), buff.size());
+    socket.read(buff.data(), buff.size());
     return njson::parse(buff);
 }
 
