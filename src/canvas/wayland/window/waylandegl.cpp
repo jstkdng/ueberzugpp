@@ -73,7 +73,7 @@ void WaylandEglWindow::opengl_cleanup()
 void WaylandEglWindow::finish_init()
 {
     auto xdg = std::make_unique<XdgStruct>();
-    xdg->ptr = shared_from_this();
+    xdg->ptr = weak_from_this();
     this_ptr = xdg.get();
     xdg_agg.ptrs.push_back(std::move(xdg));
     setup_listeners();
