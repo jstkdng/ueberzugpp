@@ -21,9 +21,7 @@
 #include "../config.hpp"
 
 #include <fmt/format.h>
-
 #include <thread>
-#include <iostream>
 
 constexpr int id_len = 10;
 
