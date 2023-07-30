@@ -169,6 +169,7 @@ if(ENABLE_WAYLAND)
         "src/canvas/wayland/window/waylandshm.cpp"
         "src/canvas/wayland/config/sway.cpp"
         "src/canvas/wayland/config/hyprland.cpp"
+        "src/canvas/wayland/config/wayfire.cpp"
         "src/canvas/wayland/config/dummy.cpp"
     )
 
