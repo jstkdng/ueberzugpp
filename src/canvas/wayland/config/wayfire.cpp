@@ -17,6 +17,9 @@
 #include "wayfire.hpp"
 
 #include <spdlog/spdlog.h>
+#include <nlohmann/json.hpp>
+
+using njson = nlohmann::json;
 
 WayfireSocket::WayfireSocket(const std::string_view endpoint):
 socket(endpoint),
@@ -31,10 +34,22 @@ auto WayfireSocket::get_window_info() -> struct WaylandWindowGeometry
 }
 
 void WayfireSocket::initial_setup([[maybe_unused]] const std::string_view appid)
-{}
-
-void WayfireSocket::move_window([[maybe_unused]] const std::string_view appid,
-        [[maybe_unused]] int xcoord, [[maybe_unused]] int ycoord)
 {
     // all is handled by the ueberzug plugin
+}
+
+void WayfireSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
+{
+    const njson json = {
+        {"method", "ueberzugpp/set_offset"},
+        {"data", {
+            {"app-id", appid},
+            {"x", xcoord},
+            {"y", ycoord}
+        }}
+    };
+    const auto data = json.dump();
+    const uint32_t data_size = data.length();
+    socket.write(&data_size, sizeof(uint32_t));
+    socket.write(data.c_str(), data_size);
 }
