@@ -25,12 +25,12 @@ auto WaylandConfig::get() -> std::unique_ptr<WaylandConfig>
 {
     const auto sway_sock = os::getenv("SWAYSOCK");
     if (sway_sock.has_value()) {
-        return std::make_unique<SwaySocket>();
+        return std::make_unique<SwaySocket>(sway_sock.value());
     }
 
     const auto hypr_sig = os::getenv("HYPRLAND_INSTANCE_SIGNATURE");
     if (hypr_sig.has_value()) {
-        return std::make_unique<HyprlandSocket>();
+        return std::make_unique<HyprlandSocket>(hypr_sig.value());
     }
 
     const auto wayfire_sock = os::getenv("WAYFIRE_SOCKET");

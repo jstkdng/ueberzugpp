@@ -19,14 +19,13 @@
 
 #include "../config.hpp"
 
-#include <memory>
 #include <spdlog/fwd.h>
 #include <nlohmann/json.hpp>
 
 class HyprlandSocket : public WaylandConfig
 {
 public:
-    HyprlandSocket();
+    explicit HyprlandSocket(std::string_view signature);
     ~HyprlandSocket() override = default;
     [[nodiscard]] auto get_window_info() -> struct WaylandWindowGeometry override;
     void initial_setup(std::string_view appid) override;

@@ -33,7 +33,7 @@ public:
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
 private:
-    UnixSocket socket;
+    const UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
 };
 

@@ -32,16 +32,15 @@ enum ipc_message_type {
 class SwaySocket : public WaylandConfig
 {
 public:
-    SwaySocket();
+    explicit SwaySocket(std::string_view endpoint);
     ~SwaySocket() override = default;
     [[nodiscard]] auto get_window_info() -> struct WaylandWindowGeometry override;
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
 private:
-    std::unique_ptr<UnixSocket> socket;
+    const UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
-    std::string socket_path;
 
     void disable_focus(std::string_view appid);
     void enable_floating(std::string_view appid);
