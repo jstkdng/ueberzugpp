@@ -17,7 +17,6 @@
 #include "wayfire.hpp"
 
 #include <spdlog/spdlog.h>
-#include <nlohmann/json.hpp>
 
 using njson = nlohmann::json;
 
@@ -30,7 +29,16 @@ logger(spdlog::get("wayland"))
 
 auto WayfireSocket::get_window_info() -> struct WaylandWindowGeometry
 {
-    return {};
+    const auto response = request("window-rules/get-focused-view");
+    const auto& info = response.at("info");
+    const auto& geometry = info.at("geometry");
+    const int decoration_height = 25;
+    return {
+        .width = geometry.at("width"),
+        .height = geometry.at("height").get<int>() - decoration_height,
+        .x = 0,
+        .y = 0
+    };
 }
 
 void WayfireSocket::initial_setup([[maybe_unused]] const std::string_view appid)
@@ -40,16 +48,28 @@ void WayfireSocket::initial_setup([[maybe_unused]] const std::string_view appid)
 
 void WayfireSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    const njson json = {
-        {"method", "ueberzugpp/set_offset"},
-        {"data", {
-            {"app-id", appid},
-            {"x", xcoord},
-            {"y", ycoord}
-        }}
+    const njson payload_data = {
+        {"app-id", appid},
+        {"x", xcoord},
+        {"y", ycoord}
     };
-    const auto data = json.dump();
-    const uint32_t data_size = data.length();
-    socket.write(&data_size, sizeof(uint32_t));
-    socket.write(data.c_str(), data_size);
+    std::ignore = request("ueberzugpp/set_offset", payload_data);
+}
+
+auto WayfireSocket::request(const std::string_view method, const njson& data) const -> njson
+{
+    const njson json = {
+        {"method", method},
+        {"data", data}
+    };
+    const auto payload = json.dump();
+    const uint32_t payload_size = payload.length();
+    socket.write(&payload_size, sizeof(uint32_t));
+    socket.write(payload.c_str(), payload_size);
+
+    uint32_t response_size = 0;
+    socket.read(&response_size, sizeof(uint32_t));
+    std::string buffer (response_size, 0);
+    socket.read(buffer.data(), response_size);
+    return njson::parse(buffer);
 }

@@ -24,7 +24,8 @@ class DummyWaylandConfig : public WaylandConfig
 public:
     DummyWaylandConfig() = default;
     ~DummyWaylandConfig() override = default;
-    [[nodiscard]] auto get_window_info() -> struct WaylandWindowGeometry override;
+
+    auto get_window_info() -> struct WaylandWindowGeometry override;
     auto is_dummy() -> bool override { return true; }
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;

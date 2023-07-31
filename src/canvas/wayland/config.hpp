@@ -35,7 +35,7 @@ public:
 
     virtual ~WaylandConfig() = default;
 
-    [[nodiscard]] virtual auto get_window_info() -> struct WaylandWindowGeometry = 0;
+    virtual auto get_window_info() -> struct WaylandWindowGeometry = 0;
     virtual auto is_dummy() -> bool { return false; }
     virtual void initial_setup(std::string_view appid) = 0;
     virtual void move_window(std::string_view appid, int xcoord, int ycoord) = 0;

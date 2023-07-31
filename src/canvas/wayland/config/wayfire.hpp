@@ -21,6 +21,7 @@
 #include "../config.hpp"
 
 #include <spdlog/fwd.h>
+#include <nlohmann/json.hpp>
 
 class WayfireSocket : public WaylandConfig
 {
@@ -28,11 +29,13 @@ public:
     explicit WayfireSocket(std::string_view endpoint);
     ~WayfireSocket() override = default;
 
-    [[nodiscard]] auto get_window_info() -> struct WaylandWindowGeometry override;
+    auto get_window_info() -> struct WaylandWindowGeometry override;
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
 private:
+    [[nodiscard]] auto request(std::string_view method, const nlohmann::json& data = {}) const -> nlohmann::json;
+
     const UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
 };
