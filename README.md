@@ -7,7 +7,8 @@ feel free to open an issue.
 
 Advantages over w3mimgdisplay and ueberzug:
 
-- support for wayland (sway and hyprland only) and MacOS
+- support for wayland: sway, hyprland and wayfire
+- support for MacOS
 - no race conditions as a new window is created to display images
 - expose events will be processed, so images will be redrawn on switch workspaces
 - tmux support on X11, sway and hyprland
