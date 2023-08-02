@@ -23,9 +23,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(CMAKE_EXECUTABLE_ENABLE_EXPORTS ON)
-
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
+
+cmake_policy(SET CMP0065 NEW)
+set(CMAKE_ENABLE_EXPORTS ON)
 
 project(wayfire-ueberzugpp LANGUAGES CXX C VERSION 0.0.1)
 add_library(ueberzugpp SHARED)
@@ -39,11 +40,11 @@ list(APPEND CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 find_package(WaylandProtocols REQUIRED)
 find_package(WaylandScanner REQUIRED)
 
-ecm_add_wayland_client_protocol(PLUGIN_SOURCES
+ecm_add_wayland_server_protocol(PLUGIN_SOURCES
     PROTOCOL "${WaylandProtocols_DATADIR}/stable/xdg-shell/xdg-shell.xml"
     BASENAME "xdg-shell")
 file(CREATE_LINK
-    "wayland-xdg-shell-client-protocol.h"
+    "wayland-xdg-shell-server-protocol.h"
     "${PROJECT_BINARY_DIR}/xdg-shell-protocol.h" SYMBOLIC)
 
 pkg_check_modules(WAYFIRE REQUIRED IMPORTED_TARGET wayfire)
@@ -56,7 +57,6 @@ target_compile_options(ueberzugpp PRIVATE
         -Wall -Wextra -Wpedantic -Werror
     >
 )
-
 
 target_include_directories(ueberzugpp PRIVATE "${PROJECT_BINARY_DIR}")
 target_sources(ueberzugpp PRIVATE ${PLUGIN_SOURCES})

@@ -61,7 +61,7 @@ class ueberzugpp_surface_t
     {
         translation->set_offset({xcoord, ycoord});
         const auto term = terminal.lock();
-        if (term == nullptr) {
+        if (!term) {
             return;
         }
         term->damage();
@@ -83,23 +83,25 @@ class ueberzugpp_mapper : public wf::plugin_interface_t
         ipc_repo->unregister_method("ueberzugpp/set_offset");
     }
 
-    ipc::method_callback set_offset = [this] (nlohmann::json json) {
+    ipc::method_callback set_offset = [this] (nlohmann::json json)
+    {
         // NOLINTBEGIN
         WFJSON_EXPECT_FIELD(json, "app-id", string);
         WFJSON_EXPECT_FIELD(json, "x", number_integer);
         WFJSON_EXPECT_FIELD(json, "y", number_integer);
         // NOLINTEND
 
-        const std::string& app_id = json["app-id"];
+        const std::string app_id = json["app-id"];
         const int xcoord = json["x"];
         const int ycoord = json["y"];
 
-        if (ueberzugpps.find(app_id) == ueberzugpps.end())
+        const auto search = surfaces.find(app_id);
+        if (search == surfaces.end())
         {
             return ipc::json_error("Unknown ueberzugpp window with appid " + app_id);
         }
 
-        ueberzugpps[app_id]->set_offset(xcoord, ycoord);
+        search->second->set_offset(xcoord, ycoord);
         return ipc::json_ok();
     };
 
@@ -118,9 +120,10 @@ class ueberzugpp_mapper : public wf::plugin_interface_t
             return;
         }
 
-        const std::string appid = event->surface->toplevel->title == nullptr ? "" : "null";
+        const auto* toplevel_title = event->surface->toplevel->title;
+        const std::string appid = toplevel_title != nullptr ? toplevel_title : "null";
         const std::string search_for = "ueberzugpp_";
-        if (appid.find(search_for) == std::string::npos)
+        if (appid.find(search_for) != std::string::npos)
         {
             auto terminal = wf::get_core().get_active_output()->get_active_view();
             if (!terminal)
@@ -130,15 +133,16 @@ class ueberzugpp_mapper : public wf::plugin_interface_t
             }
 
             event->use_default_implementation = false;
-            const auto [iter, was_inserted] = ueberzugpps.insert_or_assign(appid,
+            const auto [iter, was_inserted] = surfaces.insert_or_assign(appid,
                     std::make_unique<ueberzugpp_surface_t>(terminal->weak_from_this(), event->surface->toplevel));
-            iter->second->destroy_callback = [this, appid] {
-                ueberzugpps.erase(appid);
+            iter->second->destroy_callback = [this, appid]
+            {
+                surfaces.erase(appid);
             };
         }
     };
 
-    std::unordered_map<std::string, std::unique_ptr<ueberzugpp_surface_t>> ueberzugpps;
+    std::unordered_map<std::string, std::unique_ptr<ueberzugpp_surface_t>> surfaces;
 };
 } // end namespace wf
 
