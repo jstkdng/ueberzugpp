@@ -81,7 +81,8 @@ auto util::get_process_tree_v2(int pid) -> std::vector<Process>
 auto util::get_cache_path() -> std::string
 {
     const auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
-    return fmt::format("{}/.cache/ueberzugpp/", home);
+    const auto cache_home = os::getenv("XDG_CACHE_HOME").value_or(fmt::format("{}/.cache", home));
+    return fmt::format("{}/ueberzugpp/", cache_home);
 }
 
 auto util::get_log_filename() -> std::string
