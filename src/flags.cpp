@@ -28,8 +28,8 @@ using json = nlohmann::json;
 // read configuration file
 Flags::Flags()
 {
-    auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
-    auto config_home = os::getenv("XDG_CONFIG_HOME").value_or(
+    const auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
+    const auto config_home = os::getenv("XDG_CONFIG_HOME").value_or(
             fmt::format("{}/.config", home));
     config_file = fmt::format("{}/ueberzugpp/config.json", config_home);
     if (fs::exists(config_file)) {

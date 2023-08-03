@@ -52,7 +52,7 @@ Application::Application(const std::string_view executable)
     }
     canvas = Canvas::create();
     const auto cache_path = util::get_cache_path();
-    if (!fs::exists(cache_path)) {
+    if (!fs::exists(cache_path) && !flags->no_cache) {
         fs::create_directories(cache_path);
     }
     tmux::register_hooks();
