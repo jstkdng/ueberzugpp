@@ -22,7 +22,6 @@
 #include <string>
 #include <vector>
 #include <mutex>
-#include <string_view>
 
 class Iterm2Chunk;
 class Image;
@@ -45,7 +44,7 @@ private:
     int horizontal_cells = 0;
     int vertical_cells = 0;
 
-    static auto process_chunks(std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
+    static auto process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>;
 };
 
 #endif

@@ -24,7 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
-#include <ranges>
+#include <algorithm>
 
 #include <spdlog/spdlog.h>
 #include <fmt/format.h>
@@ -92,13 +92,13 @@ void Iterm2::draw()
     str.clear();
 }
 
-auto Iterm2::process_chunks(const std::string_view filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>
+auto Iterm2::process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>
 {
     const int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
     std::vector<std::unique_ptr<Iterm2Chunk>> chunks;
     chunks.reserve(num_chunks + 2);
 
-    std::ifstream ifs (filename.data());
+    std::ifstream ifs (filename);
     while (ifs.good()) {
         auto chunk = std::make_unique<Iterm2Chunk>(chunk_size);
         ifs.read(chunk->get_buffer(), chunk_size);
@@ -107,9 +107,9 @@ auto Iterm2::process_chunks(const std::string_view filename, int chunk_size, siz
     }
 
 #ifdef HAVE_STD_EXECUTION_H
-    std::for_each(std::execution::par_unseq, std::begin(chunks), std::end(chunks), Iterm2Chunk::process_chunk);
+    std::for_each(std::execution::par_unseq, chunks.begin(), chunks.end(), Iterm2Chunk::process_chunk);
 #else
-    oneapi::tbb::parallel_for_each(std::begin(chunks), std::end(chunks), Iterm2Chunk());
+    oneapi::tbb::parallel_for_each(chunks.begin(), chunks.end(), Iterm2Chunk());
 #endif
 
     return chunks;
