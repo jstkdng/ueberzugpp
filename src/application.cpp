@@ -57,11 +57,11 @@ Application::Application(const std::string_view executable)
     }
     tmux::register_hooks();
     socket_thread = std::thread([this] {
-        logger->info("Listening for commands on socket {}.", util::get_socket_path());
+        logger->info("Listening for commands on socket {}", util::get_socket_path());
         socket_loop();
     });
     if (flags->no_cache) {
-        logger->info("Image caching is disabled.");
+        logger->info("Image caching is disabled");
     }
     if (VIPS_INIT(executable.data())) {
         vips_error_exit(nullptr);

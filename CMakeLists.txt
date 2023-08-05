@@ -232,6 +232,16 @@ pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
 
 if (APPLE)
     list(APPEND UEBERZUG_SOURCES src/process/apple.cpp)
+
+    find_package(range-v3 QUIET)
+    if (NOT range-v3_FOUND)
+        FetchContent_Declare(range-v3
+            URL https://github.com/ericniebler/range-v3/archive/refs/tags/0.12.0.tar.gz
+        )
+        FetchContent_Populate(range-v3)
+        add_subdirectory(${range-v3_SOURCE_DIR} ${range-v3_BINARY_DIR} EXCLUDE_FROM_ALL)
+    endif()
+    list(APPEND UEBERZUG_LIBRARIES range-v3)
 else()
     list(APPEND UEBERZUG_SOURCES src/process/linux.cpp)
 endif()

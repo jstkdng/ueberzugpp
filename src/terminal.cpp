@@ -40,6 +40,10 @@
 #include <gsl/gsl>
 #include <spdlog/spdlog.h>
 
+#ifdef __APPLE__
+#   include <range/v3/algorithm/reverse.hpp>
+#endif
+
 Terminal::Terminal():
 pid(os::get_pid()),
 terminal_pid(pid)
@@ -292,12 +296,17 @@ void Terminal::get_fallback_wayland_terminal_sizes()
 
 void Terminal::open_first_pty()
 {
+#ifdef __APPLE__
+    using ranges::reverse;
+#else
+    using std::ranges::reverse;
+#endif
     const auto pids = tmux::get_client_pids().value_or(std::vector<int>{pid});
 
     struct stat stat_info;
     for (const auto spid: pids) {
         auto tree = util::get_process_tree_v2(spid);
-        std::ranges::reverse(tree);
+        reverse(tree);
         for (const auto &proc: tree) {
             stat(proc.pty_path.c_str(), &stat_info);
             if (proc.tty_nr == stat_info.st_rdev) {

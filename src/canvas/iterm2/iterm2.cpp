@@ -35,6 +35,10 @@
 #   include <oneapi/tbb.h>
 #endif
 
+#ifdef __APPLE__
+#   include <range/v3/algorithm/for_each.hpp>
+#endif
+
 namespace fs = std::filesystem;
 
 Iterm2::Iterm2(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
@@ -56,6 +60,11 @@ Iterm2::~Iterm2()
 
 void Iterm2::draw()
 {
+#ifdef __APPLE__
+    using ranges::for_each;
+#else
+    using std::ranges::for_each;
+#endif
     str.append("\033]1337;File=inline=1;");
     const auto filename = image->filename();
     const auto num_bytes = fs::file_size(filename);
@@ -70,7 +79,7 @@ void Iterm2::draw()
     const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
     str.reserve((num_chunks + 2) * bytes_per_chunk);
 
-    std::ranges::for_each(std::as_const(chunks), [this] (const std::unique_ptr<Iterm2Chunk>& chunk) {
+    for_each(std::as_const(chunks), [this] (const std::unique_ptr<Iterm2Chunk>& chunk) {
         str.append(chunk->get_result());
     });
     str.append("\a");

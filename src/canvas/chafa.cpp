@@ -25,6 +25,10 @@
 #include <iostream>
 #include <algorithm>
 
+#ifdef __APPLE__
+#   include <range/v3/algorithm/for_each.hpp>
+#endif
+
 #include <spdlog/spdlog.h>
 
 void gstring_delete(GString* str) {
@@ -75,6 +79,11 @@ Chafa::~Chafa()
 
 void Chafa::draw()
 {
+#ifdef __APPLE__
+    using ranges::for_each;
+#else
+    using std::ranges::for_each;
+#endif
     canvas = chafa_canvas_new(config);
     chafa_canvas_draw_all_pixels(canvas,
             CHAFA_PIXEL_BGRA8_UNASSOCIATED,
@@ -91,7 +100,7 @@ void Chafa::draw()
 
     const std::scoped_lock lock {*stdout_mutex};
     util::save_cursor_position();
-    std::ranges::for_each(std::as_const(lines), [this, &ycoord] (const auto& line) {
+    for_each(std::as_const(lines), [this, &ycoord] (const std::string& line) {
         util::move_cursor(ycoord++, x);
         std::cout << line;
     });
