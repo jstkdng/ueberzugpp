@@ -35,11 +35,12 @@ max_width(dims->max_wpixels()),
 max_height(dims->max_hpixels()),
 in_cache(in_cache)
 {
+    logger = spdlog::get("opencv");
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
     if (image.empty()) {
-        throw std::runtime_error("OpenCV unable to read image");
+        logger->warn("unable to read image");
+        throw std::runtime_error("");
     }
-    logger = spdlog::get("opencv");
     logger->info("Loading image {}", filename);
     flags = Flags::instance();
 

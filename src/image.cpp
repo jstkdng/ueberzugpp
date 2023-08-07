@@ -64,7 +64,8 @@ auto Image::load(const njson& command, const Terminal& terminal) -> std::unique_
         } catch (const std::runtime_error& ex) {}
     }
 #endif
-    if (vips_foreign_find_load(image_path.c_str()) != nullptr) {
+    const auto* vips_loader = vips_foreign_find_load(image_path.c_str());
+    if (vips_loader != nullptr) {
         try {
             return std::make_unique<LibvipsImage>(dimensions, image_path, in_cache);
         } catch (const vips::VError& err) {}
