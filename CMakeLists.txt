@@ -31,7 +31,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
-project(ueberzugpp LANGUAGES CXX C VERSION 2.8.9)
+project(ueberzugpp LANGUAGES CXX C VERSION 2.9.0)
 add_executable(ueberzug)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
