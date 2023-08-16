@@ -49,6 +49,7 @@ public:
     std::string cmd_id;
     std::string cmd_action;
     std::string cmd_socket;
+    bool cmd_origin_center = false;
     std::string cmd_x;
     std::string cmd_y;
     std::string cmd_max_width;

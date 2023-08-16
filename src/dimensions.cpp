@@ -21,7 +21,8 @@
 #include <utility>
 
 Dimensions::Dimensions(const Terminal& terminal, uint16_t xcoord,
-        uint16_t ycoord, int max_w, int max_h, std::string scaler):
+        uint16_t ycoord, int max_w, int max_h, std::string scaler, bool origin_center):
+origin_center(origin_center),
 max_w(max_w),
 max_h(max_h),
 padding_horizontal(terminal.padding_horizontal),

@@ -18,6 +18,7 @@
 #include "util.hpp"
 #include "dimensions.hpp"
 #include "flags.hpp"
+#include "terminal.hpp"
 
 #include <unordered_set>
 #include <iostream>
@@ -45,6 +46,14 @@ in_cache(in_cache)
     flags = Flags::instance();
 
     process_image();
+
+    if (dims->origin_center) {
+        logger->debug("Setting origin at center");
+        uint32_t img_width = std::min(static_cast<uint32_t>(width()), max_width);
+        uint32_t img_height = std::min(static_cast<uint32_t>(height()), max_height);
+        dims->x -= std::floor(static_cast<double>(img_width) / 2 / dims->terminal.font_width);
+        dims->y -= std::floor(static_cast<double>(img_height) / 2 / dims->terminal.font_height);
+    }
 }
 
 auto OpencvImage::filename() const -> std::string

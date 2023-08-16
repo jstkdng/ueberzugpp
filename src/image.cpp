@@ -148,6 +148,7 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
     int ycoord = 0;
     int max_width = 0;
     int max_height = 0;
+    bool origin_center = json.at("origin_center");
     string width_key = "max_width";
     string height_key = "max_height";
     const string scaler = json.value("scaler", "contain");
@@ -173,5 +174,5 @@ auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::
         xcoord = json.at("x");
         ycoord = json.at("y");
     }
-    return std::make_shared<Dimensions>(terminal, xcoord, ycoord, max_width, max_height, scaler);
+    return std::make_shared<Dimensions>(terminal, xcoord, ycoord, max_width, max_height, scaler, origin_center);
 }

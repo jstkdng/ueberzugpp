@@ -202,6 +202,7 @@ void util::send_command(const Flags& flags)
         {"identifier", flags.cmd_id},
         {"max_width", std::stoi(flags.cmd_max_width)},
         {"max_height", std::stoi(flags.cmd_max_height)},
+        {"origin_center", flags.cmd_origin_center},
         {"x", std::stoi(flags.cmd_x)},
         {"y", std::stoi(flags.cmd_y)},
         {"path", flags.cmd_file_path}

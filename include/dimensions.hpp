@@ -26,13 +26,14 @@ class Dimensions
 {
 public:
     Dimensions(const Terminal& terminal, uint16_t xcoord, uint16_t ycoord,
-            int max_w, int max_h, std::string scaler);
+            int max_w, int max_h, std::string scaler, bool origin_center);
 
     [[nodiscard]] auto xpixels() const -> int;
     [[nodiscard]] auto ypixels() const -> int;
     [[nodiscard]] auto max_wpixels() const -> int;
     [[nodiscard]] auto max_hpixels() const -> int;
 
+    bool origin_center;
     uint16_t x;
     uint16_t y;
     uint16_t max_w;

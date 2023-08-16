@@ -85,6 +85,7 @@ auto main(int argc, char *argv[]) -> int
     cmd_comand->add_option("-i,--identifier", flags->cmd_id, "Preview identifier");
     cmd_comand->add_option("-a,--action", flags->cmd_action, "Action to send");
     cmd_comand->add_option("-f,--file", flags->cmd_file_path, "Path of image file");
+    cmd_comand->add_flag("--origin-center", flags->cmd_origin_center, "Location of the origin wrt the image");
     cmd_comand->add_option("-x,--xpos", flags->cmd_x, "X position of preview");
     cmd_comand->add_option("-y,--ypos", flags->cmd_y, "Y position of preview");
     cmd_comand->add_option("--max-width", flags->cmd_max_width, "Max width of preview");
