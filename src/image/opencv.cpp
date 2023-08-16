@@ -49,10 +49,10 @@ in_cache(in_cache)
 
     if (dims->origin_center) {
         logger->debug("Setting origin at center");
-        uint32_t img_width = std::min(static_cast<uint32_t>(width()), max_width);
-        uint32_t img_height = std::min(static_cast<uint32_t>(height()), max_height);
-        dims->x -= std::floor(static_cast<double>(img_width) / 2 / dims->terminal.font_width);
-        dims->y -= std::floor(static_cast<double>(img_height) / 2 / dims->terminal.font_height);
+        const double img_width = static_cast<double>(width()) / dims->terminal.font_width;
+        const double img_height = static_cast<double>(height()) / dims->terminal.font_height;
+        dims->x -= std::floor(img_width / 2);
+        dims->y -= std::floor(img_height / 2);
     }
 }
 
