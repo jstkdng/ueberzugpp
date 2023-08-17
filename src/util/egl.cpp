@@ -76,7 +76,8 @@ display(eglGetPlatformDisplay(platform, native_display, attrib))
     logger = spdlog::get("opengl");
 
     if (display == EGL_NO_DISPLAY) {
-        logger->error("Could not obtain display, error {}", error_to_string());
+        const auto err = error_to_string();
+        logger->error("Could not obtain display, error {}", err);
         throw std::runtime_error("");
     }
 
@@ -84,7 +85,8 @@ display(eglGetPlatformDisplay(platform, native_display, attrib))
     EGLint egl_minor = 0;
     EGLBoolean eglres = eglInitialize(display, &egl_major, &egl_minor);
     if (eglres != EGL_TRUE) {
-        logger->error("Could not initialize display, error {}", error_to_string());
+        const auto err = error_to_string();
+        logger->error("Could not initialize display, error {}", err);
         throw std::runtime_error("");
     }
     if (egl_major != egl_major_version && egl_minor != egl_minor_version) {
@@ -94,14 +96,16 @@ display(eglGetPlatformDisplay(platform, native_display, attrib))
 
     eglres = eglBindAPI(EGL_OPENGL_API);
     if (eglres != EGL_TRUE) {
-        logger->error("Could not bind to OpenGL API, error {}", error_to_string());
+        const auto err = error_to_string();
+        logger->error("Could not bind to OpenGL API, error {}", err);
         throw std::runtime_error("");
     }
 
     int num_config = 0;
     eglres = eglChooseConfig(display, config_attrs.data(), &config, 1, &num_config);
     if (eglres != EGL_TRUE || num_config != 1) {
-        logger->error("Could not create config, error {}", error_to_string());
+        const auto err = error_to_string();
+        logger->error("Could not create config, error {}", err);
         throw std::runtime_error("");
     }
 
@@ -140,7 +144,8 @@ auto EGLUtil<T, V>::create_context(EGLSurface surface) -> EGLContext
 {
     EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attrs.data());
     if (context == EGL_NO_CONTEXT) {
-        logger->error("Could not create context, error {}", error_to_string());
+        const auto err = error_to_string();
+        logger->error("Could not create context, error {}", err);
         return context;
     }
 
@@ -159,7 +164,8 @@ auto EGLUtil<T, V>::create_surface(V* native_window) -> EGLSurface
 {
     EGLSurface surface = eglCreatePlatformWindowSurface(display, config, native_window, nullptr);
     if (surface == EGL_NO_SURFACE) {
-        logger->error("Could not create surface, error {}", error_to_string());
+        const auto err = error_to_string();
+        logger->error("Could not create surface, error {}", err);
     }
     return surface;
 }

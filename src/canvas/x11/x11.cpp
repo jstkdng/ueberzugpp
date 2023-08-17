@@ -21,6 +21,8 @@
 #include "application.hpp"
 #include "flags.hpp"
 
+#include <string_view>
+
 #include <spdlog/spdlog.h>
 
 #ifdef ENABLE_OPENGL
@@ -231,9 +233,11 @@ void X11Canvas::print_xcb_error(const xcb_generic_error_t* err)
     const char *major = xcb_errors_get_name_for_major_code(err_ctx, err->major_code);
     const char *minor = xcb_errors_get_name_for_minor_code(err_ctx, err->major_code, err->minor_code);
     const char *error = xcb_errors_get_name_for_error(err_ctx, err->error_code, &extension);
+
+    const std::string_view ext_str = extension != nullptr ? extension : "no_extension";
+    const std::string_view minor_str = minor != nullptr ? minor : "no_minor";
     logger->error("XCB: {}:{}, {}:{}, resource {} sequence {}",
-           error, extension != nullptr ? extension : "no_extension",
-           major, minor != nullptr ? minor : "no_minor",
+           error, ext_str, major, minor_str,
            err->resource_id, err->sequence);
 #else
     logger->error("XCB: resource {} sequence {}", err->resource_id, err->sequence);

@@ -57,7 +57,8 @@ Application::Application(const std::string_view executable)
     }
     tmux::register_hooks();
     socket_thread = std::thread([this] {
-        logger->info("Listening for commands on socket {}", util::get_socket_path());
+        const auto sock_path = util::get_socket_path();
+        logger->info("Listening for commands on socket {}", sock_path);
         socket_loop();
     });
     if (flags->no_cache) {
@@ -93,7 +94,8 @@ void Application::execute(const std::string_view cmd)
         logger->error("Command received is not valid json");
         return;
     }
-    logger->info("Command received: {}", json.dump());
+    const auto json_str = json.dump();
+    logger->info("Command received: {}", json_str);
 
     const std::string& action = json.at("action");
     if (action == "tmux") {

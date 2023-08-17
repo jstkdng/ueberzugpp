@@ -36,7 +36,7 @@ orig_y(ycoord)
 
 void Dimensions::read_offsets()
 {
-    auto [offset_x, offset_y] = tmux::get_offset();
+    const auto [offset_x, offset_y] = tmux::get_offset();
     x = orig_x + offset_x;
     y = orig_y + offset_y;
 }

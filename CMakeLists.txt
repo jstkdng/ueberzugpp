@@ -85,20 +85,23 @@ if(NOT nlohmann_json_FOUND)
     list(APPEND FC_LIBS nlohmann_json)
 endif()
 
-find_package(spdlog QUIET)
-if(NOT spdlog_FOUND)
-    FetchContent_Declare(spdlog
-        URL https://github.com/gabime/spdlog/archive/refs/tags/v1.11.0.tar.gz
-    )
-    list(APPEND FC_LIBS spdlog)
-endif()
-
 find_package(fmt QUIET)
 if(NOT fmt_FOUND)
     FetchContent_Declare(fmt
-        URL https://github.com/fmtlib/fmt/archive/refs/tags/9.1.0.tar.gz
+        URL https://github.com/fmtlib/fmt/archive/refs/tags/10.1.0.tar.gz
     )
     list(APPEND FC_LIBS fmt)
+endif()
+
+find_package(spdlog QUIET)
+if(NOT spdlog_FOUND)
+    if (fmt_FOUND)
+        option(SPDLOG_FMT_EXTERNAL ON)
+    endif()
+    FetchContent_Declare(spdlog
+        URL https://github.com/gabime/spdlog/archive/refs/tags/v1.12.0.tar.gz
+    )
+    list(APPEND FC_LIBS spdlog)
 endif()
 
 if(FC_LIBS)
