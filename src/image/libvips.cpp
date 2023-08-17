@@ -59,14 +59,6 @@ in_cache(in_cache)
     } catch (const VError& err) {}
 
     process_image();
-
-    if (dims->origin_center) {
-        logger->debug("Setting origin at center");
-        const double img_width = static_cast<double>(width()) / dims->terminal.font_width;
-        const double img_height = static_cast<double>(height()) / dims->terminal.font_height;
-        dims->x -= std::floor(img_width / 2);
-        dims->y -= std::floor(img_height / 2);
-    }
 }
 
 auto LibvipsImage::dimensions() const -> const Dimensions&
@@ -178,6 +170,12 @@ auto LibvipsImage::resize_image() -> void
 auto LibvipsImage::process_image() -> void
 {
     resize_image();
+    if (flags->origin_center) {
+        const double img_width = static_cast<double>(width()) / dims->terminal.font_width;
+        const double img_height = static_cast<double>(height()) / dims->terminal.font_height;
+        dims->x -= std::floor(img_width / 2);
+        dims->y -= std::floor(img_height / 2);
+    }
 
     const std::unordered_set<std::string_view> bgra_trifecta = {
         "x11", "chafa", "wayland"
