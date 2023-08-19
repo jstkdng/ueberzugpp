@@ -30,7 +30,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug CACHE STRING "Build type.")
 
-project(ueberzugpp LANGUAGES CXX C VERSION 2.9.0)
+project(ueberzugpp LANGUAGES CXX C VERSION 2.9.1)
 add_executable(ueberzug)
 
 option(ENABLE_X11           "Enable X11 canvas." ON)
@@ -202,7 +202,7 @@ if(ENABLE_TURBOBASE64)
     if (NOT turbobase64_FOUND)
         FetchContent_Declare(
             turbobase64
-            URL https://github.com/powturbo/Turbo-Base64/archive/refs/tags/2023.04.tar.gz
+            URL https://github.com/powturbo/Turbo-Base64/archive/refs/tags/2023.08.tar.gz
         )
         FetchContent_Populate(turbobase64)
         add_subdirectory(${turbobase64_SOURCE_DIR} ${turbobase64_BINARY_DIR} EXCLUDE_FROM_ALL)
