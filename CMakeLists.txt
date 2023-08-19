@@ -58,7 +58,6 @@ endif()
 
 find_package(Microsoft.GSL CONFIG QUIET)
 if (NOT Microsoft.GSL_FOUND)
-    option(GSL_TEST OFF)
     FetchContent_Declare(GSL
         URL https://github.com/microsoft/GSL/archive/refs/tags/v4.0.0.tar.gz
     )
@@ -95,9 +94,7 @@ endif()
 
 find_package(spdlog QUIET)
 if(NOT spdlog_FOUND)
-    if (fmt_FOUND)
-        option(SPDLOG_FMT_EXTERNAL ON)
-    endif()
+    set(SPDLOG_FMT_EXTERNAL ON)
     FetchContent_Declare(spdlog
         URL https://github.com/gabime/spdlog/archive/refs/tags/v1.12.0.tar.gz
     )
@@ -278,8 +275,8 @@ list(APPEND UEBERZUG_LIBRARIES
     nlohmann_json::nlohmann_json
     CLI11::CLI11
     Threads::Threads
-    spdlog::spdlog
     fmt::fmt
+    spdlog::spdlog
     OpenSSL::Crypto
     Microsoft.GSL::GSL
     TBB::tbb

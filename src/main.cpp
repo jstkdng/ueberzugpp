@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <csignal>
+
 #include <CLI/App.hpp>
 #include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
-#include <csignal>
-#include <fmt/format.h>
-
-#include <spdlog/spdlog-inl.h>
+#include <spdlog/spdlog.h>
 #include <spdlog/cfg/env.h>
 
 #include "application.hpp"
