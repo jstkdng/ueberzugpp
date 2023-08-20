@@ -249,17 +249,19 @@ void Application::print_header()
 {
     const auto log_tmp = util::get_log_filename();
     const auto log_path = fs::temp_directory_path() / log_tmp;
-    std::ofstream ofs(log_path, std::ios::out | std::ios::app);
-    ofs << " _    _      _                                           \n"
-        << "| |  | |    | |                                _     _   \n"
-        << "| |  | | ___| |__   ___ _ __ _____   _  __ _ _| |_ _| |_ \n"
-        << "| |  | |/ _ \\ '_ \\ / _ \\ '__|_  / | | |/ _` |_   _|_   _|\n"
-        << "| |__| |  __/ |_) |  __/ |   / /| |_| | (_| | |_|   |_|  \n"
-        << " \\____/ \\___|_.__/ \\___|_|  /___|\\__,_|\\__, |            \n"
-        << "                                        __/ |            \n"
-        << "                                       |___/     "
-        << "v" << ueberzugpp_VERSION_MAJOR << "." << ueberzugpp_VERSION_MINOR
-        << "." << ueberzugpp_VERSION_PATCH << std::endl;
+    const auto art = fmt::format(R"(
+ _   _      _
+| | | |    | |                                _     _
+| | | | ___| |__   ___ _ __ _____   _  __ _ _| |_ _| |_
+| | | |/ _ \ '_ \ / _ \ '__|_  / | | |/ _` |_   _|_   _|
+| |_| |  __/ |_) |  __/ |   / /| |_| | (_| | |_|   |_|
+ \___/ \___|_.__/ \___|_|  /___|\__,_|\__, |
+                                       __/ |
+                                      |___/     v{}.{}.{})",
+        ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH
+    );
+    std::ofstream ofs (log_path, std::ios::out | std::ios::app);
+    ofs << art << std::endl;
 }
 
 void Application::set_silent()
@@ -272,13 +274,14 @@ void Application::set_silent()
 
 void Application::print_version()
 {
-    std::cout << "ueberzugpp " << ueberzugpp_VERSION_MAJOR << "." << ueberzugpp_VERSION_MINOR
-        << "." << ueberzugpp_VERSION_PATCH << std::endl;
+    const auto ver_str = fmt::format("ueberzugpp {}.{}.{}",
+            ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
+    std::cout << ver_str << std::endl;
 }
 
 void Application::daemonize(const std::string_view pid_file)
 {
     os::daemonize();
     std::ofstream ofs (pid_file.data());
-    ofs << os::get_pid();
+    ofs << os::get_pid() << std::flush;
 }
