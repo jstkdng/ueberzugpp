@@ -18,6 +18,7 @@
 #include "util.hpp"
 #include "dimensions.hpp"
 #include "flags.hpp"
+#include "terminal.hpp"
 
 #include <unordered_set>
 #include <iostream>
@@ -126,6 +127,12 @@ void OpencvImage::resize_image_helper(cv::InputOutputArray& mat, int new_width, 
 void OpencvImage::process_image()
 {
     resize_image();
+    if (flags->origin_center) {
+        const double img_width = static_cast<double>(width()) / dims->terminal.font_width;
+        const double img_height = static_cast<double>(height()) / dims->terminal.font_height;
+        dims->x -= std::floor(img_width / 2);
+        dims->y -= std::floor(img_height / 2);
+    }
 
     const std::unordered_set<std::string_view> bgra_trifecta = {
         "x11", "chafa", "wayland"

@@ -45,6 +45,7 @@ public:
     bool use_opengl = false;
     std::string output;
     std::string pid_file;
+    bool origin_center = false;
 
     std::string cmd_id;
     std::string cmd_action;
