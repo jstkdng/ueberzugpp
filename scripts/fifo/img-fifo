@@ -20,7 +20,7 @@ start_ueberzugpp() {
 cleanup() {
     rm -f "$FIFO"
 }
-trap cleanup HUP INT QUIT TERM PWR EXIT
+trap cleanup HUP INT QUIT TERM EXIT
 
 preview_image() {
     echo '{"path": "'"$5"'", "action": "add", "identifier": "img-fifo", "x": "'"$1"'", "y": "'"$2"'", "width": "'"$3"'", "height": "'"$4"'"}' >"$FIFO"

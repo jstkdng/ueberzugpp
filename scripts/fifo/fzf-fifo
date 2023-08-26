@@ -23,7 +23,7 @@ start_ueberzugpp() {
 cleanup() {
     exec 3>&-
 }
-trap cleanup HUP INT QUIT TERM PWR EXIT
+trap cleanup HUP INT QUIT TERM EXIT
 
 preview_image() {
     echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": "'"$x"'", "y": "'"$y"'", "width": "'"$width"'", "height": "'"$height"'"}' >"$FIFO"
