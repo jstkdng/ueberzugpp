@@ -213,9 +213,15 @@ if(ENABLE_TURBOBASE64)
     endif()
 endif()
 
+set(PROJECT_WARNINGS_CXX
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror)
+
 target_compile_options(ueberzug PRIVATE
     $<$<CONFIG:Debug>:
-        -Wall -Wextra -Wpedantic -Werror
+        $<$<COMPILE_LANGUAGE:CXX>:${PROJECT_WARNINGS_CXX}>
     >
 )
 

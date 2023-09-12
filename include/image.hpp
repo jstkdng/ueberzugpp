@@ -28,10 +28,10 @@ class Terminal;
 class Image
 {
 public:
-    static auto load(const nlohmann::json& command, const Terminal& terminal) -> std::unique_ptr<Image>;
+    static auto load(const nlohmann::json& command, const Terminal* terminal) -> std::unique_ptr<Image>;
     static auto check_cache(const Dimensions& dimensions,
             const std::filesystem::path& orig_path) -> std::string;
-    static auto get_dimensions(const nlohmann::json& json, const Terminal& terminal) -> std::shared_ptr<Dimensions>;
+    static auto get_dimensions(const nlohmann::json& json, const Terminal* terminal) -> std::shared_ptr<Dimensions>;
 
     virtual ~Image() = default;
 

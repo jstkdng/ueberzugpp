@@ -20,12 +20,12 @@
 
 #include <utility>
 
-Dimensions::Dimensions(const Terminal& terminal, uint16_t xcoord,
+Dimensions::Dimensions(const Terminal* terminal, uint16_t xcoord,
         uint16_t ycoord, int max_w, int max_h, std::string scaler):
 max_w(max_w),
 max_h(max_h),
-padding_horizontal(terminal.padding_horizontal),
-padding_vertical(terminal.padding_vertical),
+padding_horizontal(terminal->padding_horizontal),
+padding_vertical(terminal->padding_vertical),
 scaler(std::move(scaler)),
 terminal(terminal),
 orig_x(xcoord),
@@ -43,20 +43,20 @@ void Dimensions::read_offsets()
 
 auto Dimensions::xpixels() const -> int
 {
-    return x * terminal.font_width;
+    return x * terminal->font_width;
 }
 
 auto Dimensions::ypixels() const -> int
 {
-    return y * terminal.font_height;
+    return y * terminal->font_height;
 }
 
 auto Dimensions::max_wpixels() const -> int
 {
-    return max_w * terminal.font_width;
+    return max_w * terminal->font_width;
 }
 
 auto Dimensions::max_hpixels() const -> int
 {
-    return max_h * terminal.font_height;
+    return max_h * terminal->font_height;
 }

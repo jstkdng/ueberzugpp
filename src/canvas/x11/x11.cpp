@@ -180,7 +180,7 @@ void X11Canvas::add_image(const std::string& identifier, std::unique_ptr<Image> 
 
     const auto image = images.at(identifier);
     const auto dims = image->dimensions();
-    std::unordered_set<xcb_window_t> parent_ids {dims.terminal.x11_wid};
+    std::unordered_set<xcb_window_t> parent_ids {dims.terminal->x11_wid};
     get_tmux_window_ids(parent_ids);
 
     std::ranges::for_each(std::as_const(parent_ids), [this, &identifier, &image] (xcb_window_t parent) {

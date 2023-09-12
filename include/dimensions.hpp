@@ -25,7 +25,7 @@ class Terminal;
 class Dimensions
 {
 public:
-    Dimensions(const Terminal& terminal, uint16_t xcoord, uint16_t ycoord,
+    Dimensions(const Terminal* terminal, uint16_t xcoord, uint16_t ycoord,
             int max_w, int max_h, std::string scaler);
 
     [[nodiscard]] auto xpixels() const -> int;
@@ -40,7 +40,7 @@ public:
     uint16_t padding_horizontal;
     uint16_t padding_vertical;
     std::string scaler;
-    const Terminal& terminal;
+    const Terminal* terminal;
 
 private:
 

@@ -110,7 +110,7 @@ void Application::execute(const std::string_view cmd)
             logger->error("Path received is not valid");
             return;
         }
-        auto image = Image::load(json, *terminal);
+        auto image = Image::load(json, terminal.get());
         if (!image) {
             logger->error("Unable to load image file");
             return;

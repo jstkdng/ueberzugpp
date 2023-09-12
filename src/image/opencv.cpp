@@ -128,8 +128,8 @@ void OpencvImage::process_image()
 {
     resize_image();
     if (flags->origin_center) {
-        const double img_width = static_cast<double>(width()) / dims->terminal.font_width;
-        const double img_height = static_cast<double>(height()) / dims->terminal.font_height;
+        const double img_width = static_cast<double>(width()) / dims->terminal->font_width;
+        const double img_height = static_cast<double>(height()) / dims->terminal->font_height;
         dims->x -= std::floor(img_width / 2);
         dims->y -= std::floor(img_height / 2);
     }

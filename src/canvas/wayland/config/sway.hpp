@@ -51,7 +51,7 @@ private:
     [[nodiscard]] auto get_nodes() const -> std::vector<nlohmann::json>;
     [[nodiscard]] auto ipc_message(ipc_message_type type, std::string_view payload = "") const -> nlohmann::json;
 
-    const UnixSocket socket;
+    UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
 };
 

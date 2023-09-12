@@ -32,8 +32,8 @@ stdout_mutex(std::move(stdout_mutex))
     const auto dims = image->dimensions();
     x = dims.x + 1;
     y = dims.y + 1;
-    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dims.terminal.font_width);
-    vertical_cells = std::ceil(static_cast<double>(image->height()) / dims.terminal.font_height);
+    horizontal_cells = std::ceil(static_cast<double>(image->width()) / dims.terminal->font_width);
+    vertical_cells = std::ceil(static_cast<double>(image->height()) / dims.terminal->font_height);
 
     const auto draw_callback = [] (char *data, int size, void* priv) -> int {
         auto *str = static_cast<std::string*>(priv);

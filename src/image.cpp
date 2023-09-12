@@ -35,7 +35,7 @@
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
 
-auto Image::load(const njson& command, const Terminal& terminal) -> std::unique_ptr<Image>
+auto Image::load(const njson& command, const Terminal* terminal) -> std::unique_ptr<Image>
 {
     const std::string& filename = command.at("path");
     if (!fs::exists(filename)) {
@@ -141,7 +141,7 @@ auto Image::get_new_sizes(double max_width, double max_height, const std::string
     return std::make_pair(new_width, new_height);
 }
 
-auto Image::get_dimensions(const njson& json, const Terminal& terminal) -> std::shared_ptr<Dimensions>
+auto Image::get_dimensions(const njson& json, const Terminal* terminal) -> std::shared_ptr<Dimensions>
 {
     using std::string;
     int xcoord = 0;
