@@ -45,6 +45,8 @@ Advantages over w3mimgdisplay and ueberzug:
 
 ### Debian/Ubuntu/Fedora
 
+Packages for x86_64, aarch64 and ppc64le are available in the following repository.
+
 https://software.opensuse.org/download.html?project=home%3Ajustkidding&package=ueberzugpp
 
 # Usage
