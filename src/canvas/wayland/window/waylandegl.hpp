@@ -35,8 +35,8 @@ class WaylandEglWindow :
 {
 public:
     WaylandEglWindow(struct wl_compositor *compositor, struct xdg_wm_base *xdg_base,
-            EGLUtil<struct wl_display, struct wl_egl_window>& egl, std::unique_ptr<Image> new_image,
-            std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg& xdg_agg);
+            const EGLUtil<struct wl_display, struct wl_egl_window>* egl, std::unique_ptr<Image> new_image,
+            std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg);
     ~WaylandEglWindow() override;
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
     static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
@@ -64,7 +64,7 @@ private:
     EGLContext egl_context;
 
     struct wl_egl_window *egl_window = nullptr;
-    EGLUtil<struct wl_display, struct wl_egl_window>& egl;
+    const EGLUtil<struct wl_display, struct wl_egl_window>* egl;
 
     GLuint texture;
     GLuint fbo;
@@ -74,7 +74,7 @@ private:
 
     std::string appid;
     void* this_ptr;
-    struct XdgStructAgg& xdg_agg;
+    struct XdgStructAgg* xdg_agg;
     bool visible = false;
 
     void move_window();

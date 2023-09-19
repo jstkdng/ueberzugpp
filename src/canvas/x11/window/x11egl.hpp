@@ -32,7 +32,7 @@ class X11EGLWindow : public Window
 {
 public:
     X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t windowid, xcb_window_t parentid, EGLUtil<xcb_connection_t, xcb_window_t>& egl,
+            xcb_window_t windowid, xcb_window_t parentid, const EGLUtil<xcb_connection_t, xcb_window_t>* egl,
             std::shared_ptr<Image> new_image);
     ~X11EGLWindow() override;
 
@@ -47,7 +47,7 @@ private:
     xcb_window_t windowid;
     xcb_window_t parentid;
     std::shared_ptr<Image> image;
-    EGLUtil<xcb_connection_t, xcb_window_t>& egl;
+    const EGLUtil<xcb_connection_t, xcb_window_t>* egl;
 
     GLuint texture;
     GLuint fbo;

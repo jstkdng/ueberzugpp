@@ -34,8 +34,8 @@ constexpr struct wl_callback_listener frame_listener_egl = {
 };
 
 WaylandEglWindow::WaylandEglWindow(struct wl_compositor *compositor, struct xdg_wm_base *xdg_base,
-        EGLUtil<struct wl_display, struct wl_egl_window>& egl, std::unique_ptr<Image> new_image,
-        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg& xdg_agg):
+        const EGLUtil<struct wl_display, struct wl_egl_window>* egl, std::unique_ptr<Image> new_image,
+        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg):
 compositor(compositor),
 xdg_base(xdg_base),
 surface(wl_compositor_create_surface(compositor)),
@@ -62,12 +62,12 @@ WaylandEglWindow::~WaylandEglWindow()
 
 void WaylandEglWindow::opengl_cleanup()
 {
-    egl.run_contained(egl_context, egl_surface, [this] {
+    egl->run_contained(egl_context, egl_surface, [this] {
         glDeleteTextures(1, &texture);
         glDeleteFramebuffers(1, &fbo);
     });
-    eglDestroySurface(egl.display, egl_surface);
-    eglDestroyContext(egl.display, egl_context);
+    eglDestroySurface(egl->display, egl_surface);
+    eglDestroyContext(egl->display, egl_context);
 }
 
 void WaylandEglWindow::finish_init()
@@ -75,25 +75,25 @@ void WaylandEglWindow::finish_init()
     auto xdg = std::make_unique<XdgStruct>();
     xdg->ptr = weak_from_this();
     this_ptr = xdg.get();
-    xdg_agg.ptrs.push_back(std::move(xdg));
+    xdg_agg->ptrs.push_back(std::move(xdg));
     setup_listeners();
     visible = true;
 }
 
 void WaylandEglWindow::opengl_setup()
 {
-    egl_surface = egl.create_surface(egl_window);
+    egl_surface = egl->create_surface(egl_window);
     if (egl_surface == EGL_NO_SURFACE) {
         throw std::runtime_error("");
     }
 
-    egl_context = egl.create_context(egl_surface);
+    egl_context = egl->create_context(egl_surface);
     if (egl_context == EGL_NO_CONTEXT) {
         throw std::runtime_error("");
     }
 
-    egl.run_contained(egl_surface, egl_context, [this] {
-        eglSwapInterval(egl.display, 0);
+    egl->run_contained(egl_surface, egl_context, [this] {
+        eglSwapInterval(egl->display, 0);
         glGenFramebuffers(1, &fbo);
         glGenTextures(1, &texture);
     });
@@ -151,15 +151,15 @@ void WaylandEglWindow::draw()
 void WaylandEglWindow::load_framebuffer()
 {
     std::scoped_lock lock {egl_mutex};
-    egl.run_contained(egl_surface, egl_context, [this] {
-        egl.get_texture_from_image(*image, texture);
+    egl->run_contained(egl_surface, egl_context, [this] {
+        egl->get_texture_from_image(*image, texture);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                 GL_TEXTURE_2D, texture, 0);
         glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-        eglSwapBuffers(egl.display, egl_surface);
+        eglSwapBuffers(egl->display, egl_surface);
     });
 }
 

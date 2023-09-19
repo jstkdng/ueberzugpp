@@ -25,7 +25,7 @@
 #include <gsl/gsl>
 
 X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t windowid, xcb_window_t parentid, EGLUtil<xcb_connection_t, xcb_window_t>& egl,
+            xcb_window_t windowid, xcb_window_t parentid, const EGLUtil<xcb_connection_t, xcb_window_t>* egl,
             std::shared_ptr<Image> new_image):
 connection(connection),
 screen(screen),
@@ -41,12 +41,12 @@ egl(egl)
 
 X11EGLWindow::~X11EGLWindow()
 {
-    egl.run_contained(egl_surface, egl_context, [this] {
+    egl->run_contained(egl_surface, egl_context, [this] {
         glDeleteTextures(1, &texture);
         glDeleteFramebuffers(1, &fbo);
     });
-    eglDestroySurface(egl.display, egl_surface);
-    eglDestroyContext(egl.display, egl_context);
+    eglDestroySurface(egl->display, egl_surface);
+    eglDestroyContext(egl->display, egl_context);
 
     xcb_destroy_window(connection, windowid);
     xcb_flush(connection);
@@ -79,17 +79,17 @@ void X11EGLWindow::create()
 
 void X11EGLWindow::opengl_setup()
 {
-    egl_surface = egl.create_surface(&windowid);
+    egl_surface = egl->create_surface(&windowid);
     if (egl_surface == EGL_NO_SURFACE) {
         throw std::runtime_error("");
     }
 
-    egl_context = egl.create_context(egl_surface);
+    egl_context = egl->create_context(egl_surface);
     if (egl_context == EGL_NO_CONTEXT) {
         throw std::runtime_error("");
     }
 
-    egl.run_contained(egl_surface, egl_context, [this] {
+    egl->run_contained(egl_surface, egl_context, [this] {
         glGenFramebuffers(1, &fbo);
         glGenTextures(1, &texture);
     });
@@ -98,18 +98,18 @@ void X11EGLWindow::opengl_setup()
 void X11EGLWindow::draw()
 {
     const std::scoped_lock lock {egl_mutex};
-    egl.run_contained(egl_surface, egl_context, [this] {
+    egl->run_contained(egl_surface, egl_context, [this] {
         glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
                       GL_COLOR_BUFFER_BIT, GL_NEAREST);
-        eglSwapBuffers(egl.display, egl_surface);
+        eglSwapBuffers(egl->display, egl_surface);
     });
 }
 
 void X11EGLWindow::generate_frame()
 {
     const std::scoped_lock lock {egl_mutex};
-    egl.run_contained(egl_surface, egl_context, [this] {
-        egl.get_texture_from_image(*image, texture);
+    egl->run_contained(egl_surface, egl_context, [this] {
+        egl->get_texture_from_image(*image, texture);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
         glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                 GL_TEXTURE_2D, texture, 0);

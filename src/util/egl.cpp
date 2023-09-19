@@ -140,7 +140,7 @@ auto EGLUtil<T, V>::error_to_string() const -> std::string_view
 }
 
 template <class T, class V>
-auto EGLUtil<T, V>::create_context(EGLSurface surface) -> EGLContext
+auto EGLUtil<T, V>::create_context(EGLSurface surface) const -> EGLContext
 {
     EGLContext context = eglCreateContext(display, config, EGL_NO_CONTEXT, context_attrs.data());
     if (context == EGL_NO_CONTEXT) {
@@ -160,7 +160,7 @@ auto EGLUtil<T, V>::create_context(EGLSurface surface) -> EGLContext
 }
 
 template <class T, class V>
-auto EGLUtil<T, V>::create_surface(V* native_window) -> EGLSurface
+auto EGLUtil<T, V>::create_surface(V* native_window) const -> EGLSurface
 {
     EGLSurface surface = eglCreatePlatformWindowSurface(display, config, native_window, nullptr);
     if (surface == EGL_NO_SURFACE) {
@@ -171,19 +171,19 @@ auto EGLUtil<T, V>::create_surface(V* native_window) -> EGLSurface
 }
 
 template <class T, class V>
-void EGLUtil<T, V>::make_current(EGLSurface surface, EGLContext context)
+void EGLUtil<T, V>::make_current(EGLSurface surface, EGLContext context) const
 {
     eglMakeCurrent(display, surface, surface, context);
 }
 
 template <class T, class V>
-void EGLUtil<T, V>::restore()
+void EGLUtil<T, V>::restore() const
 {
     eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
 }
 
 template <class T, class V>
-void EGLUtil<T, V>::run_contained(EGLSurface surface, EGLContext context, const std::function<void()>& func)
+void EGLUtil<T, V>::run_contained(EGLSurface surface, EGLContext context, const std::function<void()>& func) const
 {
     make_current(surface, context);
     func();
@@ -191,7 +191,7 @@ void EGLUtil<T, V>::run_contained(EGLSurface surface, EGLContext context, const 
 }
 
 template <class T, class V>
-void EGLUtil<T, V>::get_texture_from_image(const Image& image, GLuint texture)
+void EGLUtil<T, V>::get_texture_from_image(const Image& image, GLuint texture) const
 {
     glBindTexture(GL_TEXTURE_2D, texture);
 

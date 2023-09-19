@@ -36,7 +36,7 @@ public:
 private:
     [[nodiscard]] auto request(std::string_view method, const nlohmann::json& data = {}) const -> nlohmann::json;
 
-    const UnixSocket socket;
+    UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
 };
 

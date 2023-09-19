@@ -147,15 +147,15 @@ void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Ima
 #ifdef ENABLE_OPENGL
     if (egl_available) {
         try {
-            window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, *egl, std::move(new_image), config, xdg_agg);
+            window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl.get(), std::move(new_image), config, &xdg_agg);
         } catch (const std::runtime_error& err) {
             return;
         }
     } else {
-        window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, xdg_agg);
+        window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg);
     }
 #else
-    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, xdg_agg);
+    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg);
 #endif
     window->finish_init();
     windows.insert_or_assign(identifier, std::move(window));

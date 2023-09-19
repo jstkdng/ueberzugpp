@@ -35,14 +35,12 @@ public:
     EGLUtil(EGLenum platform, T* native_display, const EGLAttrib* attrib = nullptr);
     ~EGLUtil();
 
-    void get_texture_from_image(const Image& image, GLuint texture);
-
-    auto create_surface(V* native_window) -> EGLSurface;
-    auto create_context(EGLSurface surface) -> EGLContext;
-
-    void run_contained(EGLSurface surface, EGLContext context, const std::function<void()>& func);
-    void make_current(EGLSurface surface, EGLContext context);
-    void restore();
+    void get_texture_from_image(const Image& image, GLuint texture) const;
+    void run_contained(EGLSurface surface, EGLContext context, const std::function<void()>& func) const;
+    void make_current(EGLSurface surface, EGLContext context) const;
+    void restore() const;
+    [[nodiscard]] auto create_surface(V* native_window) const -> EGLSurface;
+    [[nodiscard]] auto create_context(EGLSurface surface) const -> EGLContext;
 
     EGLDisplay display;
 

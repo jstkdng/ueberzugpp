@@ -36,7 +36,7 @@ constexpr struct wl_callback_listener frame_listener = {
 
 WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor,
         struct wl_shm *wl_shm, struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
-        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg& xdg_agg):
+        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg):
 compositor(compositor),
 xdg_base(xdg_base),
 surface(wl_compositor_create_surface(compositor)),
@@ -57,7 +57,7 @@ void WaylandShmWindow::finish_init()
     auto xdg = std::make_unique<XdgStruct>();
     xdg->ptr = weak_from_this();
     this_ptr = xdg.get();
-    xdg_agg.ptrs.push_back(std::move(xdg));
+    xdg_agg->ptrs.push_back(std::move(xdg));
     setup_listeners();
     visible = true;
 }
