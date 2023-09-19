@@ -79,7 +79,7 @@ void Kitty::generate_frame()
 
 auto Kitty::process_chunks() -> std::vector<KittyChunk>
 {
-    const uint64_t chunk_size = 4096;
+    const uint64_t chunk_size = 3068;
     uint64_t num_chunks = image->size() / chunk_size;
     uint64_t last_chunk_size = image->size() % chunk_size;
     if (last_chunk_size == 0) {
