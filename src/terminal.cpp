@@ -97,7 +97,7 @@ void Terminal::get_terminal_size()
         ypixel = fallback_ypixel;
     }
     if (xpixel == 0 || ypixel == 0) {
-        throw std::runtime_error("UNABLE TO CALCULATE TERMINAL SIZES");
+        throw std::runtime_error("Unable to calculate terminal sizes");
     }
 
     const double padding_horiz = guess_padding(cols, xpixel);
@@ -137,6 +137,9 @@ void Terminal::set_detected_output()
         detected_output = "wayland";
     }
     if (flags->output.empty()) {
+        if (detected_output.empty()) {
+            throw std::runtime_error("Could not detect output backend");
+        }
         flags->output = detected_output;
     }
 }
@@ -270,6 +273,7 @@ void Terminal::get_fallback_x11_terminal_sizes()
         return;
     }
     x11_wid = xutil.get_parent_window(terminal_pid);
+    logger->debug("Using fallback X11 window id {}", x11_wid);
     const auto [xpix, ypix] = xutil.get_window_dimensions(x11_wid);
     fallback_xpixel = xpix;
     fallback_ypixel = ypix;
