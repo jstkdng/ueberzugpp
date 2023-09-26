@@ -40,29 +40,14 @@ Flags::Flags()
 void Flags::read_config_file()
 {
     std::ifstream ifs(config_file);
-    try {
-        json data = json::parse(ifs);
-        if (!data.contains("layer")) {
-            return;
-        }
-        data = data["layer"];
-        if (data.contains("silent")) {
-            silent = data["silent"];
-        }
-        if (data.contains("output")) {
-            output = data["output"];
-        }
-        if (data.contains("no-cache")) {
-            no_cache = data["no-cache"];
-        }
-        if (data.contains("no-opencv")) {
-            no_opencv = data["no-opencv"];
-        }
-        if (data.contains("opengl")) {
-            use_opengl = data["opengl"];
-        }
-    } catch (const json::parse_error& e) {
-        std::cerr << "Could not parse config file." << std::endl;
-        std::exit(1);
+    const auto data = json::parse(ifs);
+    if (!data.contains("layer")) {
+        return;
     }
+    const auto& layer = data.at("layer");
+    silent = layer.value("silent", false);
+    output = layer.value("output", "");
+    no_cache = layer.value("no-cache", false);
+    no_opencv = layer.value("no-opencv", false);
+    use_opengl = layer.value("opengl", false);
 }

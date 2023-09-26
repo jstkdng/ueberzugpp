@@ -62,7 +62,14 @@ auto main(int argc, char *argv[]) -> int
     sigaction(SIGCHLD, nullptr, nullptr);
 
     spdlog::cfg::load_env_levels();
-    auto flags = Flags::instance();
+
+    std::shared_ptr<Flags> flags;
+    try {
+        flags = Flags::instance();
+    } catch (const std::exception& e) {
+        std::cerr << "Could not parse config file: " << e.what() << std::endl;
+        return 1;
+    }
 
     CLI::App program("Display images in the terminal", "ueberzug");
     program.add_flag("-V,--version", flags->print_version, "Print version information.");
@@ -113,8 +120,13 @@ auto main(int argc, char *argv[]) -> int
     }
 
     if (layer_command->parsed()) {
-        Application application(argv[0]);
-        application.command_loop();
+        try {
+            Application application(argv[0]);
+            application.command_loop();
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << std::endl;
+            return 1;
+        }
     }
 
     if (tmux_command->parsed()) {
