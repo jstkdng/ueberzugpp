@@ -136,6 +136,12 @@ Must be installed in order to build.
 - openssl
 - tbb
 
+### Install dependencies on Ubuntu
+
+```
+apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev
+```
+
 ## Downloadable dependencies
 
 Required for building, if they are not installed, they will be downloaded
