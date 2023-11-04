@@ -40,7 +40,7 @@ public:
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
     static auto get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
-    static auto get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
+    auto get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
 
 private:
     void disable_focus(std::string_view appid);
@@ -53,6 +53,7 @@ private:
 
     UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
+    float scale_factor = 1.0;
 };
 
 #endif

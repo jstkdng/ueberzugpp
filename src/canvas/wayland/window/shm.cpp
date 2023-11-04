@@ -28,12 +28,12 @@
 #include <cerrno>
 #include <system_error>
 
-WaylandShm::WaylandShm(int width, int height, struct wl_shm* shm):
+WaylandShm::WaylandShm(int width, int height, int scale_factor, struct wl_shm* shm):
 shm(shm),
 width(width),
 height(height),
 stride(width * 4),
-pool_size(height * stride)
+pool_size(height * stride * scale_factor)
 {
     const int path_size = 32;
     shm_path = fmt::format("/{}", util::generate_random_string(path_size));

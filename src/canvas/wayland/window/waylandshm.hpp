@@ -36,12 +36,13 @@ class WaylandShmWindow :
 public:
     WaylandShmWindow(struct wl_compositor *compositor, struct wl_shm *wl_shm,
             struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
-            std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg);
+            std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg, int32_t scale_factor);
     ~WaylandShmWindow() override;
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
     static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
 
-    void draw() override;
+    void draw() override {}
+    void wl_draw(int32_t scale_factor) override;
     void generate_frame() override;
     void show() override;
     void hide() override;
@@ -59,6 +60,7 @@ private:
     struct xdg_surface *xdg_surface = nullptr;
     struct xdg_toplevel *xdg_toplevel = nullptr;
     struct wl_callback *callback;
+    int32_t scale_factor;
     std::unique_ptr<Image> image;
     std::unique_ptr<WaylandShm> shm;
     std::string appid;

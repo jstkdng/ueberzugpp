@@ -39,6 +39,15 @@ constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {
     .ping = WaylandCanvas::xdg_wm_base_ping
 };
 
+constexpr struct wl_output_listener wl_output_listener = {
+    .geometry = WaylandCanvas::output_geometry,
+    .mode = WaylandCanvas::output_mode,
+    .done = WaylandCanvas::output_done,
+    .scale = WaylandCanvas::output_scale,
+    .name = WaylandCanvas::output_name,
+    .description = WaylandCanvas::output_description
+};
+
 void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version)
 {
@@ -57,6 +66,11 @@ void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry,
             wl_registry_bind(registry, name, &xdg_wm_base_interface, version)
         );
         xdg_wm_base_add_listener(canvas->xdg_base, &xdg_wm_base_listener, canvas);
+    } else if (interface_str == wl_output_interface.name) {
+        canvas->output = reinterpret_cast<struct wl_output*>(
+            wl_registry_bind(registry, name, &wl_output_interface, version)
+        );
+        wl_output_add_listener(canvas->output, &wl_output_listener, canvas);
     }
 }
 
@@ -70,6 +84,13 @@ void WaylandCanvas::xdg_wm_base_ping([[maybe_unused]] void *data,
         struct xdg_wm_base *xdg_wm_base, uint32_t serial)
 {
     xdg_wm_base_pong(xdg_wm_base, serial);
+}
+
+void WaylandCanvas::output_scale(void* data, struct wl_output* output, int32_t factor) {
+    auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
+    if (canvas->output == output) {
+        canvas->output_scale_factor = factor;
+    }
 }
 
 WaylandCanvas::WaylandCanvas():
@@ -152,10 +173,10 @@ void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Ima
             return;
         }
     } else {
-        window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg);
+        window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg, output_scale_factor);
     }
 #else
-    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg);
+    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg, output_scale_factor);
 #endif
     window->finish_init();
     windows.insert_or_assign(identifier, std::move(window));
