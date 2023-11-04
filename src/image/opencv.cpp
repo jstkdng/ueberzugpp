@@ -44,7 +44,6 @@ in_cache(in_cache)
     }
     logger->info("Loading image {}", filename);
     flags = Flags::instance();
-
     process_image();
 }
 

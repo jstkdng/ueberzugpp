@@ -19,8 +19,10 @@
 
 #include <string>
 #include <cstdint>
+#include <memory>
 
 class Terminal;
+class Flags;
 
 class Dimensions
 {
@@ -43,9 +45,9 @@ public:
     const Terminal* terminal;
 
 private:
-
     uint16_t orig_x;
     uint16_t orig_y;
+    std::shared_ptr<Flags> flags;
 
     void read_offsets();
 };

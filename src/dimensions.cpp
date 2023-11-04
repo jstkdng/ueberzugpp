@@ -17,8 +17,11 @@
 #include "dimensions.hpp"
 #include "tmux.hpp"
 #include "terminal.hpp"
+#include "flags.hpp"
 
 #include <utility>
+#include <gsl/gsl>
+#include <iostream>
 
 Dimensions::Dimensions(const Terminal* terminal, uint16_t xcoord,
         uint16_t ycoord, int max_w, int max_h, std::string scaler):
@@ -29,7 +32,8 @@ padding_vertical(terminal->padding_vertical),
 scaler(std::move(scaler)),
 terminal(terminal),
 orig_x(xcoord),
-orig_y(ycoord)
+orig_y(ycoord),
+flags(Flags::instance())
 {
     read_offsets();
 }
@@ -43,20 +47,20 @@ void Dimensions::read_offsets()
 
 auto Dimensions::xpixels() const -> int
 {
-    return x * terminal->font_width;
+    return gsl::narrow_cast<int>(gsl::narrow_cast<float>(x * terminal->font_width) * flags->screen_scale);
 }
 
 auto Dimensions::ypixels() const -> int
 {
-    return y * terminal->font_height;
+    return gsl::narrow_cast<int>(gsl::narrow_cast<float>(y * terminal->font_height) * flags->screen_scale);
 }
 
 auto Dimensions::max_wpixels() const -> int
 {
-    return max_w * terminal->font_width;
+    return gsl::narrow_cast<int>(gsl::narrow_cast<float>(max_w * terminal->font_width) * flags->screen_scale);
 }
 
 auto Dimensions::max_hpixels() const -> int
 {
-    return max_h * terminal->font_height;
+    return gsl::narrow_cast<int>(gsl::narrow_cast<float>(max_h * terminal->font_height) * flags->screen_scale);
 }

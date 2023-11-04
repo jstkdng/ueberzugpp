@@ -17,7 +17,6 @@
 #include "flags.hpp"
 #include "os.hpp"
 
-#include <iostream>
 #include <fmt/format.h>
 #include <fstream>
 #include <nlohmann/json.hpp>

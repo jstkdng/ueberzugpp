@@ -19,11 +19,13 @@
 #include "application.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
+#include "flags.hpp"
 
 #include <string>
 #include <array>
 #include <stack>
 #include <algorithm>
+#include <gsl/gsl>
 
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
@@ -35,7 +37,8 @@ constexpr auto ipc_header_size = ipc_magic.size() + 8;
 
 SwaySocket::SwaySocket(const std::string_view endpoint):
 socket(endpoint),
-logger(spdlog::get("wayland"))
+logger(spdlog::get("wayland")),
+flags(Flags::instance())
 {
     logger->info("Using sway socket {}", endpoint);
 }
@@ -54,8 +57,8 @@ auto SwaySocket::get_window_info() -> struct WaylandWindowGeometry
     const auto& mon_rect = monitor.at("rect");
     const auto& rect = window.at("rect");
     return {
-        .width = rect.at("width"),
-        .height = rect.at("height"),
+        .width = gsl::narrow_cast<int>(rect.at("width").get<float>() * flags->screen_scale),
+        .height = gsl::narrow_cast<int>(rect.at("height").get<float>() * flags->screen_scale),
         .x = rect.at("x").get<int>() - mon_rect.at("x").get<int>(),
         .y = rect.at("y").get<int>() - mon_rect.at("y").get<int>()
     };
@@ -86,6 +89,12 @@ auto SwaySocket::get_active_monitor(const std::vector<nlohmann::json>& nodes) ->
     const int focus_id = nodes.at(0).at("focus").at(0);
     for (const auto& node: nodes) {
         if (node.at("id") == focus_id) {
+            const float scale_value = node.at("scale");
+            if (scale_value > 1.0F) {
+                // WTF why does this work???
+                const float magic = 0.5F;
+                flags->screen_scale = magic;
+            }
             return node;
         }
     }

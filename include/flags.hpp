@@ -46,6 +46,7 @@ public:
     std::string output;
     std::string pid_file;
     bool origin_center = false;
+    float screen_scale = 1;
 
     std::string cmd_id;
     std::string cmd_action;

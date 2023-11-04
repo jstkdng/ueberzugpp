@@ -23,6 +23,8 @@
 #include <nlohmann/json.hpp>
 #include <spdlog/fwd.h>
 
+class Flags;
+
 enum ipc_message_type {
     IPC_COMMAND = 0,
     IPC_GET_WORKSPACES = 1,
@@ -40,7 +42,7 @@ public:
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
     static auto get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
-    static auto get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
+    auto get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
 
 private:
     void disable_focus(std::string_view appid);
@@ -53,6 +55,7 @@ private:
 
     UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
+    std::shared_ptr<Flags> flags;
 };
 
 #endif
