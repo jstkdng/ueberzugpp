@@ -22,6 +22,7 @@
 
 #include <unordered_set>
 #include <algorithm>
+#include <iostream>
 
 #ifdef ENABLE_OPENCV
     #include <opencv2/videoio.hpp>
@@ -144,6 +145,15 @@ auto LibvipsImage::resize_image() -> void
     }
     const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler);
     if (new_width <= 0 && new_height <= 0) {
+        // ensure width and height are pair
+        if (flags->output == "wayland") {
+            const auto curw = width();
+            const auto curh = height();
+            if ((curw % 2) != 0 || (curh % 2) != 0) {
+                auto *opts = VImage::option()->set("height", curh - (curh % 2));
+                image = image.thumbnail_image(curw - (curw % 2), opts);
+            }
+        }
         return;
     }
 
@@ -156,6 +166,9 @@ auto LibvipsImage::resize_image() -> void
         scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
     }
     image = image.resize(scale);
+
+    //auto *opts = VImage::option()->set("height", new_height);
+    //image = image.thumbnail_image(new_width, opts);
     if (is_anim || flags->no_cache) {
         return;
     }
