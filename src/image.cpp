@@ -138,7 +138,7 @@ auto Image::get_new_sizes(double max_width, double max_height, const std::string
     new_width = gsl::narrow_cast<int>(img_width * new_scale);
     new_height = gsl::narrow_cast<int>(img_height * new_scale);
 
-    return std::make_pair(new_width, new_height);
+    return std::make_pair(new_width - (new_width % 2), new_height - (new_height % 2));
 }
 
 auto Image::get_dimensions(const njson& json, const Terminal* terminal) -> std::shared_ptr<Dimensions>

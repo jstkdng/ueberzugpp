@@ -23,7 +23,7 @@
 class WaylandShm
 {
 public:
-    WaylandShm(int width, int height, struct wl_shm* shm);
+    WaylandShm(int width, int height, int scale_factor, struct wl_shm* shm);
     ~WaylandShm();
     auto get_data() -> uint32_t*;
 

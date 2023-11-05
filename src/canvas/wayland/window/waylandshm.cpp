@@ -36,14 +36,15 @@ constexpr struct wl_callback_listener frame_listener = {
 
 WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor,
         struct wl_shm *wl_shm, struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
-        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg):
+        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg, int32_t output_scale_factor):
 compositor(compositor),
 xdg_base(xdg_base),
 surface(wl_compositor_create_surface(compositor)),
 xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
 xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
+scale_factor(output_scale_factor),
 image(std::move(new_image)),
-shm(std::make_unique<WaylandShm>(image->width(), image->height(), wl_shm)),
+shm(std::make_unique<WaylandShm>(image->width(), image->height(), scale_factor, wl_shm)),
 appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
 config(std::move(new_config)),
 xdg_agg(xdg_agg)
@@ -85,10 +86,11 @@ WaylandShmWindow::~WaylandShmWindow()
     delete_wayland_structs();
 }
 
-void WaylandShmWindow::draw()
+void WaylandShmWindow::wl_draw(int32_t scale_factor)
 {
     std::memcpy(shm->get_data(), image->data(), image->size());
     wl_surface_attach(surface, shm->buffer, 0, 0);
+    wl_surface_set_buffer_scale(surface, scale_factor);
     wl_surface_commit(surface);
     move_window();
 }
@@ -169,7 +171,8 @@ void WaylandShmWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg
     if (!window) {
         return;
     }
-    window->draw();
+    auto* shm_window = dynamic_cast<WaylandShmWindow*>(window.get());
+    shm_window->wl_draw(shm_window->scale_factor);
 }
 
 void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)

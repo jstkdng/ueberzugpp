@@ -29,6 +29,7 @@ class WaylandWindow:
 public:
     ~WaylandWindow() override = default;
 
+    virtual void wl_draw([[maybe_unused]] int32_t scale_factor) {};
     virtual void finish_init() = 0;
 };
 
