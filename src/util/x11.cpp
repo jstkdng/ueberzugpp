@@ -156,7 +156,11 @@ auto X11Util::get_parent_window(int pid) const -> xcb_window_t
 {
     const auto wid = os::getenv("WINDOWID");
     if (wid.has_value()) {
-        return std::stoi(wid.value());
+        try {
+            return std::stoi(wid.value());
+        } catch (const std::out_of_range& oor) {
+            return 0;
+        }
     }
 
     const auto pid_window_map = get_pid_window_map();
