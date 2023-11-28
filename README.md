@@ -129,10 +129,10 @@ the minimum supported version.
 
 Must be installed in order to build.
 
-- cmake (3.18 <= )
+- cmake ≥ 3.18
 - libvips
 - libsixel
-- chafa (1.6 <= )
+- chafa ≥ 1.6
 - openssl
 - tbb
 
