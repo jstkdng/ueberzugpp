@@ -20,6 +20,9 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <map>
+
+using strmap = std::map<std::string, std::string, std::less<void>>;
 
 namespace os
 {
@@ -35,6 +38,8 @@ namespace os
 
     void get_process_info(int pid);
     void daemonize();
+
+    auto load_env() -> strmap;
 } // namespace os
 
 #endif

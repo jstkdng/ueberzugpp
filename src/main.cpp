@@ -103,7 +103,7 @@ auto main(int argc, char *argv[]) -> int
     auto *query_win_command = program.add_subcommand("query_windows", "**UNUSED**, only present for backwards compatibility.");
     query_win_command->allow_extras();
 
-    CLI11_PARSE(program, argc, argv)
+    CLI11_PARSE(program, argc, argv);
 
     if (query_win_command->parsed()) {
         return 0;

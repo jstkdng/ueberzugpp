@@ -21,13 +21,14 @@
 #include <array>
 #include <memory>
 #include <system_error>
-#include <iostream>
 
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
 #include <unistd.h>
 #include <poll.h>
+
+const strmap envp {os::load_env()};
 
 auto os::exec(const std::string_view cmd) -> std::string
 {
@@ -100,11 +101,11 @@ auto os::wait_for_data_on_stdin(int waitms) -> bool
 
 auto os::getenv(const std::string_view var) -> std::optional<std::string>
 {
-    const auto *res = std::getenv(var.data());
-    if (res == nullptr) {
+    const auto search = envp.find(var);
+    if (search == envp.end()) {
         return {};
     }
-    return res;
+    return search->second;
 }
 
 auto os::get_pid() -> int
@@ -123,4 +124,25 @@ void os::daemonize()
     if (res == -1) {
         throw std::system_error(errno, std::generic_category());
     }
+}
+
+// copy current environment
+auto os::load_env() -> strmap
+{
+    char **runner = environ;
+    strmap envp;
+    while (*runner != nullptr) {
+        const std::string_view envline {*runner};
+        const auto idx = envline.find('=');
+        const auto envname = envline.substr(0, idx);
+        // check if variable is empty
+        if (idx == envline.length() - 1) {
+            envp.emplace(envname, "");
+        } else {
+            const auto envvalue = envline.substr(idx + 1);
+            envp.emplace(envname, envvalue);
+        }
+        runner = runner + 1;
+    }
+    return envp;
 }
