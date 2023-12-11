@@ -46,35 +46,9 @@ public:
 
     static void registry_handle_global(void *data, struct wl_registry *registry,
         uint32_t name, const char *interface, uint32_t version);
-    static void registry_handle_global_remove(void *data, struct wl_registry *registry,
-        uint32_t name);
     static void xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
 
     static void output_scale(void* data, struct wl_output* output, int32_t factor);
-    static void output_geometry([[maybe_unused]] void *data,
-			 [[maybe_unused]] struct wl_output *wl_output,
-			 [[maybe_unused]] int32_t xpos,
-			 [[maybe_unused]] int32_t ypos,
-			 [[maybe_unused]] int32_t physical_width,
-			 [[maybe_unused]] int32_t physical_height,
-			 [[maybe_unused]] int32_t subpixel,
-			 [[maybe_unused]] const char *make,
-			 [[maybe_unused]] const char *model,
-			 [[maybe_unused]] int32_t transform) {}
-    static void output_mode([[maybe_unused]] void *data,
-		     [[maybe_unused]] struct wl_output *wl_output,
-		     [[maybe_unused]] uint32_t flags,
-		     [[maybe_unused]] int32_t width,
-		     [[maybe_unused]] int32_t height,
-		     [[maybe_unused]] int32_t refresh) {}
-    static void output_done([[maybe_unused]] void *data,
-		     [[maybe_unused]] struct wl_output *wl_output) {}
-    static void output_name([[maybe_unused]] void *data,
-		     [[maybe_unused]] struct wl_output *wl_output,
-		     [[maybe_unused]] const char *name) {}
-    static void output_description([[maybe_unused]] void *data,
-			    [[maybe_unused]] struct wl_output *wl_output,
-			    [[maybe_unused]] const char *description) {}
 
     void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
     void remove_image(const std::string& identifier) override;

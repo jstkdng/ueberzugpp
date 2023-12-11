@@ -32,7 +32,7 @@
 
 constexpr struct wl_registry_listener registry_listener = {
     .global = WaylandCanvas::registry_handle_global,
-    .global_remove = WaylandCanvas::registry_handle_global_remove
+    .global_remove = [] (auto...) {}
 };
 
 constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {
@@ -40,12 +40,12 @@ constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {
 };
 
 constexpr struct wl_output_listener wl_output_listener = {
-    .geometry = WaylandCanvas::output_geometry,
-    .mode = WaylandCanvas::output_mode,
-    .done = WaylandCanvas::output_done,
+    .geometry = [] (auto...) {},
+    .mode = [] (auto...) {},
+    .done = [] (auto...) {},
     .scale = WaylandCanvas::output_scale,
-    .name = WaylandCanvas::output_name,
-    .description = WaylandCanvas::output_description
+    .name = [] (auto...) {},
+    .description = [] (auto...) {}
 };
 
 void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry,
@@ -73,12 +73,6 @@ void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry,
         wl_output_add_listener(canvas->output, &wl_output_listener, canvas);
     }
 }
-
-void WaylandCanvas::registry_handle_global_remove(
-        [[maybe_unused]] void *data,
-        [[maybe_unused]] wl_registry *registry,
-        [[maybe_unused]] uint32_t name)
-{}
 
 void WaylandCanvas::xdg_wm_base_ping([[maybe_unused]] void *data,
         struct xdg_wm_base *xdg_wm_base, uint32_t serial)
