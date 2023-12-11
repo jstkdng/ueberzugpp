@@ -42,7 +42,7 @@ in_cache(in_cache)
         logger->warn("unable to read image");
         throw std::runtime_error("");
     }
-    logger->info("Loading image {}", filename);
+    logger->info("loading file {}", filename);
     flags = Flags::instance();
 
     process_image();

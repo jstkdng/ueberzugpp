@@ -44,14 +44,14 @@ in_cache(in_cache)
     image = VImage::new_from_file(path.c_str()).colourspace(VIPS_INTERPRETATION_sRGB);
     flags = Flags::instance();
     logger = spdlog::get("vips");
-    logger->info("Loading image {}", filename);
+    logger->info("loading file {}", filename);
 
     try {
         // animated images should have both n-pages and delay
         npages = image.get_int("n-pages");
         std::ignore = image.get_array_int("delay");
         is_anim = true;
-        logger->info("Image is animated");
+        logger->info("file is an animated image");
         auto *opts = VImage::option()->set("n", -1);
         backup = VImage::new_from_file(filename.c_str(), opts)
             .colourspace(VIPS_INTERPRETATION_sRGB);
