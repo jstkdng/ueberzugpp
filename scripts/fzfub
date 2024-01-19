@@ -6,7 +6,7 @@ case "$(uname -a)" in
 esac
 
 cleanup() {
-    ueberzugpp cmd -s "$UB_SOCKET" -a exit
+    ueberzugpp cmd -s "$SOCKET" -a exit
 }
 trap cleanup HUP INT QUIT TERM EXIT
 
