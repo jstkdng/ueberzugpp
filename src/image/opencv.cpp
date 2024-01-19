@@ -196,15 +196,26 @@ void OpencvImage::process_image()
     }
 #endif
 
+    if (image.channels() == 1) {
+        cv::cvtColor(image, image, cv::COLOR_GRAY2BGRA);
+    }
+
     if (bgra_trifecta.contains(flags->output)) {
         if (image.channels() == 3) {
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
     } else if (flags->output == "kitty") {
-        cv::cvtColor(image, image, cv::COLOR_BGR2RGBA);
+        if (image.channels() == 4) {
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
+        } else {
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+        }
     } else if (flags->output == "sixel") {
-        cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+        if (image.channels() == 4) {
+            cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
+        } else {
+            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
+        }
     }
-
     _size = image.total() * image.elemSize();
 }
