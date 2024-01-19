@@ -62,6 +62,9 @@ private:
     void process_image();
     void resize_image();
     void resize_image_helper(cv::InputOutputArray& mat, int new_width, int new_height);
+
+    void rotate_image();
+    void wayland_processing();
 };
 
 #endif

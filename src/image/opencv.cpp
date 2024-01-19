@@ -21,8 +21,8 @@
 #include "terminal.hpp"
 
 #include <unordered_set>
-#include <iostream>
 #include <string_view>
+#include <execution>
 
 #include <spdlog/spdlog.h>
 #include <opencv2/imgcodecs.hpp>
@@ -38,6 +38,7 @@ in_cache(in_cache)
 {
     logger = spdlog::get("opencv");
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
+
     if (image.empty()) {
         logger->warn("unable to read image");
         throw std::runtime_error("");
@@ -45,6 +46,7 @@ in_cache(in_cache)
     logger->info("loading file {}", filename);
     flags = Flags::instance();
 
+    rotate_image();
     process_image();
 }
 
@@ -83,6 +85,38 @@ auto OpencvImage::channels() const -> int
     return image.channels();
 }
 
+void OpencvImage::wayland_processing()
+{
+    if (flags->output != "wayland") {
+        return;
+    }
+}
+
+void OpencvImage::rotate_image()
+{
+    const auto rotation = util::read_exif_rotation(path.c_str());
+    if (!rotation.has_value()) {
+        return;
+    }
+    const auto value = rotation.value();
+    const int upside_down = 3;
+    const int cclockwise90 = 6;
+    const int clockwise90 = 8;
+    switch(value) {
+        case upside_down:
+            cv::rotate(image, image, cv::ROTATE_180);
+            break;
+        case cclockwise90:
+            cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
+            break;
+        case clockwise90:
+            cv::rotate(image, image, cv::ROTATE_90_COUNTERCLOCKWISE);
+            break;
+        default:
+            break;
+    }
+}
+
 // only use opencl if required
 auto OpencvImage::resize_image() -> void
 {
@@ -104,6 +138,16 @@ auto OpencvImage::resize_image() -> void
 
     const auto opencl_ctx = cv::ocl::Context::getDefault();
     opencl_available = opencl_ctx.ptr() != nullptr;
+
+    /*if (image.channels() == 4) {
+        const auto white_to_black = [] (cv::Vec4b& pix) {
+            const uint8_t max_val = 255;
+            if (pix[0] == max_val && pix[1] == max_val && pix[2] == max_val && pix[3] >= 0) {
+                pix = cv::Vec4b(0, 0, 0, 0);
+            }
+        };
+        std::for_each(std::execution::par_unseq, image.begin<cv::Vec4b>(), image.end<cv::Vec4b>(), white_to_black);
+    }*/
 
     if (opencl_available) {
         logger->debug("OpenCL is available");
@@ -152,26 +196,15 @@ void OpencvImage::process_image()
     }
 #endif
 
-    if (image.channels() == 1) {
-        cv::cvtColor(image, image, cv::COLOR_GRAY2BGRA);
-    }
-
     if (bgra_trifecta.contains(flags->output)) {
         if (image.channels() == 3) {
             cv::cvtColor(image, image, cv::COLOR_BGR2BGRA);
         }
     } else if (flags->output == "kitty") {
-        if (image.channels() == 4) {
-            cv::cvtColor(image, image, cv::COLOR_BGRA2RGBA);
-        } else {
-            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
-        }
+        cv::cvtColor(image, image, cv::COLOR_BGR2RGBA);
     } else if (flags->output == "sixel") {
-        if (image.channels() == 4) {
-            cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
-        } else {
-            cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
-        }
+        cv::cvtColor(image, image, cv::COLOR_BGR2RGB);
     }
+
     _size = image.total() * image.elemSize();
 }

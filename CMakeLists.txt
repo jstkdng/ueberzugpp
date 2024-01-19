@@ -234,6 +234,7 @@ target_compile_definitions(ueberzug PRIVATE
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
+pkg_check_modules(EXIF REQUIRED IMPORTED_TARGET libexif)
 
 if (APPLE)
     list(APPEND UEBERZUG_SOURCES src/process/apple.cpp)
@@ -289,6 +290,7 @@ list(APPEND UEBERZUG_LIBRARIES
     PkgConfig::VIPS
     PkgConfig::SIXEL
     PkgConfig::CHAFA
+    PkgConfig::EXIF
 )
 
 target_include_directories(ueberzug PRIVATE

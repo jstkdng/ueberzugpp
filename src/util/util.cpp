@@ -45,6 +45,8 @@
 #   endif
 #endif
 
+#include <libexif/exif-data.h>
+
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
 
@@ -236,3 +238,24 @@ auto util::generate_random_string(size_t length) -> std::string
     std::generate_n(std::begin(result), length, [&chars, &dist, &rng] { return chars[dist(rng)]; });
     return result;
 }
+
+/*
+1: Normal (0° rotation)
+3: Upside-down (180° rotation)
+6: Rotated 90° counterclockwise (270° clockwise)
+8: Rotated 90° clockwise (270° counterclockwise)
+ */
+auto util::read_exif_rotation(const char* path) -> std::optional<std::uint16_t>
+{
+    const auto data = c_unique_ptr<ExifData, exif_data_free>{
+        exif_data_new_from_file(path)
+    };
+    if (data == nullptr) {
+        return {};
+    }
+    // orientation is in IFD[0]
+    auto* ifd = data->ifd[0];
+    auto* entry = exif_content_get_entry(ifd, EXIF_TAG_ORIENTATION);
+    return entry->data[1];
+}
+

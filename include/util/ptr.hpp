@@ -45,7 +45,6 @@ using c_unique_ptr = std::unique_ptr<T, deleter_from_fn<fn>>;
 template <typename T, auto fn>
 using cn_unique_ptr = std::unique_ptr<T, deleter_from_fn_null<fn>>;
 
-
 template <typename T>
 using unique_C_ptr = std::unique_ptr<T, deleter_from_fn<std::free>>;
 

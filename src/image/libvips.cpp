@@ -59,6 +59,9 @@ in_cache(in_cache)
         image = backup.crop(0, 0, backup.width(), orig_height);
     } catch (const VError& err) {}
 
+    if (!is_anim) {
+        image = image.autorot();
+    }
     process_image();
 }
 
