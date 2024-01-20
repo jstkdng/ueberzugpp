@@ -1,0 +1,17 @@
+---
+BasedOnStyle: LLVM
+
+Language: Cpp
+Standard: c++20
+
+AllowShortFunctionsOnASingleLine: InlineOnly
+IndentCaseLabels: true
+IndentWidth: 4
+PPIndentWidth: 2
+IndentPPDirectives: AfterHash
+ColumnLimit: 120
+InsertNewlineAtEOF: true
+AlwaysBreakTemplateDeclarations: Yes
+MaxEmptyLinesToKeep: 1
+BreakBeforeBraces: Linux
+
