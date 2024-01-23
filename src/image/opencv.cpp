@@ -15,26 +15,22 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "opencv.hpp"
-#include "util.hpp"
 #include "dimensions.hpp"
 #include "flags.hpp"
 #include "terminal.hpp"
+#include "util.hpp"
 
-#include <unordered_set>
 #include <string_view>
-#include <execution>
+#include <unordered_set>
 
-#include <spdlog/spdlog.h>
+#include <opencv2/core/ocl.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
-#include <opencv2/core/ocl.hpp>
+#include <spdlog/spdlog.h>
 
-OpencvImage::OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache):
-path(filename),
-dims(std::move(new_dims)),
-max_width(dims->max_wpixels()),
-max_height(dims->max_hpixels()),
-in_cache(in_cache)
+OpencvImage::OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache)
+    : path(filename), dims(std::move(new_dims)), max_width(dims->max_wpixels()), max_height(dims->max_hpixels()),
+      in_cache(in_cache)
 {
     logger = spdlog::get("opencv");
     image = cv::imread(filename, cv::IMREAD_UNCHANGED);
@@ -55,12 +51,12 @@ auto OpencvImage::filename() const -> std::string
     return path.string();
 }
 
-auto OpencvImage::dimensions() const -> const Dimensions&
+auto OpencvImage::dimensions() const -> const Dimensions &
 {
     return *dims;
 }
 
-auto OpencvImage::width() const-> int
+auto OpencvImage::width() const -> int
 {
     return image.cols;
 }
@@ -75,7 +71,7 @@ auto OpencvImage::size() const -> size_t
     return _size;
 }
 
-auto OpencvImage::data() const -> const unsigned char*
+auto OpencvImage::data() const -> const unsigned char *
 {
     return image.data;
 }
@@ -102,7 +98,7 @@ void OpencvImage::rotate_image()
     const int upside_down = 3;
     const int cclockwise90 = 6;
     const int clockwise90 = 8;
-    switch(value) {
+    switch (value) {
         case upside_down:
             cv::rotate(image, image, cv::ROTATE_180);
             break;
@@ -139,16 +135,6 @@ auto OpencvImage::resize_image() -> void
     const auto opencl_ctx = cv::ocl::Context::getDefault();
     opencl_available = opencl_ctx.ptr() != nullptr;
 
-    /*if (image.channels() == 4) {
-        const auto white_to_black = [] (cv::Vec4b& pix) {
-            const uint8_t max_val = 255;
-            if (pix[0] == max_val && pix[1] == max_val && pix[2] == max_val && pix[3] >= 0) {
-                pix = cv::Vec4b(0, 0, 0, 0);
-            }
-        };
-        std::for_each(std::execution::par_unseq, image.begin<cv::Vec4b>(), image.end<cv::Vec4b>(), white_to_black);
-    }*/
-
     if (opencl_available) {
         logger->debug("OpenCL is available");
         image.copyTo(uimage);
@@ -159,7 +145,7 @@ auto OpencvImage::resize_image() -> void
     }
 }
 
-void OpencvImage::resize_image_helper(cv::InputOutputArray& mat, int new_width, int new_height)
+void OpencvImage::resize_image_helper(cv::InputOutputArray &mat, int new_width, int new_height)
 {
     logger->debug("Resizing image");
     cv::resize(mat, mat, cv::Size(new_width, new_height), 0, 0, cv::INTER_AREA);
@@ -173,7 +159,8 @@ void OpencvImage::resize_image_helper(cv::InputOutputArray& mat, int new_width, 
     try {
         cv::imwrite(save_location, mat);
         logger->debug("Saved resized image");
-    } catch (const cv::Exception& ex) {}
+    } catch (const cv::Exception &ex) {
+    }
 }
 
 void OpencvImage::process_image()
@@ -186,9 +173,7 @@ void OpencvImage::process_image()
         dims->y -= std::floor(img_height / 2);
     }
 
-    const std::unordered_set<std::string_view> bgra_trifecta = {
-        "x11", "chafa", "wayland"
-    };
+    const std::unordered_set<std::string_view> bgra_trifecta = {"x11", "chafa", "wayland"};
 
 #ifdef ENABLE_OPENGL
     if (flags->use_opengl) {
