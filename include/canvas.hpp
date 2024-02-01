@@ -17,18 +17,18 @@
 #ifndef CANVAS_H
 #define CANVAS_H
 
-#include <memory>
+#include "image.hpp"
 
-class Image;
+#include <memory>
 
 class Canvas
 {
-public:
+  public:
     static auto create() -> std::unique_ptr<Canvas>;
     virtual ~Canvas() = default;
 
-    virtual void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) = 0;
-    virtual void remove_image(const std::string& identifier) = 0;
+    virtual void add_image(const std::string &identifier, std::unique_ptr<Image> new_image) = 0;
+    virtual void remove_image(const std::string &identifier) = 0;
 
     virtual void show() {}
     virtual void hide() {}
@@ -36,4 +36,3 @@ public:
 };
 
 #endif
-

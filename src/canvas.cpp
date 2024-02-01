@@ -14,16 +14,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "canvas/stdout.hpp"
 #include "canvas/chafa.hpp"
-#include "canvas/sixel.hpp"
-#include "canvas/kitty/kitty.hpp"
 #include "canvas/iterm2/iterm2.hpp"
+#include "canvas/kitty/kitty.hpp"
+#include "canvas/sixel.hpp"
+#include "canvas/stdout.hpp"
 #ifdef ENABLE_X11
-#   include "canvas/x11/x11.hpp"
+#  include "canvas/x11/x11.hpp"
 #endif
 #ifdef ENABLE_WAYLAND
-#   include "canvas/wayland/wayland.hpp"
+#  include "canvas/wayland/wayland.hpp"
 #endif
 #include "flags.hpp"
 #include "os.hpp"

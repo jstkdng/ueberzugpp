@@ -18,21 +18,21 @@
 #define APPLICATION_H
 
 #include "canvas.hpp"
-#include "terminal.hpp"
 #include "flags.hpp"
+#include "terminal.hpp"
 #include "util/ptr.hpp"
 
-#include <string>
-#include <thread>
-#include <cstdlib>
-#include <string_view>
 #include <atomic>
+#include <cstdlib>
+#include <string>
+#include <string_view>
+#include <thread>
 
 #include <spdlog/fwd.h>
 
 class Application
 {
-public:
+  public:
     explicit Application(std::string_view executable);
     ~Application();
 
@@ -48,7 +48,7 @@ public:
     static void daemonize(std::string_view pid_file);
     static const pid_t parent_pid_;
 
-private:
+  private:
     std::unique_ptr<Terminal> terminal;
     std::unique_ptr<Canvas> canvas;
 

@@ -17,29 +17,28 @@
 #ifndef IMAGE_H
 #define IMAGE_H
 
-#include <memory>
-#include <string>
 #include <filesystem>
+#include <memory>
 #include <nlohmann/json.hpp>
+#include <string>
 
 class Dimensions;
 class Terminal;
 
 class Image
 {
-public:
-    static auto load(const nlohmann::json& command, const Terminal* terminal) -> std::unique_ptr<Image>;
-    static auto check_cache(const Dimensions& dimensions,
-            const std::filesystem::path& orig_path) -> std::string;
-    static auto get_dimensions(const nlohmann::json& json, const Terminal* terminal) -> std::shared_ptr<Dimensions>;
+  public:
+    static auto load(const nlohmann::json &command, const Terminal *terminal) -> std::unique_ptr<Image>;
+    static auto check_cache(const Dimensions &dimensions, const std::filesystem::path &orig_path) -> std::string;
+    static auto get_dimensions(const nlohmann::json &json, const Terminal *terminal) -> std::shared_ptr<Dimensions>;
 
     virtual ~Image() = default;
 
-    [[nodiscard]] virtual auto dimensions() const -> const Dimensions& = 0;
+    [[nodiscard]] virtual auto dimensions() const -> const Dimensions & = 0;
     [[nodiscard]] virtual auto width() const -> int = 0;
     [[nodiscard]] virtual auto height() const -> int = 0;
     [[nodiscard]] virtual auto size() const -> size_t = 0;
-    [[nodiscard]] virtual auto data() const -> const unsigned char* = 0;
+    [[nodiscard]] virtual auto data() const -> const unsigned char * = 0;
     [[nodiscard]] virtual auto channels() const -> int = 0;
 
     [[nodiscard]] virtual auto frame_delay() const -> int { return -1; }
@@ -47,8 +46,8 @@ public:
     [[nodiscard]] virtual auto filename() const -> std::string = 0;
     virtual auto next_frame() -> void {}
 
-protected:
-    [[nodiscard]] auto get_new_sizes(double max_width, double max_height, const std::string& scaler) const
+  protected:
+    [[nodiscard]] auto get_new_sizes(double max_width, double max_height, const std::string &scaler) const
         -> std::pair<int, int>;
 };
 

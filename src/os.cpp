@@ -17,29 +17,61 @@
 #include "os.hpp"
 #include "util/ptr.hpp"
 
-#include <cstdlib>
 #include <array>
+#include <cstdlib>
 #include <memory>
 #include <system_error>
 
 #include <cerrno>
 #include <cstdio>
 #include <cstring>
-#include <unistd.h>
 #include <poll.h>
+#include <unistd.h>
 
-const strmap envp {os::load_env()};
+using strmap = std::map<std::string, std::string, std::less<void>>;
+
+#ifdef __APPLE__
+extern char *const *const environ;
+#endif
+
+namespace
+{
+
+// copy current environment
+auto load_env() -> strmap
+{
+    char **runner = environ;
+    strmap envp;
+    while (*runner != nullptr) {
+        const std::string_view envline{*runner};
+        const auto idx = envline.find('=');
+        const auto envname = envline.substr(0, idx);
+        // check if variable is empty
+        if (idx == envline.length() - 1) {
+            envp.emplace(envname, "");
+        } else {
+            const auto envvalue = envline.substr(idx + 1);
+            envp.emplace(envname, envvalue);
+        }
+        runner = runner + 1;
+    }
+    return envp;
+}
+
+const strmap envp = load_env();
+
+} // end namespace
 
 auto os::exec(const std::string_view cmd) -> std::string
 {
     const int bufsize = 128;
     std::array<char, bufsize> buffer;
     std::string result;
-    c_unique_ptr<FILE, pclose> pipe {popen(cmd.data(), "r")};
+    c_unique_ptr<FILE, pclose> pipe{popen(cmd.data(), "r")};
     if (!pipe) {
         throw std::system_error(errno, std::generic_category());
     }
-    while(fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
     if (!result.empty()) {
@@ -85,9 +117,7 @@ auto os::wait_for_data_on_fd(int filde, int waitms) -> bool
 
     const int res = poll(&fds, 1, waitms);
 
-    if (((fds.revents & POLLERR) != 0) ||
-        ((fds.revents & POLLNVAL) != 0) ||
-        (res == -1 && errno != EINTR)) {
+    if (((fds.revents & POLLERR) != 0) || ((fds.revents & POLLNVAL) != 0) || (res == -1 && errno != EINTR)) {
         throw std::system_error(errno, std::generic_category());
     }
     // read all remaining data after a POLLHUP
@@ -124,25 +154,4 @@ void os::daemonize()
     if (res == -1) {
         throw std::system_error(errno, std::generic_category());
     }
-}
-
-// copy current environment
-auto os::load_env() -> strmap
-{
-    char **runner = environ;
-    strmap envp;
-    while (*runner != nullptr) {
-        const std::string_view envline {*runner};
-        const auto idx = envline.find('=');
-        const auto envname = envline.substr(0, idx);
-        // check if variable is empty
-        if (idx == envline.length() - 1) {
-            envp.emplace(envname, "");
-        } else {
-            const auto envvalue = envline.substr(idx + 1);
-            envp.emplace(envname, envvalue);
-        }
-        runner = runner + 1;
-    }
-    return envp;
 }

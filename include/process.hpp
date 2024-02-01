@@ -21,7 +21,7 @@
 
 class Process
 {
-public:
+  public:
     explicit Process(int pid);
     ~Process() = default;
 

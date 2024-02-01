@@ -22,17 +22,19 @@
 template <auto fn>
 struct deleter_from_fn {
     template <typename T>
-    constexpr void operator()(T* arg) const {
-        fn(const_cast<std::remove_const_t<T>*>(arg));
+    constexpr void operator()(T *arg) const
+    {
+        fn(const_cast<std::remove_const_t<T> *>(arg));
     }
 };
 
 template <auto fn>
 struct deleter_from_fn_null {
     template <typename T>
-    constexpr void operator()(T* arg) const {
+    constexpr void operator()(T *arg) const
+    {
         if (arg != nullptr) {
-            fn(const_cast<std::remove_const_t<T>*>(arg));
+            fn(const_cast<std::remove_const_t<T> *>(arg));
         }
     }
 };

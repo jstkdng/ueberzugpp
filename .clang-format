@@ -14,4 +14,4 @@ InsertNewlineAtEOF: true
 AlwaysBreakTemplateDeclarations: Yes
 MaxEmptyLinesToKeep: 1
 BreakBeforeBraces: Linux
-
+PackConstructorInitializers: Never

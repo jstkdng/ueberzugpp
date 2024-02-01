@@ -17,10 +17,10 @@
 #include <csignal>
 
 #include <CLI/App.hpp>
-#include <CLI/Formatter.hpp>
 #include <CLI/Config.hpp>
-#include <spdlog/spdlog.h>
+#include <CLI/Formatter.hpp>
 #include <spdlog/cfg/env.h>
+#include <spdlog/spdlog.h>
 
 #include "application.hpp"
 #include "flags.hpp"
@@ -29,7 +29,7 @@
 
 void signal_handler(const int signal)
 {
-    auto& flag = Application::stop_flag_;
+    auto &flag = Application::stop_flag_;
     flag.store(true);
 
     const auto logger = spdlog::get("main");
@@ -66,7 +66,7 @@ auto main(int argc, char *argv[]) -> int
     std::shared_ptr<Flags> flags;
     try {
         flags = Flags::instance();
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << "Could not parse config file: " << e.what() << std::endl;
         return 1;
     }
@@ -76,7 +76,9 @@ auto main(int argc, char *argv[]) -> int
 
     auto *layer_command = program.add_subcommand("layer", "Display images on the terminal.");
     layer_command->add_flag("-s,--silent", flags->silent, "Print stderr to /dev/null.");
-    layer_command->add_flag("--use-escape-codes", flags->use_escape_codes, "Use escape codes to get terminal capabilities.")->default_val(false);
+    layer_command
+        ->add_flag("--use-escape-codes", flags->use_escape_codes, "Use escape codes to get terminal capabilities.")
+        ->default_val(false);
     layer_command->add_option("--pid-file", flags->pid_file, "Output file where to write the daemon PID.");
     layer_command->add_flag("--no-stdin", flags->no_stdin, "Do not listen on stdin for commands.")->needs("--pid-file");
     layer_command->add_flag("--no-cache", flags->no_cache, "Disable caching of resized images.");
@@ -100,7 +102,8 @@ auto main(int argc, char *argv[]) -> int
     auto *tmux_command = program.add_subcommand("tmux", "Handle tmux hooks. Used internaly.");
     tmux_command->allow_extras();
 
-    auto *query_win_command = program.add_subcommand("query_windows", "**UNUSED**, only present for backwards compatibility.");
+    auto *query_win_command =
+        program.add_subcommand("query_windows", "**UNUSED**, only present for backwards compatibility.");
     query_win_command->allow_extras();
 
     CLI11_PARSE(program, argc, argv);
@@ -123,7 +126,7 @@ auto main(int argc, char *argv[]) -> int
         try {
             Application application(argv[0]);
             application.command_loop();
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             std::cerr << e.what() << std::endl;
             return 1;
         }
@@ -133,7 +136,8 @@ auto main(int argc, char *argv[]) -> int
         try {
             const auto positionals = tmux_command->remaining();
             tmux::handle_hook(positionals.at(0), std::stoi(positionals.at(1)));
-        } catch (const std::out_of_range& oor) {}
+        } catch (const std::out_of_range &oor) {
+        }
     }
 
     if (cmd_comand->parsed()) {
@@ -142,4 +146,3 @@ auto main(int argc, char *argv[]) -> int
 
     return 0;
 }
-

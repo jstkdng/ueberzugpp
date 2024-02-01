@@ -17,14 +17,14 @@
 #ifndef UTIL_SOCKET_H
 #define UTIL_SOCKET_H
 
-#include <string_view>
 #include <cstdint>
 #include <string>
+#include <string_view>
 #include <vector>
 
 class UnixSocket
 {
-public:
+  public:
     UnixSocket();
     explicit UnixSocket(std::string_view endpoint);
     ~UnixSocket();
@@ -33,11 +33,11 @@ public:
     void bind_to_endpoint(std::string_view endpoint) const;
     [[nodiscard]] auto wait_for_connections(int waitms) const -> int;
     [[nodiscard]] auto read_data_from_connection(int filde) -> std::vector<std::string>;
-    void write(const void* data, std::size_t len) const;
-    void read(void* data, std::size_t len) const;
+    void write(const void *data, std::size_t len) const;
+    void read(void *data, std::size_t len) const;
     [[nodiscard]] auto read_until_empty() const -> std::string;
 
-private:
+  private:
     int fd;
     bool connected = true;
     std::string buffer;

@@ -17,24 +17,24 @@
 #ifndef FLAGS_H
 #define FLAGS_H
 
-#include <string>
 #include <filesystem>
 #include <memory>
+#include <string>
 
 // singleton
 class Flags
 {
-public:
+  public:
     static auto instance() -> std::shared_ptr<Flags>
     {
-        static std::shared_ptr<Flags> instance {new Flags};
+        static std::shared_ptr<Flags> instance{new Flags};
         return instance;
     }
 
-    Flags(const Flags&) = delete;
-    Flags(Flags&) = delete;
-    auto operator=(const Flags&) -> Flags& = delete;
-    auto operator=(Flags&) -> Flags& = delete;
+    Flags(const Flags &) = delete;
+    Flags(Flags &) = delete;
+    auto operator=(const Flags &) -> Flags & = delete;
+    auto operator=(Flags &) -> Flags & = delete;
 
     bool no_stdin = false;
     bool silent = false;
@@ -56,7 +56,7 @@ public:
     std::string cmd_max_height;
     std::string cmd_file_path;
 
-private:
+  private:
     Flags();
     std::filesystem::path config_file;
 

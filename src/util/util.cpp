@@ -15,34 +15,34 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util.hpp"
-#include "process.hpp"
+#include "flags.hpp"
 #include "os.hpp"
+#include "process.hpp"
 #include "util/ptr.hpp"
 #include "util/socket.hpp"
-#include "flags.hpp"
 
-#include <memory>
-#include <regex>
-#include <iostream>
-#include <sstream>
-#include <iomanip>
 #include <array>
+#include <iomanip>
+#include <iostream>
+#include <memory>
 #include <random>
+#include <regex>
+#include <sstream>
 
-#include <nlohmann/json.hpp>
-#include <gsl/gsl>
 #include <fmt/format.h>
+#include <gsl/gsl>
+#include <nlohmann/json.hpp>
 #include <openssl/evp.h>
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
-#   define EVP_MD_CTX_new   EVP_MD_CTX_create
-#   define EVP_MD_CTX_free  EVP_MD_CTX_destroy
+#  define EVP_MD_CTX_new EVP_MD_CTX_create
+#  define EVP_MD_CTX_free EVP_MD_CTX_destroy
 #endif
 #ifdef ENABLE_TURBOBASE64
-#   ifdef WITH_SYSTEM_TURBOBASE64
-#       include <turbobase64/turbob64.h>
-#   else
-#       include "turbob64.h"
-#   endif
+#  ifdef WITH_SYSTEM_TURBOBASE64
+#    include <turbobase64/turbob64.h>
+#  else
+#    include "turbob64.h"
+#  endif
 #endif
 
 #include <libexif/exif-data.h>
@@ -50,10 +50,10 @@
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
 
-auto util::str_split(const std::string& str, const std::string& delim) -> std::vector<std::string>
+auto util::str_split(const std::string &str, const std::string &delim) -> std::vector<std::string>
 {
-    const std::regex regex {delim};
-    const std::sregex_token_iterator first {str.begin(), str.end(), regex, -1};
+    const std::regex regex{delim};
+    const std::sregex_token_iterator first{str.begin(), str.end(), regex, -1};
     const std::sregex_token_iterator last;
     return {first, last};
 }
@@ -104,15 +104,16 @@ void util::send_socket_message(const std::string_view msg, const std::string_vie
         UnixSocket socket;
         socket.connect_to_endpoint(endpoint);
         socket.write(msg.data(), msg.size());
-    } catch (const std::system_error& err) {}
+    } catch (const std::system_error &err) {
+    }
 }
 
 auto util::base64_encode(const unsigned char *input, size_t length) -> std::string
 {
-    const size_t bufsize = 4 * ((length+2)/3) + 1;
-    std::vector<char> res (bufsize, 0);
-    base64_encode_v2(input, length, reinterpret_cast<unsigned char*>(res.data()));
-    return { res.data() };
+    const size_t bufsize = 4 * ((length + 2) / 3) + 1;
+    std::vector<char> res(bufsize, 0);
+    base64_encode_v2(input, length, reinterpret_cast<unsigned char *>(res.data()));
+    return {res.data()};
 }
 
 void util::base64_encode_v2(const unsigned char *input, size_t length, unsigned char *out)
@@ -127,9 +128,7 @@ void util::base64_encode_v2(const unsigned char *input, size_t length, unsigned 
 auto util::get_b2_hash_ssl(const std::string_view str) -> std::string
 {
     std::stringstream sstream;
-    const auto mdctx = c_unique_ptr<EVP_MD_CTX, EVP_MD_CTX_free> {
-        EVP_MD_CTX_new()
-    };
+    const auto mdctx = c_unique_ptr<EVP_MD_CTX, EVP_MD_CTX_free>{EVP_MD_CTX_new()};
 #ifdef LIBRESSL_VERSION_NUMBER
     const auto *evp = EVP_sha256();
 #else
@@ -168,11 +167,11 @@ auto util::get_cache_file_save_location(const fs::path &path) -> std::string
     return fmt::format("{}{}{}", get_cache_path(), get_b2_hash_ssl(path.string()), path.extension().string());
 }
 
-void util::benchmark(const std::function<void(void)>& func)
+void util::benchmark(const std::function<void(void)> &func)
 {
-    using std::chrono::high_resolution_clock;
-    using std::chrono::duration_cast;
     using std::chrono::duration;
+    using std::chrono::duration_cast;
+    using std::chrono::high_resolution_clock;
     using std::chrono::milliseconds;
 
     const auto ti1 = high_resolution_clock::now();
@@ -183,7 +182,7 @@ void util::benchmark(const std::function<void(void)>& func)
     std::cout << ms_double.count() << "ms\n";
 }
 
-void util::send_command(const Flags& flags)
+void util::send_command(const Flags &flags)
 {
     if (flags.cmd_action == "exit") {
         util::send_socket_message("EXIT", flags.cmd_socket);
@@ -191,23 +190,18 @@ void util::send_command(const Flags& flags)
     }
 
     if (flags.cmd_action == "remove") {
-        const njson json = {
-            {"action", "remove"},
-            {"identifier", flags.cmd_id}
-        };
+        const njson json = {{"action", "remove"}, {"identifier", flags.cmd_id}};
         util::send_socket_message(json.dump(), flags.cmd_socket);
         return;
     }
 
-    const njson json = {
-        {"action", flags.cmd_action},
-        {"identifier", flags.cmd_id},
-        {"max_width", std::stoi(flags.cmd_max_width)},
-        {"max_height", std::stoi(flags.cmd_max_height)},
-        {"x", std::stoi(flags.cmd_x)},
-        {"y", std::stoi(flags.cmd_y)},
-        {"path", flags.cmd_file_path}
-    };
+    const njson json = {{"action", flags.cmd_action},
+                        {"identifier", flags.cmd_id},
+                        {"max_width", std::stoi(flags.cmd_max_width)},
+                        {"max_height", std::stoi(flags.cmd_max_height)},
+                        {"x", std::stoi(flags.cmd_x)},
+                        {"y", std::stoi(flags.cmd_y)},
+                        {"path", flags.cmd_file_path}};
     util::send_socket_message(json.dump(), flags.cmd_socket);
 }
 
@@ -225,12 +219,9 @@ void util::clear_terminal_area(int xcoord, int ycoord, int width, int height)
 
 auto util::generate_random_string(size_t length) -> std::string
 {
-    constexpr auto chars = std::to_array({
-        '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-        'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z'
-    });
+    constexpr auto chars =
+        std::to_array({'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+                       'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'});
     auto rng_dev = std::random_device();
     auto rng = std::mt19937(rng_dev());
     auto dist = std::uniform_int_distribution{{}, chars.size() - 1};
@@ -245,17 +236,14 @@ auto util::generate_random_string(size_t length) -> std::string
 6: Rotated 90° counterclockwise (270° clockwise)
 8: Rotated 90° clockwise (270° counterclockwise)
  */
-auto util::read_exif_rotation(const char* path) -> std::optional<std::uint16_t>
+auto util::read_exif_rotation(const char *path) -> std::optional<std::uint16_t>
 {
-    const auto data = c_unique_ptr<ExifData, exif_data_free>{
-        exif_data_new_from_file(path)
-    };
+    const auto data = c_unique_ptr<ExifData, exif_data_free>{exif_data_new_from_file(path)};
     if (data == nullptr) {
         return {};
     }
     // orientation is in IFD[0]
-    auto* ifd = data->ifd[0];
-    auto* entry = exif_content_get_entry(ifd, EXIF_TAG_ORIENTATION);
+    auto *ifd = data->ifd[0];
+    const auto *entry = exif_content_get_entry(ifd, EXIF_TAG_ORIENTATION);
     return entry->data[1];
 }
-

@@ -17,29 +17,27 @@
 #ifndef NAMESPACE_OS_H
 #define NAMESPACE_OS_H
 
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
-#include <map>
-
-using strmap = std::map<std::string, std::string, std::less<void>>;
 
 namespace os
 {
-    auto exec(std::string_view cmd) -> std::string;
-    auto getenv(std::string_view var) -> std::optional<std::string>;
-    auto read_data_from_fd(int filde, char sep = '\n') -> std::string;
-    auto read_data_from_stdin(char sep = '\n') -> std::string;
-    auto wait_for_data_on_fd(int filde, int waitms) -> bool;
-    auto wait_for_data_on_stdin(int waitms) -> bool;
 
-    auto get_pid() -> int;
-    auto get_ppid() -> int;
+auto exec(std::string_view cmd) -> std::string;
+auto getenv(std::string_view var) -> std::optional<std::string>;
+auto read_data_from_fd(int filde, char sep = '\n') -> std::string;
+auto read_data_from_stdin(char sep = '\n') -> std::string;
+auto wait_for_data_on_fd(int filde, int waitms) -> bool;
+auto wait_for_data_on_stdin(int waitms) -> bool;
 
-    void get_process_info(int pid);
-    void daemonize();
+auto get_pid() -> int;
+auto get_ppid() -> int;
 
-    auto load_env() -> strmap;
+void get_process_info(int pid);
+void daemonize();
+
 } // namespace os
 
 #endif

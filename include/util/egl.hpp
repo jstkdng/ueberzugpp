@@ -17,8 +17,8 @@
 #ifndef UTIL_EGL_H
 #define UTIL_EGL_H
 
-#include <memory>
 #include <functional>
+#include <memory>
 
 #include <spdlog/fwd.h>
 
@@ -31,20 +31,20 @@ class Image;
 template <class T, class V>
 class EGLUtil
 {
-public:
-    EGLUtil(EGLenum platform, T* native_display, const EGLAttrib* attrib = nullptr);
+  public:
+    EGLUtil(EGLenum platform, T *native_display, const EGLAttrib *attrib = nullptr);
     ~EGLUtil();
 
-    void get_texture_from_image(const Image& image, GLuint texture) const;
-    void run_contained(EGLSurface surface, EGLContext context, const std::function<void()>& func) const;
+    void get_texture_from_image(const Image &image, GLuint texture) const;
+    void run_contained(EGLSurface surface, EGLContext context, const std::function<void()> &func) const;
     void make_current(EGLSurface surface, EGLContext context) const;
     void restore() const;
-    [[nodiscard]] auto create_surface(V* native_window) const -> EGLSurface;
+    [[nodiscard]] auto create_surface(V *native_window) const -> EGLSurface;
     [[nodiscard]] auto create_context(EGLSurface surface) const -> EGLContext;
 
     EGLDisplay display;
 
-private:
+  private:
     EGLConfig config;
     std::shared_ptr<spdlog::logger> logger;
 
