@@ -15,29 +15,29 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "application.hpp"
+#include "image.hpp"
 #include "os.hpp"
-#include "version.hpp"
+#include "tmux.hpp"
 #include "util.hpp"
 #include "util/socket.hpp"
-#include "tmux.hpp"
-#include "image.hpp"
+#include "version.hpp"
 
 #include <filesystem>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <unordered_map>
 
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
 #include <fmt/format.h>
-#include <vips/vips8>
 #include <nlohmann/json.hpp>
+#include <spdlog/sinks/basic_file_sink.h>
+#include <spdlog/spdlog.h>
+#include <vips/vips8>
 
 using njson = nlohmann::json;
 namespace fs = std::filesystem;
 
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::atomic<bool> Application::stop_flag_ {false};
+std::atomic<bool> Application::stop_flag_{false};
 const pid_t Application::parent_pid_ = os::get_ppid();
 
 Application::Application(const std::string_view executable)
@@ -90,21 +90,21 @@ void Application::execute(const std::string_view cmd)
     njson json;
     try {
         json = njson::parse(cmd);
-    } catch (const njson::parse_error& e) {
+    } catch (const njson::parse_error &e) {
         logger->error("Command received is not valid json");
         return;
     }
     const auto json_str = json.dump();
     logger->info("Command received: {}", json_str);
 
-    const std::string& action = json.at("action");
+    const std::string &action = json.at("action");
     if (action == "tmux") {
-        const std::string& hook = json.at("hook");
+        const std::string &hook = json.at("hook");
         handle_tmux_hook(hook);
         return;
     }
 
-    const std::string& identifier = json.at("identifier");
+    const std::string &identifier = json.at("identifier");
     if (action == "add") {
         if (!json.at("path").is_string()) {
             logger->error("Path received is not valid");
@@ -125,36 +125,33 @@ void Application::execute(const std::string_view cmd)
 
 void Application::handle_tmux_hook(const std::string_view hook)
 {
-    const std::unordered_map<std::string_view, std::function<void()>> hook_fns {
+    const std::unordered_map<std::string_view, std::function<void()>> hook_fns{
         {"client-session-changed",
-            [this] {
-                if (tmux::is_window_focused()) {
-                    canvas->show();
-                }
-            }},
+         [this] {
+             if (tmux::is_window_focused()) {
+                 canvas->show();
+             }
+         }},
         {"session-window-changed",
-            [this] {
-                if (tmux::is_window_focused()) {
-                    canvas->show();
-                } else {
-                    canvas->hide();
-                }
-            }},
-        {"client-detached",
-            [this] {
-                canvas->hide();
-            }},
+         [this] {
+             if (tmux::is_window_focused()) {
+                 canvas->show();
+             } else {
+                 canvas->hide();
+             }
+         }},
+        {"client-detached", [this] { canvas->hide(); }},
         {"window-layout-changed",
-            [this] {
-                if (tmux::is_window_focused()) {
-                    canvas->hide();
-                }
-            }},
+         [this] {
+             if (tmux::is_window_focused()) {
+                 canvas->hide();
+             }
+         }},
     };
 
     try {
         hook_fns.at(hook)();
-    } catch (const std::out_of_range& oor) {
+    } catch (const std::out_of_range &oor) {
         logger->warn("TMUX hook not recognized");
     }
 }
@@ -192,7 +189,7 @@ void Application::setup_logger()
         spdlog::initialize_logger(opengl_logger);
 
         logger = spdlog::get("main");
-    } catch (const spdlog::spdlog_ex& ex) {
+    } catch (const spdlog::spdlog_ex &ex) {
         std::cout << "Log init failed: " << ex.what() << std::endl;
     }
 }
@@ -213,7 +210,7 @@ void Application::command_loop()
         try {
             const auto cmd = os::read_data_from_stdin();
             execute(cmd);
-        } catch (const std::system_error& err) {
+        } catch (const std::system_error &err) {
             stop_flag_.store(true);
             break;
         }
@@ -235,7 +232,7 @@ void Application::socket_loop()
             continue;
         }
         const auto data = socket.read_data_from_connection(conn);
-        for (const auto& cmd: data) {
+        for (const auto &cmd : data) {
             if (cmd == "EXIT") {
                 stop_flag_.store(true);
                 return;
@@ -258,9 +255,8 @@ void Application::print_header()
  \___/ \___|_.__/ \___|_|  /___|\__,_|\__, |
                                        __/ |
                                       |___/     v{}.{}.{})",
-        ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH
-    );
-    std::ofstream ofs (log_path, std::ios::out | std::ios::app);
+                                 ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
+    std::ofstream ofs(log_path, std::ios::out | std::ios::app);
     ofs << art << std::endl;
 }
 
@@ -274,14 +270,14 @@ void Application::set_silent()
 
 void Application::print_version()
 {
-    const auto ver_str = fmt::format("ueberzugpp {}.{}.{}",
-            ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
+    const auto ver_str = fmt::format("ueberzugpp {}.{}.{}", ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR,
+                                     ueberzugpp_VERSION_PATCH);
     std::cout << ver_str << std::endl;
 }
 
 void Application::daemonize(const std::string_view pid_file)
 {
     os::daemonize();
-    std::ofstream ofs (pid_file.data());
+    std::ofstream ofs(pid_file.data());
     ofs << os::get_pid() << std::flush;
 }

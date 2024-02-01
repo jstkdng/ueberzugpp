@@ -15,11 +15,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "waylandshm.hpp"
-#include "util.hpp"
-#include "image.hpp"
-#include "dimensions.hpp"
-#include "shm.hpp"
 #include "../config.hpp"
+#include "dimensions.hpp"
+#include "image.hpp"
+#include "shm.hpp"
+#include "util.hpp"
 
 #include <fmt/format.h>
 #include <thread>
@@ -30,24 +30,23 @@ constexpr struct xdg_surface_listener xdg_surface_listener = {
     .configure = WaylandShmWindow::xdg_surface_configure,
 };
 
-constexpr struct wl_callback_listener frame_listener = {
-    .done = WaylandShmWindow::wl_surface_frame_done
-};
+constexpr struct wl_callback_listener frame_listener = {.done = WaylandShmWindow::wl_surface_frame_done};
 
-WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor,
-        struct wl_shm *wl_shm, struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
-        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg, int32_t output_scale_factor):
-compositor(compositor),
-xdg_base(xdg_base),
-surface(wl_compositor_create_surface(compositor)),
-xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
-xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
-scale_factor(output_scale_factor),
-image(std::move(new_image)),
-shm(std::make_unique<WaylandShm>(image->width(), image->height(), scale_factor, wl_shm)),
-appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
-config(std::move(new_config)),
-xdg_agg(xdg_agg)
+WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor, struct wl_shm *wl_shm,
+                                   struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
+                                   std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg *xdg_agg,
+                                   int32_t output_scale_factor)
+    : compositor(compositor),
+      xdg_base(xdg_base),
+      surface(wl_compositor_create_surface(compositor)),
+      xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
+      xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
+      scale_factor(output_scale_factor),
+      image(std::move(new_image)),
+      shm(std::make_unique<WaylandShm>(image->width(), image->height(), scale_factor, wl_shm)),
+      appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
+      config(std::move(new_config)),
+      xdg_agg(xdg_agg)
 {
     config->initial_setup(appid);
     xdg_setup();
@@ -113,7 +112,7 @@ void WaylandShmWindow::hide()
         return;
     }
     visible = false;
-    const std::scoped_lock lock {draw_mutex};
+    const std::scoped_lock lock{draw_mutex};
     delete_xdg_structs();
     wl_surface_attach(surface, nullptr, 0, 0);
     wl_surface_commit(surface);
@@ -166,25 +165,25 @@ void WaylandShmWindow::generate_frame()
 void WaylandShmWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
 {
     xdg_surface_ack_configure(xdg_surface, serial);
-    const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
+    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
     const auto window = tmp->ptr.lock();
     if (!window) {
         return;
     }
-    auto* shm_window = dynamic_cast<WaylandShmWindow*>(window.get());
+    auto *shm_window = dynamic_cast<WaylandShmWindow *>(window.get());
     shm_window->wl_draw(shm_window->scale_factor);
 }
 
 void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
 {
     wl_callback_destroy(callback);
-    const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
+    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
     const auto window = tmp->ptr.lock();
     if (!window) {
         return;
     }
-    auto* shm_window = dynamic_cast<WaylandShmWindow*>(window.get());
-    const std::scoped_lock lock {shm_window->draw_mutex};
+    auto *shm_window = dynamic_cast<WaylandShmWindow *>(window.get());
+    const std::scoped_lock lock{shm_window->draw_mutex};
     if (!shm_window->visible) {
         return;
     }

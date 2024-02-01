@@ -18,9 +18,9 @@
 #include "util.hpp"
 #include "util/ptr.hpp"
 
+#include <fcntl.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 #include <fmt/format.h>
@@ -28,12 +28,12 @@
 #include <cerrno>
 #include <system_error>
 
-WaylandShm::WaylandShm(int width, int height, int scale_factor, struct wl_shm* shm):
-shm(shm),
-width(width),
-height(height),
-stride(width * 4),
-pool_size(height * stride * scale_factor)
+WaylandShm::WaylandShm(int width, int height, int scale_factor, struct wl_shm *shm)
+    : shm(shm),
+      width(width),
+      height(height),
+      stride(width * 4),
+      pool_size(height * stride * scale_factor)
 {
     const int path_size = 32;
     shm_path = fmt::format("/{}", util::generate_random_string(path_size));
@@ -44,7 +44,7 @@ pool_size(height * stride * scale_factor)
 void WaylandShm::create_shm_file()
 {
     const mode_t shm_mode = 0600;
-    fd = shm_open(shm_path.c_str(), O_RDWR | O_CREAT | O_EXCL, shm_mode);
+    fd = shm_open(shm_path.c_str(), O_RDWR | O_CREAT, shm_mode);
     if (fd == -1) {
         throw std::system_error(errno, std::system_category());
     }
@@ -52,22 +52,18 @@ void WaylandShm::create_shm_file()
     if (res == -1) {
         throw std::system_error(errno, std::system_category());
     }
-    pool_data = reinterpret_cast<uint8_t*>(
-        mmap(nullptr, pool_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)
-    );
+    pool_data = reinterpret_cast<uint8_t *>(mmap(nullptr, pool_size, PROT_WRITE, MAP_SHARED, fd, 0));
 }
 
 void WaylandShm::allocate_pool_buffers()
 {
-    const auto pool = c_unique_ptr<struct wl_shm_pool, wl_shm_pool_destroy> {
-        wl_shm_create_pool(shm, fd, pool_size)
-    };
+    const auto pool = c_unique_ptr<struct wl_shm_pool, wl_shm_pool_destroy>{wl_shm_create_pool(shm, fd, pool_size)};
     buffer = wl_shm_pool_create_buffer(pool.get(), 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
 }
 
-auto WaylandShm::get_data() -> uint32_t*
+auto WaylandShm::get_data() -> uint32_t *
 {
-    return reinterpret_cast<uint32_t*>(&pool_data[0]);
+    return reinterpret_cast<uint32_t *>(&pool_data[0]);
 }
 
 WaylandShm::~WaylandShm()
