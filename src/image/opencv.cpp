@@ -29,7 +29,10 @@
 #include <spdlog/spdlog.h>
 
 OpencvImage::OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache)
-    : path(filename), dims(std::move(new_dims)), max_width(dims->max_wpixels()), max_height(dims->max_hpixels()),
+    : path(filename),
+      dims(std::move(new_dims)),
+      max_width(dims->max_wpixels()),
+      max_height(dims->max_hpixels()),
       in_cache(in_cache)
 {
     logger = spdlog::get("opencv");
@@ -174,6 +177,11 @@ void OpencvImage::process_image()
     }
 
     const std::unordered_set<std::string_view> bgra_trifecta = {"x11", "chafa", "wayland"};
+
+    if (image.depth() == CV_16U) {
+        const float alpha = 0.00390625; // 1 / 256
+        image.convertTo(image, CV_8U, alpha);
+    }
 
 #ifdef ENABLE_OPENGL
     if (flags->use_opengl) {

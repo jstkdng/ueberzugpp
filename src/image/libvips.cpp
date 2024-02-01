@@ -15,31 +15,30 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "libvips.hpp"
-#include "util.hpp"
 #include "dimensions.hpp"
 #include "flags.hpp"
 #include "terminal.hpp"
+#include "util.hpp"
 
-#include <unordered_set>
 #include <algorithm>
 #include <iostream>
+#include <unordered_set>
 
 #ifdef ENABLE_OPENCV
-    #include <opencv2/videoio.hpp>
+#  include <opencv2/videoio.hpp>
 #endif
-#include <spdlog/spdlog.h>
 #include <gsl/gsl>
+#include <spdlog/spdlog.h>
 
-using vips::VImage;
 using vips::VError;
+using vips::VImage;
 
-LibvipsImage::LibvipsImage(std::shared_ptr<Dimensions> new_dims,
-            const std::string &filename, bool in_cache):
-path(filename),
-dims(std::move(new_dims)),
-max_width(dims->max_wpixels()),
-max_height(dims->max_hpixels()),
-in_cache(in_cache)
+LibvipsImage::LibvipsImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache)
+    : path(filename),
+      dims(std::move(new_dims)),
+      max_width(dims->max_wpixels()),
+      max_height(dims->max_hpixels()),
+      in_cache(in_cache)
 {
     image = VImage::new_from_file(path.c_str()).colourspace(VIPS_INTERPRETATION_sRGB);
     flags = Flags::instance();
@@ -53,11 +52,11 @@ in_cache(in_cache)
         is_anim = true;
         logger->info("file is an animated image");
         auto *opts = VImage::option()->set("n", -1);
-        backup = VImage::new_from_file(filename.c_str(), opts)
-            .colourspace(VIPS_INTERPRETATION_sRGB);
+        backup = VImage::new_from_file(filename.c_str(), opts).colourspace(VIPS_INTERPRETATION_sRGB);
         orig_height = backup.height() / npages;
         image = backup.crop(0, 0, backup.width(), orig_height);
-    } catch (const VError& err) {}
+    } catch (const VError &err) {
+    }
 
     if (!is_anim) {
         image = image.autorot();
@@ -65,7 +64,7 @@ in_cache(in_cache)
     process_image();
 }
 
-auto LibvipsImage::dimensions() const -> const Dimensions&
+auto LibvipsImage::dimensions() const -> const Dimensions &
 {
     return *dims;
 }
@@ -90,7 +89,7 @@ auto LibvipsImage::size() const -> size_t
     return _size;
 }
 
-auto LibvipsImage::data() const -> const unsigned char*
+auto LibvipsImage::data() const -> const unsigned char *
 {
     return _data.get();
 }
@@ -128,7 +127,7 @@ auto LibvipsImage::frame_delay() const -> int
         const int ms_per_sec = 1000;
         if (delays.at(0) == 0) {
 #ifdef ENABLE_OPENCV
-            const cv::VideoCapture video (path);
+            const cv::VideoCapture video(path);
             if (video.isOpened()) {
                 return gsl::narrow_cast<int>((1.0 / video.get(cv::CAP_PROP_FPS)) * ms_per_sec);
             }
@@ -136,7 +135,7 @@ auto LibvipsImage::frame_delay() const -> int
             return gsl::narrow_cast<int>((1.0 / npages) * ms_per_sec);
         }
         return delays.at(0);
-    } catch (const VError& err) {
+    } catch (const VError &err) {
         return -1;
     }
 }
@@ -170,8 +169,8 @@ auto LibvipsImage::resize_image() -> void
     }
     image = image.resize(scale);
 
-    //auto *opts = VImage::option()->set("height", new_height);
-    //image = image.thumbnail_image(new_width, opts);
+    // auto *opts = VImage::option()->set("height", new_height);
+    // image = image.thumbnail_image(new_width, opts);
     if (is_anim || flags->no_cache) {
         return;
     }
@@ -180,7 +179,8 @@ auto LibvipsImage::resize_image() -> void
     try {
         image.write_to_file(save_location.c_str());
         logger->debug("Saved resized image");
-    } catch (const VError& err) {}
+    } catch (const VError &err) {
+    }
 }
 
 auto LibvipsImage::process_image() -> void
@@ -193,9 +193,7 @@ auto LibvipsImage::process_image() -> void
         dims->y -= std::floor(img_height / 2);
     }
 
-    const std::unordered_set<std::string_view> bgra_trifecta = {
-        "x11", "chafa", "wayland"
-    };
+    const std::unordered_set<std::string_view> bgra_trifecta = {"x11", "chafa", "wayland"};
 
 #ifdef ENABLE_OPENGL
     if (flags->use_opengl) {
@@ -211,9 +209,7 @@ auto LibvipsImage::process_image() -> void
         }
         // convert from RGB to BGR
         auto bands = image.bandsplit();
-        auto tmp = bands[0];
-        bands[0] = bands[2];
-        bands[2] = tmp;
+        std::swap(bands[0], bands[2]);
         image = VImage::bandjoin(bands);
     } else if (flags->output == "sixel") {
         // sixel expects RGB888
@@ -222,5 +218,5 @@ auto LibvipsImage::process_image() -> void
         }
     }
     _size = VIPS_IMAGE_SIZEOF_IMAGE(image.get_image());
-    _data.reset(static_cast<unsigned char*>(image.write_to_memory(&_size)));
+    _data.reset(static_cast<unsigned char *>(image.write_to_memory(&_size)));
 }
