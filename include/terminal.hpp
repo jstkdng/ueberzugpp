@@ -21,15 +21,14 @@
 #include <string>
 #include <string_view>
 
-#include <termios.h>
 #include <spdlog/fwd.h>
+#include <termios.h>
 
-class X11Util;
-class Flags;
+#include "flags.hpp"
 
 class Terminal
 {
-public:
+  public:
     Terminal();
     ~Terminal();
 
@@ -46,7 +45,7 @@ public:
     std::string term_program;
     std::string detected_output;
 
-private:
+  private:
     auto get_terminal_size() -> void;
     static auto guess_padding(uint16_t chars, double pixels) -> double;
     static auto guess_font_size(uint16_t chars, double pixels, double padding) -> double;

@@ -17,9 +17,11 @@
 #ifndef WAYLAND_EGL_WINDOW_H
 #define WAYLAND_EGL_WINDOW_H
 
-#include "waylandwindow.hpp"
-#include "wayland-xdg-shell-client-protocol.h"
+#include "../config.hpp"
+#include "image.hpp"
 #include "util/egl.hpp"
+#include "wayland-xdg-shell-client-protocol.h"
+#include "waylandwindow.hpp"
 
 #include <wayland-client.h>
 #include <wayland-egl.h>
@@ -27,16 +29,12 @@
 #include <memory>
 #include <mutex>
 
-class Image;
-class WaylandConfig;
-
-class WaylandEglWindow :
-    public WaylandWindow
+class WaylandEglWindow : public WaylandWindow
 {
-public:
+  public:
     WaylandEglWindow(struct wl_compositor *compositor, struct xdg_wm_base *xdg_base,
-            const EGLUtil<struct wl_display, struct wl_egl_window>* egl, std::unique_ptr<Image> new_image,
-            std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg);
+                     const EGLUtil<struct wl_display, struct wl_egl_window> *egl, std::unique_ptr<Image> new_image,
+                     WaylandConfig *new_config, struct XdgStructAgg *xdg_agg);
     ~WaylandEglWindow() override;
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
     static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
@@ -48,7 +46,7 @@ public:
 
     void finish_init() override;
 
-private:
+  private:
     struct wl_compositor *compositor;
     struct xdg_wm_base *xdg_base;
 
@@ -58,13 +56,13 @@ private:
     struct wl_callback *callback;
 
     std::unique_ptr<Image> image;
-    std::shared_ptr<WaylandConfig> config;
+    WaylandConfig *config;
 
     EGLSurface egl_surface;
     EGLContext egl_context;
 
     struct wl_egl_window *egl_window = nullptr;
-    const EGLUtil<struct wl_display, struct wl_egl_window>* egl;
+    const EGLUtil<struct wl_display, struct wl_egl_window> *egl;
 
     GLuint texture;
     GLuint fbo;
@@ -73,8 +71,8 @@ private:
     std::mutex egl_mutex;
 
     std::string appid;
-    void* this_ptr;
-    struct XdgStructAgg* xdg_agg;
+    void *this_ptr;
+    struct XdgStructAgg *xdg_agg;
     bool visible = false;
 
     void move_window();
@@ -88,4 +86,3 @@ private:
     void load_framebuffer();
 };
 #endif
-

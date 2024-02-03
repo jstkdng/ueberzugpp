@@ -17,30 +17,32 @@
 #ifndef X11_UTIL_H
 #define X11_UTIL_H
 
-#include <vector>
-#include <unordered_map>
-#include <memory>
 #include <initializer_list>
+#include <memory>
+#include <unordered_map>
+#include <vector>
 
 #include <xcb/xcb.h>
 
 class X11Util
 {
-public:
+  public:
     X11Util();
-    explicit X11Util(xcb_connection_t* connection);
+    explicit X11Util(xcb_connection_t *connection);
     ~X11Util();
 
     [[nodiscard]] auto get_server_window_ids() const -> std::vector<xcb_window_t>;
     [[nodiscard]] auto get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_window_t>;
     [[nodiscard]] auto get_window_dimensions(xcb_window_t window) const -> std::pair<uint16_t, uint16_t>;
     [[nodiscard]] auto get_parent_window(int pid) const -> xcb_window_t;
-    [[nodiscard]] auto window_has_properties(xcb_window_t window, std::initializer_list<xcb_atom_t> properties) const -> bool;
+    [[nodiscard]] auto window_has_properties(xcb_window_t window, std::initializer_list<xcb_atom_t> properties) const
+        -> bool;
 
     bool connected = false;
-private:
-    xcb_connection_t* connection;
-    xcb_screen_t* screen = nullptr;
+
+  private:
+    xcb_connection_t *connection;
+    xcb_screen_t *screen = nullptr;
     bool owns_connection = true;
 };
 

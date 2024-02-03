@@ -15,10 +15,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "waylandegl.hpp"
-#include "util.hpp"
-#include "image.hpp"
 #include "dimensions.hpp"
-#include "../config.hpp"
+#include "util.hpp"
 
 #include <fmt/format.h>
 #include <thread>
@@ -29,24 +27,23 @@ constexpr struct xdg_surface_listener xdg_surface_listener_egl = {
     .configure = WaylandEglWindow::xdg_surface_configure,
 };
 
-constexpr struct wl_callback_listener frame_listener_egl = {
-    .done = WaylandEglWindow::wl_surface_frame_done
-};
+constexpr struct wl_callback_listener frame_listener_egl = {.done = WaylandEglWindow::wl_surface_frame_done};
 
 WaylandEglWindow::WaylandEglWindow(struct wl_compositor *compositor, struct xdg_wm_base *xdg_base,
-        const EGLUtil<struct wl_display, struct wl_egl_window>* egl, std::unique_ptr<Image> new_image,
-        std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg):
-compositor(compositor),
-xdg_base(xdg_base),
-surface(wl_compositor_create_surface(compositor)),
-xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
-xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
-image(std::move(new_image)),
-config(std::move(new_config)),
-egl_window(wl_egl_window_create(surface, image->width(), image->height())),
-egl(egl),
-appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
-xdg_agg(xdg_agg)
+                                   const EGLUtil<struct wl_display, struct wl_egl_window> *egl,
+                                   std::unique_ptr<Image> new_image, WaylandConfig *new_config,
+                                   struct XdgStructAgg *xdg_agg)
+    : compositor(compositor),
+      xdg_base(xdg_base),
+      surface(wl_compositor_create_surface(compositor)),
+      xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
+      xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
+      image(std::move(new_image)),
+      config(new_config),
+      egl_window(wl_egl_window_create(surface, image->width(), image->height())),
+      egl(egl),
+      appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
+      xdg_agg(xdg_agg)
 {
     config->initial_setup(appid);
     opengl_setup();
@@ -150,14 +147,13 @@ void WaylandEglWindow::draw()
 
 void WaylandEglWindow::load_framebuffer()
 {
-    std::scoped_lock lock {egl_mutex};
+    std::scoped_lock lock{egl_mutex};
     egl->run_contained(egl_surface, egl_context, [this] {
         egl->get_texture_from_image(*image, texture);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D, texture, 0);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
         glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
         eglSwapBuffers(egl->display, egl_surface);
     });
@@ -204,7 +200,7 @@ void WaylandEglWindow::hide()
         return;
     }
     visible = false;
-    const std::scoped_lock lock {draw_mutex};
+    const std::scoped_lock lock{draw_mutex};
     delete_xdg_structs();
     wl_surface_attach(surface, nullptr, 0, 0);
     wl_surface_commit(surface);
@@ -213,28 +209,27 @@ void WaylandEglWindow::hide()
 void WaylandEglWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
 {
     xdg_surface_ack_configure(xdg_surface, serial);
-    const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
+    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
     const auto window = tmp->ptr.lock();
     if (!window) {
         return;
     }
-    auto* egl_window = dynamic_cast<WaylandEglWindow*>(window.get());
+    auto *egl_window = dynamic_cast<WaylandEglWindow *>(window.get());
     egl_window->draw();
 }
 
 void WaylandEglWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
 {
     wl_callback_destroy(callback);
-    const auto *tmp = reinterpret_cast<struct XdgStruct*>(data);
+    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
     const auto window = tmp->ptr.lock();
     if (!window) {
         return;
     }
-    auto* egl_window = dynamic_cast<WaylandEglWindow*>(window.get());
-    const std::scoped_lock lock {egl_window->draw_mutex};
+    auto *egl_window = dynamic_cast<WaylandEglWindow *>(window.get());
+    const std::scoped_lock lock{egl_window->draw_mutex};
     if (!egl_window->visible) {
         return;
     }
     egl_window->generate_frame();
 }
-

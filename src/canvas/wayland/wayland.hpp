@@ -18,6 +18,8 @@
 #define WAYLAND_CANVAS_H
 
 #include "canvas.hpp"
+#include "config.hpp"
+#include "flags.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
 #include "window/waylandwindow.hpp"
 
@@ -33,10 +35,6 @@
 #  include "util/egl.hpp"
 #  include <wayland-egl.h>
 #endif
-
-class WaylandConfig;
-class Flags;
-class WaylandWindow;
 
 class WaylandCanvas : public Canvas
 {

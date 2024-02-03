@@ -17,16 +17,15 @@
 #ifndef DIMENSIONS_H
 #define DIMENSIONS_H
 
-#include <string>
 #include <cstdint>
+#include <string>
 
-class Terminal;
+#include "terminal.hpp"
 
 class Dimensions
 {
-public:
-    Dimensions(const Terminal* terminal, uint16_t xcoord, uint16_t ycoord,
-            int max_w, int max_h, std::string scaler);
+  public:
+    Dimensions(const Terminal *terminal, uint16_t xcoord, uint16_t ycoord, int max_w, int max_h, std::string scaler);
 
     [[nodiscard]] auto xpixels() const -> int;
     [[nodiscard]] auto ypixels() const -> int;
@@ -40,10 +39,9 @@ public:
     uint16_t padding_horizontal;
     uint16_t padding_vertical;
     std::string scaler;
-    const Terminal* terminal;
+    const Terminal *terminal;
 
-private:
-
+  private:
     uint16_t orig_x;
     uint16_t orig_y;
 

@@ -22,8 +22,8 @@
 #include <nlohmann/json.hpp>
 #include <string>
 
-class Dimensions;
-class Terminal;
+#include "dimensions.hpp"
+#include "terminal.hpp"
 
 class Image
 {

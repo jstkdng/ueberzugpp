@@ -15,15 +15,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "waylandshm.hpp"
-#include "../config.hpp"
 #include "dimensions.hpp"
-#include "image.hpp"
 #include "shm.hpp"
 #include "util.hpp"
 
 #include <fmt/format.h>
 #include <iostream>
-#include <thread>
 
 constexpr int id_len = 10;
 

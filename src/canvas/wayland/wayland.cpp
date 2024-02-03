@@ -15,8 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "wayland.hpp"
-#include "config.hpp"
-#include "flags.hpp"
 #include "image.hpp"
 #include "os.hpp"
 #include "util.hpp"
@@ -156,19 +154,18 @@ void WaylandCanvas::add_image(const std::string &identifier, std::unique_ptr<Ima
     std::shared_ptr<WaylandWindow> window;
 #ifdef ENABLE_OPENGL
     if (egl_available) {
-        /*try {
-            window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl.get(), std::move(new_image), config,
-                                                        &xdg_agg);
+        try {
+            window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl.get(), std::move(new_image),
+                                                        config.get(), &xdg_agg);
         } catch (const std::runtime_error &err) {
             return;
-        }*/
-    } else {
+        }
+    }
+#endif
+    if (window == nullptr) {
         window = std::make_shared<WaylandShmWindow>(this, std::move(new_image), &xdg_agg, config.get());
     }
-#else
-    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg,
-                                                output_scale_factor);
-#endif
+
     window->finish_init();
     windows.insert_or_assign(identifier, std::move(window));
 }
