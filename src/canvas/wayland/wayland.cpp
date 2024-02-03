@@ -15,80 +15,77 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "wayland.hpp"
-#include "os.hpp"
-#include "util.hpp"
-#include "image.hpp"
 #include "config.hpp"
 #include "flags.hpp"
+#include "image.hpp"
+#include "os.hpp"
+#include "util.hpp"
 
 #include <spdlog/spdlog.h>
-#include <iostream>
 
 #ifdef ENABLE_OPENGL
-#   include <EGL/eglext.h>
-#   include "window/waylandegl.hpp"
+#  include "window/waylandegl.hpp"
+#  include <EGL/eglext.h>
 #endif
 #include "window/waylandshm.hpp"
 
-constexpr struct wl_registry_listener registry_listener = {
-    .global = WaylandCanvas::registry_handle_global,
-    .global_remove = [] (auto...) {}
-};
+constexpr struct wl_registry_listener registry_listener = {.global = WaylandCanvas::registry_handle_global,
+                                                           .global_remove = [](auto...) {}};
 
-constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {
-    .ping = WaylandCanvas::xdg_wm_base_ping
-};
+constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {.ping = WaylandCanvas::xdg_wm_base_ping};
 
-constexpr struct wl_output_listener wl_output_listener = {
-    .geometry = [] (auto...) {},
-    .mode = [] (auto...) {},
-    .done = [] (auto...) {},
-    .scale = WaylandCanvas::output_scale,
-    .name = [] (auto...) {},
-    .description = [] (auto...) {}
-};
+constexpr struct wl_output_listener wl_output_listener = {.geometry = [](auto...) {},
+                                                          .mode = [](auto...) {},
+                                                          .done = WaylandCanvas::output_done,
+                                                          .scale = WaylandCanvas::output_scale,
+                                                          .name = WaylandCanvas::output_name,
+                                                          .description = [](auto...) {}};
 
-void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry,
-        uint32_t name, const char *interface, uint32_t version)
+void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry, uint32_t name, const char *interface,
+                                           uint32_t version)
 {
-    const std::string_view interface_str { interface };
-    auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
+    const std::string_view interface_str{interface};
+    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
     if (interface_str == wl_compositor_interface.name) {
-        canvas->compositor = reinterpret_cast<struct wl_compositor*>(
-            wl_registry_bind(registry, name, &wl_compositor_interface, version)
-        );
+        canvas->compositor =
+            static_cast<struct wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, version));
     } else if (interface_str == wl_shm_interface.name) {
-        canvas->wl_shm = reinterpret_cast<struct wl_shm*>(
-            wl_registry_bind(registry, name, &wl_shm_interface, version)
-        );
+        canvas->wl_shm = static_cast<struct wl_shm *>(wl_registry_bind(registry, name, &wl_shm_interface, version));
     } else if (interface_str == xdg_wm_base_interface.name) {
-        canvas->xdg_base = reinterpret_cast<struct xdg_wm_base*>(
-            wl_registry_bind(registry, name, &xdg_wm_base_interface, version)
-        );
+        canvas->xdg_base =
+            static_cast<struct xdg_wm_base *>(wl_registry_bind(registry, name, &xdg_wm_base_interface, version));
         xdg_wm_base_add_listener(canvas->xdg_base, &xdg_wm_base_listener, canvas);
     } else if (interface_str == wl_output_interface.name) {
-        canvas->output = reinterpret_cast<struct wl_output*>(
-            wl_registry_bind(registry, name, &wl_output_interface, version)
-        );
-        wl_output_add_listener(canvas->output, &wl_output_listener, canvas);
+        auto *output = static_cast<struct wl_output *>(wl_registry_bind(registry, name, &wl_output_interface, version));
+        wl_output_add_listener(output, &wl_output_listener, canvas);
     }
 }
 
-void WaylandCanvas::xdg_wm_base_ping([[maybe_unused]] void *data,
-        struct xdg_wm_base *xdg_wm_base, uint32_t serial)
+void WaylandCanvas::xdg_wm_base_ping([[maybe_unused]] void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial)
 {
     xdg_wm_base_pong(xdg_wm_base, serial);
 }
 
-void WaylandCanvas::output_scale(void* data, struct wl_output* output, int32_t factor) {
-    auto *canvas = reinterpret_cast<WaylandCanvas*>(data);
-    if (canvas->output == output) {
-        canvas->output_scale_factor = factor;
-    }
+void WaylandCanvas::output_name(void *data, [[maybe_unused]] struct wl_output *output, const char *name)
+{
+    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
+    canvas->output_pair.first = name;
 }
 
-WaylandCanvas::WaylandCanvas():
-display(wl_display_connect(nullptr))
+void WaylandCanvas::output_scale(void *data, [[maybe_unused]] struct wl_output *output, int32_t scale)
+{
+    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
+    canvas->output_pair.second = scale;
+}
+
+void WaylandCanvas::output_done(void *data, [[maybe_unused]] struct wl_output *output)
+{
+    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
+    canvas->output_info.emplace(canvas->output_pair.first, canvas->output_pair.second);
+}
+
+WaylandCanvas::WaylandCanvas()
+    : display(wl_display_connect(nullptr))
 {
     if (display == nullptr) {
         throw std::runtime_error("Failed to connect to wayland display.");
@@ -99,15 +96,13 @@ display(wl_display_connect(nullptr))
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
     config = WaylandConfig::get();
-    event_handler = std::thread([this] {
-        handle_events();
-    });
+    event_handler = std::thread([this] { handle_events(); });
 
 #ifdef ENABLE_OPENGL
     if (flags->use_opengl) {
         try {
             egl = std::make_unique<EGLUtil<struct wl_display, struct wl_egl_window>>(EGL_PLATFORM_WAYLAND_EXT, display);
-        } catch (const std::runtime_error& err) {
+        } catch (const std::runtime_error &err) {
             egl_available = false;
         }
     } else {
@@ -120,14 +115,14 @@ display(wl_display_connect(nullptr))
 
 void WaylandCanvas::show()
 {
-    for (const auto& [key, value]: windows) {
+    for (const auto &[key, value] : windows) {
         value->show();
     }
 }
 
 void WaylandCanvas::hide()
 {
-    for (const auto& [key, value]: windows) {
+    for (const auto &[key, value] : windows) {
         value->hide();
     }
 }
@@ -156,21 +151,23 @@ WaylandCanvas::~WaylandCanvas()
     wl_display_disconnect(display);
 }
 
-void WaylandCanvas::add_image(const std::string& identifier, std::unique_ptr<Image> new_image)
+void WaylandCanvas::add_image(const std::string &identifier, std::unique_ptr<Image> new_image)
 {
     std::shared_ptr<WaylandWindow> window;
 #ifdef ENABLE_OPENGL
     if (egl_available) {
-        try {
-            window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl.get(), std::move(new_image), config, &xdg_agg);
-        } catch (const std::runtime_error& err) {
+        /*try {
+            window = std::make_shared<WaylandEglWindow>(compositor, xdg_base, egl.get(), std::move(new_image), config,
+                                                        &xdg_agg);
+        } catch (const std::runtime_error &err) {
             return;
-        }
+        }*/
     } else {
-        window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg, output_scale_factor);
+        window = std::make_shared<WaylandShmWindow>(this, std::move(new_image), &xdg_agg, config.get());
     }
 #else
-    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg, output_scale_factor);
+    window = std::make_shared<WaylandShmWindow>(compositor, wl_shm, xdg_base, std::move(new_image), config, &xdg_agg,
+                                                output_scale_factor);
 #endif
     window->finish_init();
     windows.insert_or_assign(identifier, std::move(window));
@@ -197,13 +194,13 @@ void WaylandCanvas::handle_events()
             } else {
                 wl_display_cancel_read(display);
             }
-        } catch (const std::system_error& err) {
+        } catch (const std::system_error &err) {
             wl_display_cancel_read(display);
         }
     }
 }
 
-void WaylandCanvas::remove_image(const std::string& identifier)
+void WaylandCanvas::remove_image(const std::string &identifier)
 {
     windows.erase(identifier);
     wl_display_flush(display);

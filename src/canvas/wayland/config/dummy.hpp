@@ -21,10 +21,11 @@
 
 class DummyWaylandConfig : public WaylandConfig
 {
-public:
+  public:
     DummyWaylandConfig() = default;
     ~DummyWaylandConfig() override = default;
 
+    auto get_focused_output_name() -> std::string override { return {}; };
     auto get_window_info() -> struct WaylandWindowGeometry override;
     auto is_dummy() -> bool override { return true; }
     void initial_setup(std::string_view appid) override;

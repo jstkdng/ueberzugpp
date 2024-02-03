@@ -17,24 +17,25 @@
 #ifndef WAYFIRE_SOCKET_H
 #define WAYFIRE_SOCKET_H
 
-#include "util/socket.hpp"
 #include "../config.hpp"
+#include "util/socket.hpp"
 
-#include <spdlog/fwd.h>
 #include <nlohmann/json.hpp>
+#include <spdlog/fwd.h>
 
 class WayfireSocket : public WaylandConfig
 {
-public:
+  public:
     explicit WayfireSocket(std::string_view endpoint);
     ~WayfireSocket() override = default;
 
     auto get_window_info() -> struct WaylandWindowGeometry override;
+    auto get_focused_output_name() -> std::string override { return {}; };
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
-private:
-    [[nodiscard]] auto request(std::string_view method, const nlohmann::json& data = {}) const -> nlohmann::json;
+  private:
+    [[nodiscard]] auto request(std::string_view method, const nlohmann::json &data = {}) const -> nlohmann::json;
 
     UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;

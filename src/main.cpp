@@ -123,13 +123,8 @@ auto main(int argc, char *argv[]) -> int
     }
 
     if (layer_command->parsed()) {
-        try {
-            Application application(argv[0]);
-            application.command_loop();
-        } catch (const std::exception &e) {
-            std::cerr << e.what() << std::endl;
-            return 1;
-        }
+        Application application(argv[0]);
+        application.command_loop();
     }
 
     if (tmux_command->parsed()) {

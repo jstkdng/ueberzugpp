@@ -17,26 +17,23 @@
 #ifndef WAYLAND_SHM_WINDOW_H
 #define WAYLAND_SHM_WINDOW_H
 
-#include "waylandwindow.hpp"
+#include "../wayland.hpp"
+#include "image.hpp"
+#include "shm.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
+#include "waylandwindow.hpp"
 
-#include <wayland-client.h>
-#include <string>
+#include <atomic>
 #include <memory>
 #include <mutex>
-#include <atomic>
+#include <string>
+#include <wayland-client.h>
 
-class Image;
-class WaylandConfig;
-class WaylandShm;
-
-class WaylandShmWindow :
-    public WaylandWindow
+class WaylandShmWindow : public WaylandWindow
 {
-public:
-    WaylandShmWindow(struct wl_compositor *compositor, struct wl_shm *wl_shm,
-            struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
-            std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg* xdg_agg, int32_t scale_factor);
+  public:
+    WaylandShmWindow(WaylandCanvas *canvas, std::unique_ptr<Image> new_image, struct XdgStructAgg *xdg_agg,
+                     WaylandConfig *config);
     ~WaylandShmWindow() override;
     static void xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial);
     static void wl_surface_frame_done(void *data, struct wl_callback *callback, uint32_t time);
@@ -50,24 +47,24 @@ public:
     void finish_init() override;
 
     std::mutex draw_mutex;
-    std::atomic<bool> visible {false};
+    std::atomic<bool> visible{false};
+    std::unique_ptr<WaylandShm> shm;
+    int32_t output_scale;
 
-private:
-    struct wl_compositor *compositor;
-    struct xdg_wm_base *xdg_base;
+  private:
+    WaylandConfig *config;
 
+    struct xdg_wm_base *xdg_base = nullptr;
     struct wl_surface *surface = nullptr;
     struct xdg_surface *xdg_surface = nullptr;
     struct xdg_toplevel *xdg_toplevel = nullptr;
     struct wl_callback *callback;
-    int32_t scale_factor;
-    std::unique_ptr<Image> image;
-    std::unique_ptr<WaylandShm> shm;
-    std::string appid;
-    std::shared_ptr<WaylandConfig> config;
 
-    struct XdgStructAgg* xdg_agg;
-    void* this_ptr;
+    std::unique_ptr<Image> image;
+    std::string appid;
+
+    struct XdgStructAgg *xdg_agg;
+    void *this_ptr;
 
     void move_window();
     void xdg_setup();

@@ -18,20 +18,20 @@
 #define WAYLAND_CANVAS_H
 
 #include "canvas.hpp"
-#include "window/waylandwindow.hpp"
 #include "wayland-xdg-shell-client-protocol.h"
+#include "window/waylandwindow.hpp"
 
-#include <memory>
 #include <atomic>
+#include <memory>
 #include <thread>
 #include <unordered_map>
 
-#include <wayland-client.h>
 #include <spdlog/fwd.h>
+#include <wayland-client.h>
 
 #ifdef ENABLE_OPENGL
-#   include "util/egl.hpp"
-#   include <wayland-egl.h>
+#  include "util/egl.hpp"
+#  include <wayland-egl.h>
 #endif
 
 class WaylandConfig;
@@ -40,35 +40,38 @@ class WaylandWindow;
 
 class WaylandCanvas : public Canvas
 {
-public:
+  public:
     explicit WaylandCanvas();
     ~WaylandCanvas() override;
 
-    static void registry_handle_global(void *data, struct wl_registry *registry,
-        uint32_t name, const char *interface, uint32_t version);
+    static void registry_handle_global(void *data, struct wl_registry *registry, uint32_t name, const char *interface,
+                                       uint32_t version);
     static void xdg_wm_base_ping(void *data, struct xdg_wm_base *xdg_wm_base, uint32_t serial);
 
-    static void output_scale(void* data, struct wl_output* output, int32_t factor);
+    static void output_scale(void *data, struct wl_output *output, int32_t scale);
+    static void output_name(void *data, struct wl_output *output, const char *name);
+    static void output_done(void *data, struct wl_output *output);
 
-    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override;
-    void remove_image(const std::string& identifier) override;
+    void add_image(const std::string &identifier, std::unique_ptr<Image> new_image) override;
+    void remove_image(const std::string &identifier) override;
     void show() override;
     void hide() override;
 
-    struct wl_compositor* compositor = nullptr;
-    struct wl_shm* wl_shm = nullptr;
-    struct xdg_wm_base* xdg_base = nullptr;
-    struct wl_output* output = nullptr;
-    int32_t output_scale_factor = 1;
+    struct wl_compositor *compositor = nullptr;
+    struct wl_shm *wl_shm = nullptr;
+    struct xdg_wm_base *xdg_base = nullptr;
 
-private:
-    struct wl_display* display = nullptr;
-    struct wl_registry* registry = nullptr;
-    std::atomic<bool> stop_flag {false};
+    std::pair<std::string, int32_t> output_pair;
+    std::unordered_map<std::string, int32_t> output_info;
+
+  private:
+    struct wl_display *display = nullptr;
+    struct wl_registry *registry = nullptr;
+    std::atomic<bool> stop_flag{false};
     std::thread event_handler;
 
     std::shared_ptr<spdlog::logger> logger;
-    std::shared_ptr<WaylandConfig> config;
+    std::unique_ptr<WaylandConfig> config;
     std::shared_ptr<Flags> flags;
     std::unordered_map<std::string, std::shared_ptr<WaylandWindow>> windows;
 

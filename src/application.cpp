@@ -36,8 +36,7 @@
 using njson = nlohmann::json;
 namespace fs = std::filesystem;
 
-// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-std::atomic<bool> Application::stop_flag_{false};
+std::atomic<bool> Application::stop_flag_{false}; // NOLINT
 const pid_t Application::parent_pid_ = os::get_ppid();
 
 Application::Application(const std::string_view executable)

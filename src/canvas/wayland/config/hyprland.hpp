@@ -19,20 +19,21 @@
 
 #include "../config.hpp"
 
-#include <spdlog/fwd.h>
 #include <nlohmann/json.hpp>
+#include <spdlog/fwd.h>
 
 class HyprlandSocket : public WaylandConfig
 {
-public:
+  public:
     explicit HyprlandSocket(std::string_view signature);
     ~HyprlandSocket() override = default;
 
     auto get_window_info() -> struct WaylandWindowGeometry override;
+    auto get_focused_output_name() -> std::string override { return {}; };
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
-private:
+  private:
     void disable_focus(std::string_view appid);
     void enable_floating(std::string_view appid);
     void remove_borders(std::string_view appid);

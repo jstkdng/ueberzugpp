@@ -30,9 +30,7 @@
 
 using strmap = std::map<std::string, std::string, std::less<void>>;
 
-#ifdef __APPLE__
-extern char *const *const environ;
-#endif
+extern char **environ; // NOLINT
 
 namespace
 {

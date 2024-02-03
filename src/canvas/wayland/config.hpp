@@ -17,11 +17,11 @@
 #ifndef WAYLAND_CONFIG_H
 #define WAYLAND_CONFIG_H
 
+#include <cstdint>
 #include <memory>
 #include <string_view>
 
-struct WaylandWindowGeometry
-{
+struct WaylandWindowGeometry {
     int width;
     int height;
     int x;
@@ -30,11 +30,12 @@ struct WaylandWindowGeometry
 
 class WaylandConfig
 {
-public:
+  public:
     static auto get() -> std::unique_ptr<WaylandConfig>;
 
     virtual ~WaylandConfig() = default;
 
+    virtual auto get_focused_output_name() -> std::string = 0;
     virtual auto get_window_info() -> struct WaylandWindowGeometry = 0;
     virtual auto is_dummy() -> bool { return false; }
     virtual void initial_setup(std::string_view appid) = 0;

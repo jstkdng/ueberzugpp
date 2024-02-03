@@ -17,26 +17,26 @@
 #ifndef WAYLAND_SHM_H
 #define WAYLAND_SHM_H
 
-#include <wayland-client.h>
 #include <string>
+#include <wayland-client.h>
 
 class WaylandShm
 {
-public:
-    WaylandShm(int width, int height, int scale_factor, struct wl_shm* shm);
+  public:
+    WaylandShm(int width, int height, int scale_factor, struct wl_shm *shm);
     ~WaylandShm();
-    auto get_data() -> uint32_t*;
 
-    struct wl_buffer* buffer = nullptr;
-private:
+    struct wl_buffer *buffer = nullptr;
+    uint8_t *pool_data;
+
+  private:
     void create_shm_file();
     void allocate_pool_buffers();
 
-    struct wl_shm* shm = nullptr;
+    struct wl_shm *shm = nullptr;
 
     int fd = 0;
     std::string shm_path;
-    uint8_t *pool_data;
 
     int width = 0;
     int height = 0;

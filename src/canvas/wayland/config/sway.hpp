@@ -17,43 +17,46 @@
 #ifndef SWAY_SOCKET_H
 #define SWAY_SOCKET_H
 
-#include "util/socket.hpp"
 #include "../config.hpp"
+#include "util/socket.hpp"
 
 #include <nlohmann/json.hpp>
 #include <spdlog/fwd.h>
 
-enum ipc_message_type {
-    IPC_COMMAND = 0,
-    IPC_GET_WORKSPACES = 1,
-    IPC_GET_TREE = 4
+enum ipc_message_type { IPC_COMMAND = 0, IPC_GET_WORKSPACES = 1, IPC_GET_OUTPUTS = 3, IPC_GET_TREE = 4 };
+
+struct SwayOutputInfo {
+    int x;
+    int y;
+    float scale;
+    std::string name;
 };
 
 class SwaySocket : public WaylandConfig
 {
-public:
+  public:
     explicit SwaySocket(std::string_view endpoint);
     ~SwaySocket() override = default;
 
+    auto get_focused_output_name() -> std::string override;
     auto get_window_info() -> struct WaylandWindowGeometry override;
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
+    static auto get_active_window(const std::vector<nlohmann::json> &nodes) -> nlohmann::json;
 
-    static auto get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
-    auto get_active_monitor(const std::vector<nlohmann::json>& nodes) -> nlohmann::json;
-
-private:
+  private:
     void disable_focus(std::string_view appid);
     void enable_floating(std::string_view appid);
     void ipc_command(std::string_view appid, std::string_view command) const;
     void ipc_command(std::string_view payload) const;
+    void set_active_output_info();
 
     [[nodiscard]] auto get_nodes() const -> std::vector<nlohmann::json>;
     [[nodiscard]] auto ipc_message(ipc_message_type type, std::string_view payload = "") const -> nlohmann::json;
 
     UnixSocket socket;
     std::shared_ptr<spdlog::logger> logger;
-    float scale_factor = 1.0;
+    struct SwayOutputInfo output_info;
 };
 
 #endif

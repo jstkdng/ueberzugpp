@@ -22,6 +22,7 @@
 #include "util.hpp"
 
 #include <fmt/format.h>
+#include <iostream>
 #include <thread>
 
 constexpr int id_len = 10;
@@ -32,24 +33,49 @@ constexpr struct xdg_surface_listener xdg_surface_listener = {
 
 constexpr struct wl_callback_listener frame_listener = {.done = WaylandShmWindow::wl_surface_frame_done};
 
-WaylandShmWindow::WaylandShmWindow(struct wl_compositor *compositor, struct wl_shm *wl_shm,
-                                   struct xdg_wm_base *xdg_base, std::unique_ptr<Image> new_image,
-                                   std::shared_ptr<WaylandConfig> new_config, struct XdgStructAgg *xdg_agg,
-                                   int32_t output_scale_factor)
-    : compositor(compositor),
-      xdg_base(xdg_base),
-      surface(wl_compositor_create_surface(compositor)),
+void WaylandShmWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
+{
+    xdg_surface_ack_configure(xdg_surface, serial);
+    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
+    const auto window = tmp->ptr.lock();
+    if (!window) {
+        return;
+    }
+    auto *shm_window = dynamic_cast<WaylandShmWindow *>(window.get());
+    shm_window->wl_draw(shm_window->output_scale);
+}
+
+void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
+{
+    wl_callback_destroy(callback);
+    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
+    const auto window = tmp->ptr.lock();
+    if (!window) {
+        return;
+    }
+    auto *shm_window = dynamic_cast<WaylandShmWindow *>(window.get());
+    const std::scoped_lock lock{shm_window->draw_mutex};
+    if (!shm_window->visible) {
+        return;
+    }
+    shm_window->generate_frame();
+}
+
+WaylandShmWindow::WaylandShmWindow(WaylandCanvas *canvas, std::unique_ptr<Image> new_image,
+                                   struct XdgStructAgg *xdg_agg, WaylandConfig *config)
+    : config(config),
+      xdg_base(canvas->xdg_base),
+      surface(wl_compositor_create_surface(canvas->compositor)),
       xdg_surface(xdg_wm_base_get_xdg_surface(xdg_base, surface)),
       xdg_toplevel(xdg_surface_get_toplevel(xdg_surface)),
-      scale_factor(output_scale_factor),
       image(std::move(new_image)),
-      shm(std::make_unique<WaylandShm>(image->width(), image->height(), scale_factor, wl_shm)),
       appid(fmt::format("ueberzugpp_{}", util::generate_random_string(id_len))),
-      config(std::move(new_config)),
       xdg_agg(xdg_agg)
 {
     config->initial_setup(appid);
     xdg_setup();
+    output_scale = canvas->output_info.at(config->get_focused_output_name());
+    shm = std::make_unique<WaylandShm>(image->width(), image->height(), output_scale, canvas->wl_shm);
 }
 
 void WaylandShmWindow::finish_init()
@@ -58,6 +84,7 @@ void WaylandShmWindow::finish_init()
     xdg->ptr = weak_from_this();
     this_ptr = xdg.get();
     xdg_agg->ptrs.push_back(std::move(xdg));
+
     setup_listeners();
     visible = true;
 }
@@ -87,7 +114,7 @@ WaylandShmWindow::~WaylandShmWindow()
 
 void WaylandShmWindow::wl_draw(int32_t scale_factor)
 {
-    std::memcpy(shm->get_data(), image->data(), image->size());
+    std::memcpy(shm->pool_data, image->data(), image->size());
     wl_surface_attach(surface, shm->buffer, 0, 0);
     wl_surface_set_buffer_scale(surface, scale_factor);
     wl_surface_commit(surface);
@@ -156,36 +183,8 @@ void WaylandShmWindow::generate_frame()
     wl_callback_add_listener(callback, &frame_listener, this_ptr);
 
     image->next_frame();
-    std::memcpy(shm->get_data(), image->data(), image->size());
+    std::memcpy(shm->pool_data, image->data(), image->size());
     wl_surface_attach(surface, shm->buffer, 0, 0);
     wl_surface_damage_buffer(surface, 0, 0, image->width(), image->height());
     wl_surface_commit(surface);
-}
-
-void WaylandShmWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
-{
-    xdg_surface_ack_configure(xdg_surface, serial);
-    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
-    const auto window = tmp->ptr.lock();
-    if (!window) {
-        return;
-    }
-    auto *shm_window = dynamic_cast<WaylandShmWindow *>(window.get());
-    shm_window->wl_draw(shm_window->scale_factor);
-}
-
-void WaylandShmWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
-{
-    wl_callback_destroy(callback);
-    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
-    const auto window = tmp->ptr.lock();
-    if (!window) {
-        return;
-    }
-    auto *shm_window = dynamic_cast<WaylandShmWindow *>(window.get());
-    const std::scoped_lock lock{shm_window->draw_mutex};
-    if (!shm_window->visible) {
-        return;
-    }
-    shm_window->generate_frame();
 }
