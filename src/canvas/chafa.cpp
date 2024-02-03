@@ -86,6 +86,21 @@ void Chafa::draw()
     chafa_canvas_draw_all_pixels(canvas, CHAFA_PIXEL_BGRA8_UNASSOCIATED, image->data(), image->width(), image->height(),
                                  image->width() * 4);
 
+#ifdef CHAFA_VERSION_1_14
+    GString **lines = nullptr;
+    gint lines_length = 0;
+
+    chafa_canvas_print_rows(canvas, term_info, &lines, &lines_length);
+    auto ycoord = y;
+    const std::scoped_lock lock{*stdout_mutex};
+    util::save_cursor_position();
+    for (int i = 0; i < lines_length; ++i) {
+        const auto line = c_unique_ptr<GString, gstring_delete>{lines[i]};
+        util::move_cursor(ycoord++, x);
+        std::cout << line->str;
+    }
+    g_free(lines);
+#else
     const auto result = c_unique_ptr<GString, gstring_delete>{chafa_canvas_print(canvas, term_info)};
     auto ycoord = y;
     const auto lines = util::str_split(result->str, "\n");
@@ -96,6 +111,7 @@ void Chafa::draw()
         util::move_cursor(ycoord++, x);
         std::cout << line;
     });
+#endif
     std::cout << std::flush;
     util::restore_cursor_position();
 }
