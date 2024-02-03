@@ -122,14 +122,15 @@ auto OpencvImage::resize_image() -> void
     if (in_cache) {
         return;
     }
-    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler);
+    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler, flags->scale_factor);
     if (new_width <= 0 && new_height <= 0) {
         // ensure width and height are pair
         if (flags->needs_scaling) {
             const auto curw = width();
             const auto curh = height();
             if ((curw % 2) != 0 || (curh % 2) != 0) {
-                resize_image_helper(image, curw - (curw % 2), curh - (curh % 2));
+                resize_image_helper(image, util::round_up(curw, flags->scale_factor),
+                                    util::round_up(curh, flags->scale_factor));
             }
         }
         return;

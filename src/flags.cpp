@@ -17,7 +17,6 @@
 #include "flags.hpp"
 #include "os.hpp"
 
-#include <iostream>
 #include <fmt/format.h>
 #include <fstream>
 #include <nlohmann/json.hpp>
@@ -29,8 +28,7 @@ using json = nlohmann::json;
 Flags::Flags()
 {
     const auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
-    const auto config_home = os::getenv("XDG_CONFIG_HOME").value_or(
-            fmt::format("{}/.config", home));
+    const auto config_home = os::getenv("XDG_CONFIG_HOME").value_or(fmt::format("{}/.config", home));
     config_file = fmt::format("{}/ueberzugpp/config.json", config_home);
     if (fs::exists(config_file)) {
         read_config_file();
@@ -44,7 +42,7 @@ void Flags::read_config_file()
     if (!data.contains("layer")) {
         return;
     }
-    const auto& layer = data.at("layer");
+    const auto &layer = data.at("layer");
     silent = layer.value("silent", false);
     output = layer.value("output", "");
     no_cache = layer.value("no-cache", false);

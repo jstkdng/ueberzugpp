@@ -247,3 +247,17 @@ auto util::read_exif_rotation(const char *path) -> std::optional<std::uint16_t>
     const auto *entry = exif_content_get_entry(ifd, EXIF_TAG_ORIENTATION);
     return entry->data[1];
 }
+
+auto util::round_up(int num_to_round, int multiple) -> int
+{
+    if (multiple == 0) {
+        return num_to_round;
+    }
+
+    int remainder = num_to_round % multiple;
+    if (remainder == 0) {
+        return num_to_round;
+    }
+
+    return num_to_round + multiple - remainder;
+}

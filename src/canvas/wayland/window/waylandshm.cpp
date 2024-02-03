@@ -20,7 +20,6 @@
 #include "util.hpp"
 
 #include <fmt/format.h>
-#include <iostream>
 
 constexpr int id_len = 10;
 

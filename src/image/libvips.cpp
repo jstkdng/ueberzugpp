@@ -21,7 +21,6 @@
 #include "util.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <unordered_set>
 
 #ifdef ENABLE_OPENCV
@@ -145,15 +144,17 @@ auto LibvipsImage::resize_image() -> void
     if (in_cache) {
         return;
     }
-    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler);
+    const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler, flags->scale_factor);
     if (new_width <= 0 && new_height <= 0) {
         // ensure width and height are pair
         if (flags->needs_scaling) {
             const auto curw = width();
             const auto curh = height();
             if ((curw % 2) != 0 || (curh % 2) != 0) {
-                auto *opts = VImage::option()->set("height", curh - (curh % 2));
-                image = image.thumbnail_image(curw - (curw % 2), opts);
+                auto *opts = VImage::option()
+                                 ->set("height", util::round_up(curh, flags->scale_factor))
+                                 ->set("size", VIPS_SIZE_FORCE);
+                image = image.thumbnail_image(util::round_up(curw, flags->scale_factor), opts);
             }
         }
         return;
@@ -161,16 +162,9 @@ auto LibvipsImage::resize_image() -> void
 
     logger->debug("Resizing image");
 
-    double scale = 0;
-    if (new_width > width()) {
-        scale = static_cast<double>(new_width) / width();
-    } else {
-        scale = static_cast<double>(std::min(new_width, width())) / std::max(new_width, width());
-    }
-    image = image.resize(scale);
+    auto *opts = VImage::option()->set("height", new_height)->set("size", VIPS_SIZE_FORCE);
+    image = image.thumbnail_image(new_width, opts);
 
-    // auto *opts = VImage::option()->set("height", new_height);
-    // image = image.thumbnail_image(new_width, opts);
     if (is_anim || flags->no_cache) {
         return;
     }

@@ -16,28 +16,28 @@
 
 #include "image.hpp"
 #ifdef ENABLE_OPENCV
-#   include "image/opencv.hpp"
+#  include "image/opencv.hpp"
 #endif
+#include "dimensions.hpp"
+#include "flags.hpp"
 #include "image/libvips.hpp"
 #include "os.hpp"
 #include "util.hpp"
-#include "flags.hpp"
-#include "dimensions.hpp"
 
 #ifdef ENABLE_OPENCV
-#   include <opencv2/imgcodecs.hpp>
+#  include <opencv2/imgcodecs.hpp>
 #endif
-#include <vips/vips.h>
-#include <unordered_set>
 #include <gsl/gsl>
 #include <spdlog/spdlog.h>
+#include <unordered_set>
+#include <vips/vips.h>
 
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
 
-auto Image::load(const njson& command, const Terminal* terminal) -> std::unique_ptr<Image>
+auto Image::load(const njson &command, const Terminal *terminal) -> std::unique_ptr<Image>
 {
-    const std::string& filename = command.at("path");
+    const std::string &filename = command.at("path");
     if (!fs::exists(filename)) {
         return nullptr;
     }
@@ -46,7 +46,7 @@ auto Image::load(const njson& command, const Terminal* terminal) -> std::unique_
     std::shared_ptr<Dimensions> dimensions;
     try {
         dimensions = get_dimensions(command, terminal);
-    } catch (const std::exception& except) {
+    } catch (const std::exception &except) {
         logger->error("Could not parse dimensions from command");
         return nullptr;
     }
@@ -61,19 +61,21 @@ auto Image::load(const njson& command, const Terminal* terminal) -> std::unique_
     if (cv::haveImageReader(image_path) && !flags->no_opencv) {
         try {
             return std::make_unique<OpencvImage>(dimensions, image_path, in_cache);
-        } catch (const std::runtime_error& ex) {}
+        } catch (const std::runtime_error &ex) {
+        }
     }
 #endif
-    const auto* vips_loader = vips_foreign_find_load(image_path.c_str());
+    const auto *vips_loader = vips_foreign_find_load(image_path.c_str());
     if (vips_loader != nullptr) {
         try {
             return std::make_unique<LibvipsImage>(dimensions, image_path, in_cache);
-        } catch (const vips::VError& err) {}
+        } catch (const vips::VError &err) {
+        }
     }
     return nullptr;
 }
 
-auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path) -> std::string
+auto Image::check_cache(const Dimensions &dimensions, const fs::path &orig_path) -> std::string
 {
     const fs::path cache_path = util::get_cache_file_save_location(orig_path);
     if (!fs::exists(cache_path)) {
@@ -83,12 +85,12 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
     vips::VImage cache_img;
     try {
         cache_img = vips::VImage::new_from_file(cache_path.c_str());
-    } catch (const vips::VError& err) {
+    } catch (const vips::VError &err) {
         return orig_path;
     }
     const uint32_t img_width = cache_img.width();
     const uint32_t img_height = cache_img.height();
-    const uint32_t dim_width = dimensions.max_wpixels(); 
+    const uint32_t dim_width = dimensions.max_wpixels();
     const uint32_t dim_height = dimensions.max_hpixels();
     const int delta = 10;
 
@@ -99,7 +101,7 @@ auto Image::check_cache(const Dimensions& dimensions, const fs::path& orig_path)
     return orig_path;
 }
 
-auto Image::get_new_sizes(double max_width, double max_height, const std::string& scaler) const
+auto Image::get_new_sizes(double max_width, double max_height, const std::string &scaler, int scale_factor) const
     -> std::pair<int, int>
 {
     int img_width = width();
@@ -138,10 +140,10 @@ auto Image::get_new_sizes(double max_width, double max_height, const std::string
     new_width = gsl::narrow_cast<int>(img_width * new_scale);
     new_height = gsl::narrow_cast<int>(img_height * new_scale);
 
-    return std::make_pair(new_width - (new_width % 2), new_height - (new_height % 2));
+    return std::make_pair(util::round_up(new_width, scale_factor), util::round_up(new_height, scale_factor));
 }
 
-auto Image::get_dimensions(const njson& json, const Terminal* terminal) -> std::shared_ptr<Dimensions>
+auto Image::get_dimensions(const njson &json, const Terminal *terminal) -> std::shared_ptr<Dimensions>
 {
     using std::string;
     int xcoord = 0;
@@ -156,8 +158,8 @@ auto Image::get_dimensions(const njson& json, const Terminal* terminal) -> std::
         height_key = "height";
     }
     if (json.at(width_key).is_string()) {
-        const string& width = json.at(width_key);
-        const string& height = json.at(height_key);
+        const string &width = json.at(width_key);
+        const string &height = json.at(height_key);
         max_width = std::stoi(width);
         max_height = std::stoi(height);
     } else {
@@ -165,8 +167,8 @@ auto Image::get_dimensions(const njson& json, const Terminal* terminal) -> std::
         max_height = json.at(height_key);
     }
     if (json.at("x").is_string()) {
-        const string& xcoords = json.at("x");
-        const string& ycoords = json.at("y");
+        const string &xcoords = json.at("x");
+        const string &ycoords = json.at("y");
         xcoord = std::stoi(xcoords);
         ycoord = std::stoi(ycoords);
     } else {
