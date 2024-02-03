@@ -184,6 +184,17 @@ void OpencvImage::process_image()
         image.convertTo(image, CV_8U, alpha);
     }
 
+    if (image.channels() == 4) {
+        // premultiply alpha
+        image.forEach<cv::Vec4b>([](cv::Vec4b &pix, [[maybe_unused]] const int *position) {
+            const uint8_t alpha = pix[3];
+            const uint8_t div = 255;
+            pix[0] = (pix[0] * alpha) / div;
+            pix[1] = (pix[1] * alpha) / div;
+            pix[2] = (pix[2] * alpha) / div;
+        });
+    }
+
 #ifdef ENABLE_OPENGL
     if (flags->use_opengl) {
         cv::flip(image, image, 0);
