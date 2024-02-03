@@ -15,7 +15,6 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sixel.hpp"
-#include "image.hpp"
 #include "dimensions.hpp"
 #include "terminal.hpp"
 #include "util.hpp"
@@ -25,9 +24,9 @@
 
 namespace fs = std::filesystem;
 
-Sixel::Sixel(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
-image(std::move(new_image)),
-stdout_mutex(std::move(stdout_mutex))
+Sixel::Sixel(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex)
+    : image(std::move(new_image)),
+      stdout_mutex(std::move(stdout_mutex))
 {
     const auto dims = image->dimensions();
     x = dims.x + 1;
@@ -35,8 +34,8 @@ stdout_mutex(std::move(stdout_mutex))
     horizontal_cells = std::ceil(static_cast<double>(image->width()) / dims.terminal->font_width);
     vertical_cells = std::ceil(static_cast<double>(image->height()) / dims.terminal->font_height);
 
-    const auto draw_callback = [] (char *data, int size, void* priv) -> int {
-        auto *str = static_cast<std::string*>(priv);
+    const auto draw_callback = [](char *data, int size, void *priv) -> int {
+        auto *str = static_cast<std::string *>(priv);
         str->append(data, size);
         return size;
     };
@@ -48,14 +47,8 @@ stdout_mutex(std::move(stdout_mutex))
 
     // create dither and palette from image
     sixel_dither_new(&dither, -1, nullptr);
-    sixel_dither_initialize(dither,
-            const_cast<unsigned char*>(image->data()),
-            image->width(),
-            image->height(),
-            SIXEL_PIXELFORMAT_RGB888,
-            SIXEL_LARGE_LUM,
-            SIXEL_REP_CENTER_BOX,
-            SIXEL_QUALITY_HIGH);
+    sixel_dither_initialize(dither, const_cast<unsigned char *>(image->data()), image->width(), image->height(),
+                            SIXEL_PIXELFORMAT_RGB888, SIXEL_LARGE_LUM, SIXEL_REP_CENTER_BOX, SIXEL_QUALITY_HIGH);
 }
 
 Sixel::~Sixel()
@@ -67,7 +60,7 @@ Sixel::~Sixel()
     sixel_dither_destroy(dither);
     sixel_output_destroy(output);
 
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -91,12 +84,10 @@ void Sixel::draw()
 void Sixel::generate_frame()
 {
     // output sixel content to stream
-    sixel_encode(const_cast<unsigned char*>(image->data()),
-            image->width(),
-            image->height(),
-            3 /*unused*/, dither, output);
+    sixel_encode(const_cast<unsigned char *>(image->data()), image->width(), image->height(), 3 /*unused*/, dither,
+                 output);
 
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;

@@ -20,24 +20,21 @@
 #include "image.hpp"
 #include "util/ptr.hpp"
 
-#include <string>
-#include <vips/vips8>
 #include <filesystem>
 #include <spdlog/fwd.h>
-
-class Dimensions;
-class Flags;
+#include <string>
+#include <vips/vips8>
 
 class LibvipsImage : public Image
 {
-public:
+  public:
     LibvipsImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache);
 
-    [[nodiscard]] auto dimensions() const -> const Dimensions& override;
+    [[nodiscard]] auto dimensions() const -> const Dimensions & override;
     [[nodiscard]] auto width() const -> int override;
     [[nodiscard]] auto height() const -> int override;
     [[nodiscard]] auto size() const -> size_t override;
-    [[nodiscard]] auto data() const -> const unsigned char* override;
+    [[nodiscard]] auto data() const -> const unsigned char * override;
     [[nodiscard]] auto channels() const -> int override;
 
     void next_frame() override;
@@ -45,7 +42,7 @@ public:
     [[nodiscard]] auto is_animated() const -> bool override;
     [[nodiscard]] auto filename() const -> std::string override;
 
-private:
+  private:
     vips::VImage image;
     vips::VImage backup;
 

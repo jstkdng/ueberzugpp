@@ -19,31 +19,29 @@
 
 #include "image.hpp"
 
-#include <string>
-#include <opencv2/core.hpp>
 #include <filesystem>
+#include <opencv2/core.hpp>
 #include <spdlog/fwd.h>
+#include <string>
 
 namespace fs = std::filesystem;
 
-class Dimensions;
-class Flags;
-
 class OpencvImage : public Image
 {
-public:
-    OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string& filename, bool in_cache);
+  public:
+    OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache);
     ~OpencvImage() override = default;
 
-    [[nodiscard]] auto dimensions() const -> const Dimensions& override;
+    [[nodiscard]] auto dimensions() const -> const Dimensions & override;
     [[nodiscard]] auto width() const -> int override;
     [[nodiscard]] auto height() const -> int override;
     [[nodiscard]] auto size() const -> size_t override;
-    [[nodiscard]] auto data() const -> const unsigned char* override;
+    [[nodiscard]] auto data() const -> const unsigned char * override;
     [[nodiscard]] auto channels() const -> int override;
 
     [[nodiscard]] auto filename() const -> std::string override;
-private:
+
+  private:
     cv::Mat image;
     cv::UMat uimage;
 
@@ -61,7 +59,7 @@ private:
 
     void process_image();
     void resize_image();
-    void resize_image_helper(cv::InputOutputArray& mat, int new_width, int new_height);
+    void resize_image_helper(cv::InputOutputArray &mat, int new_width, int new_height);
 
     void rotate_image();
     void wayland_processing();

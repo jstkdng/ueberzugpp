@@ -17,30 +17,29 @@
 #ifndef CHAFA_WINDOW_H
 #define CHAFA_WINDOW_H
 
+#include "image.hpp"
 #include "window.hpp"
 
 #include <memory>
 #include <mutex>
 
-#include <spdlog/fwd.h>
 #include <chafa.h>
-
-class Image;
+#include <spdlog/fwd.h>
 
 class Chafa : public Window
 {
-public:
+  public:
     Chafa(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex);
     ~Chafa() override;
 
     void draw() override;
-    void generate_frame() override {};
+    void generate_frame() override{};
 
-private:
-    ChafaTermInfo* term_info = nullptr;
-    ChafaSymbolMap* symbol_map = nullptr;
-    ChafaCanvasConfig* config = nullptr;
-    ChafaCanvas* canvas = nullptr;
+  private:
+    ChafaTermInfo *term_info = nullptr;
+    ChafaSymbolMap *symbol_map = nullptr;
+    ChafaCanvasConfig *config = nullptr;
+    ChafaCanvas *canvas = nullptr;
 
     std::unique_ptr<Image> image;
     std::shared_ptr<std::mutex> stdout_mutex;

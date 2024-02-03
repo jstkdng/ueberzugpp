@@ -17,25 +17,24 @@
 #ifndef KITTY_WINDOW_H
 #define KITTY_WINDOW_H
 
+#include "chunk.hpp"
+#include "image.hpp"
 #include "window.hpp"
 
 #include <memory>
 #include <mutex>
 #include <vector>
 
-class Image;
-class KittyChunk;
-
 class Kitty : public Window
 {
-public:
+  public:
     Kitty(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex);
     ~Kitty() override;
 
     void draw() override;
     void generate_frame() override;
 
-private:
+  private:
     std::string str;
     std::unique_ptr<Image> image;
     std::shared_ptr<std::mutex> stdout_mutex;

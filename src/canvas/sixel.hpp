@@ -17,35 +17,34 @@
 #ifndef SIXEL_WINDOW_H
 #define SIXEL_WINDOW_H
 
+#include "image.hpp"
 #include "window.hpp"
 
+#include <atomic>
 #include <memory>
 #include <mutex>
-#include <vector>
 #include <thread>
-#include <atomic>
+#include <vector>
 
 #include <sixel.h>
 
-class Image;
-
 class Sixel : public Window
 {
-public:
+  public:
     Sixel(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex);
     ~Sixel() override;
 
     void draw() override;
     void generate_frame() override;
 
-private:
+  private:
     std::unique_ptr<Image> image;
     std::shared_ptr<std::mutex> stdout_mutex;
 
     std::string str;
     std::thread draw_thread;
-    std::atomic<bool> can_draw {true};
-    
+    std::atomic<bool> can_draw{true};
+
     int x;
     int y;
     int horizontal_cells = 0;
@@ -56,4 +55,3 @@ private:
 };
 
 #endif
-

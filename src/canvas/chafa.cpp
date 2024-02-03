@@ -15,41 +15,39 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "chafa.hpp"
+#include "dimensions.hpp"
+#include "terminal.hpp"
 #include "util.hpp"
 #include "util/ptr.hpp"
-#include "dimensions.hpp"
-#include "image.hpp"
-#include "terminal.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <algorithm>
 
 #ifdef __APPLE__
-#   include <range/v3/algorithm/for_each.hpp>
+#  include <range/v3/algorithm/for_each.hpp>
 #endif
 
 #include <spdlog/spdlog.h>
 
-void gstring_delete(GString* str) {
+void gstring_delete(GString *str)
+{
     g_string_free(str, true);
 }
 
-Chafa::Chafa(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
-symbol_map(chafa_symbol_map_new()),
-config(chafa_canvas_config_new()),
-image(std::move(new_image)),
-stdout_mutex(std::move(stdout_mutex))
+Chafa::Chafa(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex)
+    : symbol_map(chafa_symbol_map_new()),
+      config(chafa_canvas_config_new()),
+      image(std::move(new_image)),
+      stdout_mutex(std::move(stdout_mutex))
 {
-    const auto envp = c_unique_ptr<gchar*, g_strfreev> {
-        g_get_environ()
-    };
+    const auto envp = c_unique_ptr<gchar *, g_strfreev>{g_get_environ()};
     term_info = chafa_term_db_detect(chafa_term_db_get_default(), envp.get());
     logger = spdlog::get("chafa");
     logger->info("Canvas created");
     logger->warn("This canvas is meant to be used as a last resort. Please"
-            " use the X11 output or switch to a terminal that has kitty,"
-            " sixel or iterm2 support.");
+                 " use the X11 output or switch to a terminal that has kitty,"
+                 " sixel or iterm2 support.");
 
     const auto dims = image->dimensions();
     x = dims.x + 1;
@@ -67,13 +65,13 @@ stdout_mutex(std::move(stdout_mutex))
 }
 
 Chafa::~Chafa()
-{    
+{
     chafa_canvas_unref(canvas);
     chafa_canvas_config_unref(config);
     chafa_symbol_map_unref(symbol_map);
     chafa_term_info_unref(term_info);
 
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
@@ -85,22 +83,16 @@ void Chafa::draw()
     using std::ranges::for_each;
 #endif
     canvas = chafa_canvas_new(config);
-    chafa_canvas_draw_all_pixels(canvas,
-            CHAFA_PIXEL_BGRA8_UNASSOCIATED,
-            image->data(),
-            image->width(),
-            image->height(),
-            image->width() * 4);
+    chafa_canvas_draw_all_pixels(canvas, CHAFA_PIXEL_BGRA8_UNASSOCIATED, image->data(), image->width(), image->height(),
+                                 image->width() * 4);
 
-    const auto result = c_unique_ptr<GString, gstring_delete> {
-        chafa_canvas_print(canvas, term_info)
-    };
+    const auto result = c_unique_ptr<GString, gstring_delete>{chafa_canvas_print(canvas, term_info)};
     auto ycoord = y;
     const auto lines = util::str_split(result->str, "\n");
 
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     util::save_cursor_position();
-    for_each(std::as_const(lines), [this, &ycoord] (const std::string& line) {
+    for_each(std::as_const(lines), [this, &ycoord](const std::string &line) {
         util::move_cursor(ycoord++, x);
         std::cout << line;
     });

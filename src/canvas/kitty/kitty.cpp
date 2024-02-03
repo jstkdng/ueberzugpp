@@ -15,25 +15,23 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "kitty.hpp"
-#include "image.hpp"
-#include "util.hpp"
 #include "dimensions.hpp"
-#include "chunk.hpp"
+#include "util.hpp"
 
 #include <fmt/format.h>
 
 #include <iostream>
 
 #ifdef HAVE_STD_EXECUTION_H
-#   include <execution>
+#  include <execution>
 #else
-#   include <oneapi/tbb.h>
+#  include <oneapi/tbb.h>
 #endif
 
-Kitty::Kitty(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
-image(std::move(new_image)),
-stdout_mutex(std::move(stdout_mutex)),
-id(util::generate_random_number<uint32_t>(1))
+Kitty::Kitty(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex)
+    : image(std::move(new_image)),
+      stdout_mutex(std::move(stdout_mutex)),
+      id(util::generate_random_number<uint32_t>(1))
 {
     const auto dims = image->dimensions();
     x = dims.x + 1;
@@ -42,7 +40,7 @@ id(util::generate_random_number<uint32_t>(1))
 
 Kitty::~Kitty()
 {
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     std::cout << fmt::format("\033_Ga=d,d=i,i={}\033\\", id) << std::flush;
 }
 
@@ -55,9 +53,8 @@ void Kitty::generate_frame()
 {
     const int bits_per_channel = 8;
     auto chunks = process_chunks();
-    str.append(fmt::format("\033_Ga=T,m=1,i={},q=2,f={},s={},v={};{}\033\\",
-            id, image->channels() * bits_per_channel, image->width(),
-            image->height(), chunks.front().get_result()));
+    str.append(fmt::format("\033_Ga=T,m=1,i={},q=2,f={},s={},v={};{}\033\\", id, image->channels() * bits_per_channel,
+                           image->width(), image->height(), chunks.front().get_result()));
 
     for (auto chunk = std::next(std::begin(chunks)); chunk != std::prev(std::end(chunks)); std::advance(chunk, 1)) {
         str.append("\033_Gm=1,q=2;");
@@ -69,7 +66,7 @@ void Kitty::generate_frame()
     str.append(chunks.back().get_result());
     str.append("\033\\");
 
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;
@@ -86,7 +83,7 @@ auto Kitty::process_chunks() -> std::vector<KittyChunk>
         last_chunk_size = chunk_size;
         num_chunks--;
     }
-    const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
+    const uint64_t bytes_per_chunk = 4 * ((chunk_size + 2) / 3) + 100;
     str.reserve((num_chunks + 2) * bytes_per_chunk);
 
     std::vector<KittyChunk> chunks;
@@ -107,4 +104,3 @@ auto Kitty::process_chunks() -> std::vector<KittyChunk>
 
     return chunks;
 }
-

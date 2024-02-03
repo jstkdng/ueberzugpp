@@ -18,21 +18,21 @@
 #define STDOUT_CANVAS_H
 
 #include "canvas.hpp"
-#include "window.hpp"
 #include "image.hpp"
+#include "window.hpp"
 
 #include <spdlog/spdlog.h>
 
-#include <unordered_map>
 #include <memory>
-#include <string>
 #include <mutex>
+#include <string>
+#include <unordered_map>
 
-template<WindowType T>
+template <WindowType T>
 class StdoutCanvas : public Canvas
 {
-public:
-    explicit StdoutCanvas(const std::string& output)
+  public:
+    explicit StdoutCanvas(const std::string &output)
     {
         stdout_mutex = std::make_shared<std::mutex>();
         logger = spdlog::get(output);
@@ -40,21 +40,22 @@ public:
 
     ~StdoutCanvas() override = default;
 
-    void add_image(const std::string& identifier, std::unique_ptr<Image> new_image) override
+    void add_image(const std::string &identifier, std::unique_ptr<Image> new_image) override
     {
         logger->info("Displaying image with id {}", identifier);
         images.erase(identifier);
-        const auto [entry, success] = images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
+        const auto [entry, success] =
+            images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
         entry->second->draw();
     }
 
-    void remove_image(const std::string& identifier) override
+    void remove_image(const std::string &identifier) override
     {
         logger->info("Removing image with id {}", identifier);
         images.erase(identifier);
     }
 
-private:
+  private:
     std::unordered_map<std::string, std::unique_ptr<T>> images;
     std::shared_ptr<std::mutex> stdout_mutex;
     std::shared_ptr<spdlog::logger> logger;
