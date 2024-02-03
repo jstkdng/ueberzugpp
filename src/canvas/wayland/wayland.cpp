@@ -43,7 +43,7 @@ void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry, ui
                                            uint32_t version)
 {
     const std::string_view interface_str{interface};
-    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
+    auto *canvas = static_cast<WaylandCanvas *>(data);
     if (interface_str == wl_compositor_interface.name) {
         canvas->compositor =
             static_cast<struct wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, version));
@@ -66,20 +66,25 @@ void WaylandCanvas::xdg_wm_base_ping([[maybe_unused]] void *data, struct xdg_wm_
 
 void WaylandCanvas::output_name(void *data, [[maybe_unused]] struct wl_output *output, const char *name)
 {
-    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
+    auto *canvas = static_cast<WaylandCanvas *>(data);
     canvas->output_pair.first = name;
 }
 
 void WaylandCanvas::output_scale(void *data, [[maybe_unused]] struct wl_output *output, int32_t scale)
 {
-    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
+    auto *canvas = static_cast<WaylandCanvas *>(data);
     canvas->output_pair.second = scale;
 }
 
 void WaylandCanvas::output_done(void *data, [[maybe_unused]] struct wl_output *output)
 {
-    auto *canvas = reinterpret_cast<WaylandCanvas *>(data);
-    canvas->output_info.emplace(canvas->output_pair.first, canvas->output_pair.second);
+    auto *canvas = static_cast<WaylandCanvas *>(data);
+    const auto active_output = canvas->config->get_focused_output_name();
+    if (active_output == canvas->output_pair.first) {
+        canvas->flags->scale_factor = canvas->output_pair.second;
+        canvas->flags->needs_scaling = canvas->output_pair.second > 1;
+    }
+    canvas->output_info.insert(canvas->output_pair);
 }
 
 WaylandCanvas::WaylandCanvas()
@@ -90,10 +95,10 @@ WaylandCanvas::WaylandCanvas()
     }
     logger = spdlog::get("wayland");
     flags = Flags::instance();
+    config = WaylandConfig::get();
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
-    config = WaylandConfig::get();
     event_handler = std::thread([this] { handle_events(); });
 
 #ifdef ENABLE_OPENGL

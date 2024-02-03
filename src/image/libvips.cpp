@@ -148,7 +148,7 @@ auto LibvipsImage::resize_image() -> void
     const auto [new_width, new_height] = get_new_sizes(max_width, max_height, dims->scaler);
     if (new_width <= 0 && new_height <= 0) {
         // ensure width and height are pair
-        if (flags->output == "wayland") {
+        if (flags->needs_scaling) {
             const auto curw = width();
             const auto curh = height();
             if ((curw % 2) != 0 || (curh % 2) != 0) {

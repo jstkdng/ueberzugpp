@@ -46,6 +46,8 @@ class Flags
     std::string output;
     std::string pid_file;
     bool origin_center = false;
+    int32_t scale_factor = 1;
+    bool needs_scaling = false;
 
     std::string cmd_id;
     std::string cmd_action;
