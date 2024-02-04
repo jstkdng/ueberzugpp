@@ -39,7 +39,7 @@ namespace fs = std::filesystem;
 std::atomic<bool> Application::stop_flag_{false}; // NOLINT
 const pid_t Application::parent_pid_ = os::get_ppid();
 
-Application::Application(const std::string_view executable)
+Application::Application(const char *executable)
 {
     flags = Flags::instance();
     print_header();
@@ -63,7 +63,7 @@ Application::Application(const std::string_view executable)
     if (flags->no_cache) {
         logger->info("Image caching is disabled");
     }
-    if (VIPS_INIT(executable.data())) {
+    if (VIPS_INIT(executable)) {
         vips_error_exit(nullptr);
     }
     vips_cache_set_max(1);

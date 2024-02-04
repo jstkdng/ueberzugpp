@@ -33,7 +33,7 @@
 class Application
 {
   public:
-    explicit Application(std::string_view executable);
+    explicit Application(const char *executable);
     ~Application();
 
     void execute(std::string_view cmd);
