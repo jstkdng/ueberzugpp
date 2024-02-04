@@ -15,38 +15,38 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "terminal.hpp"
-#include "os.hpp"
-#include "util.hpp"
 #include "flags.hpp"
+#include "os.hpp"
 #include "process.hpp"
 #include "tmux.hpp"
+#include "util.hpp"
 #ifdef ENABLE_X11
-#   include "util/x11.hpp"
+#  include "util/x11.hpp"
 #endif
 #ifdef ENABLE_WAYLAND
-#   include "canvas/wayland/config.hpp"
+#  include "canvas/wayland/config.hpp"
 #endif
 
-#include <cmath>
-#include <sstream>
-#include <iostream>
 #include <algorithm>
+#include <cmath>
+#include <iostream>
+#include <sstream>
 #include <unordered_set>
 
 #include <fcntl.h>
-#include <unistd.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
 #include <gsl/gsl>
 #include <spdlog/spdlog.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #ifdef __APPLE__
-#   include <range/v3/algorithm/reverse.hpp>
+#  include <range/v3/algorithm/reverse.hpp>
 #endif
 
-Terminal::Terminal():
-pid(os::get_pid()),
-terminal_pid(pid)
+Terminal::Terminal()
+    : pid(os::get_pid()),
+      terminal_pid(pid)
 {
     flags = Flags::instance();
     logger = spdlog::get("terminal");
@@ -195,9 +195,7 @@ void Terminal::get_terminal_size_xtsm()
 void Terminal::check_sixel_support()
 {
     // some terminals support sixel but don't respond to escape sequences
-    const auto supported_terms = std::unordered_set<std::string_view> {
-        "yaft-256color", "iTerm.app"
-    };
+    const auto supported_terms = std::unordered_set<std::string_view>{"yaft-256color", "iTerm.app"};
     const auto resp = read_raw_str("\033[?1;1;0S").erase(0, 3);
     const auto vals = util::str_split(resp, ";");
     if (vals.size() > 2 || supported_terms.contains(term) || supported_terms.contains(term_program)) {
@@ -221,9 +219,7 @@ void Terminal::check_kitty_support()
 
 void Terminal::check_iterm2_support()
 {
-    const auto supported_terms = std::unordered_set<std::string_view> {
-        "WezTerm", "iTerm.app"
-    };
+    const auto supported_terms = std::unordered_set<std::string_view>{"WezTerm", "iTerm.app"};
     if (supported_terms.contains(term_program)) {
         supports_iterm2 = true;
         logger->debug("iterm2 is supported");
@@ -242,17 +238,17 @@ auto Terminal::read_raw_str(const std::string_view esc) -> std::string
             return "";
         }
         return os::read_data_from_stdin(esc.back());
-    } catch (const std::system_error& err) {
+    } catch (const std::system_error &err) {
         return "";
     }
 }
 
 void Terminal::init_termios()
 {
-    tcgetattr(0, &old_term); /* grab old terminal i/o settings */
-    new_term = old_term; /* make new settings same as old settings */
-    new_term.c_lflag &= ~ICANON; /* disable buffered i/o */
-    new_term.c_lflag &= ~ECHO; /* set echo mode */
+    tcgetattr(0, &old_term);          /* grab old terminal i/o settings */
+    new_term = old_term;              /* make new settings same as old settings */
+    new_term.c_lflag &= ~ICANON;      /* disable buffered i/o */
+    new_term.c_lflag &= ~ECHO;        /* set echo mode */
     tcsetattr(0, TCSANOW, &new_term); /* use these new terminal i/o settings now */
 }
 
@@ -308,15 +304,15 @@ void Terminal::open_first_pty()
     const auto pids = tmux::get_client_pids().value_or(std::vector<int>{pid});
 
     struct stat stat_info;
-    for (const auto spid: pids) {
+    for (const auto spid : pids) {
         auto tree = util::get_process_tree_v2(spid);
         reverse(tree);
-        for (const auto &proc: tree) {
+        for (const auto &proc : tree) {
             stat(proc.pty_path.c_str(), &stat_info);
             if (proc.tty_nr == stat_info.st_rdev) {
                 pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NONBLOCK | O_NOCTTY);
                 terminal_pid = proc.pid;
-                logger->info("PTY = {}" , proc.pty_path);
+                logger->info("PTY = {}", proc.pty_path);
                 return;
             }
         }
