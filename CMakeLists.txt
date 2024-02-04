@@ -53,8 +53,6 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(TBB REQUIRED)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=x86-64-v3")
-
 # check if <execution> is available
 set(CMAKE_REQUIRED_LIBRARIES TBB::tbb)
 check_cxx_symbol_exists(std::execution::par_unseq execution
