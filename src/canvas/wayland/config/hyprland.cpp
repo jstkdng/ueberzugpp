@@ -21,24 +21,43 @@
 
 #include <algorithm>
 
-#include <spdlog/spdlog.h>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+#include <spdlog/spdlog.h>
 
 using njson = nlohmann::json;
 
-HyprlandSocket::HyprlandSocket(const std::string_view signature):
-logger(spdlog::get("wayland")),
-socket_path(fmt::format("/tmp/hypr/{}/.socket.sock", signature))
+HyprlandSocket::HyprlandSocket(const std::string_view signature)
+    : logger(spdlog::get("wayland")),
+      socket_path(fmt::format("/tmp/hypr/{}/.socket.sock", signature))
 {
     logger->info("Using hyprland socket {}", socket_path);
     const auto active = request_result("j/activewindow");
     address = active.at("address");
+    set_active_monitor();
+}
+
+void HyprlandSocket::set_active_monitor()
+{
+    const auto monitors = request_result("j/monitors");
+    for (const auto &monitor : monitors) {
+        bool focused = monitor.at("focused");
+        if (focused) {
+            output_name = monitor.at("name");
+            output_scale = monitor.at("scale");
+            break;
+        }
+    }
+}
+
+auto HyprlandSocket::get_focused_output_name() -> std::string
+{
+    return output_name;
 }
 
 auto HyprlandSocket::request_result(const std::string_view payload) -> nlohmann::json
 {
-    const UnixSocket socket {socket_path};
+    const UnixSocket socket{socket_path};
     socket.write(payload.data(), payload.size());
     const std::string result = socket.read_until_empty();
     return njson::parse(result);
@@ -46,7 +65,7 @@ auto HyprlandSocket::request_result(const std::string_view payload) -> nlohmann:
 
 void HyprlandSocket::request(const std::string_view payload)
 {
-    const UnixSocket socket {socket_path};
+    const UnixSocket socket{socket_path};
     logger->debug("Running socket command {}", payload);
     socket.write(payload.data(), payload.length());
 }
@@ -59,20 +78,18 @@ auto HyprlandSocket::get_active_window() -> nlohmann::json
         address = active.at("address");
     }
     const auto clients = request_result("j/clients");
-    const auto client = std::ranges::find_if(clients, [this] (const njson& json) {
-        return json.at("address") == address;
-    });
+    const auto client =
+        std::ranges::find_if(clients, [this](const njson &json) { return json.at("address") == address; });
     if (client == clients.end()) {
         throw std::runtime_error("Active window not found");
     }
     return *client;
 }
 
-auto HyprlandSocket::get_window_info() -> struct WaylandWindowGeometry
-{
+auto HyprlandSocket::get_window_info() -> struct WaylandWindowGeometry {
     const auto terminal = get_active_window();
-    const auto& sizes = terminal.at("size");
-    const auto& coords = terminal.at("at");
+    const auto &sizes = terminal.at("size");
+    const auto &coords = terminal.at("at");
 
     return {
         .width = sizes.at(0),
@@ -116,6 +133,13 @@ void HyprlandSocket::remove_borders(const std::string_view appid)
 
 void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    const auto payload = fmt::format("/dispatch movewindowpixel exact {} {},title:{}", xcoord, ycoord, appid);
+    int res_x = xcoord;
+    int res_y = ycoord;
+    if (output_scale > 1.0F) {
+        const int offset = 10;
+        res_x = res_x / 2 + offset;
+        res_y = res_y / 2 + offset;
+    }
+    const auto payload = fmt::format("/dispatch movewindowpixel exact {} {},title:{}", res_x, res_y, appid);
     request(payload);
 }

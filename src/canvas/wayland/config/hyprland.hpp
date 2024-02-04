@@ -29,7 +29,7 @@ class HyprlandSocket : public WaylandConfig
     ~HyprlandSocket() override = default;
 
     auto get_window_info() -> struct WaylandWindowGeometry override;
-    auto get_focused_output_name() -> std::string override { return {}; };
+    auto get_focused_output_name() -> std::string override;
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;
 
@@ -41,10 +41,13 @@ class HyprlandSocket : public WaylandConfig
     void request(std::string_view payload);
     auto request_result(std::string_view payload) -> nlohmann::json;
     auto get_active_window() -> nlohmann::json;
+    void set_active_monitor();
 
     std::shared_ptr<spdlog::logger> logger;
     std::string socket_path;
     std::string address;
+    std::string output_name;
+    float output_scale = 1.0F;
 };
 
 #endif

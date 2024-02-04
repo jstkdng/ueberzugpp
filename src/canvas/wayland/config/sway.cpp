@@ -22,7 +22,6 @@
 
 #include <algorithm>
 #include <array>
-#include <gsl/gsl>
 #include <stack>
 #include <string>
 
@@ -123,9 +122,8 @@ void SwaySocket::move_window(const std::string_view appid, int xcoord, int ycoor
     int res_x = xcoord;
     int res_y = ycoord;
     if (output_info.scale > 1.0F) {
-        const float scale_magic = 0.5;
-        res_x = std::floor(gsl::narrow_cast<float>(res_x) * scale_magic);
-        res_y = std::floor(gsl::narrow_cast<float>(res_y) * scale_magic);
+        res_x = res_x / 2;
+        res_y = res_y / 2;
     }
     const auto payload = fmt::format(R"([app_id="{}"] move position {} {})", appid, res_x, res_y);
     ipc_command(payload);
