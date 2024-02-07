@@ -16,24 +16,24 @@
 
 #include "util/socket.hpp"
 
-#include <system_error>
-#include <memory>
-#include <filesystem>
+#include <array>
 #include <cerrno>
 #include <cstring>
-#include <array>
+#include <filesystem>
+#include <memory>
+#include <system_error>
 
-#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <unistd.h>
 
 #include "os.hpp"
 #include "util.hpp"
 
 namespace fs = std::filesystem;
 
-UnixSocket::UnixSocket(const std::string_view endpoint):
-fd(socket(AF_UNIX, SOCK_STREAM, 0))
+UnixSocket::UnixSocket(const std::string_view endpoint)
+    : fd(socket(AF_UNIX, SOCK_STREAM, 0))
 {
     if (fd == -1) {
         throw std::system_error(errno, std::generic_category());
@@ -41,8 +41,8 @@ fd(socket(AF_UNIX, SOCK_STREAM, 0))
     connect_to_endpoint(endpoint);
 }
 
-UnixSocket::UnixSocket():
-fd(socket(AF_UNIX, SOCK_STREAM, 0))
+UnixSocket::UnixSocket()
+    : fd(socket(AF_UNIX, SOCK_STREAM, 0))
 {
     if (fd == -1) {
         throw std::system_error(errno, std::generic_category());
@@ -62,8 +62,7 @@ void UnixSocket::connect_to_endpoint(const std::string_view endpoint)
     sock.sun_family = AF_UNIX;
     endpoint.copy(sock.sun_path, endpoint.size());
 
-    int res = connect(fd, reinterpret_cast<const struct sockaddr*>(&sock),
-            sizeof(struct sockaddr_un));
+    int res = connect(fd, reinterpret_cast<const struct sockaddr *>(&sock), sizeof(struct sockaddr_un));
     if (res == -1) {
         throw std::system_error(errno, std::generic_category());
     }
@@ -76,8 +75,7 @@ void UnixSocket::bind_to_endpoint(const std::string_view endpoint) const
     sock.sun_family = AF_UNIX;
     endpoint.copy(sock.sun_path, endpoint.size());
 
-    int res = bind(fd, reinterpret_cast<const struct sockaddr*>(&sock),
-            sizeof(struct sockaddr_un));
+    int res = bind(fd, reinterpret_cast<const struct sockaddr *>(&sock), sizeof(struct sockaddr_un));
     if (res == -1) {
         throw std::system_error(errno, std::generic_category());
     }
@@ -115,12 +113,12 @@ auto UnixSocket::read_data_from_connection(int filde) -> std::vector<std::string
     return cmds;
 }
 
-void UnixSocket::write(const void* data, std::size_t len) const
+void UnixSocket::write(const void *data, std::size_t len) const
 {
     if (!connected) {
         return;
     }
-    const auto *runner = reinterpret_cast<const uint8_t*>(data);
+    const auto *runner = static_cast<const uint8_t *>(data);
     while (len != 0) {
         const auto status = send(fd, runner, len, MSG_NOSIGNAL);
         if (status == -1) {
@@ -131,12 +129,12 @@ void UnixSocket::write(const void* data, std::size_t len) const
     }
 }
 
-void UnixSocket::read(void* data, std::size_t len) const
+void UnixSocket::read(void *data, std::size_t len) const
 {
     if (!connected) {
         return;
     }
-    auto *runner = reinterpret_cast<uint8_t*>(data);
+    auto *runner = static_cast<uint8_t *>(data);
     while (len != 0) {
         const auto status = recv(fd, runner, len, 0);
         if (status == 0) {

@@ -209,7 +209,7 @@ void WaylandEglWindow::hide()
 void WaylandEglWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg_surface, uint32_t serial)
 {
     xdg_surface_ack_configure(xdg_surface, serial);
-    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
+    const auto *tmp = static_cast<struct XdgStruct *>(data);
     const auto window = tmp->ptr.lock();
     if (!window) {
         return;
@@ -221,7 +221,7 @@ void WaylandEglWindow::xdg_surface_configure(void *data, struct xdg_surface *xdg
 void WaylandEglWindow::wl_surface_frame_done(void *data, struct wl_callback *callback, [[maybe_unused]] uint32_t time)
 {
     wl_callback_destroy(callback);
-    const auto *tmp = reinterpret_cast<struct XdgStruct *>(data);
+    const auto *tmp = static_cast<struct XdgStruct *>(data);
     const auto window = tmp->ptr.lock();
     if (!window) {
         return;
