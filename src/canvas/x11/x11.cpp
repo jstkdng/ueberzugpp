@@ -59,11 +59,7 @@ X11Canvas::X11Canvas()
 
     xutil = std::make_unique<X11Util>(connection);
     logger = spdlog::get("X11");
-    event_handler = std::thread([this] {
-        logger->debug("Started event handler");
-        handle_events();
-        logger->debug("Stopped event handler");
-    });
+    event_handler = std::thread(&X11Canvas::handle_events, this);
     logger->info("Canvas created");
 }
 

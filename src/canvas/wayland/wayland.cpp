@@ -105,7 +105,7 @@ WaylandCanvas::WaylandCanvas()
     registry = wl_display_get_registry(display);
     wl_registry_add_listener(registry, &registry_listener, this);
     wl_display_roundtrip(display);
-    event_handler = std::thread([this] { handle_events(); });
+    event_handler = std::thread(&WaylandCanvas::handle_events, this);
 
 #ifdef ENABLE_OPENGL
     if (flags->use_opengl) {
