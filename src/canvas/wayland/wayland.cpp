@@ -40,21 +40,27 @@ constexpr struct wl_output_listener wl_output_listener = {.geometry = [](auto...
                                                           .description = [](auto...) {}};
 
 void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry, uint32_t name, const char *interface,
-                                           uint32_t version)
+                                           [[maybe_unused]] uint32_t version)
 {
     const std::string_view interface_str{interface};
+    const uint32_t compositor_ver = 5;
+    const uint32_t shm_ver = 1;
+    const uint32_t xdg_base_ver = 2;
+    const uint32_t output_ver = 4;
+
     auto *canvas = static_cast<WaylandCanvas *>(data);
     if (interface_str == wl_compositor_interface.name) {
-        canvas->compositor =
-            static_cast<struct wl_compositor *>(wl_registry_bind(registry, name, &wl_compositor_interface, version));
+        canvas->compositor = static_cast<struct wl_compositor *>(
+            wl_registry_bind(registry, name, &wl_compositor_interface, compositor_ver));
     } else if (interface_str == wl_shm_interface.name) {
-        canvas->wl_shm = static_cast<struct wl_shm *>(wl_registry_bind(registry, name, &wl_shm_interface, version));
+        canvas->wl_shm = static_cast<struct wl_shm *>(wl_registry_bind(registry, name, &wl_shm_interface, shm_ver));
     } else if (interface_str == xdg_wm_base_interface.name) {
         canvas->xdg_base =
-            static_cast<struct xdg_wm_base *>(wl_registry_bind(registry, name, &xdg_wm_base_interface, version));
+            static_cast<struct xdg_wm_base *>(wl_registry_bind(registry, name, &xdg_wm_base_interface, xdg_base_ver));
         xdg_wm_base_add_listener(canvas->xdg_base, &xdg_wm_base_listener, canvas);
     } else if (interface_str == wl_output_interface.name) {
-        auto *output = static_cast<struct wl_output *>(wl_registry_bind(registry, name, &wl_output_interface, version));
+        auto *output =
+            static_cast<struct wl_output *>(wl_registry_bind(registry, name, &wl_output_interface, output_ver));
         wl_output_add_listener(output, &wl_output_listener, canvas);
     }
 }
