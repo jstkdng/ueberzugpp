@@ -134,14 +134,14 @@ auto util::get_b2_hash_ssl(const std::string_view str) -> std::string
 #else
     const auto *evp = EVP_blake2b512();
 #endif
-    auto digest = std::vector<unsigned char>(EVP_MD_size(evp), 0);
+    auto digest = std::array<unsigned char, EVP_MAX_MD_SIZE>();
 
     EVP_DigestInit_ex(mdctx.get(), evp, nullptr);
     EVP_DigestUpdate(mdctx.get(), str.data(), str.size());
     unsigned int digest_len = 0;
     EVP_DigestFinal_ex(mdctx.get(), digest.data(), &digest_len);
 
-    for (uint32_t i = 0; i < digest_len; ++i) {
+    for (unsigned int i = 0; i < digest_len; ++i) {
         sstream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(digest[i]);
     }
     return sstream.str();
