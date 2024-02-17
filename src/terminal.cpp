@@ -162,8 +162,12 @@ void Terminal::get_terminal_size_escape_code()
         return;
     }
     const auto sizes = util::str_split(resp, ";");
-    ypixel = std::stoi(sizes[0]);
-    xpixel = std::stoi(sizes[1]);
+    try {
+        ypixel = std::stoi(sizes[0]);
+        xpixel = std::stoi(sizes[1]);
+    } catch (const std::invalid_argument &iarg) {
+        logger->debug("Got unexpected values in get_terminal_size_escape_code");
+    }
     // some old vte terminals respond to this values in a different order
     // assume everything older than 7000 is broken
     const auto vte_ver_str = os::getenv("VTE_VERSION").value_or("");
@@ -187,8 +191,12 @@ void Terminal::get_terminal_size_xtsm()
     if (sizes.size() != 4) {
         return;
     }
-    ypixel = std::stoi(sizes[3]);
-    xpixel = std::stoi(sizes[2]);
+    try {
+        ypixel = std::stoi(sizes[3]);
+        xpixel = std::stoi(sizes[2]);
+    } catch (const std::invalid_argument &iarg) {
+        logger->debug("Got unexpected values in get_terminal_size_xtsm");
+    }
     logger->debug("XTSM sizes XPIXEL={} YPIXEL={}", xpixel, ypixel);
 }
 

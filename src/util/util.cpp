@@ -141,8 +141,9 @@ auto util::get_b2_hash_ssl(const std::string_view str) -> std::string
     unsigned int digest_len = 0;
     EVP_DigestFinal_ex(mdctx.get(), digest.data(), &digest_len);
 
+    sstream << std::hex << std::setw(2) << std::setfill('0');
     for (unsigned int i = 0; i < digest_len; ++i) {
-        sstream << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(digest[i]);
+        sstream << static_cast<int>(digest[i]);
     }
     return sstream.str();
 }
