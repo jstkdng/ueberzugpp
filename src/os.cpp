@@ -28,44 +28,12 @@
 #include <poll.h>
 #include <unistd.h>
 
-using strmap = std::map<std::string, std::string, std::less<void>>;
-
-extern char **environ; // NOLINT
-
-namespace
-{
-
-// copy current environment
-auto load_env() -> strmap
-{
-    char **runner = environ;
-    strmap envp;
-    while (*runner != nullptr) {
-        const std::string_view envline{*runner};
-        const auto idx = envline.find('=');
-        const auto envname = envline.substr(0, idx);
-        // check if variable is empty
-        if (idx == envline.length() - 1) {
-            envp.emplace(envname, "");
-        } else {
-            const auto envvalue = envline.substr(idx + 1);
-            envp.emplace(envname, envvalue);
-        }
-        runner = runner + 1;
-    }
-    return envp;
-}
-
-const strmap envp = load_env();
-
-} // end namespace
-
-auto os::exec(const std::string_view cmd) -> std::string
+auto os::exec(const std::string &cmd) -> std::string
 {
     const int bufsize = 128;
     std::array<char, bufsize> buffer;
     std::string result;
-    c_unique_ptr<FILE, pclose> pipe{popen(cmd.data(), "r")};
+    c_unique_ptr<FILE, pclose> pipe{popen(cmd.c_str(), "r")};
     if (!pipe) {
         throw std::system_error(errno, std::generic_category());
     }
@@ -127,13 +95,13 @@ auto os::wait_for_data_on_stdin(int waitms) -> bool
     return wait_for_data_on_fd(STDIN_FILENO, waitms);
 }
 
-auto os::getenv(const std::string_view var) -> std::optional<std::string>
+auto os::getenv(const std::string &var) -> std::optional<std::string>
 {
-    const auto search = envp.find(var);
-    if (search == envp.end()) {
+    const char *env_p = std::getenv(var.c_str()); // NOLINT
+    if (env_p == nullptr) {
         return {};
     }
-    return search->second;
+    return env_p;
 }
 
 auto os::get_pid() -> int
@@ -148,8 +116,15 @@ auto os::get_ppid() -> int
 
 void os::daemonize()
 {
-    const auto res = daemon(1, 1);
-    if (res == -1) {
-        throw std::system_error(errno, std::generic_category());
+    int pid = fork();
+    if (pid < 0) {
+        std::exit(EXIT_FAILURE); // NOLINT
+    }
+    if (pid > 0) {
+        std::exit(EXIT_SUCCESS); // NOLINT
+    }
+    int status = setsid();
+    if (status < 0) {
+        std::exit(EXIT_FAILURE); // NOLINT
     }
 }
