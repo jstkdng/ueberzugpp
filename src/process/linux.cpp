@@ -18,18 +18,22 @@
 
 #include <fmt/format.h>
 #include <fstream>
+#include <limits>
 #ifdef __FreeBSD__
 #  include <sys/types.h>
 #else
 #  include <sys/sysmacros.h>
 #endif
 
+constexpr auto max_size = std::numeric_limits<std::streamsize>::max();
+
 Process::Process(int pid)
     : pid(pid)
 {
     const auto stat = fmt::format("/proc/{}/stat", pid);
     std::ifstream ifs(stat);
-    ifs >> pid >> executable >> state >> ppid >> process_group_id >> session_id >> tty_nr;
+    ifs.ignore(max_size, ' '); // ignore pid
+    ifs >> executable >> state >> ppid >> process_group_id >> session_id >> tty_nr;
     minor_dev = minor(tty_nr); // NOLINT
     pty_path = fmt::format("/dev/pts/{}", minor_dev);
 }

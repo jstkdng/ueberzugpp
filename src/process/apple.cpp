@@ -14,31 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "process.hpp"
-#include "util.hpp"
-#include "tmux.hpp"
 #include "os.hpp"
+#include "process.hpp"
+#include "tmux.hpp"
+#include "util.hpp"
 
 #include <fmt/format.h>
 #include <libproc.h>
 #include <sys/types.h>
 
-Process::Process(int pid):
-pid(pid)
+Process::Process(int pid)
+    : pid(pid)
 {
     struct proc_bsdshortinfo sproc;
     struct proc_bsdinfo proc;
 
-    int st = proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &sproc, PROC_PIDT_SHORTBSDINFO_SIZE);
-    if (st == PROC_PIDT_SHORTBSDINFO_SIZE) {
-        ppid = sproc.pbsi_ppid;
+    int status = proc_pidinfo(pid, PROC_PIDT_SHORTBSDINFO, 0, &sproc, PROC_PIDT_SHORTBSDINFO_SIZE);
+    if (status == PROC_PIDT_SHORTBSDINFO_SIZE) {
+        ppid = static_cast<int>(sproc.pbsi_ppid);
     }
 
-    st = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
-    if (st == PROC_PIDTBSDINFO_SIZE) {
-        tty_nr = proc.e_tdev;
+    status = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &proc, PROC_PIDTBSDINFO_SIZE);
+    if (status == PROC_PIDTBSDINFO_SIZE) {
+        tty_nr = static_cast<int>(proc.e_tdev);
         minor_dev = minor(tty_nr);
         pty_path = fmt::format("/dev/ttys{:0>3}", minor_dev);
     }
 }
-
