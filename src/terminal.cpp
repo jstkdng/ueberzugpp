@@ -317,7 +317,7 @@ void Terminal::open_first_pty()
         for (const auto &proc : tree) {
             stat(proc.pty_path.c_str(), &stat_info);
             if (proc.tty_nr == static_cast<int>(stat_info.st_rdev)) {
-                pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NONBLOCK | O_NOCTTY);
+                pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NOCTTY);
                 terminal_pid = proc.pid;
                 logger->info("PTY = {}", proc.pty_path);
                 return;
