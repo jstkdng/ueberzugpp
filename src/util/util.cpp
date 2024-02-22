@@ -30,7 +30,6 @@
 #include <sstream>
 
 #include <fmt/format.h>
-#include <gsl/gsl>
 #include <nlohmann/json.hpp>
 #include <openssl/evp.h>
 #if OPENSSL_VERSION_NUMBER < 0x10100000L
@@ -121,7 +120,7 @@ void util::base64_encode_v2(const unsigned char *input, size_t length, unsigned 
 #ifdef ENABLE_TURBOBASE64
     tb64enc(input, length, out);
 #else
-    EVP_EncodeBlock(out, input, gsl::narrow_cast<int>(length));
+    EVP_EncodeBlock(out, input, static_cast<int>(length));
 #endif
 }
 

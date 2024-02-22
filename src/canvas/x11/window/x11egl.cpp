@@ -14,25 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "image.hpp"
-#include "dimensions.hpp"
 #include "x11egl.hpp"
+#include "dimensions.hpp"
+#include "image.hpp"
 #include "util.hpp"
 
-#include <spdlog/spdlog.h>
 #include <array>
+#include <spdlog/spdlog.h>
 
-#include <gsl/gsl>
-
-X11EGLWindow::X11EGLWindow(xcb_connection_t* connection, xcb_screen_t* screen,
-            xcb_window_t windowid, xcb_window_t parentid, const EGLUtil<xcb_connection_t, xcb_window_t>* egl,
-            std::shared_ptr<Image> new_image):
-connection(connection),
-screen(screen),
-windowid(windowid),
-parentid(parentid),
-image(std::move(new_image)),
-egl(egl)
+X11EGLWindow::X11EGLWindow(xcb_connection_t *connection, xcb_screen_t *screen, xcb_window_t windowid,
+                           xcb_window_t parentid, const EGLUtil<xcb_connection_t, xcb_window_t> *egl,
+                           std::shared_ptr<Image> new_image)
+    : connection(connection),
+      screen(screen),
+      windowid(windowid),
+      parentid(parentid),
+      image(std::move(new_image)),
+      egl(egl)
 {
     logger = spdlog::get("x11");
     create();
@@ -54,7 +52,7 @@ X11EGLWindow::~X11EGLWindow()
 
 void X11EGLWindow::create()
 {
-    const uint32_t value_mask =  XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
+    const uint32_t value_mask = XCB_CW_BACK_PIXEL | XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK | XCB_CW_COLORMAP;
     struct xcb_create_window_value_list_t value_list;
     value_list.background_pixel = screen->black_pixel;
     value_list.border_pixel = screen->black_pixel;
@@ -62,19 +60,11 @@ void X11EGLWindow::create()
     value_list.colormap = screen->default_colormap;
 
     const auto dimensions = image->dimensions();
-    const auto xcoord = gsl::narrow_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
-    const auto ycoord = gsl::narrow_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
-    xcb_create_window_aux(connection,
-            screen->root_depth,
-            windowid,
-            parentid,
-            xcoord, ycoord,
-            image->width(), image->height(),
-            0,
-            XCB_WINDOW_CLASS_INPUT_OUTPUT,
-            screen->root_visual,
-            value_mask,
-            &value_list);
+    const auto xcoord = static_cast<int16_t>(dimensions.xpixels() + dimensions.padding_horizontal);
+    const auto ycoord = static_cast<int16_t>(dimensions.ypixels() + dimensions.padding_vertical);
+    xcb_create_window_aux(connection, screen->root_depth, windowid, parentid, xcoord, ycoord, image->width(),
+                          image->height(), 0, XCB_WINDOW_CLASS_INPUT_OUTPUT, screen->root_visual, value_mask,
+                          &value_list);
 }
 
 void X11EGLWindow::opengl_setup()
@@ -97,22 +87,21 @@ void X11EGLWindow::opengl_setup()
 
 void X11EGLWindow::draw()
 {
-    const std::scoped_lock lock {egl_mutex};
+    const std::scoped_lock lock{egl_mutex};
     egl->run_contained(egl_surface, egl_context, [this] {
         glBlitFramebuffer(0, 0, image->width(), image->height(), 0, 0, image->width(), image->height(),
-                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
         eglSwapBuffers(egl->display, egl_surface);
     });
 }
 
 void X11EGLWindow::generate_frame()
 {
-    const std::scoped_lock lock {egl_mutex};
+    const std::scoped_lock lock{egl_mutex};
     egl->run_contained(egl_surface, egl_context, [this] {
         egl->get_texture_from_image(*image, texture);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                GL_TEXTURE_2D, texture, 0);
+        glFramebufferTexture2D(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
     });
 
     send_expose_event();
@@ -142,10 +131,9 @@ void X11EGLWindow::send_expose_event()
 {
     const int event_size = 32;
     std::array<char, event_size> buffer;
-    auto *event = reinterpret_cast<xcb_expose_event_t*>(buffer.data());
+    auto *event = reinterpret_cast<xcb_expose_event_t *>(buffer.data());
     event->response_type = XCB_EXPOSE;
     event->window = windowid;
-    xcb_send_event(connection, 0, windowid,
-            XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char*>(event));
+    xcb_send_event(connection, 0, windowid, XCB_EVENT_MASK_EXPOSURE, reinterpret_cast<char *>(event));
     xcb_flush(connection);
 }

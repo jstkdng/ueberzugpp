@@ -31,8 +31,8 @@ class Process
     int ppid;
     int process_group_id;
     int session_id;
-    unsigned int tty_nr;
-    unsigned int minor_dev;
+    int tty_nr;
+    int minor_dev;
     std::string pty_path;
 };
 

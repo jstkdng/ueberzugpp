@@ -27,7 +27,6 @@
 #ifdef ENABLE_OPENCV
 #  include <opencv2/imgcodecs.hpp>
 #endif
-#include <gsl/gsl>
 #include <spdlog/spdlog.h>
 #include <unordered_set>
 #include <vips/vips.h>
@@ -137,8 +136,8 @@ auto Image::get_new_sizes(double max_width, double max_height, const std::string
             new_scale = max_width / img_width;
         }
     }
-    new_width = gsl::narrow_cast<int>(img_width * new_scale);
-    new_height = gsl::narrow_cast<int>(img_height * new_scale);
+    new_width = static_cast<int>(img_width * new_scale);
+    new_height = static_cast<int>(img_height * new_scale);
 
     return std::make_pair(util::round_up(new_width, scale_factor), util::round_up(new_height, scale_factor));
 }

@@ -61,13 +61,6 @@ if(HAVE_STD_EXECUTION_H)
   target_compile_definitions(ueberzug PRIVATE HAVE_STD_EXECUTION_H)
 endif()
 
-find_package(Microsoft.GSL CONFIG QUIET)
-if(NOT Microsoft.GSL_FOUND)
-  FetchContent_Declare(
-    GSL URL https://github.com/microsoft/GSL/archive/refs/tags/v4.0.0.tar.gz)
-  list(APPEND FC_LIBS GSL)
-endif()
-
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
   if(FETCHCONTENT_FULLY_DISCONNECTED)
@@ -264,7 +257,6 @@ list(
   fmt::fmt
   spdlog::spdlog
   OpenSSL::Crypto
-  Microsoft.GSL::GSL
   TBB::tbb
   PkgConfig::VIPS
   PkgConfig::SIXEL

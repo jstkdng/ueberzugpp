@@ -34,7 +34,6 @@
 #include <unordered_set>
 
 #include <fcntl.h>
-#include <gsl/gsl>
 #include <spdlog/spdlog.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
@@ -103,7 +102,7 @@ void Terminal::get_terminal_size()
     const double padding_horiz = guess_padding(cols, xpixel);
     const double padding_vert = guess_padding(rows, ypixel);
 
-    padding_horizontal = gsl::narrow_cast<uint16_t>(std::max(padding_horiz, padding_vert));
+    padding_horizontal = static_cast<uint16_t>(std::max(padding_horiz, padding_vert));
     padding_vertical = padding_horizontal;
     font_width = std::ceil(guess_font_size(cols, xpixel, padding_horizontal));
     font_height = std::ceil(guess_font_size(rows, ypixel, padding_vertical));
@@ -111,8 +110,8 @@ void Terminal::get_terminal_size()
     if (xpixel < fallback_xpixel && ypixel < fallback_ypixel) {
         padding_horizontal = (fallback_xpixel - xpixel) / 2;
         padding_vertical = (fallback_ypixel - ypixel) / 2;
-        font_width = gsl::narrow_cast<uint16_t>(xpixel / cols);
-        font_height = gsl::narrow_cast<uint16_t>(ypixel / rows);
+        font_width = static_cast<uint16_t>(xpixel / cols);
+        font_height = static_cast<uint16_t>(ypixel / rows);
     }
 
     logger->debug("padding_horiz={} padding_vert={}", padding_horizontal, padding_vertical);
@@ -317,7 +316,7 @@ void Terminal::open_first_pty()
         reverse(tree);
         for (const auto &proc : tree) {
             stat(proc.pty_path.c_str(), &stat_info);
-            if (proc.tty_nr == stat_info.st_rdev) {
+            if (proc.tty_nr == static_cast<int>(stat_info.st_rdev)) {
                 pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NONBLOCK | O_NOCTTY);
                 terminal_pid = proc.pid;
                 logger->info("PTY = {}", proc.pty_path);

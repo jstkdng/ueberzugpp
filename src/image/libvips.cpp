@@ -26,7 +26,6 @@
 #ifdef ENABLE_OPENCV
 #  include <opencv2/videoio.hpp>
 #endif
-#include <gsl/gsl>
 #include <spdlog/spdlog.h>
 
 using vips::VError;
@@ -128,10 +127,10 @@ auto LibvipsImage::frame_delay() const -> int
 #ifdef ENABLE_OPENCV
             const cv::VideoCapture video(path);
             if (video.isOpened()) {
-                return gsl::narrow_cast<int>((1.0 / video.get(cv::CAP_PROP_FPS)) * ms_per_sec);
+                return static_cast<int>((1.0 / video.get(cv::CAP_PROP_FPS)) * ms_per_sec);
             }
 #endif
-            return gsl::narrow_cast<int>((1.0 / npages) * ms_per_sec);
+            return static_cast<int>((1.0 / npages) * ms_per_sec);
         }
         return delays.at(0);
     } catch (const VError &err) {
