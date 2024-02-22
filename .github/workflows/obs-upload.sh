@@ -61,7 +61,6 @@ URL:            https://github.com/jstkdng/%{name}
 Source:         https://github.com/jstkdng/%{name}/archive/refs/tags/v%{version}.tar.gz#/%{name}_%{version}.tar.xz
 BuildRequires:  automake
 BuildRequires:  cmake
-BuildRequires:  cmake(Microsoft.GSL)
 BuildRequires:  cmake(spdlog)
 BuildRequires:  extra-cmake-modules
 BuildRequires:  gcc-c++

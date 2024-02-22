@@ -151,7 +151,6 @@ and included in the binary.
 - cli11
 - spdlog
 - fmt
-- microsoft.gsl
 
 ## Optional dependencies
 

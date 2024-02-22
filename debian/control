@@ -8,7 +8,6 @@ Build-Depends:
  debhelper (>= 13),
  debhelper-compat (= 13),
  cmake (>= 3.18),
- libmsgsl-dev,
  libchafa-dev,
  libvips-dev,
  nlohmann-json3-dev,
