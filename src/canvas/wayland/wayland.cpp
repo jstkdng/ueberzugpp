@@ -43,10 +43,17 @@ void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry, ui
                                            [[maybe_unused]] uint32_t version)
 {
     const std::string_view interface_str{interface};
+#ifdef WSL
+    const uint32_t compositor_ver = 4;
+    const uint32_t shm_ver = 1;
+    const uint32_t xdg_base_ver = 1;
+    const uint32_t output_ver = 3;
+#else
     const uint32_t compositor_ver = 5;
     const uint32_t shm_ver = 1;
     const uint32_t xdg_base_ver = 2;
     const uint32_t output_ver = 4;
+#endif
 
     auto *canvas = static_cast<WaylandCanvas *>(data);
     if (interface_str == wl_compositor_interface.name) {

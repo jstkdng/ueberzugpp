@@ -205,6 +205,10 @@ pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
 pkg_check_modules(EXIF REQUIRED IMPORTED_TARGET libexif)
 
+if(CMAKE_HOST_SYSTEM_VERSION MATCHES "^.*microsoft.*$")
+  target_compile_definitions(ueberzug PRIVATE WSL)
+endif()
+
 if(APPLE)
   list(APPEND UEBERZUG_SOURCES src/process/apple.cpp)
 
