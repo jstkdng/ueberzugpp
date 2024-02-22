@@ -15,38 +15,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "process.hpp"
-#include "util.hpp"
-#include "tmux.hpp"
-#include "os.hpp"
 
-#include <fstream>
-#include <string>
 #include <fmt/format.h>
+#include <fstream>
 #ifdef __FreeBSD__
-#   include <sys/types.h>
+#  include <sys/types.h>
 #else
-#   include <sys/sysmacros.h>
+#  include <sys/sysmacros.h>
 #endif
 
-Process::Process(int pid):
-pid(pid)
+Process::Process(int pid)
+    : pid(pid)
 {
     const auto stat = fmt::format("/proc/{}/stat", pid);
     std::ifstream ifs(stat);
-    std::string out;
-    std::getline(ifs, out);
-
-    const auto start = out.find('(') + 1;
-    auto end = out.find(')');
-    this->executable = out.substr(start, end - start);
-
-    // remove pid and executable from string
-    end += 2;
-    out = out.substr(end, out.size() - end);
-    const auto proc = util::str_split(out, " ");
-    state = proc[0][0];
-    ppid = std::stoi(proc[1]);
-    tty_nr = std::stoi(proc[4]);
-    minor_dev = minor(std::stoi(proc[4]));
+    ifs >> pid >> executable >> state >> ppid >> process_group_id >> session_id >> tty_nr;
+    minor_dev = minor(tty_nr); // NOLINT
     pty_path = fmt::format("/dev/pts/{}", minor_dev);
 }

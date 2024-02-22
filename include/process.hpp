@@ -26,11 +26,13 @@ class Process
     ~Process() = default;
 
     int pid;
+    std::string executable;
+    char state;
     int ppid;
+    int process_group_id;
+    int session_id;
     unsigned int tty_nr;
     unsigned int minor_dev;
-    char state;
-    std::string executable;
     std::string pty_path;
 };
 
