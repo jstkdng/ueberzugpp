@@ -18,16 +18,12 @@
 #include "os.hpp"
 #include "util.hpp"
 
-#include <string>
 #include <array>
 #include <fmt/format.h>
+#include <string>
 
-constexpr auto hooks = std::to_array<std::string_view>({
-    "client-session-changed",
-    "session-window-changed",
-    "client-detached",
-    "window-layout-changed"
-});
+constexpr auto hooks = std::to_array<std::string_view>(
+    {"client-session-changed", "session-window-changed", "client-detached", "window-layout-changed"});
 
 auto tmux::get_session_id() -> std::string
 {
@@ -64,7 +60,7 @@ auto tmux::get_client_pids() -> std::optional<std::vector<int>>
     const auto cmd = fmt::format("tmux list-clients -F '#{{client_pid}}' -t {}", tmux::get_pane());
     const auto output = os::exec(cmd);
 
-    for (const auto& line: util::str_split(output, "\n")) {
+    for (const auto &line : util::str_split(output, "\n")) {
         pids.push_back(std::stoi(line));
     }
 
@@ -85,7 +81,8 @@ auto tmux::get_pane_offset() -> std::pair<int, int>
 {
     const auto cmd = fmt::format(R"(tmux display -p -F '#{{pane_top}},#{{pane_left}},
                                      #{{pane_bottom}},#{{pane_right}},
-                                     #{{window_height}},#{{window_width}}' -t {})", tmux::get_pane());
+                                     #{{window_height}},#{{window_width}}' -t {})",
+                                 tmux::get_pane());
     const auto output = util::str_split(os::exec(cmd), ",");
     return std::make_pair(std::stoi(output.at(1)), std::stoi(output.at(0)));
 }
@@ -115,10 +112,9 @@ void tmux::register_hooks()
     if (!tmux::is_used()) {
         return;
     }
-    for (const auto& hook: hooks) {
-        const auto cmd = fmt::format(
-                R"(tmux set-hook -t {0} {1} "run-shell 'ueberzugpp tmux {1} {2}'")",
-                tmux::get_pane(), hook, os::get_pid());
+    for (const auto &hook : hooks) {
+        const auto cmd = fmt::format(R"(tmux set-hook -t {0} {1} "run-shell 'ueberzugpp tmux {1} {2}'")",
+                                     tmux::get_pane(), hook, os::get_pid());
         os::exec(cmd);
     }
 }
@@ -128,7 +124,7 @@ void tmux::unregister_hooks()
     if (!tmux::is_used()) {
         return;
     }
-    for (const auto& hook: hooks) {
+    for (const auto &hook : hooks) {
         const auto cmd = fmt::format("tmux set-hook -u -t {} {}", tmux::get_pane(), hook);
         os::exec(cmd);
     }
