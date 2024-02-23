@@ -26,7 +26,6 @@
 #include <iostream>
 #include <memory>
 #include <random>
-#include <regex>
 #include <sstream>
 
 #include <fmt/format.h>
@@ -51,10 +50,19 @@ using njson = nlohmann::json;
 
 auto util::str_split(const std::string &str, const std::string &delim) -> std::vector<std::string>
 {
-    const std::regex regex{delim};
-    const std::sregex_token_iterator first{str.begin(), str.end(), regex, -1};
-    const std::sregex_token_iterator last;
-    return {first, last};
+    using std::string;
+    std::vector<string> result;
+    string::size_type begin = 0;
+    while (true) {
+        const auto end = str.find(delim, begin);
+        const auto token = str.substr(begin, end - begin);
+        result.push_back(token);
+        if (end == string::npos) {
+            break;
+        }
+        begin = end + delim.length();
+    }
+    return result;
 }
 
 auto util::get_process_tree(int pid) -> std::vector<int>
