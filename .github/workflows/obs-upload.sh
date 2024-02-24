@@ -68,6 +68,7 @@ BuildRequires:  make
 BuildRequires:	pkgconfig(openssl)
 BuildRequires:  pkgconfig(CLI11)
 BuildRequires:  pkgconfig(chafa)
+BuildRequires:  pkgconfig(range-v3)
 BuildRequires:  pkgconfig(libsixel)
 BuildRequires:  pkgconfig(nlohmann_json)
 BuildRequires:  pkgconfig(opencv4)

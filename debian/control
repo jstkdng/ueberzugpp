@@ -24,6 +24,7 @@ Build-Depends:
  libxcb-res0-dev,
  wayland-protocols,
  libwayland-dev,
+ range-v3-dev,
  extra-cmake-modules
 
 Package: ueberzugpp
