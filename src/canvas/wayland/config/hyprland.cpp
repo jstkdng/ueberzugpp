@@ -23,6 +23,7 @@
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+#include <range/v3/all.hpp>
 #include <spdlog/spdlog.h>
 
 using njson = nlohmann::json;
@@ -78,8 +79,7 @@ auto HyprlandSocket::get_active_window() -> nlohmann::json
         address = active.at("address");
     }
     const auto clients = request_result("j/clients");
-    const auto client =
-        std::ranges::find_if(clients, [this](const njson &json) { return json.at("address") == address; });
+    const auto client = ranges::find_if(clients, [this](const njson &json) { return json.at("address") == address; });
     if (client == clients.end()) {
         throw std::runtime_error("Active window not found");
     }

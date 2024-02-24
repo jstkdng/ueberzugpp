@@ -23,6 +23,7 @@
 
 #include <string_view>
 
+#include <range/v3/all.hpp>
 #include <spdlog/spdlog.h>
 
 #ifdef ENABLE_OPENGL
@@ -176,7 +177,7 @@ void X11Canvas::add_image(const std::string &identifier, std::unique_ptr<Image> 
     std::unordered_set<xcb_window_t> parent_ids{dims.terminal->x11_wid};
     get_tmux_window_ids(parent_ids);
 
-    std::ranges::for_each(std::as_const(parent_ids), [this, &identifier, &image](xcb_window_t parent) {
+    ranges::for_each(parent_ids, [this, &identifier, &image](xcb_window_t parent) {
         const auto window_id = xcb_generate_id(connection);
         std::shared_ptr<Window> window;
 #ifdef ENABLE_OPENGL

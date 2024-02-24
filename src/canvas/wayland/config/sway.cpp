@@ -26,6 +26,7 @@
 #include <string>
 
 #include <fmt/format.h>
+#include <range/v3/all.hpp>
 #include <spdlog/spdlog.h>
 
 using njson = nlohmann::json;
@@ -63,9 +64,9 @@ auto SwaySocket::get_active_window(const std::vector<nlohmann::json>& nodes) -> 
 
     for (const auto pid : pids) {
         const auto tree = util::get_process_tree(pid);
-        const auto found = std::ranges::find_if(nodes, [&tree](const njson &json) -> bool {
+        const auto found = ranges::find_if(nodes, [&tree](const njson &json) -> bool {
             try {
-                return std::ranges::find(tree, json.at("pid").get<int>()) != tree.end();
+                return ranges::find(tree, json.at("pid").get<int>()) != tree.end();
             } catch (const njson::out_of_range &err) {
                 return false;
             }

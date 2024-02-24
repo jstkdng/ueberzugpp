@@ -32,8 +32,8 @@ Process::Process(int pid)
 {
     const auto stat = fmt::format("/proc/{}/stat", pid);
     std::ifstream ifs(stat);
-    ifs.ignore(max_size, ' '); // ignore pid
-    ifs >> executable >> state >> ppid >> process_group_id >> session_id >> tty_nr;
+    ifs.ignore(max_size, ')'); // skip pid and executable name
+    ifs >> state >> ppid >> process_group_id >> session_id >> tty_nr;
     minor_dev = minor(tty_nr); // NOLINT
     pty_path = fmt::format("/dev/pts/{}", minor_dev);
 }

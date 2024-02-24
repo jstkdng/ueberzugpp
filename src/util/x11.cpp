@@ -15,21 +15,22 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util/x11.hpp"
-#include "util.hpp"
-#include "os.hpp"
-#include "util/ptr.hpp"
 #include "flags.hpp"
+#include "os.hpp"
+#include "util.hpp"
+#include "util/ptr.hpp"
 
-#include <xcb/xcb.h>
+#include <range/v3/all.hpp>
 #include <xcb/res.h>
+#include <xcb/xcb.h>
 
 #include <algorithm>
-#include <utility>
-#include <string>
 #include <stack>
+#include <string>
+#include <utility>
 
-X11Util::X11Util():
-connection(xcb_connect(nullptr, nullptr))
+X11Util::X11Util()
+    : connection(xcb_connect(nullptr, nullptr))
 {
     const auto flags = Flags::instance();
     const auto xdg_session = os::getenv("XDG_SESSION_TYPE").value_or("");
@@ -41,11 +42,12 @@ connection(xcb_connect(nullptr, nullptr))
     }
 }
 
-X11Util::X11Util(xcb_connection_t* connection):
-connection(connection),
-screen(xcb_setup_roots_iterator(xcb_get_setup(connection)).data),
-owns_connection(false)
-{}
+X11Util::X11Util(xcb_connection_t *connection)
+    : connection(connection),
+      screen(xcb_setup_roots_iterator(xcb_get_setup(connection)).data),
+      owns_connection(false)
+{
+}
 
 X11Util::~X11Util()
 {
@@ -67,9 +69,7 @@ auto X11Util::get_server_window_ids() const -> std::vector<xcb_window_t>
         const auto cookie = cookies_st.top();
         cookies_st.pop();
 
-        const auto reply = unique_C_ptr<xcb_query_tree_reply_t> {
-            xcb_query_tree_reply(connection, cookie, nullptr)
-        };
+        const auto reply = unique_C_ptr<xcb_query_tree_reply_t>{xcb_query_tree_reply(connection, cookie, nullptr)};
         if (!reply) {
             continue;
         }
@@ -103,17 +103,16 @@ auto X11Util::get_pid_window_map() const -> std::unordered_map<uint32_t, xcb_win
     spec.mask = XCB_RES_CLIENT_ID_MASK_LOCAL_CLIENT_PID;
 
     // bulk request pids
-    for (const auto window: windows) {
+    for (const auto window : windows) {
         spec.client = window;
         cookies.push_back(xcb_res_query_client_ids_unchecked(connection, 1, &spec));
     }
 
     // process replies
     auto win_iter = windows.cbegin();
-    for (const auto cookie: cookies) {
-        const auto reply = unique_C_ptr<xcb_res_query_client_ids_reply_t> {
-            xcb_res_query_client_ids_reply(connection, cookie, nullptr)
-        };
+    for (const auto cookie : cookies) {
+        const auto reply =
+            unique_C_ptr<xcb_res_query_client_ids_reply_t>{xcb_res_query_client_ids_reply(connection, cookie, nullptr)};
         if (!reply) {
             continue;
         }
@@ -129,13 +128,11 @@ auto X11Util::window_has_properties(xcb_window_t window, std::initializer_list<x
 {
     std::vector<xcb_get_property_cookie_t> cookies;
     cookies.reserve(properties.size());
-    for (const auto prop: properties) {
+    for (const auto prop : properties) {
         cookies.push_back(xcb_get_property_unchecked(connection, 0, window, prop, XCB_ATOM_ANY, 0, 4));
     }
-    return std::ranges::any_of(std::as_const(cookies), [this] (xcb_get_property_cookie_t cookie) -> bool {
-        const auto reply = unique_C_ptr<xcb_get_property_reply_t> {
-            xcb_get_property_reply(connection, cookie, nullptr)
-        };
+    return ranges::any_of(cookies, [this](xcb_get_property_cookie_t cookie) -> bool {
+        const auto reply = unique_C_ptr<xcb_get_property_reply_t>{xcb_get_property_reply(connection, cookie, nullptr)};
         return reply && xcb_get_property_value_length(reply.get()) != 0;
     });
 }
@@ -143,9 +140,7 @@ auto X11Util::window_has_properties(xcb_window_t window, std::initializer_list<x
 auto X11Util::get_window_dimensions(xcb_window_t window) const -> std::pair<uint16_t, uint16_t>
 {
     const auto cookie = xcb_get_geometry_unchecked(connection, window);
-    const auto reply = unique_C_ptr<xcb_get_geometry_reply_t> {
-        xcb_get_geometry_reply(connection, cookie, nullptr)
-    };
+    const auto reply = unique_C_ptr<xcb_get_geometry_reply_t>{xcb_get_geometry_reply(connection, cookie, nullptr)};
     if (!reply) {
         return std::make_pair(0, 0);
     }
@@ -158,14 +153,14 @@ auto X11Util::get_parent_window(int pid) const -> xcb_window_t
     if (wid.has_value()) {
         try {
             return std::stoi(wid.value());
-        } catch (const std::out_of_range& oor) {
+        } catch (const std::out_of_range &oor) {
             return 0;
         }
     }
 
     const auto pid_window_map = get_pid_window_map();
     const auto tree = util::get_process_tree(pid);
-    for (const auto spid: tree) {
+    for (const auto spid : tree) {
         const auto win = pid_window_map.find(spid);
         if (win != pid_window_map.end()) {
             return win->second;

@@ -26,7 +26,6 @@ class Process
     ~Process() = default;
 
     int pid;
-    std::string executable;
     char state;
     int ppid;
     int process_group_id;
