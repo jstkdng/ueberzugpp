@@ -34,14 +34,11 @@
 #include <unordered_set>
 
 #include <fcntl.h>
+#include <range/v3/all.hpp>
 #include <spdlog/spdlog.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#ifdef __APPLE__
-#  include <range/v3/algorithm/reverse.hpp>
-#endif
 
 Terminal::Terminal()
     : pid(os::get_pid()),
@@ -303,17 +300,12 @@ void Terminal::get_fallback_wayland_terminal_sizes()
 
 void Terminal::open_first_pty()
 {
-#ifdef __APPLE__
-    using ranges::reverse;
-#else
-    using std::ranges::reverse;
-#endif
     const auto pids = tmux::get_client_pids().value_or(std::vector<int>{pid});
 
     struct stat stat_info;
     for (const auto spid : pids) {
         auto tree = util::get_process_tree_v2(spid);
-        reverse(tree);
+        ranges::reverse(tree);
         for (const auto &proc : tree) {
             stat(proc.pty_path.c_str(), &stat_info);
             if (proc.tty_nr == static_cast<int>(stat_info.st_rdev)) {

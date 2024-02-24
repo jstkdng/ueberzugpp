@@ -16,34 +16,32 @@
 
 #include "iterm2.hpp"
 #include "chunk.hpp"
-#include "util.hpp"
 #include "dimensions.hpp"
-#include "terminal.hpp"
 #include "image.hpp"
+#include "terminal.hpp"
+#include "util.hpp"
 
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <filesystem>
-#include <algorithm>
 
-#include <spdlog/spdlog.h>
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 #ifdef HAVE_STD_EXECUTION_H
-#   include <execution>
+#  include <execution>
 #else
-#   include <oneapi/tbb.h>
+#  include <oneapi/tbb.h>
 #endif
 
-#ifdef __APPLE__
-#   include <range/v3/algorithm/for_each.hpp>
-#endif
+#include <range/v3/all.hpp>
 
 namespace fs = std::filesystem;
 
-Iterm2::Iterm2(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex):
-image(std::move(new_image)),
-stdout_mutex(std::move(stdout_mutex))
+Iterm2::Iterm2(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex)
+    : image(std::move(new_image)),
+      stdout_mutex(std::move(stdout_mutex))
 {
     const auto dims = image->dimensions();
     x = dims.x + 1;
@@ -54,37 +52,30 @@ stdout_mutex(std::move(stdout_mutex))
 
 Iterm2::~Iterm2()
 {
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     util::clear_terminal_area(x, y, horizontal_cells, vertical_cells);
 }
 
 void Iterm2::draw()
 {
-#ifdef __APPLE__
-    using ranges::for_each;
-#else
-    using std::ranges::for_each;
-#endif
     str.append("\033]1337;File=inline=1;");
     const auto filename = image->filename();
     const auto num_bytes = fs::file_size(filename);
-    const auto encoded_filename = util::base64_encode(
-            reinterpret_cast<const unsigned char*>(filename.c_str()), filename.size());
-    str.append(fmt::format("size={};name={};width={}px;height={}px:",
-                num_bytes, encoded_filename, image->width(), image->height()));
+    const auto encoded_filename =
+        util::base64_encode(reinterpret_cast<const unsigned char *>(filename.c_str()), filename.size());
+    str.append(fmt::format("size={};name={};width={}px;height={}px:", num_bytes, encoded_filename, image->width(),
+                           image->height()));
 
     const int chunk_size = 1023;
     const auto chunks = process_chunks(filename, chunk_size, num_bytes);
     const int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
-    const uint64_t bytes_per_chunk = 4*((chunk_size+2)/3) + 100;
+    const uint64_t bytes_per_chunk = 4 * ((chunk_size + 2) / 3) + 100;
     str.reserve((num_chunks + 2) * bytes_per_chunk);
 
-    for_each(std::as_const(chunks), [this] (const std::unique_ptr<Iterm2Chunk>& chunk) {
-        str.append(chunk->get_result());
-    });
+    ranges::for_each(chunks, [this](const std::unique_ptr<Iterm2Chunk> &chunk) { str.append(chunk->get_result()); });
     str.append("\a");
 
-    const std::scoped_lock lock {*stdout_mutex};
+    const std::scoped_lock lock{*stdout_mutex};
     util::save_cursor_position();
     util::move_cursor(y, x);
     std::cout << str << std::flush;
@@ -92,13 +83,14 @@ void Iterm2::draw()
     str.clear();
 }
 
-auto Iterm2::process_chunks(const std::string& filename, int chunk_size, size_t num_bytes) -> std::vector<std::unique_ptr<Iterm2Chunk>>
+auto Iterm2::process_chunks(const std::string &filename, int chunk_size, size_t num_bytes)
+    -> std::vector<std::unique_ptr<Iterm2Chunk>>
 {
     const int num_chunks = std::ceil(static_cast<double>(num_bytes) / chunk_size);
     std::vector<std::unique_ptr<Iterm2Chunk>> chunks;
     chunks.reserve(num_chunks + 2);
 
-    std::ifstream ifs (filename);
+    std::ifstream ifs(filename);
     while (ifs.good()) {
         auto chunk = std::make_unique<Iterm2Chunk>(chunk_size);
         ifs.read(chunk->get_buffer(), chunk_size);

@@ -33,7 +33,7 @@
 
 namespace util
 {
-auto str_split(const std::string &str, const std::string &delim) -> std::vector<std::string>;
+auto str_split(std::string_view str, std::string_view delim) -> std::vector<std::string>;
 auto get_process_tree(int pid) -> std::vector<int>;
 auto get_process_tree_v2(int pid) -> std::vector<Process>;
 auto get_b2_hash_ssl(std::string_view str) -> std::string;

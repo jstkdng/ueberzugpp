@@ -15,14 +15,14 @@
 
 cmake_minimum_required(VERSION 3.18)
 
+set(CMAKE_POLICY_DEFAULT_CMP0077 NEW)
 # Avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
 cmake_policy(SET CMP0075 NEW)
+cmake_policy(SET CMP0077 NEW)
 
-set(CMAKE_C_STANDARD 99)
-set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -68,7 +68,7 @@ if(NOT CLI11_FOUND)
   else()
     FetchContent_Declare(
       cli11
-      URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.3.2.tar.gz)
+      URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.4.1.tar.gz)
     list(APPEND FC_LIBS cli11)
   endif()
 endif()
@@ -77,14 +77,14 @@ find_package(nlohmann_json QUIET)
 if(NOT nlohmann_json_FOUND)
   FetchContent_Declare(
     nlohmann_json
-    URL https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz)
+    URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
   list(APPEND FC_LIBS nlohmann_json)
 endif()
 
 find_package(fmt QUIET)
 if(NOT fmt_FOUND)
   FetchContent_Declare(
-    fmt URL https://github.com/fmtlib/fmt/archive/refs/tags/10.1.0.tar.gz)
+    fmt URL https://github.com/fmtlib/fmt/archive/refs/tags/10.2.1.tar.gz)
   list(APPEND FC_LIBS fmt)
 endif()
 
@@ -93,12 +93,22 @@ if(NOT spdlog_FOUND)
   set(SPDLOG_FMT_EXTERNAL ON)
   FetchContent_Declare(
     spdlog
-    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.12.0.tar.gz)
+    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.13.0.tar.gz)
   list(APPEND FC_LIBS spdlog)
 endif()
 
 if(FC_LIBS)
   FetchContent_MakeAvailable(${FC_LIBS})
+endif()
+
+find_package(range-v3 QUIET)
+if(NOT range-v3_FOUND)
+  FetchContent_Declare(
+    range-v3
+    URL https://github.com/ericniebler/range-v3/archive/refs/tags/0.12.0.tar.gz)
+  FetchContent_Populate(range-v3)
+  add_subdirectory(${range-v3_SOURCE_DIR} ${range-v3_BINARY_DIR}
+                   EXCLUDE_FROM_ALL)
 endif()
 
 if(ENABLE_OPENGL)
@@ -211,18 +221,6 @@ endif()
 
 if(APPLE)
   list(APPEND UEBERZUG_SOURCES src/process/apple.cpp)
-
-  find_package(range-v3 QUIET)
-  if(NOT range-v3_FOUND)
-    FetchContent_Declare(
-      range-v3
-      URL https://github.com/ericniebler/range-v3/archive/refs/tags/0.12.0.tar.gz
-    )
-    FetchContent_Populate(range-v3)
-    add_subdirectory(${range-v3_SOURCE_DIR} ${range-v3_BINARY_DIR}
-                     EXCLUDE_FROM_ALL)
-  endif()
-  list(APPEND UEBERZUG_LIBRARIES range-v3)
 else()
   list(APPEND UEBERZUG_SOURCES src/process/linux.cpp)
 endif()
@@ -260,6 +258,7 @@ list(
   Threads::Threads
   fmt::fmt
   spdlog::spdlog
+  range-v3
   OpenSSL::Crypto
   TBB::tbb
   PkgConfig::VIPS

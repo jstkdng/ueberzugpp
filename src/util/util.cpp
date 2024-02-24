@@ -42,25 +42,18 @@
 #    include "turbob64.h"
 #  endif
 #endif
+#include <range/v3/all.hpp>
 
 #include <libexif/exif-data.h>
 
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
 
-auto util::str_split(const std::string &str, const std::string &delim) -> std::vector<std::string>
+auto util::str_split(std::string_view str, std::string_view delim) -> std::vector<std::string>
 {
-    using std::string;
-    std::vector<string> result;
-    string::size_type begin = 0;
-    while (true) {
-        const auto end = str.find(delim, begin);
-        const auto token = str.substr(begin, end - begin);
-        result.push_back(token);
-        if (end == string::npos) {
-            break;
-        }
-        begin = end + delim.length();
+    std::vector<std::string> result;
+    for (const auto word : ranges::views::split(str, delim)) {
+        result.emplace_back(ranges::to<std::string>(word));
     }
     return result;
 }
