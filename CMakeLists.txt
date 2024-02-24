@@ -34,7 +34,7 @@ set(CMAKE_BUILD_TYPE
 project(
   ueberzugpp
   LANGUAGES CXX C
-  VERSION 2.9.2)
+  VERSION 2.9.3)
 add_executable(ueberzug)
 
 option(ENABLE_X11 "Enable X11 canvas." ON)
