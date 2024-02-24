@@ -2,7 +2,7 @@
 set -e
 
 DATETIME=$(date -R)
-VERSION=$(grep "project(" CMakeLists.txt | grep -oP '\(\K[^\)]+' | cut -f 6 -d ' ')
+VERSION=$(grep "set(UEBERZUGPP_VERSION" CMakeLists.txt | grep -oP '\(\K[^\)]+' | cut -f 2 -d ' ')
 TARFILE="ueberzugpp_$VERSION.tar.xz"
 DSCFILE="ueberzugpp.dsc"
 SPECFILE="ueberzugpp.spec"
@@ -65,10 +65,10 @@ BuildRequires:  cmake(spdlog)
 BuildRequires:  extra-cmake-modules
 BuildRequires:  gcc-c++
 BuildRequires:  make
+BuildRequires:  range-v3-devel
 BuildRequires:	pkgconfig(openssl)
 BuildRequires:  pkgconfig(CLI11)
 BuildRequires:  pkgconfig(chafa)
-BuildRequires:  pkgconfig(range-v3)
 BuildRequires:  pkgconfig(libsixel)
 BuildRequires:  pkgconfig(nlohmann_json)
 BuildRequires:  pkgconfig(opencv4)
