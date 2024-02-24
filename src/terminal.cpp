@@ -101,8 +101,8 @@ void Terminal::get_terminal_size()
 
     padding_horizontal = static_cast<uint16_t>(std::max(padding_horiz, padding_vert));
     padding_vertical = padding_horizontal;
-    font_width = std::ceil(guess_font_size(cols, xpixel, padding_horizontal));
-    font_height = std::ceil(guess_font_size(rows, ypixel, padding_vertical));
+    font_width = std::floor(guess_font_size(cols, xpixel, padding_horizontal));
+    font_height = std::floor(guess_font_size(rows, ypixel, padding_vertical));
 
     if (xpixel < fallback_xpixel && ypixel < fallback_ypixel) {
         padding_horizontal = (fallback_xpixel - xpixel) / 2;

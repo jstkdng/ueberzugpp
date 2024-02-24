@@ -33,7 +33,7 @@ auto os::exec(const std::string &cmd) -> std::string
     const int bufsize = 128;
     std::array<char, bufsize> buffer;
     std::string result;
-    c_unique_ptr<FILE, pclose> pipe{popen(cmd.c_str(), "r")};
+    const c_unique_ptr<FILE, pclose> pipe{popen(cmd.c_str(), "r")};
     if (!pipe) {
         throw std::system_error(errno, std::generic_category());
     }
@@ -84,7 +84,7 @@ auto os::wait_for_data_on_fd(int filde, int waitms) -> bool
     poll(&fds, 1, waitms);
 
     if ((fds.revents & (POLLERR | POLLNVAL | POLLHUP)) != 0) {
-        throw std::system_error(errno, std::generic_category());
+        throw std::system_error(EIO, std::generic_category());
     }
 
     return (fds.revents & POLLIN) != 0;
@@ -116,14 +116,14 @@ auto os::get_ppid() -> int
 
 void os::daemonize()
 {
-    int pid = fork();
+    const int pid = fork();
     if (pid < 0) {
         std::exit(EXIT_FAILURE); // NOLINT
     }
     if (pid > 0) {
         std::exit(EXIT_SUCCESS); // NOLINT
     }
-    int status = setsid();
+    const int status = setsid();
     if (status < 0) {
         std::exit(EXIT_FAILURE); // NOLINT
     }

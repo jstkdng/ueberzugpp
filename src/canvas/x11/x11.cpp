@@ -218,6 +218,7 @@ void X11Canvas::get_tmux_window_ids(std::unordered_set<xcb_window_t> &windows)
                 continue;
             }
             windows.insert(win->second);
+            break; // prevent multiple windows being created
         }
     }
 }
