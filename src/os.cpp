@@ -81,13 +81,13 @@ auto os::wait_for_data_on_fd(int filde, int waitms) -> bool
     fds.fd = filde;
     fds.events = POLLIN;
 
-    const int res = poll(&fds, 1, waitms);
+    poll(&fds, 1, waitms);
 
-    if (((fds.revents & POLLERR) != 0) || ((fds.revents & POLLNVAL) != 0) || (res == -1 && errno != EINTR)) {
+    if ((fds.revents & (POLLERR | POLLNVAL | POLLHUP)) != 0) {
         throw std::system_error(errno, std::generic_category());
     }
-    // read all remaining data after a POLLHUP
-    return (fds.revents & POLLIN) != 0 || (fds.revents & POLLHUP) != 0;
+
+    return (fds.revents & POLLIN) != 0;
 }
 
 auto os::wait_for_data_on_stdin(int waitms) -> bool

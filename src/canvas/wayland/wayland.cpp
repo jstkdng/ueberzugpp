@@ -15,6 +15,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "wayland.hpp"
+#include "application.hpp"
 #include "image.hpp"
 #include "os.hpp"
 #include "util.hpp"
@@ -146,7 +147,6 @@ void WaylandCanvas::hide()
 WaylandCanvas::~WaylandCanvas()
 {
     windows.clear();
-    stop_flag.store(true);
     if (event_handler.joinable()) {
         event_handler.join();
     }
@@ -193,14 +193,13 @@ void WaylandCanvas::handle_events()
     const int waitms = 100;
     const auto wl_fd = wl_display_get_fd(display);
 
-    while (!stop_flag.load()) {
+    while (!Application::stop_flag_.load()) {
         // prepare to read wayland events
         while (wl_display_prepare_read(display) != 0) {
             wl_display_dispatch_pending(display);
         }
         wl_display_flush(display);
 
-        // poll events
         try {
             const auto in_event = os::wait_for_data_on_fd(wl_fd, waitms);
             if (in_event) {
@@ -210,7 +209,8 @@ void WaylandCanvas::handle_events()
                 wl_display_cancel_read(display);
             }
         } catch (const std::system_error &err) {
-            wl_display_cancel_read(display);
+            Application::stop_flag_.store(true);
+            break;
         }
     }
 }

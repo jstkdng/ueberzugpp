@@ -125,14 +125,17 @@ void X11Canvas::handle_events()
     const int waitms = 100;
     const int connfd = xcb_get_file_descriptor(connection);
 
-    while (true) {
-        const bool status = os::wait_for_data_on_fd(connfd, waitms);
-        if (Application::stop_flag_.load()) {
+    while (!Application::stop_flag_.load()) {
+        try {
+            const bool status = os::wait_for_data_on_fd(connfd, waitms);
+            if (!status) {
+                continue;
+            }
+        } catch (const std::system_error &err) {
+            Application::stop_flag_.store(true);
             break;
         }
-        if (!status) {
-            continue;
-        }
+
         const std::scoped_lock lock{windows_mutex};
         auto event = unique_C_ptr<xcb_generic_event_t>{xcb_poll_for_event(connection)};
         while (event) {
