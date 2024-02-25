@@ -29,8 +29,7 @@
 
 void signal_handler(const int signal)
 {
-    auto &flag = Application::stop_flag;
-    flag.store(true);
+    Application::stop_flag = true;
 
     const auto logger = spdlog::get("main");
     if (!logger) {

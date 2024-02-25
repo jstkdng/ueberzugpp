@@ -23,7 +23,6 @@
 #include "wayland-xdg-shell-client-protocol.h"
 #include "window/waylandwindow.hpp"
 
-#include <atomic>
 #include <memory>
 #include <thread>
 #include <unordered_map>
@@ -65,7 +64,6 @@ class WaylandCanvas : public Canvas
   private:
     struct wl_display *display = nullptr;
     struct wl_registry *registry = nullptr;
-    std::atomic<bool> stop_flag{false};
     std::thread event_handler;
 
     std::shared_ptr<spdlog::logger> logger;

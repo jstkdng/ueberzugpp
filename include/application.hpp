@@ -19,6 +19,7 @@
 
 #include "canvas.hpp"
 #include "flags.hpp"
+#include "os.hpp"
 #include "terminal.hpp"
 #include "util/ptr.hpp"
 
@@ -40,11 +41,11 @@ class Application
     void command_loop();
     void handle_tmux_hook(std::string_view hook);
 
-    static std::atomic<bool> stop_flag; // NOLINT
+    inline static std::atomic<bool> stop_flag = false; // NOLINT
+    inline static const int parent_pid = os::get_ppid();
 
     static void print_version();
     static void print_header();
-    static const pid_t parent_pid;
 
   private:
     std::unique_ptr<Terminal> terminal;

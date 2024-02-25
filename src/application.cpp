@@ -16,7 +16,6 @@
 
 #include "application.hpp"
 #include "image.hpp"
-#include "os.hpp"
 #include "tmux.hpp"
 #include "util.hpp"
 #include "util/socket.hpp"
@@ -34,9 +33,6 @@
 
 using njson = nlohmann::json;
 namespace fs = std::filesystem;
-
-std::atomic<bool> Application::stop_flag{false}; // NOLINT
-const pid_t Application::parent_pid = os::get_ppid();
 
 Application::Application(const char *executable)
 {
@@ -197,19 +193,16 @@ void Application::command_loop()
     if (flags->no_stdin) {
         return;
     }
-    while (true) {
+    while (!stop_flag) {
         try {
             const auto in_event = os::wait_for_data_on_stdin(100);
-            if (stop_flag.load()) {
-                break;
-            }
             if (!in_event) {
                 continue;
             }
             const auto cmd = os::read_data_from_stdin();
             execute(cmd);
         } catch (const std::system_error &err) {
-            stop_flag.store(true);
+            stop_flag = true;
             break;
         }
     }
@@ -222,15 +215,11 @@ void Application::socket_loop()
 
     const int waitms = 100;
     int conn = -1;
-    while (true) {
+    while (!stop_flag) {
         try {
             conn = socket.wait_for_connections(waitms);
         } catch (const std::system_error &err) {
-            stop_flag.store(true);
-            break;
-        }
-
-        if (stop_flag.load()) {
+            stop_flag = true;
             break;
         }
 
@@ -241,7 +230,7 @@ void Application::socket_loop()
         const auto data = socket.read_data_from_connection(conn);
         for (const auto &cmd : data) {
             if (cmd == "EXIT") {
-                stop_flag.store(true);
+                stop_flag = true;
                 return;
             }
             execute(cmd);
