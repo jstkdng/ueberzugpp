@@ -151,6 +151,7 @@ and included in the binary.
 - cli11
 - spdlog
 - fmt
+- range-v3
 
 ## Optional dependencies
 
