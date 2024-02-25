@@ -193,7 +193,7 @@ void WaylandCanvas::handle_events()
     const int waitms = 100;
     const auto wl_fd = wl_display_get_fd(display);
 
-    while (!Application::stop_flag_.load()) {
+    while (true) {
         // prepare to read wayland events
         while (wl_display_prepare_read(display) != 0) {
             wl_display_dispatch_pending(display);
@@ -202,6 +202,9 @@ void WaylandCanvas::handle_events()
 
         try {
             const auto in_event = os::wait_for_data_on_fd(wl_fd, waitms);
+            if (Application::stop_flag_.load()) {
+                break;
+            }
             if (in_event) {
                 wl_display_read_events(display);
                 wl_display_dispatch_pending(display);

@@ -125,9 +125,12 @@ void X11Canvas::handle_events()
     const int waitms = 100;
     const int connfd = xcb_get_file_descriptor(connection);
 
-    while (!Application::stop_flag_.load()) {
+    while (true) {
         try {
             const bool status = os::wait_for_data_on_fd(connfd, waitms);
+            if (Application::stop_flag_.load()) {
+                break;
+            }
             if (!status) {
                 continue;
             }

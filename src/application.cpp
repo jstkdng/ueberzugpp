@@ -199,14 +199,14 @@ void Application::command_loop()
         return;
     }
     while (true) {
-        const auto in_event = os::wait_for_data_on_stdin(100);
-        if (stop_flag_.load()) {
-            break;
-        }
-        if (!in_event) {
-            continue;
-        }
         try {
+            const auto in_event = os::wait_for_data_on_stdin(100);
+            if (stop_flag_.load()) {
+                break;
+            }
+            if (!in_event) {
+                continue;
+            }
             const auto cmd = os::read_data_from_stdin();
             execute(cmd);
         } catch (const std::system_error &err) {
@@ -223,12 +223,18 @@ void Application::socket_loop()
     const int waitms = 100;
 
     while (true) {
-        const int conn = socket.wait_for_connections(waitms);
-        if (stop_flag_.load()) {
+        int conn = -1;
+        try {
+            conn = socket.wait_for_connections(waitms);
+            if (stop_flag_.load()) {
+                break;
+            }
+            if (conn == -1) {
+                continue;
+            }
+        } catch (const std::system_error &err) {
+            stop_flag_.store(true);
             break;
-        }
-        if (conn == -1) {
-            continue;
         }
         const auto data = socket.read_data_from_connection(conn);
         for (const auto &cmd : data) {
