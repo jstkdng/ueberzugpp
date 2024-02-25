@@ -244,8 +244,11 @@ auto util::read_exif_rotation(const char *path) -> std::optional<std::uint16_t>
         return {};
     }
     // orientation is in IFD[0]
-    auto *ifd = data->ifd[0];
+    auto *ifd = data->ifd[EXIF_IFD_0];
     const auto *entry = exif_content_get_entry(ifd, EXIF_TAG_ORIENTATION);
+    if (entry == nullptr) {
+        return {};
+    }
     return entry->data[1];
 }
 
