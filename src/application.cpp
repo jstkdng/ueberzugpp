@@ -219,22 +219,25 @@ void Application::socket_loop()
 {
     UnixSocket socket;
     socket.bind_to_endpoint(util::get_socket_path());
-    const int waitms = 100;
 
+    const int waitms = 100;
+    int conn = -1;
     while (true) {
-        int conn = -1;
         try {
             conn = socket.wait_for_connections(waitms);
-            if (stop_flag.load()) {
-                break;
-            }
-            if (conn == -1) {
-                continue;
-            }
         } catch (const std::system_error &err) {
             stop_flag.store(true);
             break;
         }
+
+        if (stop_flag.load()) {
+            break;
+        }
+
+        if (conn == -1) {
+            continue;
+        }
+
         const auto data = socket.read_data_from_connection(conn);
         for (const auto &cmd : data) {
             if (cmd == "EXIT") {

@@ -48,7 +48,10 @@ Terminal::Terminal()
     logger = spdlog::get("terminal");
     term = os::getenv("TERM").value_or("xterm-256color");
     term_program = os::getenv("TERM_PROGRAM").value_or("");
-    logger->info(R"(TERM="{}", TERM_PROGRAM="{}")", term, term_program);
+    logger->info("TERM = {}", term);
+    if (!term_program.empty()) {
+        logger->info("TERM_PROGRAM = {}", term_program);
+    }
     open_first_pty();
     get_terminal_size();
     set_detected_output();
