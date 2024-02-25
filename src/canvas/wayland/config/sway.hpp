@@ -21,7 +21,7 @@
 #include "util/socket.hpp"
 
 #include <nlohmann/json.hpp>
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 
 enum ipc_message_type { IPC_COMMAND = 0, IPC_GET_WORKSPACES = 1, IPC_GET_OUTPUTS = 3, IPC_GET_TREE = 4 };
 

@@ -16,8 +16,6 @@
 
 #include "wayfire.hpp"
 
-#include <spdlog/spdlog.h>
-
 using njson = nlohmann::json;
 
 WayfireSocket::WayfireSocket(const std::string_view endpoint):

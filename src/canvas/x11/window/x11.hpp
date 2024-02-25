@@ -22,7 +22,7 @@
 #include "window.hpp"
 
 #include <xcb/xcb_image.h>
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 
 class Dimensions;
 

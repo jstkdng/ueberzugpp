@@ -19,7 +19,6 @@
 
 #include <string_view>
 
-#include <spdlog/spdlog.h>
 #include <xcb/xcb.h>
 
 constexpr std::string_view win_name = "ueberzugpp";

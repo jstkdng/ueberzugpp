@@ -21,7 +21,7 @@
 
 #include <filesystem>
 #include <opencv2/core.hpp>
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 #include <string>
 
 namespace fs = std::filesystem;

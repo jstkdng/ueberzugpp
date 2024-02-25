@@ -30,14 +30,13 @@
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/spdlog.h>
 #include <vips/vips8>
 
 using njson = nlohmann::json;
 namespace fs = std::filesystem;
 
-std::atomic<bool> Application::stop_flag_{false}; // NOLINT
-const pid_t Application::parent_pid_ = os::get_ppid();
+std::atomic<bool> Application::stop_flag{false}; // NOLINT
+const pid_t Application::parent_pid = os::get_ppid();
 
 Application::Application(const char *executable)
 {
@@ -47,7 +46,7 @@ Application::Application(const char *executable)
     set_silent();
     terminal = std::make_unique<Terminal>();
     if (flags->no_stdin) {
-        daemonize(flags->pid_file);
+        daemonize();
     }
     canvas = Canvas::create();
     const auto cache_path = util::get_cache_path();
@@ -201,7 +200,7 @@ void Application::command_loop()
     while (true) {
         try {
             const auto in_event = os::wait_for_data_on_stdin(100);
-            if (stop_flag_.load()) {
+            if (stop_flag.load()) {
                 break;
             }
             if (!in_event) {
@@ -210,7 +209,7 @@ void Application::command_loop()
             const auto cmd = os::read_data_from_stdin();
             execute(cmd);
         } catch (const std::system_error &err) {
-            stop_flag_.store(true);
+            stop_flag.store(true);
             break;
         }
     }
@@ -226,20 +225,20 @@ void Application::socket_loop()
         int conn = -1;
         try {
             conn = socket.wait_for_connections(waitms);
-            if (stop_flag_.load()) {
+            if (stop_flag.load()) {
                 break;
             }
             if (conn == -1) {
                 continue;
             }
         } catch (const std::system_error &err) {
-            stop_flag_.store(true);
+            stop_flag.store(true);
             break;
         }
         const auto data = socket.read_data_from_connection(conn);
         for (const auto &cmd : data) {
             if (cmd == "EXIT") {
-                stop_flag_.store(true);
+                stop_flag.store(true);
                 return;
             }
             execute(cmd);
@@ -259,8 +258,9 @@ void Application::print_header()
 | |_| |  __/ |_) |  __/ |   / /| |_| | (_| | |_|   |_|
  \___/ \___|_.__/ \___|_|  /___|\__,_|\__, |
                                        __/ |
-                                      |___/     v{}.{}.{})",
-                                 ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
+                                      |___/     v{}.{}.{}.{})",
+                                 ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH,
+                                 ueberzugpp_VERSION_TWEAK);
     std::ofstream ofs(log_path, std::ios::out | std::ios::app);
     ofs << art << std::endl;
 }
@@ -275,14 +275,14 @@ void Application::set_silent()
 
 void Application::print_version()
 {
-    const auto ver_str = fmt::format("ueberzugpp {}.{}.{}", ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR,
-                                     ueberzugpp_VERSION_PATCH);
+    const auto ver_str = fmt::format("ueberzugpp {}.{}.{}.{}", ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR,
+                                     ueberzugpp_VERSION_PATCH, ueberzugpp_VERSION_TWEAK);
     std::cout << ver_str << std::endl;
 }
 
-void Application::daemonize(const std::string_view pid_file)
+void Application::daemonize()
 {
     os::daemonize();
-    std::ofstream ofs(pid_file.data());
+    std::ofstream ofs(flags->pid_file);
     ofs << os::get_pid() << std::flush;
 }

@@ -20,7 +20,6 @@
 #include "util.hpp"
 
 #include <array>
-#include <spdlog/spdlog.h>
 
 X11EGLWindow::X11EGLWindow(xcb_connection_t *connection, xcb_screen_t *screen, xcb_window_t windowid,
                            xcb_window_t parentid, const EGLUtil<xcb_connection_t, xcb_window_t> *egl,

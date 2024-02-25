@@ -20,8 +20,6 @@
 #include "os.hpp"
 #include "util.hpp"
 
-#include <spdlog/spdlog.h>
-
 #ifdef ENABLE_OPENGL
 #  include "window/waylandegl.hpp"
 #  include <EGL/eglext.h>
@@ -202,7 +200,7 @@ void WaylandCanvas::handle_events()
 
         try {
             const auto in_event = os::wait_for_data_on_fd(wl_fd, waitms);
-            if (Application::stop_flag_.load()) {
+            if (Application::stop_flag.load()) {
                 break;
             }
             if (in_event) {
@@ -212,7 +210,7 @@ void WaylandCanvas::handle_events()
                 wl_display_cancel_read(display);
             }
         } catch (const std::system_error &err) {
-            Application::stop_flag_.store(true);
+            Application::stop_flag.store(true);
             break;
         }
     }

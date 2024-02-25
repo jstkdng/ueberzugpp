@@ -26,7 +26,6 @@
 #ifdef ENABLE_OPENCV
 #  include <opencv2/videoio.hpp>
 #endif
-#include <spdlog/spdlog.h>
 
 using vips::VError;
 using vips::VImage;

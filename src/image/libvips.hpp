@@ -21,7 +21,7 @@
 #include "util/ptr.hpp"
 
 #include <filesystem>
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <vips/vips8>
 

@@ -36,6 +36,7 @@ class StdoutCanvas : public Canvas
     {
         stdout_mutex = std::make_shared<std::mutex>();
         logger = spdlog::get(output);
+        logger->info("Canvas created");
     }
 
     ~StdoutCanvas() override = default;
@@ -45,7 +46,7 @@ class StdoutCanvas : public Canvas
         logger->info("Displaying image with id {}", identifier);
         images.erase(identifier);
         const auto [entry, success] =
-            images.insert({identifier, std::make_unique<T>(std::move(new_image), stdout_mutex)});
+            images.emplace(identifier, std::make_unique<T>(std::move(new_image), stdout_mutex));
         entry->second->draw();
     }
 

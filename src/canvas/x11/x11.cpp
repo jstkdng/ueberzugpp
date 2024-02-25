@@ -24,7 +24,6 @@
 #include <string_view>
 
 #include <range/v3/all.hpp>
-#include <spdlog/spdlog.h>
 
 #ifdef ENABLE_OPENGL
 #  include "window/x11egl.hpp"
@@ -128,14 +127,14 @@ void X11Canvas::handle_events()
     while (true) {
         try {
             const bool status = os::wait_for_data_on_fd(connfd, waitms);
-            if (Application::stop_flag_.load()) {
+            if (Application::stop_flag.load()) {
                 break;
             }
             if (!status) {
                 continue;
             }
         } catch (const std::system_error &err) {
-            Application::stop_flag_.store(true);
+            Application::stop_flag.store(true);
             break;
         }
 

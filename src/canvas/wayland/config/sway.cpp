@@ -27,7 +27,6 @@
 
 #include <fmt/format.h>
 #include <range/v3/all.hpp>
-#include <spdlog/spdlog.h>
 
 using njson = nlohmann::json;
 
@@ -60,7 +59,7 @@ auto SwaySocket::get_window_info() -> struct WaylandWindowGeometry {
 
 auto SwaySocket::get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json
 {
-    const auto pids = tmux::get_client_pids().value_or(std::vector<int>{Application::parent_pid_});
+    const auto pids = tmux::get_client_pids().value_or(std::vector<int>{Application::parent_pid});
 
     for (const auto pid : pids) {
         const auto tree = util::get_process_tree(pid);

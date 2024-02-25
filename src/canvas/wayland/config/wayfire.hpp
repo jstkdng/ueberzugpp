@@ -21,7 +21,7 @@
 #include "util/socket.hpp"
 
 #include <nlohmann/json.hpp>
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 
 class WayfireSocket : public WaylandConfig
 {

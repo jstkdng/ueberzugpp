@@ -28,7 +28,7 @@
 #include <string_view>
 #include <thread>
 
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 
 class Application
 {
@@ -40,13 +40,11 @@ class Application
     void command_loop();
     void handle_tmux_hook(std::string_view hook);
 
-    // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
-    static std::atomic<bool> stop_flag_;
+    static std::atomic<bool> stop_flag; // NOLINT
 
     static void print_version();
     static void print_header();
-    static void daemonize(std::string_view pid_file);
-    static const pid_t parent_pid_;
+    static const pid_t parent_pid;
 
   private:
     std::unique_ptr<Terminal> terminal;
@@ -61,6 +59,7 @@ class Application
     void setup_logger();
     void set_silent();
     void socket_loop();
+    void daemonize();
 };
 
 #endif

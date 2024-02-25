@@ -21,7 +21,7 @@
 #include "util/egl.hpp"
 
 #include <xcb/xcb.h>
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 
 #include <memory>
 #include <mutex>

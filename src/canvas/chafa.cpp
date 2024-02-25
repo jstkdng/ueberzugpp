@@ -40,11 +40,6 @@ Chafa::Chafa(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdou
 {
     const auto envp = c_unique_ptr<gchar *, g_strfreev>{g_get_environ()};
     term_info = chafa_term_db_detect(chafa_term_db_get_default(), envp.get());
-    logger = spdlog::get("chafa");
-    logger->info("Canvas created");
-    logger->warn("This canvas is meant to be used as a last resort. Please"
-                 " use the X11 output or switch to a terminal that has kitty,"
-                 " sixel or iterm2 support.");
 
     const auto dims = image->dimensions();
     x = dims.x + 1;

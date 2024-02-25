@@ -17,3 +17,4 @@
 #define ueberzugpp_VERSION_MAJOR @ueberzugpp_VERSION_MAJOR@
 #define ueberzugpp_VERSION_MINOR @ueberzugpp_VERSION_MINOR@
 #define ueberzugpp_VERSION_PATCH @ueberzugpp_VERSION_PATCH@
+#define ueberzugpp_VERSION_TWEAK @ueberzugpp_VERSION_TWEAK@

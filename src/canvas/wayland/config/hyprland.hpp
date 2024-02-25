@@ -20,7 +20,7 @@
 #include "../config.hpp"
 
 #include <nlohmann/json.hpp>
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 
 class HyprlandSocket : public WaylandConfig
 {

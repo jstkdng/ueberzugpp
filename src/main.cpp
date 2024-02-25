@@ -29,7 +29,7 @@
 
 void signal_handler(const int signal)
 {
-    auto &flag = Application::stop_flag_;
+    auto &flag = Application::stop_flag;
     flag.store(true);
 
     const auto logger = spdlog::get("main");
@@ -38,13 +38,13 @@ void signal_handler(const int signal)
     }
     switch (signal) {
         case SIGINT:
-            logger->error("SIGINT received, exiting.");
+            logger->error("SIGINT received, exiting...");
             break;
         case SIGTERM:
-            logger->error("SIGTERM received, exiting.");
+            logger->error("SIGTERM received, exiting...");
             break;
         default:
-            logger->error("UNKNOWN({}) signal received, exiting.", signal);
+            logger->error("UNKNOWN({}) signal received, exiting...", signal);
             break;
     }
 }

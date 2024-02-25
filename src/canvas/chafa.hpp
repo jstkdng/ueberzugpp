@@ -21,10 +21,8 @@
 #include "window.hpp"
 
 #include <memory>
-#include <mutex>
 
 #include <chafa.h>
-#include <spdlog/fwd.h>
 
 class Chafa : public Window
 {
@@ -43,7 +41,6 @@ class Chafa : public Window
 
     std::unique_ptr<Image> image;
     std::shared_ptr<std::mutex> stdout_mutex;
-    std::shared_ptr<spdlog::logger> logger;
 
     int x;
     int y;

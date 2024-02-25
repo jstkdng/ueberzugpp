@@ -26,7 +26,6 @@
 #include <opencv2/core/ocl.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
-#include <spdlog/spdlog.h>
 
 OpencvImage::OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache)
     : path(filename),

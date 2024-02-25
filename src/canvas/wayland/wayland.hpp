@@ -28,7 +28,7 @@
 #include <thread>
 #include <unordered_map>
 
-#include <spdlog/fwd.h>
+#include <spdlog/spdlog.h>
 #include <wayland-client.h>
 
 #ifdef ENABLE_OPENGL
