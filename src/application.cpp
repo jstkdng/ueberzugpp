@@ -250,9 +250,8 @@ void Application::print_header()
 | |_| |  __/ |_) |  __/ |   / /| |_| | (_| | |_|   |_|
  \___/ \___|_.__/ \___|_|  /___|\__,_|\__, |
                                        __/ |
-                                      |___/     v{}.{}.{}.{})",
-                                 ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH,
-                                 ueberzugpp_VERSION_TWEAK);
+                                      |___/     v{}.{}.{})",
+                                 ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
     std::ofstream ofs(log_path, std::ios::out | std::ios::app);
     ofs << art << std::endl;
 }
@@ -267,8 +266,8 @@ void Application::set_silent()
 
 void Application::print_version()
 {
-    const auto ver_str = fmt::format("ueberzugpp {}.{}.{}.{}", ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR,
-                                     ueberzugpp_VERSION_PATCH, ueberzugpp_VERSION_TWEAK);
+    const auto ver_str = fmt::format("ueberzugpp {}.{}.{}", ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR,
+                                     ueberzugpp_VERSION_PATCH);
     std::cout << ver_str << std::endl;
 }
 
