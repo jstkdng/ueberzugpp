@@ -185,7 +185,7 @@ void OpencvImage::process_image()
 
     if (image.channels() == 4) {
         // premultiply alpha
-        image.forEach<cv::Vec4b>([](cv::Vec4b &pix, [[maybe_unused]] const int *position) {
+        image.forEach<cv::Vec4b>([](cv::Vec4b &pix, const int *) {
             const uint8_t alpha = pix[3];
             const uint8_t div = 255;
             pix[0] = (pix[0] * alpha) / div;
