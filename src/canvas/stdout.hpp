@@ -34,7 +34,6 @@ class StdoutCanvas : public Canvas
   public:
     explicit StdoutCanvas(const std::string &output)
     {
-        stdout_mutex = std::make_shared<std::mutex>();
         logger = spdlog::get(output);
         logger->info("Canvas created");
     }
@@ -46,7 +45,7 @@ class StdoutCanvas : public Canvas
         logger->info("Displaying image with id {}", identifier);
         images.erase(identifier);
         const auto [entry, success] =
-            images.emplace(identifier, std::make_unique<T>(std::move(new_image), stdout_mutex));
+            images.emplace(identifier, std::make_unique<T>(std::move(new_image), &stdout_mutex));
         entry->second->draw();
     }
 
@@ -57,9 +56,9 @@ class StdoutCanvas : public Canvas
     }
 
   private:
-    std::unordered_map<std::string, std::unique_ptr<T>> images;
-    std::shared_ptr<std::mutex> stdout_mutex;
+    std::mutex stdout_mutex;
     std::shared_ptr<spdlog::logger> logger;
+    std::unordered_map<std::string, std::unique_ptr<T>> images;
 };
 
 #endif

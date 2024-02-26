@@ -24,9 +24,9 @@
 
 namespace fs = std::filesystem;
 
-Sixel::Sixel(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex)
+Sixel::Sixel(std::unique_ptr<Image> new_image, std::mutex *stdout_mutex)
     : image(std::move(new_image)),
-      stdout_mutex(std::move(stdout_mutex))
+      stdout_mutex(stdout_mutex)
 {
     const auto dims = image->dimensions();
     x = dims.x + 1;

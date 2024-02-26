@@ -27,7 +27,7 @@
 class Chafa : public Window
 {
   public:
-    Chafa(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex);
+    Chafa(std::unique_ptr<Image> new_image, std::mutex *stdout_mutex);
     ~Chafa() override;
 
     void draw() override;
@@ -40,7 +40,7 @@ class Chafa : public Window
     ChafaCanvas *canvas = nullptr;
 
     std::unique_ptr<Image> image;
-    std::shared_ptr<std::mutex> stdout_mutex;
+    std::mutex *stdout_mutex;
 
     int x;
     int y;

@@ -28,7 +28,7 @@
 class Kitty : public Window
 {
   public:
-    Kitty(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex);
+    Kitty(std::unique_ptr<Image> new_image, std::mutex *stdout_mutex);
     ~Kitty() override;
 
     void draw() override;
@@ -37,7 +37,7 @@ class Kitty : public Window
   private:
     std::string str;
     std::unique_ptr<Image> image;
-    std::shared_ptr<std::mutex> stdout_mutex;
+    std::mutex *stdout_mutex;
     uint32_t id;
     int x;
     int y;

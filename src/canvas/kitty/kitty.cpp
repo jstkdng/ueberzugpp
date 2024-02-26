@@ -28,9 +28,9 @@
 #  include <oneapi/tbb.h>
 #endif
 
-Kitty::Kitty(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex)
+Kitty::Kitty(std::unique_ptr<Image> new_image, std::mutex *stdout_mutex)
     : image(std::move(new_image)),
-      stdout_mutex(std::move(stdout_mutex)),
+      stdout_mutex(stdout_mutex),
       id(util::generate_random_number<uint32_t>(1))
 {
     const auto dims = image->dimensions();

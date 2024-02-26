@@ -32,11 +32,11 @@ void gstring_delete(GString *str)
     g_string_free(str, true);
 }
 
-Chafa::Chafa(std::unique_ptr<Image> new_image, std::shared_ptr<std::mutex> stdout_mutex)
+Chafa::Chafa(std::unique_ptr<Image> new_image, std::mutex *stdout_mutex)
     : symbol_map(chafa_symbol_map_new()),
       config(chafa_canvas_config_new()),
       image(std::move(new_image)),
-      stdout_mutex(std::move(stdout_mutex))
+      stdout_mutex(stdout_mutex)
 {
     const auto envp = c_unique_ptr<gchar *, g_strfreev>{g_get_environ()};
     term_info = chafa_term_db_detect(chafa_term_db_get_default(), envp.get());
