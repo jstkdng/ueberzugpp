@@ -17,6 +17,8 @@
 #ifndef UTIL_EGL_H
 #define UTIL_EGL_H
 
+#include "image.hpp"
+
 #include <functional>
 #include <memory>
 
@@ -25,8 +27,6 @@
 #include <EGL/egl.h>
 #define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
-
-class Image;
 
 template <class T, class V>
 class EGLUtil
@@ -48,7 +48,7 @@ class EGLUtil
     EGLConfig config;
     std::shared_ptr<spdlog::logger> logger;
 
-    [[nodiscard]] auto error_to_string() const -> std::string_view;
+    [[nodiscard]] auto error_to_string() const -> std::string;
 };
 
 #endif
