@@ -3,3 +3,5 @@ build/
 .kdev4/
 .ccls-cache/
 /.vs
+cmake-build-debug/
+.idea
