@@ -5,3 +5,4 @@ build/
 /.vs
 cmake-build-debug/
 .idea
+*.json

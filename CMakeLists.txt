@@ -199,6 +199,7 @@ endif()
 if(ENABLE_DBUS)
   pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
   list(APPEND UEBERZUG_LIBRARIES PkgConfig::DBUS)
+  list(APPEND UEBERZUG_SOURCES "src/util/dbus.cpp")
 endif()
 
 set(PROJECT_WARNINGS_CXX -Wall -Wextra -Wpedantic -Werror)
