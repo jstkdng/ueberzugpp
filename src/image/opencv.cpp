@@ -27,6 +27,16 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
+enum {
+    EXIF_ORIENTATION_2 = 2,
+    EXIF_ORIENTATION_3,
+    EXIF_ORIENTATION_4,
+    EXIF_ORIENTATION_5,
+    EXIF_ORIENTATION_6,
+    EXIF_ORIENTATION_7,
+    EXIF_ORIENTATION_8,
+};
+
 OpencvImage::OpencvImage(std::shared_ptr<Dimensions> new_dims, const std::string &filename, bool in_cache)
     : path(filename),
       dims(std::move(new_dims)),
@@ -97,17 +107,30 @@ void OpencvImage::rotate_image()
         return;
     }
     const auto value = rotation.value();
-    const int upside_down = 3;
-    const int cclockwise90 = 6;
-    const int clockwise90 = 8;
+
+    // kudos https://jdhao.github.io/2019/07/31/image_rotation_exif_info/
     switch (value) {
-        case upside_down:
-            cv::rotate(image, image, cv::ROTATE_180);
+        case EXIF_ORIENTATION_2:
+            cv::flip(image, image, 1);
             break;
-        case cclockwise90:
+        case EXIF_ORIENTATION_3:
+            cv::flip(image, image, -1);
+            break;
+        case EXIF_ORIENTATION_4:
+            cv::flip(image, image, 0);
+            break;
+        case EXIF_ORIENTATION_5:
+            cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
+            cv::flip(image, image, 1);
+            break;
+        case EXIF_ORIENTATION_6:
             cv::rotate(image, image, cv::ROTATE_90_CLOCKWISE);
             break;
-        case clockwise90:
+        case EXIF_ORIENTATION_7:
+            cv::rotate(image, image, cv::ROTATE_90_COUNTERCLOCKWISE);
+            cv::flip(image, image, 1);
+            break;
+        case EXIF_ORIENTATION_8:
             cv::rotate(image, image, cv::ROTATE_90_COUNTERCLOCKWISE);
             break;
         default:
@@ -163,6 +186,7 @@ void OpencvImage::resize_image_helper(cv::InputOutputArray &mat, int new_width, 
         cv::imwrite(save_location, mat);
         logger->debug("Saved resized image");
     } catch (const cv::Exception &ex) {
+        logger->error("Could not save image");
     }
 }
 

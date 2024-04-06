@@ -44,7 +44,7 @@
 #endif
 #include <range/v3/all.hpp>
 
-#include <libexif/exif-data.h>
+#include <vips/vips8>
 
 namespace fs = std::filesystem;
 using njson = nlohmann::json;
@@ -105,6 +105,7 @@ void util::send_socket_message(const std::string_view msg, const std::string_vie
         socket.connect_to_endpoint(endpoint);
         socket.write(msg.data(), msg.size());
     } catch (const std::system_error &err) {
+        return;
     }
 }
 
@@ -231,25 +232,14 @@ auto util::generate_random_string(size_t length) -> std::string
     return result;
 }
 
-/*
-1: Normal (0° rotation)
-3: Upside-down (180° rotation)
-6: Rotated 90° counterclockwise (270° clockwise)
-8: Rotated 90° clockwise (270° counterclockwise)
- */
 auto util::read_exif_rotation(const char *path) -> std::optional<std::uint16_t>
 {
-    const auto data = c_unique_ptr<ExifData, exif_data_free>{exif_data_new_from_file(path)};
-    if (data == nullptr) {
+    auto image = vips::VImage::new_from_file(path);
+    try {
+        return image.get_int("orientation");
+    } catch (const vips::VError &) {
         return {};
     }
-    // orientation is in IFD[0]
-    auto *ifd = data->ifd[EXIF_IFD_0];
-    const auto *entry = exif_content_get_entry(ifd, EXIF_TAG_ORIENTATION);
-    if (entry == nullptr) {
-        return {};
-    }
-    return entry->data[1];
 }
 
 auto util::round_up(int num_to_round, int multiple) -> int

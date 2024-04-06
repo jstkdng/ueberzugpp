@@ -213,7 +213,6 @@ target_compile_definitions(ueberzug PRIVATE $<$<CONFIG:Debug>: DEBUG >)
 pkg_check_modules(VIPS REQUIRED IMPORTED_TARGET vips-cpp)
 pkg_check_modules(SIXEL REQUIRED IMPORTED_TARGET libsixel)
 pkg_check_modules(CHAFA REQUIRED IMPORTED_TARGET chafa>=1.6)
-pkg_check_modules(EXIF REQUIRED IMPORTED_TARGET libexif)
 
 if(CMAKE_HOST_SYSTEM_VERSION MATCHES "^.*microsoft.*$")
   target_compile_definitions(ueberzug PRIVATE WSL)
@@ -263,8 +262,7 @@ list(
   TBB::tbb
   PkgConfig::VIPS
   PkgConfig::SIXEL
-  PkgConfig::CHAFA
-  PkgConfig::EXIF)
+  PkgConfig::CHAFA)
 
 target_include_directories(ueberzug PRIVATE "${CMAKE_SOURCE_DIR}/include"
                                             "${PROJECT_BINARY_DIR}")
