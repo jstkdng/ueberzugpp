@@ -19,26 +19,24 @@
 
 #include <array>
 #include <cstdlib>
-#include <memory>
 #include <system_error>
 
 #include <cerrno>
 #include <cstdio>
-#include <cstring>
 #include <poll.h>
 #include <unistd.h>
 
 auto os::exec(const std::string &cmd) -> std::string
 {
     const int bufsize = 128;
-    std::array<char, bufsize> buffer;
+    std::array<char, bufsize> buffer{};
     std::string result;
-    const c_unique_ptr<FILE, pclose> pipe{popen(cmd.c_str(), "r")};
+    const c_unique_ptr<FILE, &pclose> pipe{popen(cmd.c_str(), "r")};
     if (!pipe) {
         throw std::system_error(errno, std::generic_category());
     }
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
+        result.append(buffer.data());
     }
     if (!result.empty()) {
         result.erase(result.length() - 1);
@@ -48,21 +46,19 @@ auto os::exec(const std::string &cmd) -> std::string
 
 auto os::read_data_from_fd(int filde, char sep) -> std::string
 {
+    using std::errc;
     std::string response;
     char readch = 0;
 
     while (true) {
         const auto status = read(filde, &readch, 1);
         if (status == -1) {
-            throw std::system_error(errno, std::generic_category());
+            throw std::system_error(errno, std::system_category());
         }
-        if (status == 0) {
+        if (status == 0 || readch == sep) {
             if (response.empty()) {
-                throw std::system_error(EIO, std::generic_category());
+                throw std::system_error(EIO, std::system_category());
             }
-            break;
-        }
-        if (readch == sep) {
             break;
         }
         response.push_back(readch);

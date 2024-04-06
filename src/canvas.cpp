@@ -26,7 +26,6 @@
 #  include "canvas/wayland/wayland.hpp"
 #endif
 #include "flags.hpp"
-#include "os.hpp"
 
 auto Canvas::create() -> std::unique_ptr<Canvas>
 {

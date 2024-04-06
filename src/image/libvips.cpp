@@ -53,6 +53,7 @@ LibvipsImage::LibvipsImage(std::shared_ptr<Dimensions> new_dims, const std::stri
         orig_height = backup.height() / npages;
         image = backup.crop(0, 0, backup.width(), orig_height);
     } catch (const VError &err) {
+        logger->debug("Failed to process image animation");
     }
 
     if (!is_anim) {
@@ -172,6 +173,7 @@ auto LibvipsImage::resize_image() -> void
         image.write_to_file(save_location.c_str());
         logger->debug("Saved resized image");
     } catch (const VError &err) {
+        logger->debug("Could not save resized image");
     }
 }
 

@@ -27,16 +27,16 @@
 #include "window/waylandshm.hpp"
 
 constexpr struct wl_registry_listener registry_listener = {.global = WaylandCanvas::registry_handle_global,
-                                                           .global_remove = [](auto...) {}};
+                                                           .global_remove = [](auto...) { /*unused*/ }};
 
 constexpr struct xdg_wm_base_listener xdg_wm_base_listener = {.ping = WaylandCanvas::xdg_wm_base_ping};
 
-constexpr struct wl_output_listener wl_output_listener = {.geometry = [](auto...) {},
-                                                          .mode = [](auto...) {},
+constexpr struct wl_output_listener wl_output_listener = {.geometry = [](auto...) { /*unused*/ },
+                                                          .mode = [](auto...) { /*unused*/ },
                                                           .done = WaylandCanvas::output_done,
                                                           .scale = WaylandCanvas::output_scale,
                                                           .name = WaylandCanvas::output_name,
-                                                          .description = [](auto...) {}};
+                                                          .description = [](auto...) { /*unused*/ }};
 
 void WaylandCanvas::registry_handle_global(void *data, wl_registry *registry, uint32_t name, const char *interface,
                                            [[maybe_unused]] uint32_t version)
@@ -117,7 +117,7 @@ WaylandCanvas::WaylandCanvas()
     if (flags->use_opengl) {
         try {
             egl = std::make_unique<EGLUtil<struct wl_display, struct wl_egl_window>>(EGL_PLATFORM_WAYLAND_EXT, display);
-        } catch (const std::runtime_error &err) {
+        } catch (const std::runtime_error &) {
             egl_available = false;
         }
     } else {
@@ -188,7 +188,6 @@ void WaylandCanvas::add_image(const std::string &identifier, std::unique_ptr<Ima
 
 void WaylandCanvas::handle_events()
 {
-    const int waitms = 100;
     const auto wl_fd = wl_display_get_fd(display);
     bool in_event = false;
 
@@ -200,6 +199,7 @@ void WaylandCanvas::handle_events()
         wl_display_flush(display);
 
         try {
+            constexpr int waitms = 100;
             in_event = os::wait_for_data_on_fd(wl_fd, waitms);
         } catch (const std::system_error &err) {
             Application::stop_flag = true;

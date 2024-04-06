@@ -47,7 +47,7 @@ class Image
     virtual auto next_frame() -> void {}
 
   protected:
-    [[nodiscard]] auto get_new_sizes(double max_width, double max_height, const std::string &scaler,
+    [[nodiscard]] auto get_new_sizes(double max_width, double max_height, std::string_view scaler,
                                      int scale_factor = 0) const -> std::pair<int, int>;
 };
 

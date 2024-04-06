@@ -21,14 +21,12 @@
 #include "dimensions.hpp"
 #include "flags.hpp"
 #include "image/libvips.hpp"
-#include "os.hpp"
 #include "util.hpp"
 
 #ifdef ENABLE_OPENCV
 #  include <opencv2/imgcodecs.hpp>
 #endif
 #include <spdlog/spdlog.h>
-#include <unordered_set>
 #include <vips/vips.h>
 
 namespace fs = std::filesystem;
@@ -36,7 +34,7 @@ using njson = nlohmann::json;
 
 auto Image::load(const njson &command, const Terminal *terminal) -> std::unique_ptr<Image>
 {
-    const std::string &filename = command.at("path");
+    const fs::path &filename = command.at("path");
     if (!fs::exists(filename)) {
         return nullptr;
     }
@@ -45,7 +43,7 @@ auto Image::load(const njson &command, const Terminal *terminal) -> std::unique_
     std::shared_ptr<Dimensions> dimensions;
     try {
         dimensions = get_dimensions(command, terminal);
-    } catch (const std::exception &except) {
+    } catch (const std::exception &) {
         logger->error("Could not parse dimensions from command");
         return nullptr;
     }
@@ -60,7 +58,8 @@ auto Image::load(const njson &command, const Terminal *terminal) -> std::unique_
     if (cv::haveImageReader(image_path) && !flags->no_opencv) {
         try {
             return std::make_unique<OpencvImage>(dimensions, image_path, in_cache);
-        } catch (const std::runtime_error &ex) {
+        } catch (const std::runtime_error &) {
+            return nullptr;
         }
     }
 #endif
@@ -68,7 +67,8 @@ auto Image::load(const njson &command, const Terminal *terminal) -> std::unique_
     if (vips_loader != nullptr) {
         try {
             return std::make_unique<LibvipsImage>(dimensions, image_path, in_cache);
-        } catch (const vips::VError &err) {
+        } catch (const vips::VError &) {
+            return nullptr;
         }
     }
     return nullptr;
@@ -84,7 +84,7 @@ auto Image::check_cache(const Dimensions &dimensions, const fs::path &orig_path)
     vips::VImage cache_img;
     try {
         cache_img = vips::VImage::new_from_file(cache_path.c_str());
-    } catch (const vips::VError &err) {
+    } catch (const vips::VError &) {
         return orig_path;
     }
     const uint32_t img_width = cache_img.width();
@@ -100,7 +100,7 @@ auto Image::check_cache(const Dimensions &dimensions, const fs::path &orig_path)
     return orig_path;
 }
 
-auto Image::get_new_sizes(double max_width, double max_height, const std::string &scaler, int scale_factor) const
+auto Image::get_new_sizes(double max_width, double max_height, std::string_view scaler, int scale_factor) const
     -> std::pair<int, int>
 {
     int img_width = width();

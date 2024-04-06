@@ -25,6 +25,7 @@
 #include <termios.h>
 
 #include "flags.hpp"
+#include "os.hpp"
 
 class Terminal
 {
@@ -38,7 +39,7 @@ class Terminal
     uint16_t padding_vertical;
     uint16_t rows;
     uint16_t cols;
-    int pid;
+    int pid = os::get_pid();
     int terminal_pid;
     unsigned int x11_wid;
     std::string term;
@@ -48,11 +49,11 @@ class Terminal
   private:
     auto get_terminal_size() -> void;
     static auto guess_padding(uint16_t chars, double pixels) -> double;
-    static auto guess_font_size(uint16_t chars, double pixels, double padding) -> double;
+    static auto guess_font_size(uint16_t chars, float pixels, float padding) -> float;
     static auto read_raw_str(std::string_view esc) -> std::string;
 
     void init_termios();
-    void reset_termios();
+    void reset_termios() const;
 
     void check_sixel_support();
     void check_kitty_support();

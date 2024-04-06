@@ -42,7 +42,7 @@ Sixel::Sixel(std::unique_ptr<Image> new_image, std::mutex *stdout_mutex)
     sixel_output_new(&output, draw_callback, &str, nullptr);
 
     const auto file_size = fs::file_size(image->filename());
-    const auto reserve_ratio = 50;
+    constexpr auto reserve_ratio = 50;
     str.reserve(file_size * reserve_ratio);
 
     // create dither and palette from image

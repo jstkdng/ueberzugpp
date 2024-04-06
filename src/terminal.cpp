@@ -27,10 +27,8 @@
 #  include "canvas/wayland/config.hpp"
 #endif
 
-#include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <sstream>
 #include <unordered_set>
 
 #include <fcntl.h>
@@ -41,8 +39,7 @@
 #include <unistd.h>
 
 Terminal::Terminal()
-    : pid(os::get_pid()),
-      terminal_pid(pid)
+    : terminal_pid(pid)
 {
     flags = Flags::instance();
     logger = spdlog::get("terminal");
@@ -104,12 +101,14 @@ void Terminal::get_terminal_size()
 
     padding_horizontal = static_cast<uint16_t>(std::max(padding_horiz, padding_vert));
     padding_vertical = padding_horizontal;
-    font_width = std::floor(guess_font_size(cols, xpixel, padding_horizontal));
-    font_height = std::floor(guess_font_size(rows, ypixel, padding_vertical));
+    font_width = static_cast<uint16_t>(
+        std::floor(guess_font_size(cols, static_cast<float>(xpixel), static_cast<float>(padding_horizontal))));
+    font_height = static_cast<uint16_t>(
+        std::floor(guess_font_size(rows, static_cast<float>(ypixel), static_cast<float>(padding_vertical))));
 
     if (xpixel < fallback_xpixel && ypixel < fallback_ypixel) {
-        padding_horizontal = (fallback_xpixel - xpixel) / 2;
-        padding_vertical = (fallback_ypixel - ypixel) / 2;
+        padding_horizontal = static_cast<uint16_t>((fallback_xpixel - xpixel) / 2);
+        padding_vertical = static_cast<uint16_t>((fallback_ypixel - ypixel) / 2);
         font_width = static_cast<uint16_t>(xpixel / cols);
         font_height = static_cast<uint16_t>(ypixel / rows);
     }
@@ -149,9 +148,9 @@ auto Terminal::guess_padding(uint16_t chars, double pixels) -> double
     return (pixels - font_size * chars) / 2;
 }
 
-auto Terminal::guess_font_size(uint16_t chars, double pixels, double padding) -> double
+auto Terminal::guess_font_size(uint16_t chars, float pixels, float padding) -> float
 {
-    return (pixels - 2 * padding) / chars;
+    return (pixels - 2 * padding) / static_cast<float>(chars);
 }
 
 void Terminal::get_terminal_size_escape_code()
@@ -164,10 +163,10 @@ void Terminal::get_terminal_size_escape_code()
     try {
         ypixel = std::stoi(sizes[0]);
         xpixel = std::stoi(sizes[1]);
-    } catch (const std::invalid_argument &iarg) {
+    } catch (const std::invalid_argument &) {
         logger->debug("Got unexpected values in get_terminal_size_escape_code");
     }
-    // some old vte terminals respond to this values in a different order
+    // some old vte terminals respond to these values in a different order
     // assume everything older than 7000 is broken
     const auto vte_ver_str = os::getenv("VTE_VERSION").value_or("");
     if (!vte_ver_str.empty()) {
@@ -193,7 +192,7 @@ void Terminal::get_terminal_size_xtsm()
     try {
         ypixel = std::stoi(sizes[3]);
         xpixel = std::stoi(sizes[2]);
-    } catch (const std::invalid_argument &iarg) {
+    } catch (const std::invalid_argument &) {
         logger->debug("Got unexpected values in get_terminal_size_xtsm");
     }
     logger->debug("XTSM sizes XPIXEL={} YPIXEL={}", xpixel, ypixel);
@@ -245,7 +244,7 @@ auto Terminal::read_raw_str(const std::string_view esc) -> std::string
             return "";
         }
         return os::read_data_from_stdin(esc.back());
-    } catch (const std::system_error &err) {
+    } catch (const std::system_error &) {
         return "";
     }
 }
@@ -259,7 +258,7 @@ void Terminal::init_termios()
     tcsetattr(0, TCSANOW, &new_term); /* use these new terminal i/o settings now */
 }
 
-void Terminal::reset_termios()
+void Terminal::reset_termios() const
 {
     tcsetattr(0, TCSANOW, &old_term);
 }
@@ -296,8 +295,8 @@ void Terminal::get_fallback_wayland_terminal_sizes()
         return;
     }
     const auto window = config->get_window_info();
-    fallback_xpixel = window.width;
-    fallback_ypixel = window.height;
+    fallback_xpixel = static_cast<uint16_t>(window.width);
+    fallback_ypixel = static_cast<uint16_t>(window.height);
 #endif
 }
 
