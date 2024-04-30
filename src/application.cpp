@@ -184,7 +184,7 @@ void Application::setup_logger()
 
         logger = spdlog::get("main");
     } catch (const spdlog::spdlog_ex &ex) {
-        std::cout << "Log init failed: " << ex.what() << std::endl;
+        std::cout << "Log init failed: " << ex.what() << '\n';
     }
 }
 
@@ -253,7 +253,7 @@ void Application::print_header()
                                       |___/     v{}.{}.{})",
                                  ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR, ueberzugpp_VERSION_PATCH);
     std::ofstream ofs(log_path, std::ios::out | std::ios::app);
-    ofs << art << std::endl;
+    ofs << art << '\n' << std::flush;
 }
 
 void Application::set_silent()
@@ -268,7 +268,7 @@ void Application::print_version()
 {
     const auto ver_str = fmt::format("ueberzugpp {}.{}.{}", ueberzugpp_VERSION_MAJOR, ueberzugpp_VERSION_MINOR,
                                      ueberzugpp_VERSION_PATCH);
-    std::cout << ver_str << std::endl;
+    std::cout << ver_str << '\n';
 }
 
 void Application::daemonize()
