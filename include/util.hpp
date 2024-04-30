@@ -20,7 +20,6 @@
 #include <filesystem>
 #include <functional>
 #include <limits>
-#include <memory>
 #include <optional>
 #include <random>
 #include <string>
@@ -53,7 +52,7 @@ void clear_terminal_area(int xcoord, int ycoord, int width, int height);
 auto generate_random_string(std::size_t length) -> std::string;
 auto round_up(int num_to_round, int multiple) -> int;
 
-auto read_exif_rotation(const char *path) -> std::optional<std::uint16_t>;
+auto read_exif_rotation(const std::filesystem::path &path) -> std::optional<std::uint16_t>;
 template <typename T>
 auto generate_random_number(T min, T max = std::numeric_limits<T>::max()) -> T
 {

@@ -102,7 +102,7 @@ void OpencvImage::wayland_processing()
 
 void OpencvImage::rotate_image()
 {
-    const auto rotation = util::read_exif_rotation(path.c_str());
+    const auto rotation = util::read_exif_rotation(path);
     if (!rotation.has_value()) {
         return;
     }
