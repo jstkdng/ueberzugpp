@@ -17,8 +17,8 @@
 #ifndef WAYLAND_CONFIG_H
 #define WAYLAND_CONFIG_H
 
-#include <cstdint>
 #include <memory>
+#include <string>
 #include <string_view>
 
 struct WaylandWindowGeometry {
