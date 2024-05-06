@@ -87,7 +87,7 @@ if(NOT spdlog_FOUND)
   set(SPDLOG_FMT_EXTERNAL ON)
   FetchContent_Declare(
     spdlog
-    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.14.1.tar.gz)
+    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.14.0.tar.gz)
   list(APPEND FC_LIBS spdlog)
 endif()
 
