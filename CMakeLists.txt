@@ -62,7 +62,7 @@ if(NOT CLI11_FOUND)
   else()
     FetchContent_Declare(
       cli11
-      URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.4.1.tar.gz)
+      URL https://github.com/CLIUtils/CLI11/archive/refs/tags/v2.4.2.tar.gz)
     list(APPEND FC_LIBS cli11)
   endif()
 endif()
@@ -87,7 +87,7 @@ if(NOT spdlog_FOUND)
   set(SPDLOG_FMT_EXTERNAL ON)
   FetchContent_Declare(
     spdlog
-    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.13.0.tar.gz)
+    URL https://github.com/gabime/spdlog/archive/refs/tags/v1.14.1.tar.gz)
   list(APPEND FC_LIBS spdlog)
 endif()
 
