@@ -29,8 +29,14 @@ using njson = nlohmann::json;
 
 HyprlandSocket::HyprlandSocket(const std::string_view signature)
     : logger(spdlog::get("wayland")),
-      socket_path(fmt::format("/tmp/hypr/{}/.socket.sock", signature))
+      socket_path()
 {
+    std::string xdg_runtime_dir = std::getenv("XDG_RUNTIME_DIR");
+    if (!xdg_runtime_dir.empty()) {
+        socket_path = fmt::format("{}/hypr/{}/.socket.sock", xdg_runtime_dir, signature);
+    } else {
+        socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", signature);
+    }
     logger->info("Using hyprland socket {}", socket_path);
     const auto active = request_result("j/activewindow");
     address = active.at("address");
