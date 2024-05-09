@@ -20,6 +20,7 @@
 #include "util/socket.hpp"
 
 #include <algorithm>
+#include <filesystem>
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
@@ -32,9 +33,11 @@ HyprlandSocket::HyprlandSocket(const std::string_view signature)
       socket_path()
 {
     std::string xdg_runtime_dir = std::getenv("XDG_RUNTIME_DIR");
-    if (!xdg_runtime_dir.empty()) {
-        socket_path = fmt::format("{}/hypr/{}/.socket.sock", xdg_runtime_dir, signature);
-    } else {
+    std::string hypr_rtdir = fmt::format("{}/hypr", xdg_runtime_dir);
+    if (!xdg_runtime_dir.empty() && std::filesystem::exists(hypr_rtdir)) {
+            socket_path = fmt::format("{}/{}/.socket.sock", hypr_rtdir, signature);
+    }
+    else {
         socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", signature);
     }
     logger->info("Using hyprland socket {}", socket_path);
