@@ -30,15 +30,23 @@ using njson = nlohmann::json;
 
 HyprlandSocket::HyprlandSocket(const std::string_view signature)
     : logger(spdlog::get("wayland")),
-      socket_path()
+      socket_path(fmt::format("/tmp/hypr/{}/.socket.sock", signature)) // Default
 {
-    std::string xdg_runtime_dir = std::getenv("XDG_RUNTIME_DIR");
+    // If env set & hypr dir exists -> Use $XDG_RUNTIME_DIR/hypr
+    auto XRD_var = os::getenv("XDG_RUNTIME_DIR");
+    std::string xdg_runtime_dir = XRD_var.value();
     std::string hypr_rtdir = fmt::format("{}/hypr", xdg_runtime_dir);
-    if (!xdg_runtime_dir.empty() && std::filesystem::exists(hypr_rtdir)) {
-            socket_path = fmt::format("{}/{}/.socket.sock", hypr_rtdir, signature);
+    if (XRD_var.has_value() && std::filesystem::exists(hypr_rtdir)) {
+        socket_path = fmt::format("{}/{}/.socket.sock", hypr_rtdir, signature);
     }
+    // If !env set -> Look for hardcoded dir: /run/user/$UID/hypr
     else {
-        socket_path = fmt::format("/tmp/hypr/{}/.socket.sock", signature);
+        // Get current user ID from OS (POSIX only?)
+        uid_t uid = getuid();
+        hypr_rtdir = fmt::format("/run/user/{}/hypr", uid);
+        if (std::filesystem::exists(hypr_rtdir)) {
+            socket_path = fmt::format("{}/{}/.socket.sock", hypr_rtdir, signature);
+        }
     }
     logger->info("Using hyprland socket {}", socket_path);
     const auto active = request_result("j/activewindow");
