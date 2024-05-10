@@ -20,7 +20,6 @@
 #include "util/socket.hpp"
 
 #include <algorithm>
-#include <filesystem>
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
