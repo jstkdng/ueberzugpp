@@ -19,18 +19,25 @@
 #include "tmux.hpp"
 #include "util/socket.hpp"
 
-#include <algorithm>
-
+#include <filesystem>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <range/v3/all.hpp>
 
 using njson = nlohmann::json;
+namespace fs = std::filesystem;
 
 HyprlandSocket::HyprlandSocket(const std::string_view signature)
-    : logger(spdlog::get("wayland")),
-      socket_path(fmt::format("/tmp/hypr/{}/.socket.sock", signature))
+    : logger(spdlog::get("wayland"))
 {
+    const auto socket_base_dir = os::getenv("XDG_RUNTIME_DIR").value_or("/tmp");
+    const auto socket_rel_path = fmt::format("hypr/{}/.socket.sock", signature);
+    socket_path = fmt::format("{}/{}", socket_base_dir, socket_rel_path);
+    // XDG_RUNTIME_DIR set but hyprland < 0.40
+    if (!fs::exists(socket_path)) {
+        socket_path = fmt::format("/tmp/{}", socket_rel_path);
+    }
+
     logger->info("Using hyprland socket {}", socket_path);
     const auto active = request_result("j/activewindow");
     address = active.at("address");
