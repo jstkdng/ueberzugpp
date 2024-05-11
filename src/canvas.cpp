@@ -26,6 +26,7 @@
 #  include "canvas/wayland/wayland.hpp"
 #endif
 #include "flags.hpp"
+#include <fmt/format.h>
 
 auto Canvas::create() -> std::unique_ptr<Canvas>
 {
@@ -56,6 +57,8 @@ auto Canvas::create() -> std::unique_ptr<Canvas>
     if (flags->output == "sixel") {
         return std::make_unique<StdoutCanvas<Sixel>>(flags->output);
     }
-    flags->output = "chafa";
-    return std::make_unique<StdoutCanvas<Chafa>>(flags->output);
+    if (flags->output == "chafa") {
+        return std::make_unique<StdoutCanvas<Chafa>>(flags->output);
+    }
+    throw std::runtime_error(fmt::format("output backend not supported (backend is {})", flags->output));
 }

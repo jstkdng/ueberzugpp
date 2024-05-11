@@ -136,9 +136,10 @@ void Terminal::set_detected_output()
     }
     if (flags->output.empty()) {
         if (detected_output.empty()) {
-            throw std::runtime_error("Could not detect output backend");
+            flags->output = "chafa";
+        } else {
+            flags->output = detected_output;
         }
-        flags->output = detected_output;
     }
 }
 
