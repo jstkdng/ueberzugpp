@@ -312,13 +312,18 @@ void Terminal::open_first_pty()
         ranges::reverse(tree);
         for (const auto &proc : tree) {
             const int stat_res = stat(proc.pty_path.c_str(), &stat_info);
-            if (stat_res != 0) {
+            if (stat_res == -1) {
                 const auto err = std::error_code(errno, std::generic_category());
                 logger->debug("stat failed ({}) for pty {}, pid {}, ignoring", err.message(), proc.pty_path, proc.pid);
                 continue;
             }
             if (proc.tty_nr == static_cast<int>(stat_info.st_rdev)) {
                 pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NOCTTY);
+                if (pty_fd == -1) {
+                    const auto err = std::error_code(errno, std::generic_category());
+                    logger->debug("could not open pty {}, {}", proc.pty_path, err.message());
+                    continue;
+                }
                 terminal_pid = proc.pid;
                 logger->info("PTY = {}", proc.pty_path);
                 return;
