@@ -20,7 +20,6 @@
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
-#include <memory>
 #include <system_error>
 
 #include <sys/socket.h>

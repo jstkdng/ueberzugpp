@@ -36,6 +36,7 @@
 #include <spdlog/spdlog.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
+#include <system_error>
 #include <unistd.h>
 
 Terminal::Terminal()
@@ -310,7 +311,12 @@ void Terminal::open_first_pty()
         auto tree = util::get_process_tree_v2(spid);
         ranges::reverse(tree);
         for (const auto &proc : tree) {
-            stat(proc.pty_path.c_str(), &stat_info);
+            const int stat_res = stat(proc.pty_path.c_str(), &stat_info);
+            if (stat_res != 0) {
+                const auto err = std::error_code(errno, std::generic_category());
+                logger->debug("stat failed ({}) for pty {}, pid {}, ignoring", err.message(), proc.pty_path, proc.pid);
+                continue;
+            }
             if (proc.tty_nr == static_cast<int>(stat_info.st_rdev)) {
                 pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NOCTTY);
                 terminal_pid = proc.pid;
