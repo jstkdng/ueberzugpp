@@ -321,7 +321,7 @@ void Terminal::open_first_pty()
                 pty_fd = open(proc.pty_path.c_str(), O_RDONLY | O_NOCTTY);
                 if (pty_fd == -1) {
                     const auto err = std::error_code(errno, std::generic_category());
-                    logger->debug("could not open pty {}, {}", proc.pty_path, err.message());
+                    logger->debug("could not open pty {}, {}, ignoring", proc.pty_path, err.message());
                     continue;
                 }
                 terminal_pid = proc.pid;
