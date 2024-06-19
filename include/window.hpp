@@ -17,20 +17,19 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <concepts>
-#include <memory>
+#include <type_traits>
 
 class Window
 {
-public:
+  public:
     virtual ~Window() = default;
     virtual void draw() = 0;
     virtual void generate_frame() = 0;
-    virtual void show() {};
-    virtual void hide() {};
+    virtual void show(){};
+    virtual void hide(){};
 };
 
-template<class T>
-concept WindowType = std::is_base_of<Window, T>::value;
+template <class T>
+concept WindowType = std::is_base_of_v<Window, T>;
 
 #endif
