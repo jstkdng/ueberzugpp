@@ -10,10 +10,6 @@
 
 FIFO="/tmp/fzf_preview_fifo"
 [ -p "$FIFO" ] || mkfifo "$FIFO"
-x=10
-y=5
-width=$(($(tput lines) / 2))
-height=$(($(tput lines) / 2))
 
 start_ueberzugpp() {
     ueberzugpp layer --silent <"$FIFO" &
@@ -26,7 +22,10 @@ cleanup() {
 trap cleanup HUP INT QUIT TERM EXIT
 
 preview_image() {
-    echo '{"path": "'"$1"'", "action": "add", "identifier": "fzfpreview", "x": "'"$x"'", "y": "'"$y"'", "width": "'"$width"'", "height": "'"$height"'"}' >"$FIFO"
+    echo '{"path": "'"$1"'", "action": "add", ''"identifier": "fzfpreview", '\
+        '"x": "'"$FZF_PREVIEW_LEFT"'", "y": "'"$FZF_PREVIEW_TOP"'", '\
+        '"width": "'"$FZF_PREVIEW_COLUMNS"'", "height": "'"$FZF_PREVIEW_LINES"'"}' \
+        >"$FIFO"
 }
 
 case "$1" in
