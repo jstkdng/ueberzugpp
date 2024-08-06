@@ -21,9 +21,13 @@
 #include <array>
 #include <fmt/format.h>
 #include <string>
+#include <utility>
 
-constexpr auto hooks = std::to_array<std::string_view>(
-    {"client-session-changed", "session-window-changed", "client-detached", "window-layout-changed"});
+constexpr auto session_hooks = std::to_array<std::string_view>(
+    {"session-window-changed", "client-detached", "window-layout-changed"});
+
+constexpr auto global_hooks = std::to_array<std::string_view>(
+    {"client-session-changed"});
 
 auto tmux::get_session_id() -> std::string
 {
@@ -38,8 +42,8 @@ auto tmux::is_used() -> bool
 
 auto tmux::is_window_focused() -> bool
 {
-    const auto cmd = fmt::format("tmux display -p -F '#{{window_active}},#{{pane_in_mode}}' -t {}", tmux::get_pane());
-    return os::exec(cmd) == "1,0";
+    const auto cmd = fmt::format("tmux display -p -F '#{{session_attached}},#{{window_active}},#{{pane_in_mode}}' -t {}", tmux::get_pane());
+    return os::exec(cmd) == "1,1,0";
 }
 
 auto tmux::get_pane() -> std::string
@@ -112,9 +116,12 @@ void tmux::register_hooks()
     if (!tmux::is_used()) {
         return;
     }
-    for (const auto &hook : hooks) {
-        const auto cmd = fmt::format(R"(tmux set-hook -t {0} {1} "run-shell 'ueberzugpp tmux {1} {2}'")",
-                                     tmux::get_pane(), hook, os::get_pid());
+    for (const auto &hook : session_hooks) {
+        std::string cmd = fmt::format(R"(tmux set-hook -t {0} {1} "run-shell 'ueberzugpp tmux {1} {2}'")", tmux::get_pane(), hook, os::get_pid());
+        os::exec(cmd);
+    }
+    for (const auto &hook : global_hooks) {
+        std::string cmd = fmt::format(R"(tmux set-hook -g {0} "run-shell 'ueberzugpp tmux {0} {1}'")", hook, os::get_pid());
         os::exec(cmd);
     }
 }
@@ -124,8 +131,12 @@ void tmux::unregister_hooks()
     if (!tmux::is_used()) {
         return;
     }
-    for (const auto &hook : hooks) {
+    for (const auto &hook : session_hooks) {
         const auto cmd = fmt::format("tmux set-hook -u -t {} {}", tmux::get_pane(), hook);
+        os::exec(cmd);
+    }
+    for (const auto &hook : global_hooks) {
+        const auto cmd = fmt::format("tmux set-hook -gu {}", hook);
         os::exec(cmd);
     }
 }
