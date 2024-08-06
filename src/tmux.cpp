@@ -21,7 +21,6 @@
 #include <array>
 #include <fmt/format.h>
 #include <string>
-#include <utility>
 
 constexpr auto session_hooks = std::to_array<std::string_view>(
     {"session-window-changed", "client-detached", "window-layout-changed"});
