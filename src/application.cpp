@@ -124,6 +124,8 @@ void Application::handle_tmux_hook(const std::string_view hook)
          [this] {
              if (tmux::is_window_focused()) {
                  canvas->show();
+             } else {
+                 canvas->hide();
              }
          }},
         {"session-window-changed",
