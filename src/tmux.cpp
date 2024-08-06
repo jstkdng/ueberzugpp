@@ -45,6 +45,12 @@ auto tmux::is_window_focused() -> bool
     return os::exec(cmd) == "1,1,0";
 }
 
+auto tmux::is_session_attached() -> bool
+{
+    const auto cmd = fmt::format("tmux display -p -F '#{{session_attached}}' -t {}", tmux::get_pane());
+    return os::exec(cmd) == "1";
+}
+
 auto tmux::get_pane() -> std::string
 {
     return os::getenv("TMUX_PANE").value_or("");
@@ -52,15 +58,21 @@ auto tmux::get_pane() -> std::string
 
 auto tmux::get_client_pids() -> std::optional<std::vector<int>>
 {
+
     if (!tmux::is_used()) {
-        return {};
-    }
-    if (!tmux::is_window_focused()) {
         return {};
     }
 
     std::vector<int> pids;
-    const auto cmd = fmt::format("tmux list-clients -F '#{{client_pid}}' -t {}", tmux::get_pane());
+    std::string cmd; 
+
+    if (is_session_attached()) {
+        cmd = fmt::format("tmux list-clients -F '#{{client_pid}}' -t {}", tmux::get_pane());
+    } else {
+       cmd = fmt::format("tmux list-clients -F '#{{client_pid}}'");
+    }
+
+    // const auto cmd = fmt::format("tmux list-clients -F '#{{client_pid}}'");
     const auto output = os::exec(cmd);
 
     for (const auto &line : util::str_split(output, "\n")) {
