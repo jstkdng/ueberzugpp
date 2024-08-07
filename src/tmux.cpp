@@ -58,7 +58,6 @@ auto tmux::get_pane() -> std::string
 
 auto tmux::get_client_pids() -> std::optional<std::vector<int>>
 {
-
     if (!tmux::is_used()) {
         return {};
     }
@@ -72,7 +71,6 @@ auto tmux::get_client_pids() -> std::optional<std::vector<int>>
        cmd = fmt::format("tmux list-clients -F '#{{client_pid}}'");
     }
 
-    // const auto cmd = fmt::format("tmux list-clients -F '#{{client_pid}}'");
     const auto output = os::exec(cmd);
 
     for (const auto &line : util::str_split(output, "\n")) {
