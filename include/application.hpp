@@ -61,6 +61,7 @@ class Application
     void set_silent();
     void socket_loop();
     void daemonize();
+    void init_visibility();
 };
 
 #endif

@@ -110,6 +110,7 @@ void Application::execute(const std::string_view cmd)
             return;
         }
         canvas->add_image(identifier, std::move(image));
+        init_visibility();
     } else if (action == "remove") {
         canvas->remove_image(identifier);
     } else {
@@ -238,6 +239,14 @@ void Application::socket_loop()
             execute(cmd);
         }
     }
+}
+
+void Application::init_visibility() {
+        if (tmux::is_used() && !tmux::is_window_focused()) {
+          canvas->hide();
+          return;
+        }
+        canvas->show();
 }
 
 void Application::print_header()

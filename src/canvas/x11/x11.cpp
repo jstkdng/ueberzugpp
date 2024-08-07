@@ -198,11 +198,7 @@ void X11Canvas::add_image(const std::string &identifier, std::unique_ptr<Image> 
         }
         windows.insert({window_id, window});
         image_windows.at(identifier).insert({window_id, window});
-        if (tmux::is_used() && !tmux::is_window_focused()) {
-          window->hide();
-          return;
-        }
-        window->show();
+        window->hide();
     });
 
     draw(identifier);
