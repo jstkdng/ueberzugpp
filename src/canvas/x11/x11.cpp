@@ -198,7 +198,7 @@ void X11Canvas::add_image(const std::string &identifier, std::unique_ptr<Image> 
         }
         windows.insert({window_id, window});
         image_windows.at(identifier).insert({window_id, window});
-        window->show();
+        window->hide();
     });
 
     draw(identifier);

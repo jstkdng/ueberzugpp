@@ -29,6 +29,7 @@ namespace tmux
 
     auto is_used() -> bool;
     auto is_window_focused() -> bool;
+    auto is_session_attached() -> bool;
 
     auto get_client_pids() -> std::optional<std::vector<int>>;
 
