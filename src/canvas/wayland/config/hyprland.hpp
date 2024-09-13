@@ -38,6 +38,7 @@ class HyprlandSocket : public WaylandConfig
     void enable_floating(std::string_view appid);
     void remove_borders(std::string_view appid);
     void remove_rounding(std::string_view appid);
+    void change_workspace(std::string_view appid, int workspaceid);
     void request(std::string_view payload);
     auto request_result(std::string_view payload) -> nlohmann::json;
     auto get_active_window() -> nlohmann::json;
