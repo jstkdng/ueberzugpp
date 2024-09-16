@@ -138,7 +138,7 @@ auto Image::get_new_sizes(double max_width, double max_height, std::string_view 
         } else {
             new_scale = max_height / new_height;
         }
-    } else if (new_height > max_width) {
+    } else if (new_width > max_width) {
         new_scale = max_width / new_width;
     }
     if (new_scale != 1) {
