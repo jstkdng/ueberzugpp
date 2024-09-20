@@ -105,39 +105,46 @@ auto Image::get_new_sizes(double max_width, double max_height, std::string_view 
 {
     int img_width = width();
     int img_height = height();
-    int new_width = 0;
-    int new_height = 0;
+    int new_width = img_width;
+    int new_height = img_height;
     double new_scale = 0;
     double width_scale = 0;
     double height_scale = 0;
     double min_scale = 0;
     double max_scale = 0;
 
-    if (img_height > max_height) {
-        if (img_width > max_width) {
-            width_scale = max_width / img_width;
-            height_scale = max_height / img_height;
-            min_scale = std::min(width_scale, height_scale);
-            max_scale = std::max(width_scale, height_scale);
-            if (img_width * max_scale <= max_width && img_height * max_scale <= max_height) {
-                new_scale = max_scale;
-            } else {
-                new_scale = min_scale;
-            }
-        } else {
-            new_scale = max_height / img_height;
-        }
-    } else if (img_width > max_width) {
-        new_scale = max_width / img_width;
-    } else if (scaler == "fit_contain" || scaler == "forced_cover") {
+    if (scaler == "fit_contain" || scaler == "forced_cover") {
         // I believe these should work the same
         new_scale = max_height / img_height;
         if (img_width >= img_height) {
             new_scale = max_width / img_width;
         }
+        new_width = static_cast<int>(img_width * new_scale);
+        new_height = static_cast<int>(img_height * new_scale);
+        new_scale = 1;
     }
-    new_width = static_cast<int>(img_width * new_scale);
-    new_height = static_cast<int>(img_height * new_scale);
+
+    if (new_height > max_height) {
+        if (new_width > max_width) {
+            width_scale = max_width / new_width;
+            height_scale = max_height / new_height;
+            min_scale = std::min(width_scale, height_scale);
+            max_scale = std::max(width_scale, height_scale);
+            if (new_width * max_scale <= max_width && new_height * max_scale <= max_height) {
+                new_scale = max_scale;
+            } else {
+                new_scale = min_scale;
+            }
+        } else {
+            new_scale = max_height / new_height;
+        }
+    } else if (new_width > max_width) {
+        new_scale = max_width / new_width;
+    }
+    if (new_scale != 1) {
+        new_width = static_cast<int>(new_width * new_scale);
+        new_height = static_cast<int>(new_height * new_scale);
+    }
 
     return std::make_pair(util::round_up(new_width, scale_factor), util::round_up(new_height, scale_factor));
 }
