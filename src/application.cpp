@@ -155,7 +155,7 @@ void Application::handle_tmux_hook(const std::string_view hook)
 void Application::setup_logger()
 {
     const auto log_tmp = util::get_log_filename();
-    const auto log_path = fs::temp_directory_path() / log_tmp;
+    const auto log_path = util::temp_directory_path() / log_tmp;
     try {
         spdlog::flush_on(spdlog::level::debug);
         const auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(log_path);
@@ -243,7 +243,7 @@ void Application::socket_loop()
 void Application::print_header()
 {
     const auto log_tmp = util::get_log_filename();
-    const auto log_path = fs::temp_directory_path() / log_tmp;
+    const auto log_path = util::temp_directory_path() / log_tmp;
     const auto art = fmt::format(R"(
  _   _      _
 | | | |    | |                                _     _

@@ -101,15 +101,22 @@ The configuration file should have this format.
 The most helpful is the `output` variable as that can be used to force
 ueberzugpp to output images with a particular method.
 
-3. By default, commands are sent to ueberzug++ through stdin, this is enough in
+3. You can configure ueberzug++ directory for temporary files (logs, sockets)
+   with `${UEBERZUGPP_TMPDIR}` environment variable (by default it is system temporary directory)
+
+```sh
+export UEBERZUGPP_TMPDIR="${TMPDIR}/ueberzugpp"
+```
+
+4. By default, commands are sent to ueberzug++ through stdin, this is enough in
    some cases. In some terminals and application combinations (e.g. ranger + wezterm + zellij)
    using stdin to send commands doesn't work properly or ueberzug++ could fail to
    start altogether. In those cases, the user may send commands to ueberzug++ through
-   a unix socket. By default, ueberzug++ will listen to commands on /tmp/ueberzug_{$USER}.sock.
+   a unix socket. By default, ueberzug++ will listen to commands on `${UEBERZUGPP_TMPDIR}/ueberzugpp-${PID}.socket`.
 
 New software is encouraged to use sockets instead of stdin as they cover more cases.
 
-4. You can then feed Ueberzug with json objects to display an image or make it disappear.
+5. You can then feed Ueberzug with json objects to display an image or make it disappear.
 
 - json object to display the image:
 

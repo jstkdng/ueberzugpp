@@ -16,6 +16,7 @@
 
 #include "flags.hpp"
 #include "os.hpp"
+#include "util.hpp"
 
 #include <fmt/format.h>
 #include <fstream>
@@ -27,7 +28,7 @@ using json = nlohmann::json;
 // read configuration file
 Flags::Flags()
 {
-    const auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
+    const auto home = os::getenv("HOME").value_or(util::temp_directory_path());
     const auto config_home = os::getenv("XDG_CONFIG_HOME").value_or(fmt::format("{}/.config", home));
     config_file = fmt::format("{}/ueberzugpp/config.json", config_home);
     if (fs::exists(config_file)) {
