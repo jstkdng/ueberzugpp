@@ -42,6 +42,9 @@ void signal_handler(const int signal)
         case SIGTERM:
             logger->error("SIGTERM received, exiting...");
             break;
+        case SIGHUP:
+            logger->error("SIGHUP received, exiting...");
+            break;
         default:
             logger->error("UNKNOWN({}) signal received, exiting...", signal);
             break;
@@ -57,7 +60,7 @@ auto main(int argc, char *argv[]) -> int
     sga.sa_flags = 0;
     sigaction(SIGINT, &sga, nullptr);
     sigaction(SIGTERM, &sga, nullptr);
-    sigaction(SIGHUP, nullptr, nullptr);
+    sigaction(SIGHUP, &sga, nullptr);
     sigaction(SIGCHLD, nullptr, nullptr);
 
     spdlog::cfg::load_env_levels();
