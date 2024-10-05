@@ -30,6 +30,7 @@ Advantages over w3mimgdisplay and ueberzug:
 - [rnvimr](https://github.com/kevinhwang91/rnvimr)
 - [image.nvim](https://github.com/3rd/image.nvim)
 - [yazi](https://github.com/sxyazi/yazi)
+- [twitchez](https://github.com/WANDEX/twitchez)
 - ÜberzugPP is a drop in replacement for Ueberzug, so applications that worked with ueberzug should work out of the box
   with this project.
 
@@ -217,6 +218,12 @@ cmake --build .
 ```
 
 after running these commands the resulting binary is ready to be used.
+
+- Install the resulting build directory to the default installation path (Optional)
+
+```sh
+cmake --install build
+```
 
 # Donate
 
