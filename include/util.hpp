@@ -51,6 +51,7 @@ void send_command(const Flags &flags);
 void clear_terminal_area(int xcoord, int ycoord, int width, int height);
 auto generate_random_string(std::size_t length) -> std::string;
 auto round_up(int num_to_round, int multiple) -> int;
+auto temp_directory_path() -> std::filesystem::path;
 
 auto read_exif_rotation(const std::filesystem::path &path) -> std::optional<std::uint16_t>;
 template <typename T>

@@ -82,7 +82,7 @@ auto util::get_process_tree_v2(int pid) -> std::vector<Process>
 
 auto util::get_cache_path() -> std::string
 {
-    const auto home = os::getenv("HOME").value_or(fs::temp_directory_path());
+    const auto home = os::getenv("HOME").value_or(util::temp_directory_path());
     const auto cache_home = os::getenv("XDG_CACHE_HOME").value_or(fmt::format("{}/.cache", home));
     return fmt::format("{}/ueberzugpp/", cache_home);
 }
@@ -95,7 +95,7 @@ auto util::get_log_filename() -> std::string
 
 auto util::get_socket_path(int pid) -> std::string
 {
-    return fmt::format("{}/ueberzugpp-{}.socket", fs::temp_directory_path().string(), pid);
+    return fmt::format("{}/ueberzugpp-{}.socket", util::temp_directory_path().string(), pid);
 }
 
 void util::send_socket_message(const std::string_view msg, const std::string_view endpoint)
@@ -254,4 +254,9 @@ auto util::round_up(int num_to_round, int multiple) -> int
     }
 
     return num_to_round + multiple - remainder;
+}
+
+auto util::temp_directory_path() -> fs::path
+{
+    return os::getenv("UEBERZUGPP_TMPDIR").value_or(fs::temp_directory_path());
 }
