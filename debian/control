@@ -4,6 +4,7 @@ Homepage: https://github.com/jstkdng/ueberzugpp
 Section: misc
 Priority: optional
 Standards-Version: 4.5.1
+Conflicts: ueberzug
 Build-Depends:
  debhelper (>= 13),
  debhelper-compat (= 13),
