@@ -19,7 +19,7 @@
 #include <fmt/format.h>
 #include <fstream>
 #include <limits>
-#ifdef __FreeBSD__
+#if defined(__FreeBSD__) || defined(__NetBSD__)
 #  include <sys/types.h>
 #else
 #  include <sys/sysmacros.h>
