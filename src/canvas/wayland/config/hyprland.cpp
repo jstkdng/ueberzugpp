@@ -137,8 +137,19 @@ void HyprlandSocket::remove_borders(const std::string_view appid)
     request(payload);
 }
 
+void HyprlandSocket::change_workspace(const std::string_view appid, int workspaceid)
+{
+    const auto payload = fmt::format("/dispatch movetoworkspacesilent {},title:{}", workspaceid, appid);
+    request(payload);
+}
+
 void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
+    auto terminal = get_active_window();
+    const auto &workspace = terminal.at("workspace");
+    const int workspaceid = workspace.at("id");
+    change_workspace(appid, workspaceid);
+    
     int res_x = xcoord;
     int res_y = ycoord;
     if (output_scale > 1.0F) {
