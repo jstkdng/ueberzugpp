@@ -21,6 +21,7 @@
 #include "window.hpp"
 
 #include <memory>
+#include <mutex>
 
 #include <chafa.h>
 
