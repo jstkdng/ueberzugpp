@@ -234,8 +234,8 @@ auto util::generate_random_string(size_t length) -> std::string
 
 auto util::read_exif_rotation(const fs::path &path) -> std::optional<std::uint16_t>
 {
-    auto image = vips::VImage::new_from_file(path.c_str());
     try {
+        auto image = vips::VImage::new_from_file(path.c_str());
         return image.get_int("orientation");
     } catch (const vips::VError &) {
         return {};
