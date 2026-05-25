@@ -10,7 +10,7 @@ ueberzugpp \- display images in a terminal
 .SH DESCRIPTION
 .PP
 .B ueberzugpp
-is a program meant to display images in a terminal in a with an IPC.
+is a program meant to display images in a terminal with an IPC.
 
 .SH OPTIONS
 
