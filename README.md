@@ -150,7 +150,7 @@ Must be installed in order to build.
 
 ### Install dependencies on Ubuntu
 
-```
+```sh
 apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev
 ```
 
@@ -229,6 +229,8 @@ after running these commands the resulting binary is ready to be used.
 - Install the resulting build directory to the default installation path (Optional)
 
 ```sh
+cd ..
+export PREFIX=/usr/local/
 cmake --install build
 ```
 
