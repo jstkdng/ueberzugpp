@@ -154,6 +154,12 @@ Must be installed in order to build.
 apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev
 ```
 
+### Install dependencies on Void Linux
+
+```
+xbps-install -Ay wayland-protocols libwaylandpp-devel libsixel-devel libopencv-devel extra-cmake-modules ecm-tools ecm-devel chafa-devel libvips-devel xcb-util-image-devel libxcb-devel tbb-devel openssl
+```
+
 ## Downloadable dependencies
 
 Required for building, if they are not installed, they will be downloaded
