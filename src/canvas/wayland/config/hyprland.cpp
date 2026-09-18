@@ -37,10 +37,9 @@ HyprlandSocket::HyprlandSocket(const std::string_view signature)
     if (!fs::exists(socket_path)) {
         socket_path = fmt::format("/tmp/{}", socket_rel_path);
     }
-
+    logger->info("Using hyprland socket {}", socket_path);
     check_lua_protocol();
 
-    logger->info("Using hyprland socket {}", socket_path);
     const auto active = request_result("j/activewindow");
     address = active.at("address");
     set_active_monitor();
@@ -54,7 +53,7 @@ void HyprlandSocket::check_lua_protocol()
     socket.write(payload.data(), payload.size());
     const std::string result = socket.read_until_empty();
     is_lua_protocol = result.find("hl.dispatch") != std::string::npos;
-    logger->info("Hyprland is using Lua protocol");
+    logger->info("Hyprland is using lua IPC");
 }
 
 void HyprlandSocket::set_active_monitor()
@@ -183,7 +182,7 @@ void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int y
     if (is_lua_protocol) {
         payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},move={{{},{}}}}})", appid, res_x, res_y);
     } else {
-        payload = fmt::format("/dispatch movewindowpixel exact {} {},title:{}", res_x, res_y, appid);
+        payload = fmt::format("/keyword windowrule match:title {} move {} {}", appid, res_x, res_y);
     }
     request(payload);
 }
