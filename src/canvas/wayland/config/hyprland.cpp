@@ -38,10 +38,23 @@ HyprlandSocket::HyprlandSocket(const std::string_view signature)
         socket_path = fmt::format("/tmp/{}", socket_rel_path);
     }
 
+    check_lua_protocol();
+
     logger->info("Using hyprland socket {}", socket_path);
     const auto active = request_result("j/activewindow");
     address = active.at("address");
     set_active_monitor();
+}
+
+void HyprlandSocket::check_lua_protocol()
+{
+    // thanks waybar https://github.com/Alexays/Waybar/pull/5013
+    std::string_view payload = "/dispatch workspace __ueberzugpp_probe__";
+    const UnixSocket socket{socket_path};
+    socket.write(payload.data(), payload.size());
+    const std::string result = socket.read_until_empty();
+    is_lua_protocol = result.find("hl.dispatch") != std::string::npos;
+    logger->info("Hyprland is using Lua protocol");
 }
 
 void HyprlandSocket::set_active_monitor()
@@ -115,25 +128,45 @@ void HyprlandSocket::initial_setup(const std::string_view appid)
 
 void HyprlandSocket::remove_rounding(const std::string_view appid)
 {
-    const auto payload = fmt::format("/keyword windowrule match:title {},rounding 0", appid);
+    std::string payload;
+    if (is_lua_protocol) {
+        payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},rounding=0}})", appid);
+    } else {
+        payload = fmt::format("/keyword windowrule match:title {},rounding 0", appid);
+    }
     request(payload);
 }
 
 void HyprlandSocket::disable_focus(const std::string_view appid)
 {
-    const auto payload = fmt::format("/keyword windowrule match:title {}, no_focus on", appid);
+    std::string payload;
+    if (is_lua_protocol) {
+        payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},no_focus=true}})", appid);
+    } else {
+        payload = fmt::format("/keyword windowrule match:title {}, no_focus on", appid);
+    }
     request(payload);
 }
 
 void HyprlandSocket::enable_floating(const std::string_view appid)
 {
-    const auto payload = fmt::format("/keyword windowrule match:title {}, float on", appid);
+    std::string payload;
+    if (is_lua_protocol) {
+        payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},float=true}})", appid);
+    } else {
+        payload = fmt::format("/keyword windowrule match:title {}, float on", appid);
+    }
     request(payload);
 }
 
 void HyprlandSocket::remove_borders(const std::string_view appid)
 {
-    const auto payload = fmt::format("/keyword windowrule match:title {} border_size 0", appid);
+    std::string payload;
+    if (is_lua_protocol) {
+        payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},border_size=0}})", appid);
+    } else {
+        payload = fmt::format("/keyword windowrule match:title {} border_size 0", appid);
+    }
     request(payload);
 }
 
@@ -146,6 +179,11 @@ void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int y
         res_x = res_x / 2 + offset;
         res_y = res_y / 2 + offset;
     }
-    const auto payload = fmt::format("/dispatch movewindowpixel exact {} {},title:{}", res_x, res_y, appid);
+    std::string payload;
+    if (is_lua_protocol) {
+        payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},move={{{},{}}}}})", appid, res_x, res_y);
+    } else {
+        payload = fmt::format("/dispatch movewindowpixel exact {} {},title:{}", res_x, res_y, appid);
+    }
     request(payload);
 }

@@ -42,12 +42,14 @@ class HyprlandSocket : public WaylandConfig
     auto request_result(std::string_view payload) -> nlohmann::json;
     auto get_active_window() -> nlohmann::json;
     void set_active_monitor();
+    void check_lua_protocol();
 
     std::shared_ptr<spdlog::logger> logger;
     std::string socket_path;
     std::string address;
     std::string output_name;
     float output_scale = 1.0F;
+    bool is_lua_protocol = false;
 };
 
 #endif
