@@ -131,7 +131,7 @@ void HyprlandSocket::remove_rounding(const std::string_view appid)
     if (is_lua_protocol) {
         payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},rounding=0}})", appid);
     } else {
-        payload = fmt::format("/keyword windowrule match:title {},rounding 0", appid);
+        payload = fmt::format("/keyword windowrule match:title {}, rounding 0", appid);
     }
     request(payload);
 }
@@ -164,7 +164,7 @@ void HyprlandSocket::remove_borders(const std::string_view appid)
     if (is_lua_protocol) {
         payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},border_size=0}})", appid);
     } else {
-        payload = fmt::format("/keyword windowrule match:title {} border_size 0", appid);
+        payload = fmt::format("/keyword windowrule match:title {}, border_size 0", appid);
     }
     request(payload);
 }
@@ -182,7 +182,7 @@ void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int y
     if (is_lua_protocol) {
         payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},move={{{},{}}}}})", appid, res_x, res_y);
     } else {
-        payload = fmt::format("/keyword windowrule match:title {} move {} {}", appid, res_x, res_y);
+        payload = fmt::format("/keyword windowrule match:title {}, move {} {}", appid, res_x, res_y);
     }
     request(payload);
 }
