@@ -151,7 +151,7 @@ Must be installed in order to build.
 ### Install dependencies on Ubuntu
 
 ```
-apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev
+apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev libxcb-res0-dev
 ```
 
 ## Downloadable dependencies
