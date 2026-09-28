@@ -150,8 +150,14 @@ Must be installed in order to build.
 
 ### Install dependencies on Ubuntu
 
-```
+```sh
 apt-get install libssl-dev libvips-dev libsixel-dev libchafa-dev libtbb-dev
+```
+
+### Install dependencies on Void Linux
+
+```
+xbps-install -Ay wayland-protocols libwaylandpp-devel libsixel-devel libopencv-devel extra-cmake-modules ecm-tools ecm-devel chafa-devel libvips-devel xcb-util-image-devel libxcb-devel tbb-devel openssl
 ```
 
 ## Downloadable dependencies
@@ -229,6 +235,8 @@ after running these commands the resulting binary is ready to be used.
 - Install the resulting build directory to the default installation path (Optional)
 
 ```sh
+cd ..
+export PREFIX=/usr/local/
 cmake --install build
 ```
 
