@@ -178,3 +178,8 @@ void SwaySocket::ipc_command(const std::string_view payload) const
 {
     std::ignore = ipc_message(IPC_COMMAND, payload);
 }
+
+auto SwaySocket::get_output_scale() -> std::optional<float>
+{
+    return output_info.scale;
+}

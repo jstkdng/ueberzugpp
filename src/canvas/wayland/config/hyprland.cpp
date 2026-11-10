@@ -184,3 +184,8 @@ void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int y
     }
     request(payload);
 }
+
+auto HyprlandSocket::get_output_scale() -> std::optional<float>
+{
+    return output_scale;
+}

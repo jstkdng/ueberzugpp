@@ -43,6 +43,7 @@ class NiriSocket : public WaylandConfig
     ~NiriSocket() override = default;
 
     auto get_focused_output_name() -> std::string override;
+    auto get_output_scale() -> std::optional<float> override;
     auto get_window_info() -> struct WaylandWindowGeometry override;
     void initial_setup(std::string_view appid) override;
     void move_window(std::string_view appid, int xcoord, int ycoord) override;

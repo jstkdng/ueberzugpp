@@ -153,6 +153,10 @@ if(ENABLE_WAYLAND)
     UEBERZUG_SOURCES PROTOCOL
     "${WaylandProtocols_DATADIR}/stable/xdg-shell/xdg-shell.xml" BASENAME
     "xdg-shell")
+  ecm_add_wayland_client_protocol(
+    UEBERZUG_SOURCES PROTOCOL
+    "${WaylandProtocols_DATADIR}/stable/viewporter/viewporter.xml" BASENAME
+    "viewporter")
 
   list(
     APPEND

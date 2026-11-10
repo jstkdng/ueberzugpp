@@ -56,6 +56,7 @@ class WaylandShmWindow : public WaylandWindow
 
     struct xdg_wm_base *xdg_base = nullptr;
     struct wl_surface *surface = nullptr;
+    struct wp_viewport *viewport = nullptr;
     struct xdg_surface *xdg_surface = nullptr;
     struct xdg_toplevel *xdg_toplevel = nullptr;
     struct wl_callback *callback;
@@ -67,6 +68,7 @@ class WaylandShmWindow : public WaylandWindow
     void *this_ptr;
 
     void move_window();
+    void set_surface_scale(int32_t scale_factor);
     void xdg_setup();
 
     void setup_listeners();
