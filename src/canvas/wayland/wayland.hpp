@@ -20,6 +20,7 @@
 #include "canvas.hpp"
 #include "config.hpp"
 #include "flags.hpp"
+#include "wayland-viewporter-client-protocol.h"
 #include "wayland-xdg-shell-client-protocol.h"
 #include "window/waylandwindow.hpp"
 
@@ -57,6 +58,7 @@ class WaylandCanvas : public Canvas
     struct wl_compositor *compositor = nullptr;
     struct wl_shm *wl_shm = nullptr;
     struct xdg_wm_base *xdg_base = nullptr;
+    struct wp_viewporter *viewporter = nullptr;
 
     std::pair<std::string, int32_t> output_pair;
     std::unordered_map<std::string, int32_t> output_info;

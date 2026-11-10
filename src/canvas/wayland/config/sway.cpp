@@ -51,10 +51,11 @@ auto SwaySocket::get_window_info() -> struct WaylandWindowGeometry {
     const auto nodes = get_nodes();
     const auto window = get_active_window(nodes);
     const auto &rect = window.at("rect");
-    return {.width = rect.at("width"),
-            .height = rect.at("height"),
-            .x = rect.at("x").get<int>() - output_info.x,
-            .y = rect.at("y").get<int>() - output_info.y};
+    const float scale = output_info.scale;
+    return {.width = logical_to_physical(rect.at("width").get<int>(), scale),
+            .height = logical_to_physical(rect.at("height").get<int>(), scale),
+            .x = logical_to_physical(rect.at("x").get<int>() - output_info.x, scale),
+            .y = logical_to_physical(rect.at("y").get<int>() - output_info.y, scale)};
 }
 
 auto SwaySocket::get_active_window(const std::vector<nlohmann::json>& nodes) -> nlohmann::json
@@ -119,12 +120,8 @@ void SwaySocket::enable_floating(const std::string_view appid)
 
 void SwaySocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    int res_x = xcoord;
-    int res_y = ycoord;
-    if (output_info.scale > 1.0F) {
-        res_x = res_x / 2;
-        res_y = res_y / 2;
-    }
+    const int res_x = physical_to_logical(xcoord, output_info.scale);
+    const int res_y = physical_to_logical(ycoord, output_info.scale);
     const auto payload = fmt::format(R"([app_id="{}"] move position {} {})", appid, res_x, res_y);
     ipc_command(payload);
 }
@@ -180,4 +177,9 @@ void SwaySocket::ipc_command(const std::string_view appid, const std::string_vie
 void SwaySocket::ipc_command(const std::string_view payload) const
 {
     std::ignore = ipc_message(IPC_COMMAND, payload);
+}
+
+auto SwaySocket::get_output_scale() -> std::optional<float>
+{
+    return output_info.scale;
 }

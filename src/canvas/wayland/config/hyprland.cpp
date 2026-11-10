@@ -20,6 +20,7 @@
 #include "util/socket.hpp"
 
 #include <filesystem>
+#include <tuple>
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 #include <range/v3/all.hpp>
@@ -87,6 +88,8 @@ void HyprlandSocket::request(const std::string_view payload)
     const UnixSocket socket{socket_path};
     logger->debug("Running socket command {}", payload);
     socket.write(payload.data(), payload.length());
+    // wait for the reply, hyprland may drop a request whose client hangs up before it answers
+    std::ignore = socket.read_until_empty();
 }
 
 auto HyprlandSocket::get_active_window() -> nlohmann::json
@@ -110,10 +113,10 @@ auto HyprlandSocket::get_window_info() -> struct WaylandWindowGeometry {
     const auto &coords = terminal.at("at");
 
     return {
-        .width = sizes.at(0),
-        .height = sizes.at(1),
-        .x = coords.at(0),
-        .y = coords.at(1),
+        .width = logical_to_physical(sizes.at(0).get<double>(), output_scale),
+        .height = logical_to_physical(sizes.at(1).get<double>(), output_scale),
+        .x = logical_to_physical(coords.at(0).get<double>(), output_scale),
+        .y = logical_to_physical(coords.at(1).get<double>(), output_scale),
     };
 }
 
@@ -171,13 +174,8 @@ void HyprlandSocket::remove_borders(const std::string_view appid)
 
 void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int ycoord)
 {
-    int res_x = xcoord;
-    int res_y = ycoord;
-    if (output_scale > 1.0F) {
-        const int offset = 10;
-        res_x = res_x / 2 + offset;
-        res_y = res_y / 2 + offset;
-    }
+    const int res_x = physical_to_logical(xcoord, output_scale);
+    const int res_y = physical_to_logical(ycoord, output_scale);
     std::string payload;
     if (is_lua_protocol) {
         payload = fmt::format("/eval hl.window_rule({{match={{title='{}'}},move={{{},{}}}}})", appid, res_x, res_y);
@@ -185,4 +183,9 @@ void HyprlandSocket::move_window(const std::string_view appid, int xcoord, int y
         payload = fmt::format("/keyword windowrule match:title {}, move {} {}", appid, res_x, res_y);
     }
     request(payload);
+}
+
+auto HyprlandSocket::get_output_scale() -> std::optional<float>
+{
+    return output_scale;
 }

@@ -268,3 +268,8 @@ void NiriSocket::set_active_output_info()
         .name = output.at("name").get<std::string>(),
     };
 }
+
+auto NiriSocket::get_output_scale() -> std::optional<float>
+{
+    return output_info.scale;
+}

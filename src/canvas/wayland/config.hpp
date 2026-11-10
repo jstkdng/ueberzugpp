@@ -17,7 +17,9 @@
 #ifndef WAYLAND_CONFIG_H
 #define WAYLAND_CONFIG_H
 
+#include <cmath>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -27,6 +29,17 @@ struct WaylandWindowGeometry {
     int x;
     int y;
 };
+
+// compositors use logical coordinates, terminal sizes (and cell offsets) are in physical pixels
+inline auto logical_to_physical(double value, float scale) -> int
+{
+    return static_cast<int>(std::lround(value * scale));
+}
+
+inline auto physical_to_logical(double value, float scale) -> int
+{
+    return static_cast<int>(std::lround(value / scale));
+}
 
 class WaylandConfig
 {
@@ -38,6 +51,8 @@ class WaylandConfig
     virtual auto get_focused_output_name() -> std::string = 0;
     virtual auto get_window_info() -> struct WaylandWindowGeometry = 0;
     virtual auto is_dummy() -> bool { return false; }
+    // exact (possibly fractional) scale of the focused output, if the compositor reports it
+    virtual auto get_output_scale() -> std::optional<float> { return std::nullopt; }
     virtual void initial_setup(std::string_view appid) = 0;
     virtual void move_window(std::string_view appid, int xcoord, int ycoord) = 0;
 };
